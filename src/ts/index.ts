@@ -18,6 +18,70 @@ interface IEntity {
     points: Point[];
 }
 
+abstract class RectangularEntity implements IEntity {
+    public points: Point[] = [];
+    protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
+        const radAngle = angle * CONVERSION_TO_RADIANS;
+
+        const widthCos = width * Math.cos(radAngle);
+        const widthSin = width * Math.sin(radAngle);
+        const heightCos = height * Math.cos(radAngle);
+        const heightSin = height * Math.sin(radAngle);
+
+        const firstPoint = new Point(x0, y0);
+        const secondPoint = new Point(x0 + widthCos, y0 + widthSin);
+        const thirdPoint = new Point(x0 + heightCos, y0 + heightSin);
+        const fourthPoint = new Point(thirdPoint.x + widthCos, thirdPoint.y + widthSin);
+
+        this.points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+    }
+}
+
+abstract class Tank extends RectangularEntity {
+    protected abstract readonly _angleSpeed: number;
+    protected abstract readonly _moveSpeed: number;
+    protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
+        super(x0, y0, width, height, angle);
+    }
+
+    public clockwiseMovement(step: number) {
+        const angleRadians = step * CONVERSION_TO_RADIANS;
+        const centerX = (this.points[0].x + this.points[1].x) >> 1;
+        const centerY = (this.points[0].y + this.points[1].y) >> 1;
+
+        for (const point of this.points) {
+            const deltaX = point.x - centerX;
+            const deltaY = point.y - centerY;
+            const rotatedX = deltaX * Math.cos(angleRadians) - deltaY * Math.sin(angleRadians);
+            const rotatedY = deltaX * Math.sin(angleRadians) + deltaY * Math.cos(angleRadians);
+            point.x = rotatedX + centerX;
+            point.y = rotatedY + centerY;
+        }
+    }
+    public counterclockwiseMovement(step: number){ this.clockwiseMovement(-step); }
+
+    public moveForward(step: number) {
+        const { deltaX, deltaY } = this.calcDeltaCoordinates(step);
+        for (const point of this.points) {
+            point.x += deltaX;
+            point.y += deltaY;
+        }
+    }
+    public moveBackward(step: number) { this.moveForward(-step) }
+
+    protected calcDeltaCoordinates(step: number): { deltaX: number, deltaY: number } {
+        const angle = this.calcRadAngle();
+        const deltaX = step * Math.cos(angle);
+        const deltaY = step * Math.sin(angle);
+        return { deltaX, deltaY };
+    }
+
+    protected calcRadAngle() {
+        return Math.atan2(this.points[0].y - this.points[1].y,
+            this.points[0].x - this.points[1].x);
+    }
+}
+
 // Classes
 class Point {
     public x: number;
@@ -28,17 +92,9 @@ class Point {
     }
 }
 
-class Rectangle implements IEntity {
-    public points: Point[] = [];
-    public constructor(x0: number, y0: number, width: number, height: number, slope: number) {
-        this.points = [
-            new Point(x0, y0),
-            new Point(x0 + width * Math.cos(slope * CONVERSION_TO_RADIANS), y0 + width * Math.sin(slope * CONVERSION_TO_RADIANS)),
-            new Point(x0 + height * Math.cos(slope * CONVERSION_TO_RADIANS), y0 + height * Math.sin(slope * CONVERSION_TO_RADIANS)),
-        ];
-        this.points.push(
-            new Point(this.points[2].x + width * Math.cos(slope * CONVERSION_TO_RADIANS), this.points[2].y + width * Math.sin(slope * CONVERSION_TO_RADIANS))
-        );
+class Wall extends RectangularEntity {
+    public constructor(x0: number, y0: number, width: number, height: number, angle: number) {
+        super(x0, y0, width, height, angle);
     }
 }
 
@@ -81,8 +137,8 @@ function fullFillBackGround(name: string, field: Field)
 }
 function addBackgroundTile(x: number, y: number, name: string, field: Field)
 {
-    let tile = document.createElement('img');
-    tile.src = `./img/background/${name}Background.png`;
+    const tile = document.createElement('img');
+    tile.src = `./img/backgrounds/${name}Background.png`;
     tile.style.position = 'absolute';
     tile.style.left = `${x}px`;
     tile.style.bottom = `${y}px`;
@@ -95,8 +151,8 @@ function addBackgroundTile(x: number, y: number, name: string, field: Field)
 }
 
 function createObstacles(name: string, field: Field) {
-    let wallWidth = field.width - (INDENT << 1);
-    let additionalIndent = wallWidth - RECT_WALL_WIDTH * Math.floor(wallWidth / RECT_WALL_WIDTH);
+    const wallWidth = field.width - (INDENT << 1);
+    const additionalIndent = wallWidth - RECT_WALL_WIDTH * Math.floor(wallWidth / RECT_WALL_WIDTH);
     for (let x = INDENT + (additionalIndent >> 1); x < field.width - INDENT - RECT_WALL_HEIGHT; x += RECT_WALL_WIDTH) {
         createRectObstacleHor(x, INDENT, name, field);
         createRectObstacleHor(x , field.height - RECT_WALL_HEIGHT - INDENT, name, field);
@@ -108,42 +164,42 @@ function createObstacles(name: string, field: Field) {
     }
 }
 function createSquareObstacle(x: number, y: number, name: string, field: Field) {
-    let obstacle = document.createElement('img');
+    const obstacle = document.createElement('img');
     obstacle.src = `./img/blocks/${name}Square.png`;
     obstacle.style.position = 'absolute';
     obstacle.style.left = `${x}px`;
     obstacle.style.bottom = `${y}px`;
     obstacle.style.width = `${SQUARE_WALL_SIZE}px`;
     obstacle.style.height = `${SQUARE_WALL_SIZE}px`;
-    field.addObject(new Rectangle(x, y, SQUARE_WALL_SIZE, SQUARE_WALL_SIZE, 0));
+    field.addObject(new Wall(x, y, SQUARE_WALL_SIZE, SQUARE_WALL_SIZE, 0));
 
     field.canvas.appendChild(obstacle);
 }
 function createRectObstacleHor(x: number, y: number, name: string, field: Field) {
-    let obstacle = document.createElement('img');
+    const obstacle = document.createElement('img');
     obstacle.src = `./img/blocks/${name}Rectangle.png`;
     obstacle.style.position = 'absolute';
     obstacle.style.left = `${x}px`;
     obstacle.style.bottom = `${y}px`;
     obstacle.style.width = `${RECT_WALL_WIDTH}px`;
     obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
-    field.addObject(new Rectangle(x, y, RECT_WALL_WIDTH, RECT_WALL_HEIGHT, 0));
+    field.addObject(new Wall(x, y, RECT_WALL_WIDTH, RECT_WALL_HEIGHT, 0));
 
     field.canvas.appendChild(obstacle);
 }
 function createRectObstacleVert(x: number, y: number, name: string, field: Field) {
-    const slope: number = 90;
-    let obstacle = document.createElement('img');
+    const angle: number = 90;
+    const obstacle = document.createElement('img');
     obstacle.src = `./img/blocks/${name}Rectangle.png`;
     obstacle.style.position = 'absolute';
     obstacle.style.left = `${x}px`;
     obstacle.style.bottom = `${y}px`;
     obstacle.style.width = `${RECT_WALL_WIDTH}px`;
     obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
-    obstacle.style.transform = `rotate(${slope}deg)`;
-    field.addObject(new Rectangle(x + (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1),
+    obstacle.style.transform = `rotate(${angle}deg)`;
+    field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1),
         y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1),
-        RECT_WALL_WIDTH, RECT_WALL_HEIGHT, slope));
+        RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
 
     field.canvas.appendChild(obstacle);
 }
@@ -161,20 +217,20 @@ abstract class Tank {
     private readonly _model : any;
     private _x: number;
     private _y: number;
-    private _slope: number;
-    protected abstract readonly _slopeSpeed: number;
+    private _angle: number;
+    protected abstract readonly _angleSpeed: number;
     protected abstract readonly _moveSpeed: number;
-    protected constructor(model: any, x: number, y: number, slope: number) {
+    protected constructor(model: any, x: number, y: number, angle: number) {
         this._model = model;
         this._x = x;
         this._y = y;
-        this._slope = slope;
+        this._angle = angle;
 
         this.updatePosition();
-        this.updateSlope();
+        this.updateAngle();
     }
     public moveForward() {
-        const radian = this._slope * CONVERSION_TO_RADIANS;
+        const radian = this._angle * CONVERSION_TO_RADIANS;
         this._x += this._moveSpeed * Math.cos(radian);
         this._y += this._moveSpeed * Math.sin(radian);
 
@@ -182,7 +238,7 @@ abstract class Tank {
     }
 
     public moveBackward() {
-        const radian = this._slope * CONVERSION_TO_RADIANS;
+        const radian = this._angle * CONVERSION_TO_RADIANS;
         this._x -= this._moveSpeed * Math.cos(radian);
         this._y -= this._moveSpeed * Math.sin(radian);
 
@@ -194,29 +250,29 @@ abstract class Tank {
         this._model.style.top = `${this._y}px`;
     }
 
-    private updateSlope() {
-        this._model.style.transform = `rotate(${this._slope}deg)`;
+    private updateAngle() {
+        this._model.style.transform = `rotate(${this._angle}deg)`;
     }
 
     public get x(): number { return this._x }
     public get y(): number { return this._y }
 
     public clockwiseMovement() {
-        this._slope += this._slopeSpeed;
-        this.updateSlope();
+        this._angle += this._angleSpeed;
+        this.updateAngle();
     }
     public counterclockwiseMovement(){
-        this._slope -= this._slopeSpeed;
-        this.updateSlope();
+        this._angle -= this._angleSpeed;
+        this.updateAngle();
     }
 }
 class DefaultTank extends Tank {
     protected readonly _moveSpeed: number;
-    protected readonly _slopeSpeed: number;
-    constructor(model: any, x: number, y: number, slope: number) {
-        super(model, x, y, slope);
+    protected readonly _angleSpeed: number;
+    constructor(model: any, x: number, y: number, angle: number) {
+        super(model, x, y, angle);
         this._moveSpeed = 5;
-        this._slopeSpeed = 5;
+        this._angleSpeed = 5;
     }
 }
 
