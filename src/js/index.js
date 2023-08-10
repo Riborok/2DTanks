@@ -67,7 +67,9 @@ function addBackgroundTile(x, y, name, field) {
     tile.style.border = '1px solid black';
 }
 function createObstacles(name, field) {
-    for (let x = INDENT; x < field.width - INDENT - RECT_WALL_HEIGHT; x += RECT_WALL_WIDTH) {
+    let wallWidth = field.width - (INDENT << 1);
+    let additionalIndent = wallWidth - RECT_WALL_WIDTH * Math.floor(wallWidth / RECT_WALL_WIDTH);
+    for (let x = INDENT + (additionalIndent >> 1); x < field.width - INDENT - RECT_WALL_HEIGHT; x += RECT_WALL_WIDTH) {
         createRectObstacleHor(x, INDENT, name, field);
         createRectObstacleHor(x, field.height - RECT_WALL_HEIGHT - INDENT, name, field);
     }
