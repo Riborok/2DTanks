@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>2DTanks</title>
-    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="src/index.css">
     <style>
         #canvas {
             position: absolute;
@@ -18,12 +18,13 @@
 <body>
     <div id = 'canvas'></div>
 
-    <script src="js/index.js"></script>
+    <script src="src/js/index.js"></script>
     <script>
-        let field = new Field(canvas, window.innerWidth, window.innerHeight)
-        fullFillBackGround('Grass', field);
+        let field = new Field(canvas, window.screen.width, window.screen.height);
+        let creator = new Creator(field);
 
-        createObstacles('Ground', field);
+        creator.fullFillBackground('Grass');
+        creator.createObstacles('Ground');
     </script>
 </body>
 </html>

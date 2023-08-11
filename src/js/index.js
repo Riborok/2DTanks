@@ -5,10 +5,9 @@ const VK_A = 65;
 const VK_D = 68;
 const CONVERSION_TO_RADIANS = Math.PI / 180;
 const CHUNK_SIZE = 115;
-const INDENT = 10;
+const MIN_INDENT = 10;
 const RECT_WALL_WIDTH = 101;
 const RECT_WALL_HEIGHT = 50;
-const SQUARE_WALL_SIZE = RECT_WALL_HEIGHT;
 class RectangularEntity {
     constructor(x0, y0, width, height, angle) {
         const angleRad = angle * CONVERSION_TO_RADIANS;
@@ -138,67 +137,72 @@ class Field {
         }
     }
 }
-function fullFillBackGround(name, field) {
-    field.canvas.style.overflow = 'hidden';
-    for (let i = 0; i < field.width; i += CHUNK_SIZE)
-        for (let j = 0; j < field.height; j += CHUNK_SIZE)
-            addBackgroundTile(i, j, name, field);
-}
-function addBackgroundTile(x, y, name, field) {
-    const tile = document.createElement('img');
-    tile.src = `./img/backgrounds/${name}Background.png`;
-    tile.style.position = 'absolute';
-    tile.style.left = `${x}px`;
-    tile.style.bottom = `${y}px`;
-    tile.style.width = `${CHUNK_SIZE}px`;
-    tile.style.height = `${CHUNK_SIZE}px`;
-    field.canvas.appendChild(tile);
-    tile.style.border = '1px solid black';
-}
-function createObstacles(name, field) {
-    const widthForWalls = field.width - (INDENT << 1);
-    const additionalIndent = widthForWalls - RECT_WALL_WIDTH * Math.floor(widthForWalls / RECT_WALL_WIDTH);
-    for (let x = INDENT + (additionalIndent >> 1); x < field.width - INDENT - RECT_WALL_HEIGHT; x += RECT_WALL_WIDTH) {
-        createRectObstacleHor(x, INDENT, name, field);
-        createRectObstacleHor(x, field.height - RECT_WALL_HEIGHT - INDENT, name, field);
+class Creator {
+    constructor(field) {
+        this._field = field;
     }
-    for (let y = INDENT + RECT_WALL_HEIGHT + (RECT_WALL_HEIGHT >> 1); y < field.height - INDENT - RECT_WALL_HEIGHT; y += RECT_WALL_WIDTH) {
-        createRectObstacleVert(INDENT - (RECT_WALL_HEIGHT >> 1), y, name, field);
-        createRectObstacleVert(field.width - RECT_WALL_WIDTH - INDENT + (RECT_WALL_HEIGHT >> 1), y, name, field);
+    fullFillBackground(name) {
+        this._field.canvas.style.overflow = 'hidden';
+        for (let i = 0; i < this._field.width; i += CHUNK_SIZE)
+            for (let j = 0; j < this._field.height; j += CHUNK_SIZE)
+                this.addBackgroundTile(i, j, name);
     }
-}
-function createSquareObstacle(x, y, name, field) {
-    const obstacle = document.createElement('img');
-    obstacle.src = `./img/blocks/${name}Square.png`;
-    obstacle.style.position = 'absolute';
-    obstacle.style.left = `${x}px`;
-    obstacle.style.bottom = `${y}px`;
-    obstacle.style.width = `${SQUARE_WALL_SIZE}px`;
-    obstacle.style.height = `${SQUARE_WALL_SIZE}px`;
-    field.addObject(new Wall(x, y, SQUARE_WALL_SIZE, SQUARE_WALL_SIZE, 0));
-    field.canvas.appendChild(obstacle);
-}
-function createRectObstacleHor(x, y, name, field) {
-    const obstacle = document.createElement('img');
-    obstacle.src = `./img/blocks/${name}Rectangle.png`;
-    obstacle.style.position = 'absolute';
-    obstacle.style.left = `${x}px`;
-    obstacle.style.bottom = `${y}px`;
-    obstacle.style.width = `${RECT_WALL_WIDTH}px`;
-    obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
-    field.addObject(new Wall(x, y, RECT_WALL_WIDTH, RECT_WALL_HEIGHT, 0));
-    field.canvas.appendChild(obstacle);
-}
-function createRectObstacleVert(x, y, name, field) {
-    const angle = 90;
-    const obstacle = document.createElement('img');
-    obstacle.src = `./img/blocks/${name}Rectangle.png`;
-    obstacle.style.position = 'absolute';
-    obstacle.style.left = `${x}px`;
-    obstacle.style.bottom = `${y}px`;
-    obstacle.style.width = `${RECT_WALL_WIDTH}px`;
-    obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
-    obstacle.style.transform = `rotate(${angle}deg)`;
-    field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) - (RECT_WALL_HEIGHT >> 1), y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1), RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
-    field.canvas.appendChild(obstacle);
+    createObstacles(name) {
+        const xIndent = Creator.calculateIndent(this._field.width);
+        const yIndent = Creator.calculateIndent(this._field.height - (RECT_WALL_HEIGHT << 1));
+        this.createHorObstacles(name, xIndent, yIndent);
+        this.createVertObstacles(name, xIndent, yIndent);
+    }
+    addBackgroundTile(x, y, name) {
+        const tile = document.createElement('img');
+        tile.src = `src/img/backgrounds/${name}Background.png`;
+        tile.style.position = 'absolute';
+        tile.style.left = `${x}px`;
+        tile.style.bottom = `${y}px`;
+        tile.style.width = `${CHUNK_SIZE}px`;
+        tile.style.height = `${CHUNK_SIZE}px`;
+        this._field.canvas.appendChild(tile);
+        tile.style.border = '1px solid black';
+    }
+    static calculateIndent(totalLength) {
+        const currLength = totalLength - (MIN_INDENT << 1);
+        const indent = currLength - RECT_WALL_WIDTH * Math.floor(currLength / RECT_WALL_WIDTH);
+        return (indent >> 1) + MIN_INDENT;
+    }
+    createHorObstacles(name, xIndent, yIndent) {
+        for (let x = xIndent; x <= this._field.width - xIndent - RECT_WALL_WIDTH; x += RECT_WALL_WIDTH) {
+            this.createRectHorObstacle(x, yIndent, name);
+            this.createRectHorObstacle(x, this._field.height - RECT_WALL_HEIGHT - yIndent, name);
+        }
+    }
+    createVertObstacles(name, xIndent, yIndent) {
+        for (let y = yIndent + RECT_WALL_HEIGHT + (RECT_WALL_HEIGHT >> 1); y <= this._field.height - yIndent - RECT_WALL_WIDTH; y += RECT_WALL_WIDTH) {
+            this.createRectVertObstacle(xIndent - (RECT_WALL_HEIGHT >> 1), y, name);
+            this.createRectVertObstacle(this._field.width - xIndent - RECT_WALL_WIDTH + (RECT_WALL_HEIGHT >> 1), y, name);
+        }
+    }
+    createRectHorObstacle(x, y, name) {
+        const obstacle = document.createElement('img');
+        obstacle.src = `src/img/blocks/${name}Rectangle.png`;
+        obstacle.style.position = 'absolute';
+        obstacle.style.left = `${x}px`;
+        obstacle.style.bottom = `${y}px`;
+        obstacle.style.width = `${RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
+        this._field.addObject(new Wall(x, y, RECT_WALL_WIDTH, RECT_WALL_HEIGHT, 0));
+        this._field.canvas.appendChild(obstacle);
+    }
+    createRectVertObstacle(x, y, name) {
+        const angle = 90;
+        const obstacle = document.createElement('img');
+        obstacle.src = `src/img/blocks/${name}Rectangle.png`;
+        obstacle.style.position = 'absolute';
+        obstacle.style.left = `${x}px`;
+        obstacle.style.bottom = `${y}px`;
+        obstacle.style.width = `${RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
+        obstacle.style.transform = `rotate(${angle}deg)`;
+        this._field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) - (RECT_WALL_HEIGHT >> 1), y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1), RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
+        this._field.canvas.appendChild(obstacle);
+    }
 }
