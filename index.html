@@ -21,10 +21,11 @@
     <script src="src/js/index.js"></script>
     <script>
         let field = new Field(canvas, window.screen.width, window.screen.height);
-        let creator = new Creator(field);
+        let decorCreator = new DecorCreator(field);
+        let obstacleCreator = new ObstacleCreator(field);
 
-        creator.fullFillBackground('Grass');
-        creator.createObstacles('Ground');
+        decorCreator.fullFillBackground(MATERIAL[2]);
+        obstacleCreator.createObstacles(MATERIAL[2]);
     </script>
 </body>
 </html>

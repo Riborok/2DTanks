@@ -5,12 +5,8 @@ const VK_A: number = 65;
 const VK_D: number = 68;
 
 const CONVERSION_TO_RADIANS: number = Math.PI / 180;
-
 const CHUNK_SIZE: number = 115;
-
-const MIN_INDENT: number = 10;
-const RECT_WALL_WIDTH: number = 101;
-const RECT_WALL_HEIGHT: number = 50;
+const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 
 // Interfaces and Abstraction
 interface IEntity {
@@ -213,9 +209,9 @@ class Field {
         }
     }
 }
-class Creator {
+class DecorCreator {
     private _field: Field;
-    constructor(field: Field) {
+    public constructor(field: Field) {
         this._field = field;
     }
     public fullFillBackground(name: string)
@@ -225,17 +221,10 @@ class Creator {
             for (let j: number = 0; j < this._field.height; j += CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
     }
-    public createObstacles(name: string) {
-        const xIndent = Creator.calculateIndent(this._field.width);
-        const yIndent = Creator.calculateIndent(this._field.height - (RECT_WALL_HEIGHT << 1));
-
-        this.createHorObstacles(name, xIndent, yIndent);
-        this.createVertObstacles(name, xIndent, yIndent);
-    }
     private addBackgroundTile(x: number, y: number, name: string)
     {
         const tile = document.createElement('img');
-        tile.src = `src/img/backgrounds/${name}Background.png`;
+        tile.src = `src/img/backgrounds/${name}Background_${getRandomInt(0, 1)}.png`;
         tile.style.position = 'absolute';
         tile.style.left = `${x}px`;
         tile.style.bottom = `${y}px`;
@@ -246,24 +235,44 @@ class Creator {
         // ДЛЯ ТЕСТОВ
         tile.style.border = '1px solid black';
     }
+}
+class ObstacleCreator {
+    private _field: Field;
+    private static readonly MIN_INDENT: number = 10;
+    private static readonly RECT_WALL_WIDTH: number = 101;
+    private static readonly RECT_WALL_HEIGHT: number = 50;
+    public constructor(field: Field) {
+        this._field = field;
+    }
+    public createObstacles(name: string) {
+        const xIndent = ObstacleCreator.calculateIndent(this._field.width);
+        const yIndent = ObstacleCreator.calculateIndent(this._field.height -
+            (ObstacleCreator.RECT_WALL_HEIGHT << 1));
+
+        this.createHorObstacles(name, xIndent, yIndent);
+        this.createVertObstacles(name, xIndent, yIndent);
+    }
     private static calculateIndent(totalLength: number): number {
-        const currLength = totalLength - (MIN_INDENT << 1);
-        const indent = currLength - RECT_WALL_WIDTH * Math.floor(currLength / RECT_WALL_WIDTH);
-        return (indent >> 1) + MIN_INDENT;
+        const currLength = totalLength - (ObstacleCreator.MIN_INDENT << 1);
+        const indent = currLength - ObstacleCreator.RECT_WALL_WIDTH *
+            Math.floor(currLength / ObstacleCreator.RECT_WALL_WIDTH);
+        return (indent >> 1) + ObstacleCreator.MIN_INDENT;
     }
     private createHorObstacles(name: string, xIndent: number, yIndent: number) {
-        for (let x = xIndent; x <= this._field.width - xIndent - RECT_WALL_WIDTH; x += RECT_WALL_WIDTH) {
+        for (let x = xIndent;
+             x <= this._field.width - xIndent - ObstacleCreator.RECT_WALL_WIDTH; x += ObstacleCreator.RECT_WALL_WIDTH) {
             this.createRectHorObstacle(x, yIndent, name);
-            this.createRectHorObstacle(x, this._field.height - RECT_WALL_HEIGHT - yIndent, name);
+            this.createRectHorObstacle(x, this._field.height - ObstacleCreator.RECT_WALL_HEIGHT - yIndent, name);
         }
     }
     private createVertObstacles(name: string, xIndent: number, yIndent: number) {
-        for (let y = yIndent + RECT_WALL_HEIGHT + (RECT_WALL_HEIGHT >> 1);
-             y <= this._field.height - yIndent - RECT_WALL_WIDTH;
-             y += RECT_WALL_WIDTH) {
-            this.createRectVertObstacle(xIndent - (RECT_WALL_HEIGHT >> 1), y, name);
-            this.createRectVertObstacle(this._field.width - xIndent - RECT_WALL_WIDTH + (RECT_WALL_HEIGHT >> 1), y,
-                name);
+        for (let y = yIndent + ObstacleCreator.RECT_WALL_HEIGHT + (ObstacleCreator.RECT_WALL_HEIGHT >> 1);
+             y <= this._field.height - yIndent - ObstacleCreator.RECT_WALL_WIDTH;
+             y += ObstacleCreator.RECT_WALL_WIDTH) {
+            this.createRectVertObstacle(xIndent - (ObstacleCreator.RECT_WALL_HEIGHT >> 1), y, name);
+            this.createRectVertObstacle(this._field.width - xIndent - ObstacleCreator.RECT_WALL_WIDTH +
+                (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
+                y, name);
         }
     }
     private createRectHorObstacle(x: number, y: number, name: string) {
@@ -272,9 +281,10 @@ class Creator {
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
         obstacle.style.bottom = `${y}px`;
-        obstacle.style.width = `${RECT_WALL_WIDTH}px`;
-        obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
-        this._field.addObject(new Wall(x, y, RECT_WALL_WIDTH, RECT_WALL_HEIGHT, 0));
+        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
+        this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+            ObstacleCreator.RECT_WALL_HEIGHT, 0));
 
         this._field.canvas.appendChild(obstacle);
     }
@@ -285,18 +295,22 @@ class Creator {
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
         obstacle.style.bottom = `${y}px`;
-        obstacle.style.width = `${RECT_WALL_WIDTH}px`;
-        obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
+        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}deg)`;
-        this._field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) - (RECT_WALL_HEIGHT >> 1),
-            y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1),
-            RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
+        this._field.addObject(new Wall(x + (ObstacleCreator.RECT_WALL_WIDTH >> 1) -
+            (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
+            y - (ObstacleCreator.RECT_WALL_WIDTH >> 1) + (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
+            ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
         this._field.canvas.appendChild(obstacle);
     }
 }
 
-
+// Additional function
+function getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max + 1 - min)) + min;
+}
 
 
 
