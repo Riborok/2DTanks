@@ -216,7 +216,6 @@ class DecorCreator {
     }
     public fullFillBackground(name: string)
     {
-        this._field.canvas.style.overflow = 'hidden';
         for (let i: number = 0; i < this._field.width; i += CHUNK_SIZE)
             for (let j: number = 0; j < this._field.height; j += CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
@@ -241,6 +240,7 @@ class ObstacleCreator {
     private static readonly MIN_INDENT: number = 10;
     private static readonly RECT_WALL_WIDTH: number = 101;
     private static readonly RECT_WALL_HEIGHT: number = 50;
+    private static readonly SQUARE_WALL_SIZE: number = ObstacleCreator.RECT_WALL_HEIGHT;
     public constructor(field: Field) {
         this._field = field;
     }
@@ -302,6 +302,19 @@ class ObstacleCreator {
             (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
             y - (ObstacleCreator.RECT_WALL_WIDTH >> 1) + (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
             ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, angle));
+
+        this._field.canvas.appendChild(obstacle);
+    }
+    private createSquareObstacle(x: number, y: number, name: string) {
+        const obstacle = document.createElement('img');
+        obstacle.src = `src/img/blocks/${name}Square.png`;
+        obstacle.style.position = 'absolute';
+        obstacle.style.left = `${x}px`;
+        obstacle.style.bottom = `${y}px`;
+        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
+        this._field.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
+            ObstacleCreator.SQUARE_WALL_SIZE, 0));
 
         this._field.canvas.appendChild(obstacle);
     }

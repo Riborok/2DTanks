@@ -12,6 +12,7 @@
             width: 100%;
             height: 100%;
             background-color: green;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -26,6 +27,9 @@
 
         decorCreator.fullFillBackground(MATERIAL[2]);
         obstacleCreator.createObstacles(MATERIAL[2]);
+
+        // ДЛЯ ОТЛАД0ЧКИ :)
+        window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
     </script>
 </body>
 </html>

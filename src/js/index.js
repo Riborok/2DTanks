@@ -140,7 +140,6 @@ class DecorCreator {
         this._field = field;
     }
     fullFillBackground(name) {
-        this._field.canvas.style.overflow = 'hidden';
         for (let i = 0; i < this._field.width; i += CHUNK_SIZE)
             for (let j = 0; j < this._field.height; j += CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
@@ -212,10 +211,22 @@ class ObstacleCreator {
             (ObstacleCreator.RECT_WALL_HEIGHT >> 1), y - (ObstacleCreator.RECT_WALL_WIDTH >> 1) + (ObstacleCreator.RECT_WALL_HEIGHT >> 1), ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, angle));
         this._field.canvas.appendChild(obstacle);
     }
+    createSquareObstacle(x, y, name) {
+        const obstacle = document.createElement('img');
+        obstacle.src = `src/img/blocks/${name}Square.png`;
+        obstacle.style.position = 'absolute';
+        obstacle.style.left = `${x}px`;
+        obstacle.style.bottom = `${y}px`;
+        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
+        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
+        this._field.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE, ObstacleCreator.SQUARE_WALL_SIZE, 0));
+        this._field.canvas.appendChild(obstacle);
+    }
 }
 ObstacleCreator.MIN_INDENT = 10;
 ObstacleCreator.RECT_WALL_WIDTH = 101;
 ObstacleCreator.RECT_WALL_HEIGHT = 50;
+ObstacleCreator.SQUARE_WALL_SIZE = ObstacleCreator.RECT_WALL_HEIGHT;
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
