@@ -18,7 +18,7 @@ class RectangularEntity {
         const heightSin = height * Math.sin(angleRad);
         const firstPoint = new Point(x0, y0);
         const secondPoint = new Point(x0 + widthCos, y0 + widthSin);
-        const thirdPoint = new Point(x0 + heightCos, y0 + heightSin);
+        const thirdPoint = new Point(x0 + heightSin, y0 + heightCos);
         const fourthPoint = new Point(thirdPoint.x + widthCos, thirdPoint.y + widthSin);
         this._points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
     }
@@ -156,8 +156,8 @@ function addBackgroundTile(x, y, name, field) {
     tile.style.border = '1px solid black';
 }
 function createObstacles(name, field) {
-    const wallWidth = field.width - (INDENT << 1);
-    const additionalIndent = wallWidth - RECT_WALL_WIDTH * Math.floor(wallWidth / RECT_WALL_WIDTH);
+    const widthForWalls = field.width - (INDENT << 1);
+    const additionalIndent = widthForWalls - RECT_WALL_WIDTH * Math.floor(widthForWalls / RECT_WALL_WIDTH);
     for (let x = INDENT + (additionalIndent >> 1); x < field.width - INDENT - RECT_WALL_HEIGHT; x += RECT_WALL_WIDTH) {
         createRectObstacleHor(x, INDENT, name, field);
         createRectObstacleHor(x, field.height - RECT_WALL_HEIGHT - INDENT, name, field);
@@ -199,6 +199,6 @@ function createRectObstacleVert(x, y, name, field) {
     obstacle.style.width = `${RECT_WALL_WIDTH}px`;
     obstacle.style.height = `${RECT_WALL_HEIGHT}px`;
     obstacle.style.transform = `rotate(${angle}deg)`;
-    field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1), y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1), RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
+    field.addObject(new Wall(x + (RECT_WALL_WIDTH >> 1) - (RECT_WALL_HEIGHT >> 1), y - (RECT_WALL_WIDTH >> 1) + (RECT_WALL_HEIGHT >> 1), RECT_WALL_WIDTH, RECT_WALL_HEIGHT, angle));
     field.canvas.appendChild(obstacle);
 }
