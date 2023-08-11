@@ -11,53 +11,29 @@ const RECT_WALL_HEIGHT = 50;
 const SQUARE_WALL_SIZE = RECT_WALL_HEIGHT;
 class RectangularEntity {
     constructor(x0, y0, width, height, angle) {
-        this.points = [];
-        const radAngle = angle * CONVERSION_TO_RADIANS;
-        const widthCos = width * Math.cos(radAngle);
-        const widthSin = width * Math.sin(radAngle);
-        const heightCos = height * Math.cos(radAngle);
-        const heightSin = height * Math.sin(radAngle);
+        const angleRad = angle * CONVERSION_TO_RADIANS;
+        const widthCos = width * Math.cos(angleRad);
+        const widthSin = width * Math.sin(angleRad);
+        const heightCos = height * Math.cos(angleRad);
+        const heightSin = height * Math.sin(angleRad);
         const firstPoint = new Point(x0, y0);
         const secondPoint = new Point(x0 + widthCos, y0 + widthSin);
         const thirdPoint = new Point(x0 + heightCos, y0 + heightSin);
         const fourthPoint = new Point(thirdPoint.x + widthCos, thirdPoint.y + widthSin);
-        this.points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+        this._points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+    }
+    get points() { return this._points; }
+    calcAngleRad() {
+        return Math.atan2(this.points[0].y - this.points[1].y, this.points[0].x - this.points[1].x);
     }
 }
-class Tank extends RectangularEntity {
+class HullEntity extends RectangularEntity {
     constructor(x0, y0, width, height, angle) {
         super(x0, y0, width, height, angle);
     }
-    clockwiseMovement(step) {
-        const angleRadians = step * CONVERSION_TO_RADIANS;
-        const centerX = (this.points[0].x + this.points[1].x) >> 1;
-        const centerY = (this.points[0].y + this.points[1].y) >> 1;
-        for (const point of this.points) {
-            const deltaX = point.x - centerX;
-            const deltaY = point.y - centerY;
-            const rotatedX = deltaX * Math.cos(angleRadians) - deltaY * Math.sin(angleRadians);
-            const rotatedY = deltaX * Math.sin(angleRadians) + deltaY * Math.cos(angleRadians);
-            point.x = rotatedX + centerX;
-            point.y = rotatedY + centerY;
-        }
-    }
-    counterclockwiseMovement(step) { this.clockwiseMovement(-step); }
-    moveForward(step) {
-        const { deltaX, deltaY } = this.calcDeltaCoordinates(step);
-        for (const point of this.points) {
-            point.x += deltaX;
-            point.y += deltaY;
-        }
-    }
-    moveBackward(step) { this.moveForward(-step); }
-    calcDeltaCoordinates(step) {
-        const angle = this.calcRadAngle();
-        const deltaX = step * Math.cos(angle);
-        const deltaY = step * Math.sin(angle);
-        return { deltaX, deltaY };
-    }
-    calcRadAngle() {
-        return Math.atan2(this.points[0].y - this.points[1].y, this.points[0].x - this.points[1].x);
+    takeDamage(bullet) {
+        this._armorStrength -= bullet.armorPenetration;
+        this._health -= (bullet.damage - this._armor * this._armorStrength);
     }
 }
 class Point {
@@ -66,16 +42,84 @@ class Point {
         this.y = y;
     }
 }
+class Tank {
+    constructor(track, turret, weapon, hullEntity) {
+        this._bullets = [];
+        this._track = track;
+        this._turret = turret;
+        this._weapon = weapon;
+        this._hullEntity = hullEntity;
+        this._lastTimeShot = Date.now();
+    }
+    shot() {
+        const dateNow = Date.now();
+        if (this._bullets.length === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
+            return null;
+        const bullet = this._bullets.shift();
+        bullet.damage *= this._weapon.damageCoeff;
+        bullet.moveSpeed *= this._weapon.moveSpeedCoeff;
+        bullet.armorPenetration *= this._weapon.armorPenetrationCoeff;
+        bullet.angle = this._turret.angle;
+        this._lastTimeShot = dateNow;
+        return bullet;
+    }
+    tryTakeBullet(bullet) {
+        if (this._bullets.length === this._turret.bulletCapacity)
+            return false;
+        this._bullets.push(bullet);
+        return true;
+    }
+    clockwiseMovement() {
+        this.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this.calcDeltaCoordinates();
+    }
+    counterclockwiseMovement() {
+        this.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this.calcDeltaCoordinates();
+    }
+    moveForward() {
+        for (const point of this._hullEntity.points) {
+            point.x += this._deltaX;
+            point.y += this._deltaY;
+        }
+    }
+    moveBackward() {
+        for (const point of this._hullEntity.points) {
+            point.x -= this._deltaX;
+            point.y -= this._deltaY;
+        }
+    }
+    rotatePoints(angleRad) {
+        const centerX = (this._hullEntity.points[0].x + this._hullEntity.points[1].x) >> 1;
+        const centerY = (this._hullEntity.points[0].y + this._hullEntity.points[1].y) >> 1;
+        for (const point of this._hullEntity.points) {
+            const deltaX = point.x - centerX;
+            const deltaY = point.y - centerY;
+            const rotatedX = deltaX * Math.cos(angleRad) - deltaY * Math.sin(angleRad);
+            const rotatedY = deltaX * Math.sin(angleRad) + deltaY * Math.cos(angleRad);
+            point.x = rotatedX + centerX;
+            point.y = rotatedY + centerY;
+        }
+    }
+    calcDeltaCoordinates() {
+        const angleRad = this._hullEntity.calcAngleRad();
+        this._deltaX = this._track.moveSpeed * Math.cos(angleRad);
+        this._deltaY = this._track.moveSpeed * Math.sin(angleRad);
+    }
+}
 class Wall extends RectangularEntity {
     constructor(x0, y0, width, height, angle) {
         super(x0, y0, width, height, angle);
     }
 }
 class Field {
+    get canvas() { return this._canvas; }
+    get width() { return this._width; }
+    get height() { return this._height; }
     constructor(canvas, width, height) {
-        this.canvas = canvas;
-        this.width = width;
-        this.height = height;
+        this._canvas = canvas;
+        this._width = width;
+        this._height = height;
         this._entities = [];
         for (let i = 0; i < Math.ceil(width / CHUNK_SIZE); i++) {
             this._entities[i] = [];

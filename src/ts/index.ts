@@ -15,70 +15,76 @@ const SQUARE_WALL_SIZE: number = RECT_WALL_HEIGHT;
 
 // Interfaces and Abstraction
 interface IEntity {
-    points: Point[];
+    get points(): Point[];
+}
+
+interface ITrack {
+    get moveSpeed(): number;
+    get angleSpeed(): number;
+}
+
+interface IBullet {
+    get angle(): number;
+    get moveSpeed(): number;
+    get damage(): number;
+    get armorPenetration(): number;
+
+    set moveSpeed(newMoveSpeed: number);
+    set damage(newDamage: number);
+    set armorPenetration(newArmorPenetration: number);
+    set angle(newAngle: number);
+}
+
+interface ITurret {
+    get angle(): number;
+    clockwiseMovement(): void;
+    counterclockwiseMovement(): void;
+
+    get bulletCapacity(): number;
+}
+
+interface IWeapon {
+    get reloadSpeed(): number;
+
+    get damageCoeff(): number;
+    get armorPenetrationCoeff(): number;
+    get moveSpeedCoeff(): number;
 }
 
 abstract class RectangularEntity implements IEntity {
-    public points: Point[] = [];
+    protected readonly _points: Point[];
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
-        const radAngle = angle * CONVERSION_TO_RADIANS;
+        const angleRad = angle * CONVERSION_TO_RADIANS;
 
-        const widthCos = width * Math.cos(radAngle);
-        const widthSin = width * Math.sin(radAngle);
-        const heightCos = height * Math.cos(radAngle);
-        const heightSin = height * Math.sin(radAngle);
+        const widthCos = width * Math.cos(angleRad);
+        const widthSin = width * Math.sin(angleRad);
+        const heightCos = height * Math.cos(angleRad);
+        const heightSin = height * Math.sin(angleRad);
 
         const firstPoint = new Point(x0, y0);
         const secondPoint = new Point(x0 + widthCos, y0 + widthSin);
         const thirdPoint = new Point(x0 + heightCos, y0 + heightSin);
         const fourthPoint = new Point(thirdPoint.x + widthCos, thirdPoint.y + widthSin);
 
-        this.points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+        this._points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+    }
+    get points(): Point[] { return this._points }
+    public calcAngleRad() {
+        return Math.atan2(this.points[0].y - this.points[1].y,
+            this.points[0].x - this.points[1].x);
     }
 }
 
-abstract class Tank extends RectangularEntity {
-    protected abstract readonly _angleSpeed: number;
-    protected abstract readonly _moveSpeed: number;
+abstract class HullEntity extends RectangularEntity {
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
         super(x0, y0, width, height, angle);
     }
-
-    public clockwiseMovement(step: number) {
-        const angleRadians = step * CONVERSION_TO_RADIANS;
-        const centerX = (this.points[0].x + this.points[1].x) >> 1;
-        const centerY = (this.points[0].y + this.points[1].y) >> 1;
-
-        for (const point of this.points) {
-            const deltaX = point.x - centerX;
-            const deltaY = point.y - centerY;
-            const rotatedX = deltaX * Math.cos(angleRadians) - deltaY * Math.sin(angleRadians);
-            const rotatedY = deltaX * Math.sin(angleRadians) + deltaY * Math.cos(angleRadians);
-            point.x = rotatedX + centerX;
-            point.y = rotatedY + centerY;
-        }
-    }
-    public counterclockwiseMovement(step: number){ this.clockwiseMovement(-step); }
-
-    public moveForward(step: number) {
-        const { deltaX, deltaY } = this.calcDeltaCoordinates(step);
-        for (const point of this.points) {
-            point.x += deltaX;
-            point.y += deltaY;
-        }
-    }
-    public moveBackward(step: number) { this.moveForward(-step) }
-
-    protected calcDeltaCoordinates(step: number): { deltaX: number, deltaY: number } {
-        const angle = this.calcRadAngle();
-        const deltaX = step * Math.cos(angle);
-        const deltaY = step * Math.sin(angle);
-        return { deltaX, deltaY };
-    }
-
-    protected calcRadAngle() {
-        return Math.atan2(this.points[0].y - this.points[1].y,
-            this.points[0].x - this.points[1].x);
+    protected abstract _health: number;
+    protected abstract _armor: number;
+    protected abstract _armorStrength: number; // 0 to 1
+    public takeDamage(bullet: IBullet) {
+        this._armorStrength -= bullet.armorPenetration;
+        this._health -= (bullet.damage - this._armor * this._armorStrength);
     }
 }
 
@@ -92,6 +98,85 @@ class Point {
     }
 }
 
+class Tank {
+    private _track: ITrack;
+    private _turret: ITurret;
+    private _weapon: IWeapon;
+    private _hullEntity: HullEntity;
+    public constructor(track: ITrack, turret: ITurret, weapon: IWeapon, hullEntity: HullEntity) {
+        this._track = track;
+        this._turret = turret;
+        this._weapon = weapon;
+        this._hullEntity = hullEntity;
+        this._lastTimeShot = Date.now();
+    }
+
+    private _deltaX: number;
+    private _deltaY: number;
+    private _bullets: IBullet[] = [];
+    private _lastTimeShot: number;
+
+    public shot(): IBullet {
+        const dateNow = Date.now();
+        if (this._bullets.length === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
+            return null;
+
+        const bullet = this._bullets.shift();
+        bullet.damage *= this._weapon.damageCoeff;
+        bullet.moveSpeed *= this._weapon.moveSpeedCoeff;
+        bullet.armorPenetration *= this._weapon.armorPenetrationCoeff;
+        bullet.angle = this._turret.angle;
+        this._lastTimeShot = dateNow;
+
+        return bullet;
+    }
+    public tryTakeBullet(bullet: IBullet): boolean {
+        if (this._bullets.length === this._turret.bulletCapacity)
+            return false;
+        this._bullets.push(bullet);
+        return true;
+    }
+    public clockwiseMovement() {
+        this.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this.calcDeltaCoordinates();
+    }
+    public counterclockwiseMovement() {
+        this.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this.calcDeltaCoordinates();
+    }
+    public moveForward() {
+        for (const point of this._hullEntity.points) {
+            point.x += this._deltaX;
+            point.y += this._deltaY;
+        }
+    }
+    public moveBackward() {
+        for (const point of this._hullEntity.points) {
+            point.x -= this._deltaX;
+            point.y -= this._deltaY;
+        }
+    }
+
+    private rotatePoints(angleRad: number) {
+        const centerX = (this._hullEntity.points[0].x + this._hullEntity.points[1].x) >> 1;
+        const centerY = (this._hullEntity.points[0].y + this._hullEntity.points[1].y) >> 1;
+
+        for (const point of this._hullEntity.points) {
+            const deltaX = point.x - centerX;
+            const deltaY = point.y - centerY;
+            const rotatedX = deltaX * Math.cos(angleRad) - deltaY * Math.sin(angleRad);
+            const rotatedY = deltaX * Math.sin(angleRad) + deltaY * Math.cos(angleRad);
+            point.x = rotatedX + centerX;
+            point.y = rotatedY + centerY;
+        }
+    }
+    private calcDeltaCoordinates() {
+        const angleRad = this._hullEntity.calcAngleRad();
+        this._deltaX = this._track.moveSpeed * Math.cos(angleRad);
+        this._deltaY = this._track.moveSpeed * Math.sin(angleRad);
+    }
+}
+
 class Wall extends RectangularEntity {
     public constructor(x0: number, y0: number, width: number, height: number, angle: number) {
         super(x0, y0, width, height, angle);
@@ -100,13 +185,16 @@ class Wall extends RectangularEntity {
 
 class Field {
     private readonly _entities: IEntity[][][];
-    public readonly canvas: any;
-    public readonly width: number;
-    public readonly height: number;
+    private readonly _canvas: any;
+    private readonly _width: number;
+    private readonly _height: number;
+    public get canvas(): any { return this._canvas }
+    public get width(): number { return this._width }
+    public get height(): number { return this._height }
     constructor(canvas: any, width: number, height: number) {
-        this.canvas = canvas;
-        this.width = width;
-        this.height = height;
+        this._canvas = canvas;
+        this._width = width;
+        this._height = height;
         this._entities = [];
         for (let i = 0; i < Math.ceil(width / CHUNK_SIZE); i++) {
             this._entities[i] = [];
