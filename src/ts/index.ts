@@ -211,6 +211,19 @@ class TrackSprite extends Sprite {
     }
 }
 
+class HullSprite extends Sprite {
+    private static readonly WIDTH: number = 98;
+    private static readonly HEIGHT: number = 17;
+    public constructor(x0: number, y0: number, angle: number, color: string, num: number,
+                       width: number, height: number) {
+        super(x0, y0, angle);
+
+        this._sprite.style.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._sprite.style.width = `${width}px`;
+        this._sprite.style.height = `${height}px`;
+    }
+}
+
 class LightBullet extends BulletEntity {
     public static readonly WIDTH: number = 20;
     public static readonly HEIGHT: number = 45;

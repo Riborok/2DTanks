@@ -142,6 +142,16 @@ class TrackSprite extends Sprite {
 }
 TrackSprite.WIDTH = 98;
 TrackSprite.HEIGHT = 17;
+class HullSprite extends Sprite {
+    constructor(x0, y0, angle, color, num, width, height) {
+        super(x0, y0, angle);
+        this._sprite.style.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._sprite.style.width = `${width}px`;
+        this._sprite.style.height = `${height}px`;
+    }
+}
+HullSprite.WIDTH = 98;
+HullSprite.HEIGHT = 17;
 class LightBullet extends BulletEntity {
     constructor(x0, y0, angle) {
         super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle);
