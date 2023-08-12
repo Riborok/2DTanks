@@ -40,14 +40,12 @@ abstract class Sprite {
     protected _x : number;
     protected _y : number;
     protected _angle : number;
-    protected _movementSpeed: number;
-    protected _angleSpeed: number;
 
     protected _deltaX: number;
     protected _deltaY: number;
     protected _isDeltaChanged: boolean;
 
-    protected constructor(x: number, y: number, angle: number, movementSpeed: number, angleSpeed: number) {
+    protected constructor(x: number, y: number, angle: number) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
         this._sprite.style.left = `${x}px`;
@@ -57,17 +55,14 @@ abstract class Sprite {
         this._x = x;
         this._y = y;
         this._angle = angle;
-        this._movementSpeed = movementSpeed;
-        this._angleSpeed = angleSpeed;
 
-        this._isDeltaChanged = false;
-        this.calcDeltaCoordinates();
+        this._isDeltaChanged = true;
     }
 
-    public moveForward() {
+    public moveForward(movementSpeed: number) {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
+            this.calcDeltaCoordinates(movementSpeed);
         }
 
         this._x += this._deltaX;
@@ -76,16 +71,26 @@ abstract class Sprite {
         this.updatePosition();
     }
 
-    public moveBackward() {
+    public moveBackward(movementSpeed: number) {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
+            this.calcDeltaCoordinates(movementSpeed);
         }
 
         this._x -= this._deltaX;
         this._y -= this._deltaY;
 
         this.updatePosition();
+    }
+    public clockwiseMovement(angleSpeed: number) {
+        this._isDeltaChanged = true;
+        this._angle += angleSpeed;
+        this.updateAngle();
+    }
+    public counterclockwiseMovement(angleSpeed: number){
+        this._isDeltaChanged = true;
+        this._angle -= angleSpeed;
+        this.updateAngle();
     }
 
     private updatePosition() {
@@ -95,22 +100,10 @@ abstract class Sprite {
     private updateAngle() {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
     }
-
-    public clockwiseMovement() {
-        this._isDeltaChanged = true;
-        this._angle += this._angleSpeed;
-        this.updateAngle();
-    }
-    public counterclockwiseMovement(){
-        this._isDeltaChanged = true;
-        this._angle -= this._angleSpeed;
-        this.updateAngle();
-    }
-
-    private calcDeltaCoordinates() {
+    private calcDeltaCoordinates(movementSpeed: number) {
         const angleRad = this._angle * CONVERSION_TO_RADIANS;
-        this._deltaX = this._movementSpeed * Math.cos(angleRad);
-        this._deltaY = this._movementSpeed * Math.sin(angleRad);
+        this._deltaX = movementSpeed * Math.cos(angleRad);
+        this._deltaY = movementSpeed * Math.sin(angleRad);
     }
 }
 

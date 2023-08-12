@@ -7,7 +7,7 @@ const CONVERSION_TO_RADIANS = Math.PI / 180;
 const CHUNK_SIZE = 115;
 const MATERIAL = ['Grass', 'Ground', 'Sandstone'];
 class Sprite {
-    constructor(x, y, angle, movementSpeed, angleSpeed) {
+    constructor(x, y, angle) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
         this._sprite.style.left = `${x}px`;
@@ -16,28 +16,35 @@ class Sprite {
         this._x = x;
         this._y = y;
         this._angle = angle;
-        this._movementSpeed = movementSpeed;
-        this._angleSpeed = angleSpeed;
-        this._isDeltaChanged = false;
-        this.calcDeltaCoordinates();
+        this._isDeltaChanged = true;
     }
-    moveForward() {
+    moveForward(movementSpeed) {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
+            this.calcDeltaCoordinates(movementSpeed);
         }
         this._x += this._deltaX;
         this._y += this._deltaY;
         this.updatePosition();
     }
-    moveBackward() {
+    moveBackward(movementSpeed) {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
+            this.calcDeltaCoordinates(movementSpeed);
         }
         this._x -= this._deltaX;
         this._y -= this._deltaY;
         this.updatePosition();
+    }
+    clockwiseMovement(angleSpeed) {
+        this._isDeltaChanged = true;
+        this._angle += angleSpeed;
+        this.updateAngle();
+    }
+    counterclockwiseMovement(angleSpeed) {
+        this._isDeltaChanged = true;
+        this._angle -= angleSpeed;
+        this.updateAngle();
     }
     updatePosition() {
         this._sprite.style.left = `${this._x}px`;
@@ -46,20 +53,10 @@ class Sprite {
     updateAngle() {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
     }
-    clockwiseMovement() {
-        this._isDeltaChanged = true;
-        this._angle += this._angleSpeed;
-        this.updateAngle();
-    }
-    counterclockwiseMovement() {
-        this._isDeltaChanged = true;
-        this._angle -= this._angleSpeed;
-        this.updateAngle();
-    }
-    calcDeltaCoordinates() {
+    calcDeltaCoordinates(movementSpeed) {
         const angleRad = this._angle * CONVERSION_TO_RADIANS;
-        this._deltaX = this._movementSpeed * Math.cos(angleRad);
-        this._deltaY = this._movementSpeed * Math.sin(angleRad);
+        this._deltaX = movementSpeed * Math.cos(angleRad);
+        this._deltaY = movementSpeed * Math.sin(angleRad);
     }
 }
 class RectangularEntity {
