@@ -70,7 +70,7 @@ class RectangularEntity {
     }
     get points() { return this._points; }
     calcAngleRad() {
-        return Math.atan2(this.points[0].y - this.points[1].y, this.points[0].x - this.points[1].x);
+        return Math.atan2(this.points[0].y - this.points[3].y, this.points[0].x - this.points[3].x);
     }
     rotatePoints(deltaAngleRad) {
         const centerX = (this.points[0].x + this.points[3].x) >> 1;

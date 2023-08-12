@@ -119,8 +119,8 @@ abstract class RectangularEntity implements IEntity {
     }
     get points(): Point[] { return this._points }
     public calcAngleRad() {
-        return Math.atan2(this.points[0].y - this.points[1].y,
-            this.points[0].x - this.points[1].x);
+        return Math.atan2(this.points[0].y - this.points[3].y,
+            this.points[0].x - this.points[3].x);
     }
     public rotatePoints(deltaAngleRad: number) {
         const centerX = (this.points[0].x + this.points[3].x) >> 1;
