@@ -18,18 +18,6 @@ interface ITrack {
     get angleSpeed(): number;
 }
 
-interface IBullet {
-    get angle(): number;
-    get moveSpeed(): number;
-    get damage(): number;
-    get armorPenetration(): number;
-
-    set moveSpeed(newMoveSpeed: number);
-    set damage(newDamage: number);
-    set armorPenetration(newArmorPenetration: number);
-    set angle(newAngle: number);
-}
-
 interface ITurret {
     get angle(): number;
     clockwiseMovement(): void;
@@ -44,6 +32,9 @@ interface IWeapon {
     get damageCoeff(): number;
     get armorPenetrationCoeff(): number;
     get moveSpeedCoeff(): number;
+
+    get xShot(): number;
+    get yShot(): number;
 }
 
 abstract class RectangularEntity implements IEntity {
@@ -68,6 +59,19 @@ abstract class RectangularEntity implements IEntity {
         return Math.atan2(this.points[0].y - this.points[1].y,
             this.points[0].x - this.points[1].x);
     }
+    public rotatePoints(deltaAngleRad: number) {
+        const centerX = (this.points[0].x + this.points[1].x) >> 1;
+        const centerY = (this.points[0].y + this.points[1].y) >> 1;
+
+        for (const point of this.points) {
+            const deltaX = point.x - centerX;
+            const deltaY = point.y - centerY;
+            const rotatedX = deltaX * Math.cos(deltaAngleRad) - deltaY * Math.sin(deltaAngleRad);
+            const rotatedY = deltaX * Math.sin(deltaAngleRad) + deltaY * Math.cos(deltaAngleRad);
+            point.x = rotatedX + centerX;
+            point.y = rotatedY + centerY;
+        }
+    }
 }
 
 abstract class HullEntity extends RectangularEntity {
@@ -77,10 +81,31 @@ abstract class HullEntity extends RectangularEntity {
     protected abstract _health: number;
     protected abstract _armor: number;
     protected abstract _armorStrength: number; // 0 to 1
-    public takeDamage(bullet: IBullet) {
+    public takeDamage(bullet: BulletEntity) {
         this._armorStrength -= bullet.armorPenetration;
         this._health -= (bullet.damage - this._armor * this._armorStrength);
     }
+}
+
+abstract class BulletEntity extends RectangularEntity{
+    public get moveSpeed(): number { return this._moveSpeed};
+    public get damage(): number { return this._damage};
+    public get armorPenetration(): number { return this._armorPenetration};
+
+    protected abstract _moveSpeed: number;
+    protected abstract _damage: number;
+    protected abstract _armorPenetration: number;
+    protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
+        super(x0, y0, width, height, angle);
+    }
+    public launchFromWeapon(weapon: IWeapon) {
+        this._moveSpeed *= weapon.moveSpeedCoeff;
+        this._damage *= weapon.damageCoeff;
+        this._armorPenetration *= weapon.armorPenetrationCoeff;
+    }
+}
+interface IBulletManufacturing {
+    create(x0: number, y0: number, angle: number): BulletEntity;
 }
 
 // Classes
@@ -90,6 +115,23 @@ class Point {
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
+    }
+}
+
+class LightBullet extends BulletEntity {
+    public static readonly width: number = 20;
+    public static readonly height: number = 45;
+
+    protected _armorPenetration: number = 5;
+    protected _damage: number = 15;
+    protected _moveSpeed: number = 50;
+    public constructor(x0: number, y0: number, angle: number) {
+        super(x0, y0, LightBullet.width, LightBullet.height, angle);
+    }
+}
+class LightBulletManufacturing implements IBulletManufacturing{
+    public create(x0: number, y0: number, angle: number): BulletEntity {
+        return new LightBullet(x0, y0, angle);
     }
 }
 
@@ -104,39 +146,40 @@ class Tank {
         this._weapon = weapon;
         this._hullEntity = hullEntity;
         this._lastTimeShot = Date.now();
+
+        this._bulletManufacturing = new LightBulletManufacturing();
     }
 
     private _deltaX: number;
     private _deltaY: number;
-    private _bullets: IBullet[] = [];
+    private _bulletQuantity: number;
+    private _bulletManufacturing: IBulletManufacturing;
     private _lastTimeShot: number;
 
-    public shot(): IBullet {
+    public shot(): BulletEntity {
         const dateNow = Date.now();
-        if (this._bullets.length === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
+        if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
             return null;
 
-        const bullet = this._bullets.shift();
-        bullet.damage *= this._weapon.damageCoeff;
-        bullet.moveSpeed *= this._weapon.moveSpeedCoeff;
-        bullet.armorPenetration *= this._weapon.armorPenetrationCoeff;
-        bullet.angle = this._turret.angle;
+        let bulletEntity = this._bulletManufacturing.create(this._weapon.xShot,
+            this._weapon.yShot, this._turret.angle);
+        bulletEntity.launchFromWeapon(this._weapon);
         this._lastTimeShot = dateNow;
 
-        return bullet;
+        return bulletEntity;
     }
-    public tryTakeBullet(bullet: IBullet): boolean {
-        if (this._bullets.length === this._turret.bulletCapacity)
-            return false;
-        this._bullets.push(bullet);
-        return true;
+    public incBulletQuantity(quantity: number) {
+        this._bulletQuantity = Math.min(this._bulletQuantity + quantity, this._turret.bulletCapacity);
+    }
+    public takeNewBulletManufacturing(bulletManufacturing: IBulletManufacturing) {
+        this._bulletManufacturing = bulletManufacturing;
     }
     public clockwiseMovement() {
-        this.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this._hullEntity.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
         this.calcDeltaCoordinates();
     }
     public counterclockwiseMovement() {
-        this.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this._hullEntity.rotatePoints(- this._track.angleSpeed * CONVERSION_TO_RADIANS);
         this.calcDeltaCoordinates();
     }
     public moveForward() {
@@ -149,20 +192,6 @@ class Tank {
         for (const point of this._hullEntity.points) {
             point.x -= this._deltaX;
             point.y -= this._deltaY;
-        }
-    }
-
-    private rotatePoints(angleRad: number) {
-        const centerX = (this._hullEntity.points[0].x + this._hullEntity.points[1].x) >> 1;
-        const centerY = (this._hullEntity.points[0].y + this._hullEntity.points[1].y) >> 1;
-
-        for (const point of this._hullEntity.points) {
-            const deltaX = point.x - centerX;
-            const deltaY = point.y - centerY;
-            const rotatedX = deltaX * Math.cos(angleRad) - deltaY * Math.sin(angleRad);
-            const rotatedY = deltaX * Math.sin(angleRad) + deltaY * Math.cos(angleRad);
-            point.x = rotatedX + centerX;
-            point.y = rotatedY + centerY;
         }
     }
     private calcDeltaCoordinates() {

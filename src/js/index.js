@@ -23,6 +23,18 @@ class RectangularEntity {
     calcAngleRad() {
         return Math.atan2(this.points[0].y - this.points[1].y, this.points[0].x - this.points[1].x);
     }
+    rotatePoints(deltaAngleRad) {
+        const centerX = (this.points[0].x + this.points[1].x) >> 1;
+        const centerY = (this.points[0].y + this.points[1].y) >> 1;
+        for (const point of this.points) {
+            const deltaX = point.x - centerX;
+            const deltaY = point.y - centerY;
+            const rotatedX = deltaX * Math.cos(deltaAngleRad) - deltaY * Math.sin(deltaAngleRad);
+            const rotatedY = deltaX * Math.sin(deltaAngleRad) + deltaY * Math.cos(deltaAngleRad);
+            point.x = rotatedX + centerX;
+            point.y = rotatedY + centerY;
+        }
+    }
 }
 class HullEntity extends RectangularEntity {
     constructor(x0, y0, width, height, angle) {
@@ -33,45 +45,73 @@ class HullEntity extends RectangularEntity {
         this._health -= (bullet.damage - this._armor * this._armorStrength);
     }
 }
+class BulletEntity extends RectangularEntity {
+    get moveSpeed() { return this._moveSpeed; }
+    ;
+    get damage() { return this._damage; }
+    ;
+    get armorPenetration() { return this._armorPenetration; }
+    ;
+    constructor(x0, y0, width, height, angle) {
+        super(x0, y0, width, height, angle);
+    }
+    launchFromWeapon(weapon) {
+        this._moveSpeed *= weapon.moveSpeedCoeff;
+        this._damage *= weapon.damageCoeff;
+        this._armorPenetration *= weapon.armorPenetrationCoeff;
+    }
+}
 class Point {
     constructor(x, y) {
         this.x = x;
         this.y = y;
     }
 }
+class LightBullet extends BulletEntity {
+    constructor(x0, y0, angle) {
+        super(x0, y0, LightBullet.width, LightBullet.height, angle);
+        this._armorPenetration = 5;
+        this._damage = 15;
+        this._moveSpeed = 50;
+    }
+}
+LightBullet.width = 20;
+LightBullet.height = 45;
+class LightBulletManufacturing {
+    create(x0, y0, angle) {
+        return new LightBullet(x0, y0, angle);
+    }
+}
 class Tank {
     constructor(track, turret, weapon, hullEntity) {
-        this._bullets = [];
         this._track = track;
         this._turret = turret;
         this._weapon = weapon;
         this._hullEntity = hullEntity;
         this._lastTimeShot = Date.now();
+        this._bulletManufacturing = new LightBulletManufacturing();
     }
     shot() {
         const dateNow = Date.now();
-        if (this._bullets.length === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
+        if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
             return null;
-        const bullet = this._bullets.shift();
-        bullet.damage *= this._weapon.damageCoeff;
-        bullet.moveSpeed *= this._weapon.moveSpeedCoeff;
-        bullet.armorPenetration *= this._weapon.armorPenetrationCoeff;
-        bullet.angle = this._turret.angle;
+        let bulletEntity = this._bulletManufacturing.create(this._weapon.xShot, this._weapon.yShot, this._turret.angle);
+        bulletEntity.launchFromWeapon(this._weapon);
         this._lastTimeShot = dateNow;
-        return bullet;
+        return bulletEntity;
     }
-    tryTakeBullet(bullet) {
-        if (this._bullets.length === this._turret.bulletCapacity)
-            return false;
-        this._bullets.push(bullet);
-        return true;
+    incBulletQuantity(quantity) {
+        this._bulletQuantity = Math.min(this._bulletQuantity + quantity, this._turret.bulletCapacity);
+    }
+    takeNewBulletManufacturing(bulletManufacturing) {
+        this._bulletManufacturing = bulletManufacturing;
     }
     clockwiseMovement() {
-        this.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this._hullEntity.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
         this.calcDeltaCoordinates();
     }
     counterclockwiseMovement() {
-        this.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
+        this._hullEntity.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
         this.calcDeltaCoordinates();
     }
     moveForward() {
@@ -84,18 +124,6 @@ class Tank {
         for (const point of this._hullEntity.points) {
             point.x -= this._deltaX;
             point.y -= this._deltaY;
-        }
-    }
-    rotatePoints(angleRad) {
-        const centerX = (this._hullEntity.points[0].x + this._hullEntity.points[1].x) >> 1;
-        const centerY = (this._hullEntity.points[0].y + this._hullEntity.points[1].y) >> 1;
-        for (const point of this._hullEntity.points) {
-            const deltaX = point.x - centerX;
-            const deltaY = point.y - centerY;
-            const rotatedX = deltaX * Math.cos(angleRad) - deltaY * Math.sin(angleRad);
-            const rotatedY = deltaX * Math.sin(angleRad) + deltaY * Math.cos(angleRad);
-            point.x = rotatedX + centerX;
-            point.y = rotatedY + centerY;
         }
     }
     calcDeltaCoordinates() {
