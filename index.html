@@ -25,11 +25,12 @@
         window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
 
         let field = new Field(canvas, window.screen.width, window.screen.height);
-        let decorCreator = new DecorCreator(field);
-        let obstacleCreator = new ObstacleCreator(field);
-
-        decorCreator.fullFillBackground(MATERIAL[1]);
-        obstacleCreator.createObstacles(MATERIAL[2]);
+        let gameMaster = new GameMaster(field);
+        gameMaster.createField();
+        gameMaster.Tankkk = new TankSprite(
+            0, 0, 0, 0, 0, 0, 15, 20, field
+        );
+        onkeydown = function (keysPressed) {gameMaster.handleKeys(keysPressed)};
     </script>
 </body>
 </html>

@@ -41,12 +41,14 @@ abstract class Sprite {
     protected _y : number;
     protected _angle : number;
 
-    protected constructor(x: number, y: number, angle: number) {
+    protected constructor(x: number, y: number, angle: number, field: any) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
         this._sprite.style.left = `${x}px`;
-        this._sprite.style.bottom = `${y}px`;
+        this._sprite.style.top = `${y}px`;
         this._sprite.style.transform = `rotate(${angle}deg)`;
+
+        field.canvas.appendChild(this._sprite);
 
         this._x = x;
         this._y = y;
@@ -159,46 +161,54 @@ class Point {
 }
 
 class TrackSprite extends Sprite {
-    private static readonly WIDTH: number = 98;
-    private static readonly HEIGHT: number = 17;
     private readonly _srcState0: string;
     private readonly _srcState1: string;
-    public constructor(x0: number, y0: number, angle: number, num: number) {
-        super(x0, y0, angle);
+    private _state: number;
+    public constructor(x0: number, y0: number, angle: number, num: number, width: number, height: number, field: any) {
+        super(x0, y0, angle, field);
 
-        this._srcState0 = `src/img/tanks/Tracks/Track${num}_A.png`;
+        this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
-        this._sprite.style.src = this._srcState0;
-        this._sprite.style.width = `${TrackSprite.WIDTH}px`;
-        this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
+        this._state = 0;
+        this._sprite.src = this._srcState0;
+        this._sprite.style.width = `${width}px`;
+        this._sprite.style.height = `${height}px`;
     }
     public moveForward(deltaX: number, deltaY: number) {
         super.moveForward(deltaX, deltaY);
-        if (this._sprite.style.src === this._srcState0)
-            this._sprite.style.src = this._srcState1;
-        else
-            this._sprite.style.src = this._srcState0;
+        this.changeState();
     }
     public moveBackward(deltaX: number, deltaY: number) {
         super.moveBackward(deltaX, deltaY);
-        if (this._sprite.style.src === this._srcState0)
-            this._sprite.style.src = this._srcState1;
+        this.changeState();
+    }
+    public clockwiseMovement(angleSpeed: number) {
+        super.clockwiseMovement(angleSpeed);
+        this.changeState();
+    }
+    public counterclockwiseMovement(angleSpeed: number){
+        super.counterclockwiseMovement(angleSpeed);
+        this.changeState();
+    }
+    private changeState() {
+        this._state++; this._state %= 2;
+        if (this._state === 1)
+            this._sprite.src = this._srcState1;
         else
-            this._sprite.style.src = this._srcState0;
+            this._sprite.src = this._srcState0;
     }
 }
 
 class HullSprite extends Sprite {
-    private static readonly WIDTH: number = 98;
-    private static readonly HEIGHT: number = 17;
+    public static readonly WIDTH: number[] = [93, 100, 93, 79, 100, 100, 93, 86];
+    public static readonly HEIGHT: number[] = [64, 64, 50, 43, 71, 57, 50, 43];
     public get angle(): number { return this._angle };
-    public constructor(x0: number, y0: number, angle: number, color: string, num: number,
-                       width: number, height: number) {
-        super(x0, y0, angle);
+    public constructor(x0: number, y0: number, angle: number, color: number, num: number, field: any) {
+        super(x0, y0, angle, field);
 
-        this._sprite.style.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
-        this._sprite.style.width = `${width}px`;
-        this._sprite.style.height = `${height}px`;
+        this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._sprite.style.width = `${HullSprite.WIDTH[num]}px`;
+        this._sprite.style.height = `${HullSprite.HEIGHT[num]}px`;
     }
 }
 
@@ -220,7 +230,11 @@ class LightBulletManufacturing implements IBulletManufacturing{
 }
 
 class TankSprite {
-    private _trackSprite: TrackSprite;
+    private static readonly TRACK_INDENT: number = 2;
+    private static readonly PROPORTION_WIDTH_HEIGHT: number = 246 / 42;
+
+    private _trackSpriteL: TrackSprite;
+    private _trackSpriteR: TrackSprite;
     private _hullSprite: HullSprite;
     private _movementSpeed: number;
     private _angleSpeed: number;
@@ -228,32 +242,47 @@ class TankSprite {
     private _isDeltaChanged: boolean;
     private _deltaX: number;
     private _deltaY: number;
-    public constructor(trackSprite: TrackSprite, hullSprite: HullSprite,
-                       movementSpeed: number, angleSpeed: number) {
-        this._trackSprite = trackSprite;
-        this._hullSprite = hullSprite;
+    public constructor(x0: number, y0: number, angle: number,
+                       hullNum: number, hullColor: number, trackNum: number,
+                       movementSpeed: number, angleSpeed: number, field: any) {
+        const angleRad = angle * CONVERSION_TO_RADIANS;
+        const widthTrack = HullSprite.WIDTH[hullNum] + TankSprite.TRACK_INDENT;
+        const heightTrack = Math.round(widthTrack / TankSprite.PROPORTION_WIDTH_HEIGHT);
+        this._trackSpriteL = new TrackSprite(
+            x0 + (HullSprite.HEIGHT[hullNum] + TankSprite.TRACK_INDENT - heightTrack) * Math.sin(angleRad),
+            y0 + (HullSprite.HEIGHT[hullNum] + TankSprite.TRACK_INDENT - heightTrack) * Math.cos(angleRad),
+            angle, trackNum, widthTrack, heightTrack, field
+        );
+        this._trackSpriteR = new TrackSprite(
+            x0 + TankSprite.TRACK_INDENT * Math.sin(angleRad),
+            y0 + TankSprite.TRACK_INDENT * Math.cos(angleRad),
+            angle, trackNum, widthTrack, heightTrack, field
+        );
+        this._hullSprite = new HullSprite(x0, y0, angle, hullColor, hullNum, field);
         this._movementSpeed = movementSpeed;
         this._angleSpeed = angleSpeed;
         this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
     }
     public clockwiseMovement() {
         this._isDeltaChanged = true;
-        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
-        this._trackSprite.clockwiseMovement(angleRad);
-        this._hullSprite.clockwiseMovement(angleRad);
+        this._trackSpriteL.clockwiseMovement(this._angleSpeed);
+        this._trackSpriteR.clockwiseMovement(this._angleSpeed);
+        this._hullSprite.clockwiseMovement(this._angleSpeed);
     }
     public counterclockwiseMovement() {
         this._isDeltaChanged = true;
-        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
-        this._trackSprite.counterclockwiseMovement(angleRad);
-        this._hullSprite.counterclockwiseMovement(angleRad);
+        this._trackSpriteL.counterclockwiseMovement(this._angleSpeed);
+        this._trackSpriteR.counterclockwiseMovement(this._angleSpeed);
+        this._hullSprite.counterclockwiseMovement(this._angleSpeed);
     }
     public moveForward() {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
             this.calcDeltaCoordinates();
         }
-        this._trackSprite.moveForward(this._deltaX, this._deltaY);
+        this._trackSpriteL.moveForward(this._deltaX, this._deltaY);
+        this._trackSpriteR.moveForward(this._deltaX, this._deltaY);
         this._hullSprite.moveForward(this._deltaX, this._deltaY);
     }
     public moveBackward() {
@@ -261,7 +290,8 @@ class TankSprite {
             this._isDeltaChanged = false;
             this.calcDeltaCoordinates();
         }
-        this._trackSprite.moveBackward(this._deltaX, this._deltaY);
+        this._trackSpriteL.moveBackward(this._deltaX, this._deltaY);
+        this._trackSpriteR.moveBackward(this._deltaX, this._deltaY);
         this._hullSprite.moveBackward(this._deltaX, this._deltaY);
     }
     private calcDeltaCoordinates() {
@@ -403,16 +433,16 @@ class DecorCreator {
     public fullFillBackground(name: string)
     {
         for (let i: number = 0; i < this._field.width; i += CHUNK_SIZE)
-            for (let j: number = this._field.height; j > -CHUNK_SIZE; j -= CHUNK_SIZE)
+            for (let j: number = 0; j < this._field.height; j += CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
     }
-    private addBackgroundTile(x: number, y: number, name: string)
+    public addBackgroundTile(x: number, y: number, name: string)
     {
         const tile = document.createElement('img');
         tile.src = `src/img/backgrounds/${name}Background_${getRandomInt(0, 1)}.png`;
         tile.style.position = 'absolute';
         tile.style.left = `${x}px`;
-        tile.style.bottom = `${y}px`;
+        tile.style.top = `${y}px`;
         tile.style.width = `${CHUNK_SIZE}px`;
         tile.style.height = `${CHUNK_SIZE}px`;
         this._field.canvas.appendChild(tile);
@@ -461,12 +491,12 @@ class ObstacleCreator {
                 y, name);
         }
     }
-    private createRectHorObstacle(x: number, y: number, name: string) {
+    public createRectHorObstacle(x: number, y: number, name: string) {
         const obstacle = document.createElement('img');
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
@@ -474,13 +504,13 @@ class ObstacleCreator {
 
         this._field.canvas.appendChild(obstacle);
     }
-    private createRectVertObstacle(x: number, y: number, name: string) {
+    public createRectVertObstacle(x: number, y: number, name: string) {
         const angle: number = 90;
         const obstacle = document.createElement('img');
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}deg)`;
@@ -489,12 +519,12 @@ class ObstacleCreator {
 
         this._field.canvas.appendChild(obstacle);
     }
-    private createSquareObstacle(x: number, y: number, name: string) {
+    public createSquareObstacle(x: number, y: number, name: string) {
         const obstacle = document.createElement('img');
         obstacle.src = `src/img/blocks/${name}Square.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         this._field.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
@@ -509,97 +539,49 @@ function getRandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
 
-
-
-
-
-
-/*
-abstract class Tank {
-    private readonly _model : any;
-    private _x: number;
-    private _y: number;
-    private _angle: number;
-    protected abstract readonly _angleSpeed: number;
-    protected abstract readonly _moveSpeed: number;
-    protected constructor(model: any, x: number, y: number, angle: number) {
-        this._model = model;
-        this._x = x;
-        this._y = y;
-        this._angle = angle;
-
-        this.updatePosition();
-        this.updateAngle();
-    }
-    public moveForward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x += this._moveSpeed * Math.cos(radian);
-        this._y += this._moveSpeed * Math.sin(radian);
-
-        this.updatePosition();
+class GameMaster {
+    private _field: Field;
+    private _decorCreator: DecorCreator;
+    private _obstacleCreator: ObstacleCreator;
+    private _tanks: [Tank, TankSprite][];
+    public constructor(field: Field) {
+        this._field = field;
+        this._decorCreator = new DecorCreator(field);
+        this._obstacleCreator = new ObstacleCreator(field);
     }
 
-    public moveBackward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x -= this._moveSpeed * Math.cos(radian);
-        this._y -= this._moveSpeed * Math.sin(radian);
-
-        this.updatePosition();
+    public createField() {
+        this._decorCreator.fullFillBackground(MATERIAL[1]);
+        this._obstacleCreator.createObstacles(MATERIAL[2]);
     }
 
-    private updatePosition() {
-        this._model.style.left = `${this._x}px`;
-        this._model.style.top = `${this._y}px`;
+    public SetPlayers(tanks: [Tank, TankSprite][]) {
+        this._tanks = tanks;
     }
 
-    private updateAngle() {
-        this._model.style.transform = `rotate(${this._angle}deg)`;
+    public finishGame() {
+        this._field.canvas.innerHTML = '';
+        this._tanks = null;
     }
 
-    public get x(): number { return this._x }
-    public get y(): number { return this._y }
-
-    public clockwiseMovement() {
-        this._angle += this._angleSpeed;
-        this.updateAngle();
-    }
-    public counterclockwiseMovement(){
-        this._angle -= this._angleSpeed;
-        this.updateAngle();
+    // КРИВУЛЬКА
+    public Tankkk: TankSprite;
+    public handleKeys(keysPressed: any) {
+        let keyCode = keysPressed.keyCode;
+        switch (keyCode) {
+            case VK_W:
+                this.Tankkk.moveForward();
+                break;
+            case VK_S:
+                this.Tankkk.moveBackward();
+                break;
+            case VK_D:
+                this.Tankkk.clockwiseMovement();
+                break;
+            case VK_A:
+                this.Tankkk.counterclockwiseMovement();
+                break;
+        }
     }
 }
-class DefaultTank extends Tank {
-    protected readonly _moveSpeed: number;
-    protected readonly _angleSpeed: number;
-    constructor(model: any, x: number, y: number, angle: number) {
-        super(model, x, y, angle);
-        this._moveSpeed = 5;
-        this._angleSpeed = 5;
-    }
-}
-
-
-// Кривулька
-let defTank : DefaultTank = null;
-function createTank(tank: any) {
-    defTank = new DefaultTank(tank, 20, 20, 0)
-}
-function handleKeys(keysPressed: any) {
-    let keyCode = keysPressed.keyCode;
-    switch (keyCode) {
-        case VK_W:
-            defTank.moveForward();
-            break;
-        case VK_S:
-            defTank.moveBackward();
-            break;
-        case VK_D:
-            defTank.clockwiseMovement();
-            break;
-        case VK_A:
-            defTank.counterclockwiseMovement();
-            break;
-    }
-}
- */
 

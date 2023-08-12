@@ -7,12 +7,13 @@ const CONVERSION_TO_RADIANS = Math.PI / 180;
 const CHUNK_SIZE = 115;
 const MATERIAL = ['Grass', 'Ground', 'Sandstone'];
 class Sprite {
-    constructor(x, y, angle) {
+    constructor(x, y, angle, field) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
         this._sprite.style.left = `${x}px`;
-        this._sprite.style.bottom = `${y}px`;
+        this._sprite.style.top = `${y}px`;
         this._sprite.style.transform = `rotate(${angle}deg)`;
+        field.canvas.appendChild(this._sprite);
         this._x = x;
         this._y = y;
         this._angle = angle;
@@ -101,43 +102,52 @@ class Point {
     }
 }
 class TrackSprite extends Sprite {
-    constructor(x0, y0, angle, num) {
-        super(x0, y0, angle);
-        this._srcState0 = `src/img/tanks/Tracks/Track${num}_A.png`;
+    constructor(x0, y0, angle, num, width, height, field) {
+        super(x0, y0, angle, field);
+        this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
-        this._sprite.style.src = this._srcState0;
-        this._sprite.style.width = `${TrackSprite.WIDTH}px`;
-        this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
-    }
-    moveForward(deltaX, deltaY) {
-        super.moveForward(deltaX, deltaY);
-        if (this._sprite.style.src === this._srcState0)
-            this._sprite.style.src = this._srcState1;
-        else
-            this._sprite.style.src = this._srcState0;
-    }
-    moveBackward(deltaX, deltaY) {
-        super.moveBackward(deltaX, deltaY);
-        if (this._sprite.style.src === this._srcState0)
-            this._sprite.style.src = this._srcState1;
-        else
-            this._sprite.style.src = this._srcState0;
-    }
-}
-TrackSprite.WIDTH = 98;
-TrackSprite.HEIGHT = 17;
-class HullSprite extends Sprite {
-    get angle() { return this._angle; }
-    ;
-    constructor(x0, y0, angle, color, num, width, height) {
-        super(x0, y0, angle);
-        this._sprite.style.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._state = 0;
+        this._sprite.src = this._srcState0;
         this._sprite.style.width = `${width}px`;
         this._sprite.style.height = `${height}px`;
     }
+    moveForward(deltaX, deltaY) {
+        super.moveForward(deltaX, deltaY);
+        this.changeState();
+    }
+    moveBackward(deltaX, deltaY) {
+        super.moveBackward(deltaX, deltaY);
+        this.changeState();
+    }
+    clockwiseMovement(angleSpeed) {
+        super.clockwiseMovement(angleSpeed);
+        this.changeState();
+    }
+    counterclockwiseMovement(angleSpeed) {
+        super.counterclockwiseMovement(angleSpeed);
+        this.changeState();
+    }
+    changeState() {
+        this._state++;
+        this._state %= 2;
+        if (this._state === 1)
+            this._sprite.src = this._srcState1;
+        else
+            this._sprite.src = this._srcState0;
+    }
 }
-HullSprite.WIDTH = 98;
-HullSprite.HEIGHT = 17;
+class HullSprite extends Sprite {
+    get angle() { return this._angle; }
+    ;
+    constructor(x0, y0, angle, color, num, field) {
+        super(x0, y0, angle, field);
+        this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._sprite.style.width = `${HullSprite.WIDTH[num]}px`;
+        this._sprite.style.height = `${HullSprite.HEIGHT[num]}px`;
+    }
+}
+HullSprite.WIDTH = [93, 100, 93, 79, 100, 100, 93, 86];
+HullSprite.HEIGHT = [64, 64, 50, 43, 71, 57, 50, 43];
 class LightBullet extends BulletEntity {
     constructor(x0, y0, angle) {
         super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle);
@@ -154,31 +164,37 @@ class LightBulletManufacturing {
     }
 }
 class TankSprite {
-    constructor(trackSprite, hullSprite, movementSpeed, angleSpeed) {
-        this._trackSprite = trackSprite;
-        this._hullSprite = hullSprite;
+    constructor(x0, y0, angle, hullNum, hullColor, trackNum, movementSpeed, angleSpeed, field) {
+        const angleRad = angle * CONVERSION_TO_RADIANS;
+        const widthTrack = HullSprite.WIDTH[hullNum] + TankSprite.TRACK_INDENT;
+        const heightTrack = Math.round(widthTrack / TankSprite.PROPORTION_WIDTH_HEIGHT);
+        this._trackSpriteL = new TrackSprite(x0 + (HullSprite.HEIGHT[hullNum] + TankSprite.TRACK_INDENT - heightTrack) * Math.sin(angleRad), y0 + (HullSprite.HEIGHT[hullNum] + TankSprite.TRACK_INDENT - heightTrack) * Math.cos(angleRad), angle, trackNum, widthTrack, heightTrack, field);
+        this._trackSpriteR = new TrackSprite(x0 + TankSprite.TRACK_INDENT * Math.sin(angleRad), y0 + TankSprite.TRACK_INDENT * Math.cos(angleRad), angle, trackNum, widthTrack, heightTrack, field);
+        this._hullSprite = new HullSprite(x0, y0, angle, hullColor, hullNum, field);
         this._movementSpeed = movementSpeed;
         this._angleSpeed = angleSpeed;
         this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
     }
     clockwiseMovement() {
         this._isDeltaChanged = true;
-        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
-        this._trackSprite.clockwiseMovement(angleRad);
-        this._hullSprite.clockwiseMovement(angleRad);
+        this._trackSpriteL.clockwiseMovement(this._angleSpeed);
+        this._trackSpriteR.clockwiseMovement(this._angleSpeed);
+        this._hullSprite.clockwiseMovement(this._angleSpeed);
     }
     counterclockwiseMovement() {
         this._isDeltaChanged = true;
-        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
-        this._trackSprite.counterclockwiseMovement(angleRad);
-        this._hullSprite.counterclockwiseMovement(angleRad);
+        this._trackSpriteL.counterclockwiseMovement(this._angleSpeed);
+        this._trackSpriteR.counterclockwiseMovement(this._angleSpeed);
+        this._hullSprite.counterclockwiseMovement(this._angleSpeed);
     }
     moveForward() {
         if (this._isDeltaChanged) {
             this._isDeltaChanged = false;
             this.calcDeltaCoordinates();
         }
-        this._trackSprite.moveForward(this._deltaX, this._deltaY);
+        this._trackSpriteL.moveForward(this._deltaX, this._deltaY);
+        this._trackSpriteR.moveForward(this._deltaX, this._deltaY);
         this._hullSprite.moveForward(this._deltaX, this._deltaY);
     }
     moveBackward() {
@@ -186,7 +202,8 @@ class TankSprite {
             this._isDeltaChanged = false;
             this.calcDeltaCoordinates();
         }
-        this._trackSprite.moveBackward(this._deltaX, this._deltaY);
+        this._trackSpriteL.moveBackward(this._deltaX, this._deltaY);
+        this._trackSpriteR.moveBackward(this._deltaX, this._deltaY);
         this._hullSprite.moveBackward(this._deltaX, this._deltaY);
     }
     calcDeltaCoordinates() {
@@ -195,6 +212,8 @@ class TankSprite {
         this._deltaY = this._movementSpeed * Math.sin(angleRad);
     }
 }
+TankSprite.TRACK_INDENT = 2;
+TankSprite.PROPORTION_WIDTH_HEIGHT = 246 / 42;
 class Tank {
     constructor(track, turret, weapon, hullEntity) {
         this._track = track;
@@ -299,7 +318,7 @@ class DecorCreator {
     }
     fullFillBackground(name) {
         for (let i = 0; i < this._field.width; i += CHUNK_SIZE)
-            for (let j = this._field.height; j > -CHUNK_SIZE; j -= CHUNK_SIZE)
+            for (let j = 0; j < this._field.height; j += CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
     }
     addBackgroundTile(x, y, name) {
@@ -307,7 +326,7 @@ class DecorCreator {
         tile.src = `src/img/backgrounds/${name}Background_${getRandomInt(0, 1)}.png`;
         tile.style.position = 'absolute';
         tile.style.left = `${x}px`;
-        tile.style.bottom = `${y}px`;
+        tile.style.top = `${y}px`;
         tile.style.width = `${CHUNK_SIZE}px`;
         tile.style.height = `${CHUNK_SIZE}px`;
         this._field.canvas.appendChild(tile);
@@ -349,7 +368,7 @@ class ObstacleCreator {
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, 0));
@@ -361,7 +380,7 @@ class ObstacleCreator {
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}deg)`;
@@ -373,7 +392,7 @@ class ObstacleCreator {
         obstacle.src = `src/img/blocks/${name}Square.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
-        obstacle.style.bottom = `${y}px`;
+        obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         this._field.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE, ObstacleCreator.SQUARE_WALL_SIZE, 0));
@@ -386,4 +405,39 @@ ObstacleCreator.RECT_WALL_HEIGHT = 50;
 ObstacleCreator.SQUARE_WALL_SIZE = ObstacleCreator.RECT_WALL_HEIGHT;
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max + 1 - min)) + min;
+}
+class GameMaster {
+    constructor(field) {
+        this._field = field;
+        this._decorCreator = new DecorCreator(field);
+        this._obstacleCreator = new ObstacleCreator(field);
+    }
+    createField() {
+        this._decorCreator.fullFillBackground(MATERIAL[1]);
+        this._obstacleCreator.createObstacles(MATERIAL[2]);
+    }
+    SetPlayers(tanks) {
+        this._tanks = tanks;
+    }
+    finishGame() {
+        this._field.canvas.innerHTML = '';
+        this._tanks = null;
+    }
+    handleKeys(keysPressed) {
+        let keyCode = keysPressed.keyCode;
+        switch (keyCode) {
+            case VK_W:
+                this.Tankkk.moveForward();
+                break;
+            case VK_S:
+                this.Tankkk.moveBackward();
+                break;
+            case VK_D:
+                this.Tankkk.clockwiseMovement();
+                break;
+            case VK_A:
+                this.Tankkk.counterclockwiseMovement();
+                break;
+        }
+    }
 }
