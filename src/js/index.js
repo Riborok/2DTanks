@@ -150,7 +150,12 @@ class Tank {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._weapon.reloadSpeed)
             return null;
-        let bulletEntity = this._bulletManufacturing.create(this._weapon.xShot, this._weapon.yShot, this._turret.angle);
+        const angleRad = this._turret.angle * CONVERSION_TO_RADIANS;
+        const xStart = ((this._hullEntity.points[0].x + this._hullEntity.points[3].x) >> 1) +
+            this._weapon.barrelLength * Math.cos(angleRad);
+        const yStart = ((this._hullEntity.points[0].y + this._hullEntity.points[3].y) >> 1) +
+            this._weapon.barrelLength * Math.sin(angleRad);
+        const bulletEntity = this._bulletManufacturing.create(xStart, yStart, this._turret.angle);
         bulletEntity.launchFromWeapon(this._weapon);
         this._lastTimeShot = dateNow;
         this._bulletQuantity--;
