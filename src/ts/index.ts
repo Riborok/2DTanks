@@ -41,10 +41,6 @@ abstract class Sprite {
     protected _y : number;
     protected _angle : number;
 
-    protected _deltaX: number;
-    protected _deltaY: number;
-    protected _isDeltaChanged: boolean;
-
     protected constructor(x: number, y: number, angle: number) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
@@ -55,40 +51,26 @@ abstract class Sprite {
         this._x = x;
         this._y = y;
         this._angle = angle;
-
-        this._isDeltaChanged = true;
     }
 
-    public moveForward(movementSpeed: number) {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates(movementSpeed);
-        }
-
-        this._x += this._deltaX;
-        this._y += this._deltaY;
+    public moveForward(deltaX: number, deltaY: number) {
+        this._x += deltaX;
+        this._y += deltaY;
 
         this.updatePosition();
     }
 
-    public moveBackward(movementSpeed: number) {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates(movementSpeed);
-        }
-
-        this._x -= this._deltaX;
-        this._y -= this._deltaY;
+    public moveBackward(deltaX: number, deltaY: number) {
+        this._x -= deltaX;
+        this._y -= deltaY;
 
         this.updatePosition();
     }
     public clockwiseMovement(angleSpeed: number) {
-        this._isDeltaChanged = true;
         this._angle += angleSpeed;
         this.updateAngle();
     }
     public counterclockwiseMovement(angleSpeed: number){
-        this._isDeltaChanged = true;
         this._angle -= angleSpeed;
         this.updateAngle();
     }
@@ -99,11 +81,6 @@ abstract class Sprite {
     }
     private updateAngle() {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
-    }
-    private calcDeltaCoordinates(movementSpeed: number) {
-        const angleRad = this._angle * CONVERSION_TO_RADIANS;
-        this._deltaX = movementSpeed * Math.cos(angleRad);
-        this._deltaY = movementSpeed * Math.sin(angleRad);
     }
 }
 
@@ -195,15 +172,15 @@ class TrackSprite extends Sprite {
         this._sprite.style.width = `${TrackSprite.WIDTH}px`;
         this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
     }
-    public moveForward(movementSpeed: number) {
-        super.moveForward(movementSpeed);
+    public moveForward(deltaX: number, deltaY: number) {
+        super.moveForward(deltaX, deltaY);
         if (this._sprite.style.src === this._srcState0)
             this._sprite.style.src = this._srcState1;
         else
             this._sprite.style.src = this._srcState0;
     }
-    public moveBackward(movementSpeed: number) {
-        super.moveBackward(movementSpeed);
+    public moveBackward(deltaX: number, deltaY: number) {
+        super.moveBackward(deltaX, deltaY);
         if (this._sprite.style.src === this._srcState0)
             this._sprite.style.src = this._srcState1;
         else
@@ -214,6 +191,7 @@ class TrackSprite extends Sprite {
 class HullSprite extends Sprite {
     private static readonly WIDTH: number = 98;
     private static readonly HEIGHT: number = 17;
+    public get angle(): number { return this._angle };
     public constructor(x0: number, y0: number, angle: number, color: string, num: number,
                        width: number, height: number) {
         super(x0, y0, angle);
@@ -238,6 +216,58 @@ class LightBullet extends BulletEntity {
 class LightBulletManufacturing implements IBulletManufacturing{
     public create(x0: number, y0: number, angle: number): BulletEntity {
         return new LightBullet(x0, y0, angle);
+    }
+}
+
+class TankSprite {
+    private _trackSprite: TrackSprite;
+    private _hullSprite: HullSprite;
+    private _movementSpeed: number;
+    private _angleSpeed: number;
+
+    private _isDeltaChanged: boolean;
+    private _deltaX: number;
+    private _deltaY: number;
+    public constructor(trackSprite: TrackSprite, hullSprite: HullSprite,
+                       movementSpeed: number, angleSpeed: number) {
+        this._trackSprite = trackSprite;
+        this._hullSprite = hullSprite;
+        this._movementSpeed = movementSpeed;
+        this._angleSpeed = angleSpeed;
+        this._isDeltaChanged = false;
+    }
+    public clockwiseMovement() {
+        this._isDeltaChanged = true;
+        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
+        this._trackSprite.clockwiseMovement(angleRad);
+        this._hullSprite.clockwiseMovement(angleRad);
+    }
+    public counterclockwiseMovement() {
+        this._isDeltaChanged = true;
+        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
+        this._trackSprite.counterclockwiseMovement(angleRad);
+        this._hullSprite.counterclockwiseMovement(angleRad);
+    }
+    public moveForward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._trackSprite.moveForward(this._deltaX, this._deltaY);
+        this._hullSprite.moveForward(this._deltaX, this._deltaY);
+    }
+    public moveBackward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._trackSprite.moveBackward(this._deltaX, this._deltaY);
+        this._hullSprite.moveBackward(this._deltaX, this._deltaY);
+    }
+    private calcDeltaCoordinates() {
+        const angleRad = this._hullSprite.angle * CONVERSION_TO_RADIANS;
+        this._deltaX = this._movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._movementSpeed * Math.sin(angleRad);
     }
 }
 

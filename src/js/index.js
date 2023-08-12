@@ -16,33 +16,22 @@ class Sprite {
         this._x = x;
         this._y = y;
         this._angle = angle;
-        this._isDeltaChanged = true;
     }
-    moveForward(movementSpeed) {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates(movementSpeed);
-        }
-        this._x += this._deltaX;
-        this._y += this._deltaY;
+    moveForward(deltaX, deltaY) {
+        this._x += deltaX;
+        this._y += deltaY;
         this.updatePosition();
     }
-    moveBackward(movementSpeed) {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates(movementSpeed);
-        }
-        this._x -= this._deltaX;
-        this._y -= this._deltaY;
+    moveBackward(deltaX, deltaY) {
+        this._x -= deltaX;
+        this._y -= deltaY;
         this.updatePosition();
     }
     clockwiseMovement(angleSpeed) {
-        this._isDeltaChanged = true;
         this._angle += angleSpeed;
         this.updateAngle();
     }
     counterclockwiseMovement(angleSpeed) {
-        this._isDeltaChanged = true;
         this._angle -= angleSpeed;
         this.updateAngle();
     }
@@ -52,11 +41,6 @@ class Sprite {
     }
     updateAngle() {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
-    }
-    calcDeltaCoordinates(movementSpeed) {
-        const angleRad = this._angle * CONVERSION_TO_RADIANS;
-        this._deltaX = movementSpeed * Math.cos(angleRad);
-        this._deltaY = movementSpeed * Math.sin(angleRad);
     }
 }
 class RectangularEntity {
@@ -125,15 +109,15 @@ class TrackSprite extends Sprite {
         this._sprite.style.width = `${TrackSprite.WIDTH}px`;
         this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
     }
-    moveForward(movementSpeed) {
-        super.moveForward(movementSpeed);
+    moveForward(deltaX, deltaY) {
+        super.moveForward(deltaX, deltaY);
         if (this._sprite.style.src === this._srcState0)
             this._sprite.style.src = this._srcState1;
         else
             this._sprite.style.src = this._srcState0;
     }
-    moveBackward(movementSpeed) {
-        super.moveBackward(movementSpeed);
+    moveBackward(deltaX, deltaY) {
+        super.moveBackward(deltaX, deltaY);
         if (this._sprite.style.src === this._srcState0)
             this._sprite.style.src = this._srcState1;
         else
@@ -143,6 +127,8 @@ class TrackSprite extends Sprite {
 TrackSprite.WIDTH = 98;
 TrackSprite.HEIGHT = 17;
 class HullSprite extends Sprite {
+    get angle() { return this._angle; }
+    ;
     constructor(x0, y0, angle, color, num, width, height) {
         super(x0, y0, angle);
         this._sprite.style.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
@@ -165,6 +151,48 @@ LightBullet.HEIGHT = 45;
 class LightBulletManufacturing {
     create(x0, y0, angle) {
         return new LightBullet(x0, y0, angle);
+    }
+}
+class TankSprite {
+    constructor(trackSprite, hullSprite, movementSpeed, angleSpeed) {
+        this._trackSprite = trackSprite;
+        this._hullSprite = hullSprite;
+        this._movementSpeed = movementSpeed;
+        this._angleSpeed = angleSpeed;
+        this._isDeltaChanged = false;
+    }
+    clockwiseMovement() {
+        this._isDeltaChanged = true;
+        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
+        this._trackSprite.clockwiseMovement(angleRad);
+        this._hullSprite.clockwiseMovement(angleRad);
+    }
+    counterclockwiseMovement() {
+        this._isDeltaChanged = true;
+        const angleRad = this._angleSpeed * CONVERSION_TO_RADIANS;
+        this._trackSprite.counterclockwiseMovement(angleRad);
+        this._hullSprite.counterclockwiseMovement(angleRad);
+    }
+    moveForward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._trackSprite.moveForward(this._deltaX, this._deltaY);
+        this._hullSprite.moveForward(this._deltaX, this._deltaY);
+    }
+    moveBackward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._trackSprite.moveBackward(this._deltaX, this._deltaY);
+        this._hullSprite.moveBackward(this._deltaX, this._deltaY);
+    }
+    calcDeltaCoordinates() {
+        const angleRad = this._hullSprite.angle * CONVERSION_TO_RADIANS;
+        this._deltaX = this._movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._movementSpeed * Math.sin(angleRad);
     }
 }
 class Tank {
