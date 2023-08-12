@@ -88,6 +88,8 @@ class Tank {
         this._turret = turret;
         this._weapon = weapon;
         this._hullEntity = hullEntity;
+        this.calcDeltaCoordinates();
+        this._bulletQuantity = 0;
         this._lastTimeShot = Date.now();
         this._bulletManufacturing = new LightBulletManufacturing();
     }
@@ -98,6 +100,7 @@ class Tank {
         let bulletEntity = this._bulletManufacturing.create(this._weapon.xShot, this._weapon.yShot, this._turret.angle);
         bulletEntity.launchFromWeapon(this._weapon);
         this._lastTimeShot = dateNow;
+        this._bulletQuantity--;
         return bulletEntity;
     }
     incBulletQuantity(quantity) {

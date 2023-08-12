@@ -140,21 +140,24 @@ class Tank {
     private _turret: ITurret;
     private _weapon: IWeapon;
     private _hullEntity: HullEntity;
+
+    private _deltaX: number;
+    private _deltaY: number;
+    private _bulletQuantity: number;
+    private _lastTimeShot: number;
+    private _bulletManufacturing: IBulletManufacturing;
     public constructor(track: ITrack, turret: ITurret, weapon: IWeapon, hullEntity: HullEntity) {
         this._track = track;
         this._turret = turret;
         this._weapon = weapon;
         this._hullEntity = hullEntity;
+
+        this.calcDeltaCoordinates();
+        this._bulletQuantity = 0;
         this._lastTimeShot = Date.now();
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
-
-    private _deltaX: number;
-    private _deltaY: number;
-    private _bulletQuantity: number;
-    private _bulletManufacturing: IBulletManufacturing;
-    private _lastTimeShot: number;
 
     public shot(): BulletEntity {
         const dateNow = Date.now();
@@ -165,6 +168,7 @@ class Tank {
             this._weapon.yShot, this._turret.angle);
         bulletEntity.launchFromWeapon(this._weapon);
         this._lastTimeShot = dateNow;
+        this._bulletQuantity--;
 
         return bulletEntity;
     }
