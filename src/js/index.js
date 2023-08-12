@@ -8,16 +8,12 @@ const CHUNK_SIZE = 115;
 const MATERIAL = ['Grass', 'Ground', 'Sandstone'];
 class RectangularEntity {
     constructor(x0, y0, width, height, angle) {
-        const angleRad = angle * CONVERSION_TO_RADIANS;
-        const widthCos = width * Math.cos(angleRad);
-        const widthSin = width * Math.sin(angleRad);
-        const heightCos = height * Math.cos(angleRad);
-        const heightSin = height * Math.sin(angleRad);
-        const firstPoint = new Point(x0, y0);
-        const secondPoint = new Point(x0 + widthCos, y0 + widthSin);
-        const thirdPoint = new Point(x0 + heightSin, y0 + heightCos);
-        const fourthPoint = new Point(thirdPoint.x + widthCos, thirdPoint.y + widthSin);
-        this._points = [firstPoint, secondPoint, thirdPoint, fourthPoint];
+        this._points = [new Point(x0, y0),
+            new Point(x0 + width, y0),
+            new Point(x0, y0 + height),
+            new Point(x0 + width, y0 + height)];
+        if (angle != 0)
+            this.rotatePoints(-angle * CONVERSION_TO_RADIANS);
     }
     get points() { return this._points; }
     calcAngleRad() {
@@ -238,8 +234,7 @@ class ObstacleCreator {
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}deg)`;
-        this._field.addObject(new Wall(x + (ObstacleCreator.RECT_WALL_WIDTH >> 1) -
-            (ObstacleCreator.RECT_WALL_HEIGHT >> 1), y - (ObstacleCreator.RECT_WALL_WIDTH >> 1) + (ObstacleCreator.RECT_WALL_HEIGHT >> 1), ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, angle));
+        this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT, angle));
         this._field.canvas.appendChild(obstacle);
     }
     createSquareObstacle(x, y, name) {
