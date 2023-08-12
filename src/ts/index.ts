@@ -243,7 +243,7 @@ class DecorCreator {
     public fullFillBackground(name: string)
     {
         for (let i: number = 0; i < this._field.width; i += CHUNK_SIZE)
-            for (let j: number = 0; j < this._field.height; j += CHUNK_SIZE)
+            for (let j: number = this._field.height; j > -CHUNK_SIZE; j -= CHUNK_SIZE)
                 this.addBackgroundTile(i, j, name);
     }
     private addBackgroundTile(x: number, y: number, name: string)

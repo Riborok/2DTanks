@@ -21,15 +21,15 @@
 
     <script src="src/js/index.js"></script>
     <script>
+        // ДЛЯ ОТЛАД0ЧКИ :)
+        window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
+
         let field = new Field(canvas, window.screen.width, window.screen.height);
         let decorCreator = new DecorCreator(field);
         let obstacleCreator = new ObstacleCreator(field);
 
-        decorCreator.fullFillBackground(MATERIAL[2]);
+        decorCreator.fullFillBackground(MATERIAL[1]);
         obstacleCreator.createObstacles(MATERIAL[2]);
-
-        // ДЛЯ ОТЛАД0ЧКИ :)
-        window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
     </script>
 </body>
 </html>
