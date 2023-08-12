@@ -181,15 +181,45 @@ class Point {
     }
 }
 
+class TrackSprite extends Sprite {
+    private static readonly WIDTH: number = 98;
+    private static readonly HEIGHT: number = 17;
+    private readonly _srcState0: string;
+    private readonly _srcState1: string;
+    public constructor(x0: number, y0: number, angle: number, num: number) {
+        super(x0, y0, angle);
+
+        this._srcState0 = `src/img/tanks/Tracks/Track${num}_A.png`;
+        this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
+        this._sprite.style.src = this._srcState0;
+        this._sprite.style.width = `${TrackSprite.WIDTH}px`;
+        this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
+    }
+    public moveForward(movementSpeed: number) {
+        super.moveForward(movementSpeed);
+        if (this._sprite.style.src === this._srcState0)
+            this._sprite.style.src = this._srcState1;
+        else
+            this._sprite.style.src = this._srcState0;
+    }
+    public moveBackward(movementSpeed: number) {
+        super.moveBackward(movementSpeed);
+        if (this._sprite.style.src === this._srcState0)
+            this._sprite.style.src = this._srcState1;
+        else
+            this._sprite.style.src = this._srcState0;
+    }
+}
+
 class LightBullet extends BulletEntity {
-    public static readonly width: number = 20;
-    public static readonly height: number = 45;
+    public static readonly WIDTH: number = 20;
+    public static readonly HEIGHT: number = 45;
 
     protected _armorPenetration: number = 5;
     protected _damage: number = 15;
     protected _movementSpeed: number = 50;
     public constructor(x0: number, y0: number, angle: number) {
-        super(x0, y0, LightBullet.width, LightBullet.height, angle);
+        super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle);
     }
 }
 class LightBulletManufacturing implements IBulletManufacturing{

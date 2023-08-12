@@ -116,16 +116,42 @@ class Point {
         this.y = y;
     }
 }
+class TrackSprite extends Sprite {
+    constructor(x0, y0, angle, num) {
+        super(x0, y0, angle);
+        this._srcState0 = `src/img/tanks/Tracks/Track${num}_A.png`;
+        this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
+        this._sprite.style.src = this._srcState0;
+        this._sprite.style.width = `${TrackSprite.WIDTH}px`;
+        this._sprite.style.height = `${TrackSprite.HEIGHT}px`;
+    }
+    moveForward(movementSpeed) {
+        super.moveForward(movementSpeed);
+        if (this._sprite.style.src === this._srcState0)
+            this._sprite.style.src = this._srcState1;
+        else
+            this._sprite.style.src = this._srcState0;
+    }
+    moveBackward(movementSpeed) {
+        super.moveBackward(movementSpeed);
+        if (this._sprite.style.src === this._srcState0)
+            this._sprite.style.src = this._srcState1;
+        else
+            this._sprite.style.src = this._srcState0;
+    }
+}
+TrackSprite.WIDTH = 98;
+TrackSprite.HEIGHT = 17;
 class LightBullet extends BulletEntity {
     constructor(x0, y0, angle) {
-        super(x0, y0, LightBullet.width, LightBullet.height, angle);
+        super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle);
         this._armorPenetration = 5;
         this._damage = 15;
         this._movementSpeed = 50;
     }
 }
-LightBullet.width = 20;
-LightBullet.height = 45;
+LightBullet.WIDTH = 20;
+LightBullet.HEIGHT = 45;
 class LightBulletManufacturing {
     create(x0, y0, angle) {
         return new LightBullet(x0, y0, angle);
