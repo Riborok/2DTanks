@@ -44,6 +44,10 @@ abstract class Sprite {
     protected _movementSpeed: number;
     protected _angleSpeed: number;
 
+    protected _deltaX: number;
+    protected _deltaY: number;
+    protected _isDeltaChanged: boolean;
+
     protected constructor(x: number, y: number, angle: number, movementSpeed: number, angleSpeed: number) {
         this._sprite = document.createElement('img');
         this._sprite.style.position = 'absolute';
@@ -56,20 +60,31 @@ abstract class Sprite {
         this._angle = angle;
         this._movementSpeed = movementSpeed;
         this._angleSpeed = angleSpeed;
+
+        this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
     }
 
     public moveForward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x += this._movementSpeed * Math.cos(radian);
-        this._y += this._movementSpeed * Math.sin(radian);
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+
+        this._x += this._deltaX;
+        this._y += this._deltaY;
 
         this.updatePosition();
     }
 
     public moveBackward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x -= this._movementSpeed * Math.cos(radian);
-        this._y -= this._movementSpeed * Math.sin(radian);
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+
+        this._x -= this._deltaX;
+        this._y -= this._deltaY;
 
         this.updatePosition();
     }
@@ -78,18 +93,25 @@ abstract class Sprite {
         this._sprite.style.left = `${this._x}px`;
         this._sprite.style.top = `${this._y}px`;
     }
-
     private updateAngle() {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
     }
 
     public clockwiseMovement() {
+        this._isDeltaChanged = true;
         this._angle += this._angleSpeed;
         this.updateAngle();
     }
     public counterclockwiseMovement(){
+        this._isDeltaChanged = true;
         this._angle -= this._angleSpeed;
         this.updateAngle();
+    }
+
+    private calcDeltaCoordinates() {
+        const angleRad = this._angle * CONVERSION_TO_RADIANS;
+        this._deltaX = this._movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._movementSpeed * Math.sin(angleRad);
     }
 }
 
@@ -190,6 +212,7 @@ class Tank {
     private _weapon: IWeapon;
     private _hullEntity: HullEntity;
 
+    private _isDeltaChanged: boolean;
     private _deltaX: number;
     private _deltaY: number;
     private _bulletQuantity: number;
@@ -201,8 +224,9 @@ class Tank {
         this._weapon = weapon;
         this._hullEntity = hullEntity;
 
-        this.calcDeltaCoordinates();
         this._bulletQuantity = 0;
+        this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
         this._lastTimeShot = Date.now();
 
         this._bulletManufacturing = new LightBulletManufacturing();
@@ -228,20 +252,30 @@ class Tank {
         this._bulletManufacturing = bulletManufacturing;
     }
     public clockwiseMovement() {
+        this._isDeltaChanged = true;
         this._hullEntity.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
-        this.calcDeltaCoordinates();
     }
     public counterclockwiseMovement() {
+        this._isDeltaChanged = true;
         this._hullEntity.rotatePoints(- this._track.angleSpeed * CONVERSION_TO_RADIANS);
-        this.calcDeltaCoordinates();
     }
     public moveForward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+
         for (const point of this._hullEntity.points) {
             point.x += this._deltaX;
             point.y += this._deltaY;
         }
     }
     public moveBackward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+
         for (const point of this._hullEntity.points) {
             point.x -= this._deltaX;
             point.y -= this._deltaY;

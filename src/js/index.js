@@ -18,17 +18,25 @@ class Sprite {
         this._angle = angle;
         this._movementSpeed = movementSpeed;
         this._angleSpeed = angleSpeed;
+        this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
     }
     moveForward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x += this._movementSpeed * Math.cos(radian);
-        this._y += this._movementSpeed * Math.sin(radian);
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._x += this._deltaX;
+        this._y += this._deltaY;
         this.updatePosition();
     }
     moveBackward() {
-        const radian = this._angle * CONVERSION_TO_RADIANS;
-        this._x -= this._movementSpeed * Math.cos(radian);
-        this._y -= this._movementSpeed * Math.sin(radian);
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
+        this._x -= this._deltaX;
+        this._y -= this._deltaY;
         this.updatePosition();
     }
     updatePosition() {
@@ -39,12 +47,19 @@ class Sprite {
         this._sprite.style.transform = `rotate(${this._angle}deg)`;
     }
     clockwiseMovement() {
+        this._isDeltaChanged = true;
         this._angle += this._angleSpeed;
         this.updateAngle();
     }
     counterclockwiseMovement() {
+        this._isDeltaChanged = true;
         this._angle -= this._angleSpeed;
         this.updateAngle();
+    }
+    calcDeltaCoordinates() {
+        const angleRad = this._angle * CONVERSION_TO_RADIANS;
+        this._deltaX = this._movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._movementSpeed * Math.sin(angleRad);
     }
 }
 class RectangularEntity {
@@ -125,8 +140,9 @@ class Tank {
         this._turret = turret;
         this._weapon = weapon;
         this._hullEntity = hullEntity;
-        this.calcDeltaCoordinates();
         this._bulletQuantity = 0;
+        this._isDeltaChanged = false;
+        this.calcDeltaCoordinates();
         this._lastTimeShot = Date.now();
         this._bulletManufacturing = new LightBulletManufacturing();
     }
@@ -147,20 +163,28 @@ class Tank {
         this._bulletManufacturing = bulletManufacturing;
     }
     clockwiseMovement() {
+        this._isDeltaChanged = true;
         this._hullEntity.rotatePoints(this._track.angleSpeed * CONVERSION_TO_RADIANS);
-        this.calcDeltaCoordinates();
     }
     counterclockwiseMovement() {
+        this._isDeltaChanged = true;
         this._hullEntity.rotatePoints(-this._track.angleSpeed * CONVERSION_TO_RADIANS);
-        this.calcDeltaCoordinates();
     }
     moveForward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
         for (const point of this._hullEntity.points) {
             point.x += this._deltaX;
             point.y += this._deltaY;
         }
     }
     moveBackward() {
+        if (this._isDeltaChanged) {
+            this._isDeltaChanged = false;
+            this.calcDeltaCoordinates();
+        }
         for (const point of this._hullEntity.points) {
             point.x -= this._deltaX;
             point.y -= this._deltaY;
