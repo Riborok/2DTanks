@@ -14,7 +14,7 @@ interface IEntity {
 }
 
 interface ITrack {
-    get moveSpeed(): number;
+    get movementSpeed(): number;
     get angleSpeed(): number;
 }
 
@@ -31,10 +31,66 @@ interface IWeapon {
 
     get damageCoeff(): number;
     get armorPenetrationCoeff(): number;
-    get moveSpeedCoeff(): number;
+    get movementSpeedCoeff(): number;
 
     get xShot(): number;
     get yShot(): number;
+}
+abstract class Sprite {
+    protected _sprite : any;
+    protected _x : number;
+    protected _y : number;
+    protected _angle : number;
+    protected _movementSpeed: number;
+    protected _angleSpeed: number;
+
+    protected constructor(x: number, y: number, angle: number, movementSpeed: number, angleSpeed: number) {
+        this._sprite = document.createElement('img');
+        this._sprite.style.position = 'absolute';
+        this._sprite.style.left = `${x}px`;
+        this._sprite.style.bottom = `${y}px`;
+        this._sprite.style.transform = `rotate(${angle}deg)`;
+
+        this._x = x;
+        this._y = y;
+        this._angle = angle;
+        this._movementSpeed = movementSpeed;
+        this._angleSpeed = angleSpeed;
+    }
+
+    public moveForward() {
+        const radian = this._angle * CONVERSION_TO_RADIANS;
+        this._x += this._movementSpeed * Math.cos(radian);
+        this._y += this._movementSpeed * Math.sin(radian);
+
+        this.updatePosition();
+    }
+
+    public moveBackward() {
+        const radian = this._angle * CONVERSION_TO_RADIANS;
+        this._x -= this._movementSpeed * Math.cos(radian);
+        this._y -= this._movementSpeed * Math.sin(radian);
+
+        this.updatePosition();
+    }
+
+    private updatePosition() {
+        this._sprite.style.left = `${this._x}px`;
+        this._sprite.style.top = `${this._y}px`;
+    }
+
+    private updateAngle() {
+        this._sprite.style.transform = `rotate(${this._angle}deg)`;
+    }
+
+    public clockwiseMovement() {
+        this._angle += this._angleSpeed;
+        this.updateAngle();
+    }
+    public counterclockwiseMovement(){
+        this._angle -= this._angleSpeed;
+        this.updateAngle();
+    }
 }
 
 abstract class RectangularEntity implements IEntity {
@@ -81,18 +137,18 @@ abstract class HullEntity extends RectangularEntity {
 }
 
 abstract class BulletEntity extends RectangularEntity{
-    public get moveSpeed(): number { return this._moveSpeed};
+    public get movementSpeed(): number { return this._movementSpeed};
     public get damage(): number { return this._damage};
     public get armorPenetration(): number { return this._armorPenetration};
 
-    protected abstract _moveSpeed: number;
+    protected abstract _movementSpeed: number;
     protected abstract _damage: number;
     protected abstract _armorPenetration: number;
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
         super(x0, y0, width, height, angle);
     }
     public launchFromWeapon(weapon: IWeapon) {
-        this._moveSpeed *= weapon.moveSpeedCoeff;
+        this._movementSpeed *= weapon.movementSpeedCoeff;
         this._damage *= weapon.damageCoeff;
         this._armorPenetration *= weapon.armorPenetrationCoeff;
     }
@@ -117,7 +173,7 @@ class LightBullet extends BulletEntity {
 
     protected _armorPenetration: number = 5;
     protected _damage: number = 15;
-    protected _moveSpeed: number = 50;
+    protected _movementSpeed: number = 50;
     public constructor(x0: number, y0: number, angle: number) {
         super(x0, y0, LightBullet.width, LightBullet.height, angle);
     }
@@ -193,8 +249,8 @@ class Tank {
     }
     private calcDeltaCoordinates() {
         const angleRad = this._hullEntity.calcAngleRad();
-        this._deltaX = this._track.moveSpeed * Math.cos(angleRad);
-        this._deltaY = this._track.moveSpeed * Math.sin(angleRad);
+        this._deltaX = this._track.movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._track.movementSpeed * Math.sin(angleRad);
     }
 }
 

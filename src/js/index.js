@@ -6,6 +6,47 @@ const VK_D = 68;
 const CONVERSION_TO_RADIANS = Math.PI / 180;
 const CHUNK_SIZE = 115;
 const MATERIAL = ['Grass', 'Ground', 'Sandstone'];
+class Sprite {
+    constructor(x, y, angle, movementSpeed, angleSpeed) {
+        this._sprite = document.createElement('img');
+        this._sprite.style.position = 'absolute';
+        this._sprite.style.left = `${x}px`;
+        this._sprite.style.bottom = `${y}px`;
+        this._sprite.style.transform = `rotate(${angle}deg)`;
+        this._x = x;
+        this._y = y;
+        this._angle = angle;
+        this._movementSpeed = movementSpeed;
+        this._angleSpeed = angleSpeed;
+    }
+    moveForward() {
+        const radian = this._angle * CONVERSION_TO_RADIANS;
+        this._x += this._movementSpeed * Math.cos(radian);
+        this._y += this._movementSpeed * Math.sin(radian);
+        this.updatePosition();
+    }
+    moveBackward() {
+        const radian = this._angle * CONVERSION_TO_RADIANS;
+        this._x -= this._movementSpeed * Math.cos(radian);
+        this._y -= this._movementSpeed * Math.sin(radian);
+        this.updatePosition();
+    }
+    updatePosition() {
+        this._sprite.style.left = `${this._x}px`;
+        this._sprite.style.top = `${this._y}px`;
+    }
+    updateAngle() {
+        this._sprite.style.transform = `rotate(${this._angle}deg)`;
+    }
+    clockwiseMovement() {
+        this._angle += this._angleSpeed;
+        this.updateAngle();
+    }
+    counterclockwiseMovement() {
+        this._angle -= this._angleSpeed;
+        this.updateAngle();
+    }
+}
 class RectangularEntity {
     constructor(x0, y0, width, height, angle) {
         this._points = [new Point(x0, y0),
@@ -42,7 +83,7 @@ class HullEntity extends RectangularEntity {
     }
 }
 class BulletEntity extends RectangularEntity {
-    get moveSpeed() { return this._moveSpeed; }
+    get movementSpeed() { return this._movementSpeed; }
     ;
     get damage() { return this._damage; }
     ;
@@ -52,7 +93,7 @@ class BulletEntity extends RectangularEntity {
         super(x0, y0, width, height, angle);
     }
     launchFromWeapon(weapon) {
-        this._moveSpeed *= weapon.moveSpeedCoeff;
+        this._movementSpeed *= weapon.movementSpeedCoeff;
         this._damage *= weapon.damageCoeff;
         this._armorPenetration *= weapon.armorPenetrationCoeff;
     }
@@ -68,7 +109,7 @@ class LightBullet extends BulletEntity {
         super(x0, y0, LightBullet.width, LightBullet.height, angle);
         this._armorPenetration = 5;
         this._damage = 15;
-        this._moveSpeed = 50;
+        this._movementSpeed = 50;
     }
 }
 LightBullet.width = 20;
@@ -127,8 +168,8 @@ class Tank {
     }
     calcDeltaCoordinates() {
         const angleRad = this._hullEntity.calcAngleRad();
-        this._deltaX = this._track.moveSpeed * Math.cos(angleRad);
-        this._deltaY = this._track.moveSpeed * Math.sin(angleRad);
+        this._deltaX = this._track.movementSpeed * Math.cos(angleRad);
+        this._deltaY = this._track.movementSpeed * Math.sin(angleRad);
     }
 }
 class Wall extends RectangularEntity {
