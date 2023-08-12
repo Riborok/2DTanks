@@ -53,16 +53,16 @@ abstract class RectangularEntity implements IEntity {
             this.points[0].x - this.points[1].x);
     }
     public rotatePoints(deltaAngleRad: number) {
-        const centerX = (this.points[0].x + this.points[1].x) >> 1;
-        const centerY = (this.points[0].y + this.points[1].y) >> 1;
+        const centerX = (this.points[0].x + this.points[3].x) >> 1;
+        const centerY = (this.points[0].y + this.points[3].y) >> 1;
 
         for (const point of this.points) {
             const deltaX = point.x - centerX;
             const deltaY = point.y - centerY;
             const rotatedX = deltaX * Math.cos(deltaAngleRad) - deltaY * Math.sin(deltaAngleRad);
             const rotatedY = deltaX * Math.sin(deltaAngleRad) + deltaY * Math.cos(deltaAngleRad);
-            point.x = rotatedX + centerX;
-            point.y = rotatedY + centerY;
+            point.x = Math.round(rotatedX + centerX);
+            point.y = Math.round(rotatedY + centerY);
         }
     }
 }
