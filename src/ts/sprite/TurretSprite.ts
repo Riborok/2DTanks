@@ -1,8 +1,9 @@
 import {Sprite} from "./Sprite";
+import {Point} from "../model/Point";
 
 export class TurretSprite extends Sprite {
-    private static readonly WIDTH: number[] = [43, 50, 36, 36, 29, 36, 43, 29];
-    private static readonly HEIGHT: number[] = [36, 36, 22, 36, 29, 29, 36, 29];
+    public static readonly WIDTH: number[] = [43, 50, 36, 36, 29, 36, 43, 29];
+    public static readonly HEIGHT: number[] = [36, 36, 22, 36, 29, 29, 36, 29];
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(color: number, num: number, indentX: number, indentY: number) {
@@ -11,18 +12,10 @@ export class TurretSprite extends Sprite {
         this._indentX = indentX;
         this._indentY = indentY;
     }
-    public setPosition(x: number, y: number, angle: number) {
-        const adjustedPos = this.calcPosition(x, y, angle);
-        super.setPosition(adjustedPos.x, adjustedPos.y, angle);
-    }
-    public setAngle(x: number, y: number, angle: number) {
-        const adjustedPos = this.calcPosition(x, y, angle);
-        super.setPosition(adjustedPos.x, adjustedPos.y, angle);
-        super.setAngle(adjustedPos.x, adjustedPos.y, angle);
-    }
-    private calcPosition(x: number, y: number, angle: number): { x: number, y: number } {
-        const adjustedX = x + this._indentX * Math.cos(angle) + this._indentY * Math.sin(angle);
-        const adjustedY = y + this._indentY * Math.cos(angle) - this._indentX * Math.sin(angle);
-        return { x: adjustedX, y: adjustedY };
+    public calcPosition(point: Point, angle: number): Point {
+        return new Point(
+            point.x + this._indentX * Math.cos(angle) + this._indentY * Math.sin(angle),
+            point.y + this._indentY * Math.cos(angle) - this._indentX * Math.sin(angle)
+        );
     }
 }

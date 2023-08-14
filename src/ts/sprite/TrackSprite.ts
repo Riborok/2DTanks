@@ -1,12 +1,17 @@
 import {TankSprite} from "./TankSprite";
 import {Sprite} from "./Sprite";
+import {Point} from "../model/Point";
 
 abstract class TrackSprite extends Sprite {
-    protected readonly _srcState0: string;
-    protected readonly _srcState1: string;
-    protected _state: number;
+    private readonly _srcState0: string;
+    private readonly _srcState1: string;
+    private _state: number;
+    private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
+    protected static calcHeight(width: number) {
+        return Math.round(TrackSprite.PROPORTION_WIDTH_HEIGHT * width);
+    }
 
-    protected abstract calcPosition(x: number, y: number, angle: number): { x: number, y: number };
+    public abstract calcPosition(point: Point, angle: number): Point;
     protected constructor(num: number, width: number, height: number) {
         super(width, height);
 
@@ -15,45 +20,45 @@ abstract class TrackSprite extends Sprite {
         this._state = 0;
         this._sprite.src = this._srcState0;
     }
-    protected changeState() {
+    private changeState() {
         this._state++; this._state %= 2;
         if (this._state === 1)
             this._sprite.src = this._srcState1;
         else
             this._sprite.src = this._srcState0;
     }
-    public setPosition(x: number, y: number, angle: number) {
+    public setPosition(point: Point) {
         this.changeState();
-        const adjustedPos = this.calcPosition(x, y, angle);
-        super.setPosition(adjustedPos.x, adjustedPos.y, angle);
+        super.setPosition(point);
     }
-    public setAngle(x: number, y: number, angle: number) {
+    public setAngle(angle: number) {
         this.changeState();
-        const adjustedPos = this.calcPosition(x, y, angle);
-        super.setPosition(adjustedPos.x, adjustedPos.y, angle);
-        super.setAngle(adjustedPos.x, adjustedPos.y, angle);
+        super.setAngle(angle);
     }
 }
 
 export class UpTrackSprite extends TrackSprite  {
-    public constructor(num: number, width: number, height: number) {
-        super(num, width, height);
+    public constructor(num: number, width: number) {
+        super(num, width, TrackSprite.calcHeight(width));
     }
-    protected override calcPosition(x: number, y: number, angle: number): { x: number, y: number } {
-        const adjustedX = x - TankSprite.TRACK_INDENT * Math.sin(angle);
-        const adjustedY = y - TankSprite.TRACK_INDENT * Math.cos(angle);
-        return { x: adjustedX, y: adjustedY };
+    public override calcPosition(point: Point, angle: number): Point {
+        return new Point(
+            point.x - TankSprite.TRACK_INDENT * Math.sin(angle),
+            point.y - TankSprite.TRACK_INDENT * Math.cos(angle)
+        );
     }
 }
 export class DownTrackSprite extends TrackSprite  {
     private readonly _deltaHeight: number;
-    public constructor(num: number, width: number, height: number, tankHeight: number) {
+    public constructor(num: number, width: number, tankHeight: number) {
+        const height = TrackSprite.calcHeight(width);
         super(num, width, height);
         this._deltaHeight = tankHeight + TankSprite.TRACK_INDENT - height;
     }
-    protected override calcPosition(x: number, y: number, angle: number): { x: number, y: number } {
-        const adjustedX = x + this._deltaHeight * Math.sin(angle);
-        const adjustedY = y + this._deltaHeight * Math.cos(angle);
-        return { x: adjustedX, y: adjustedY };
+    public override calcPosition(point: Point, angle: number): Point {
+        return new Point(
+            point.x + this._deltaHeight * Math.sin(angle),
+            point.y + this._deltaHeight * Math.cos(angle)
+        );
     }
 }
