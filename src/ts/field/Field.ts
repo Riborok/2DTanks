@@ -4,13 +4,13 @@ import {Point} from "../model/Point";
 
 export class Field {
     private readonly _entities: IEntity[][][];
-    private readonly _canvas: any;
+    private readonly _canvas: Element;
     private readonly _width: number;
     private readonly _height: number;
-    public get canvas(): any { return this._canvas }
+    public get canvas(): Element { return this._canvas }
     public get width(): number { return this._width }
     public get height(): number { return this._height }
-    constructor(canvas: any, width: number, height: number) {
+    constructor(canvas: Element, width: number, height: number) {
         this._canvas = canvas;
         this._width = width;
         this._height = height;

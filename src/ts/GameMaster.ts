@@ -29,7 +29,7 @@ export class GameMaster {
 
     // КРИВУЛЬКА
     // public Tankkk: TankSprite;
-    // public handleKeys(keysPressed: any) {
+    // public handleKeys(keysPressed) {
     //     let keyCode = keysPressed.keyCode;
     //     switch (keyCode) {
     //         case VK_W:
