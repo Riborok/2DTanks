@@ -1,5 +1,6 @@
 import {CHUNK_SIZE} from "../constants";
 import {IEntity} from "../model/IEntity";
+import {Point} from "../model/Point";
 
 export class Field {
     private readonly _entities: IEntity[][][];
@@ -23,12 +24,12 @@ export class Field {
     }
 
     public addObject(entity: IEntity) {
-        for (const point of entity.points) {
+        entity.points.forEach((point: Point) => {
             const chunkX = Math.floor(point.x / CHUNK_SIZE);
             const chunkY = Math.floor(point.y / CHUNK_SIZE);
             if (this._entities[chunkX][chunkY][this._entities[chunkX][chunkY].length - 1] !== entity) {
                 this._entities[chunkX][chunkY].push(entity);
             }
-        }
+        });
     }
 }
