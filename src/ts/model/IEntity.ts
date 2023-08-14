@@ -26,8 +26,7 @@ export abstract class RectangularEntity implements IEntity {
         this._angle -= deltaAngle;
         const center = this.calcCenter();
 
-        for (const point of this.points)
-            RectangularEntity.rotatePoint(point, center, deltaAngle);
+        this.points.forEach((point: Point) => {RectangularEntity.rotatePoint(point, center, deltaAngle)});
     }
     public static rotatePoint(point: Point, center: Point, deltaAngle: number) {
         const deltaX = point.x - center.x;

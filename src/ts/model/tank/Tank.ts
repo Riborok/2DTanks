@@ -5,6 +5,7 @@ import {HullEntity} from "./HullEntity";
 import {BulletEntity} from "./BulletEntity";
 import {IBulletManufacturing} from "./BulletEntity";
 import {LightBulletManufacturing} from "./BulletEntity";
+import {Point} from "../Point";
 
 class Tank {
     private _track: ITrack;
@@ -69,10 +70,10 @@ class Tank {
             this.calcDeltaCoordinates();
         }
 
-        for (const point of this._hullEntity.points) {
+        this._hullEntity.points.forEach((point: Point) => {
             point.x += this._deltaX;
             point.y += this._deltaY;
-        }
+        });
     }
     public moveBackward() {
         if (this._isDeltaChanged) {
@@ -80,10 +81,10 @@ class Tank {
             this.calcDeltaCoordinates();
         }
 
-        for (const point of this._hullEntity.points) {
+        this._hullEntity.points.forEach((point: Point) => {
             point.x -= this._deltaX;
             point.y -= this._deltaY;
-        }
+        });
     }
     private calcDeltaCoordinates() {
         this._deltaX = this._track.movementSpeed * Math.cos(this._hullEntity.angle);
