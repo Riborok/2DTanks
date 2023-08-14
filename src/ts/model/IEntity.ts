@@ -31,9 +31,9 @@ export abstract class RectangularEntity implements IEntity {
     public static rotatePoint(point: Point, center: Point, deltaAngle: number) {
         const deltaX = point.x - center.x;
         const deltaY = point.y - center.y;
-        const rotatedX = deltaX * Math.cos(deltaAngle) - deltaY * Math.sin(deltaAngle);
-        const rotatedY = deltaX * Math.sin(deltaAngle) + deltaY * Math.cos(deltaAngle);
-        point.x = Math.round(rotatedX + center.x);
-        point.y = Math.round(rotatedY + center.y);
+        const rotatedX = Math.round(deltaX * Math.cos(deltaAngle) - deltaY * Math.sin(deltaAngle));
+        const rotatedY = Math.round(deltaX * Math.sin(deltaAngle) + deltaY * Math.cos(deltaAngle));
+        point.x = rotatedX + center.x;
+        point.y = rotatedY + center.y;
     }
 }
