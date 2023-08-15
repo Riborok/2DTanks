@@ -1,4 +1,3 @@
-import {TankSprite} from "./TankSprite";
 import {Sprite} from "./Sprite";
 import {Point} from "../model/Point";
 
