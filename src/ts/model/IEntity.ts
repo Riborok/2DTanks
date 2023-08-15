@@ -20,7 +20,12 @@ export abstract class RectangularEntity implements IEntity {
     public calcCenter(): Point {
         return new Point((this.points[0].x + this.points[3].x) >> 1, (this.points[0].y + this.points[3].y) >> 1);
     }
-
+    public movePoints(dx: number, dy: number){
+        this._points.forEach((point: Point) => {
+            point.x += dx;
+            point.y += dy;
+        })
+    }
     // Clockwise rotation
     public rotatePoints(deltaAngle: number) {
         this._angle -= deltaAngle;
