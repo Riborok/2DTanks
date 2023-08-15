@@ -6,7 +6,7 @@ export interface ITurret {
     get bulletCapacity(): number;
 }
 
-class TurretModel0 implements ITurret{
+export class TurretModel0 implements ITurret{
     private _angle: number = 0;
     private static readonly ANGLE_SPEED: number = 0.05;
     get angle(): number { return this._angle }

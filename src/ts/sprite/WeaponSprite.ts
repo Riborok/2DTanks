@@ -1,13 +1,12 @@
 import {Sprite} from "./Sprite";
 import {Point} from "../model/Point";
+import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../constants";
 
 export class WeaponSprite extends Sprite {
-    private static readonly WIDTH: number[] = [47, 49, 40, 43, 50, 36, 43, 36];
-    private static readonly HEIGHT: number[] = [14, 10, 14, 7, 11, 16, 14, 14];
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(num: number, indentX: number, indentY: number) {
-        super(WeaponSprite.WIDTH[num], WeaponSprite.HEIGHT[num]);
+        super(WEAPON_WIDTH[num], WEAPON_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Weapons/Weapon_${num}.png`;
         this._indentX = indentX;
         this._indentY = indentY;

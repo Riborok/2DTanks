@@ -1,16 +1,19 @@
 import {MATERIAL} from "./constants";
 import {DecorCreator} from "./field/DecorCreator";
-import {Field} from "./field/Field";
+import {EntityManager} from "./field/EntityManager";
 import {ObstacleCreator} from "./field/ObstacleCreator";
+import {Field} from "./field/Field";
 
 export class GameMaster {
-    private _field: Field;
-    private _decorCreator: DecorCreator;
-    private _obstacleCreator: ObstacleCreator;
+    private readonly _field: Field;
+    private readonly _entityManager: EntityManager;
+    private readonly _decorCreator: DecorCreator;
+    private readonly _obstacleCreator: ObstacleCreator;
     public constructor(field: Field) {
         this._field = field;
+        this._entityManager = new EntityManager(field.width, field.height);
         this._decorCreator = new DecorCreator(field);
-        this._obstacleCreator = new ObstacleCreator(field);
+        this._obstacleCreator = new ObstacleCreator(field, this._entityManager);
     }
 
     public createField() {

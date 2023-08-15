@@ -21,19 +21,19 @@ class ValueCaching {
 export class SinCache {
     private constructor() {}
 
-    private static sinCache: ValueCaching = new ValueCaching(Math.sin);
+    private static readonly SIN_CACHE: ValueCaching = new ValueCaching(Math.sin);
 
     public static getSin(angle: number): number {
-        return SinCache.sinCache.getValue(angle);
+        return SinCache.SIN_CACHE.getValue(angle);
     }
 }
 
 export class CosCache {
     private constructor() {}
 
-    private static cosCache: ValueCaching = new ValueCaching(Math.cos);
+    private static readonly COS_CACHE: ValueCaching = new ValueCaching(Math.cos);
 
     public static getCos(angle: number): number {
-        return CosCache.cosCache.getValue(angle);
+        return CosCache.COS_CACHE.getValue(angle);
     }
 }

@@ -1,5 +1,6 @@
 import {RectangularEntity} from "../IEntity";
 import {BulletEntity} from "./BulletEntity";
+import {HULL_HEIGHT, HULL_WIDTH} from "../../constants";
 
 export abstract class HullEntity extends RectangularEntity {
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
@@ -17,7 +18,10 @@ export abstract class HullEntity extends RectangularEntity {
     }
 }
 
-class HullModel0 extends HullEntity{
+export class HullModel0 extends HullEntity{
     protected _armor: number = 100;
     protected _health: number = 100;
+    public constructor(x0: number, y0: number, angle: number) {
+        super(x0, y0, HULL_WIDTH[0], HULL_HEIGHT[0], angle);
+    }
 }

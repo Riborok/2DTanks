@@ -1,6 +1,6 @@
 import {CHUNK_SIZE} from "../constants";
-import {Field} from "./Field";
 import {getRandomInt} from "../additionalFunc";
+import {Field} from "./Field";
 
 export class DecorCreator {
     private _field: Field;
