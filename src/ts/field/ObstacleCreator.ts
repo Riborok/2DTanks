@@ -1,14 +1,17 @@
-import {Field} from "./Field";
+import {EntityManager} from "./EntityManager";
 import {Wall} from "./Wall";
+import {Field} from "./Field";
 
 export class ObstacleCreator {
     private _field: Field;
-    private static readonly MIN_INDENT: number = 10;
+    private _entityManager: EntityManager;
+    private static readonly INDENT: number = 10;
     private static readonly RECT_WALL_WIDTH: number = 101;
     private static readonly RECT_WALL_HEIGHT: number = 50;
     private static readonly SQUARE_WALL_SIZE: number = ObstacleCreator.RECT_WALL_HEIGHT;
-    public constructor(field: Field) {
+    public constructor(field: Field, entityManager: EntityManager) {
         this._field = field;
+        this._entityManager = entityManager;
     }
     public createObstacles(name: string) {
         const xIndent = ObstacleCreator.calculateIndent(this._field.width);
@@ -19,10 +22,10 @@ export class ObstacleCreator {
         this.createVertObstacles(name, xIndent, yIndent);
     }
     private static calculateIndent(totalLength: number): number {
-        const currLength = totalLength - (ObstacleCreator.MIN_INDENT << 1);
+        const currLength = totalLength - (ObstacleCreator.INDENT << 1);
         const indent = currLength - ObstacleCreator.RECT_WALL_WIDTH *
             Math.floor(currLength / ObstacleCreator.RECT_WALL_WIDTH);
-        return (indent >> 1) + ObstacleCreator.MIN_INDENT;
+        return (indent >> 1) + ObstacleCreator.INDENT;
     }
     private createHorObstacles(name: string, xIndent: number, yIndent: number) {
         for (let x = xIndent;
@@ -49,7 +52,7 @@ export class ObstacleCreator {
         obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, 0));
 
         this._field.canvas.appendChild(obstacle);
@@ -64,7 +67,7 @@ export class ObstacleCreator {
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
-        this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
         this._field.canvas.appendChild(obstacle);
@@ -77,7 +80,7 @@ export class ObstacleCreator {
         obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        this._field.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
+        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, 0));
 
         this._field.canvas.appendChild(obstacle);

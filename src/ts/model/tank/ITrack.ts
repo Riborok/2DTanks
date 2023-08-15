@@ -3,7 +3,7 @@ export interface ITrack {
     get angleSpeed(): number;
 }
 
-class TrackModel0 implements ITrack{
+export class TrackModel0 implements ITrack{
     get angleSpeed(): number { return 0.05 }
     get movementSpeed(): number { return 3 }
 }

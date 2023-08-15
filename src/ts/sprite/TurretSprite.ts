@@ -1,13 +1,12 @@
 import {Sprite} from "./Sprite";
 import {Point} from "../model/Point";
+import {TURRET_HEIGHT, TURRET_WIDTH} from "../constants";
 
 export class TurretSprite extends Sprite {
-    public static readonly WIDTH: number[] = [43, 50, 36, 36, 29, 36, 43, 29];
-    public static readonly HEIGHT: number[] = [36, 36, 22, 36, 29, 29, 36, 29];
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(color: number, num: number, indentX: number, indentY: number) {
-        super(TurretSprite.WIDTH[num], TurretSprite.HEIGHT[num]);
+        super(TURRET_WIDTH[num], TURRET_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Turrets/Turret_${num}/Turret_${color}.png`;
         this._indentX = indentX;
         this._indentY = indentY;
