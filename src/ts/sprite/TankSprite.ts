@@ -1,7 +1,6 @@
-import {Sprite} from "./Sprite";
+import {TankSpriteParts} from "./TankSpriteParts";
 
 export class TankSprite {
-    public static readonly TRACK_INDENT: number = 1;
     public constructor() {
         // const widthTrack = HullSprite.WIDTH[hullNum] + TankSprite.TRACK_INDENT;
         // const heightTrack = Math.round(widthTrack / TankSprite.PROPORTION_WIDTH_HEIGHT);
