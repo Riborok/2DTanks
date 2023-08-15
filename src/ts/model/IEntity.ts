@@ -24,7 +24,7 @@ export abstract class RectangularEntity implements IEntity {
         this._points.forEach((point: Point) => {
             point.x += dx;
             point.y += dy;
-        })
+        });
     }
     // Clockwise rotation
     public rotatePoints(deltaAngle: number) {

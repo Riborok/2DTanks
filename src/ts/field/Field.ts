@@ -26,14 +26,17 @@ export class Field {
         return {
             chunkX: Math.floor(point.x / CHUNK_SIZE),
             chunkY: Math.floor(point.y / CHUNK_SIZE)
-        };
+        }
     }
     private static isCross(rectangle1: RectangularEntity, rectangle2: RectangularEntity): boolean {
-        const xOverlap = rectangle1.points[0].x < rectangle2.points[1].x && rectangle1.points[1].x > rectangle2.points[0].x;
-        const yOverlap = rectangle1.points[0].y > rectangle2.points[2].y && rectangle1.points[2].y < rectangle2.points[0].y;
+        const xOverlap = rectangle1.points[0].x < rectangle2.points[1].x &&
+            rectangle1.points[1].x > rectangle2.points[0].x;
+        const yOverlap = rectangle1.points[0].y > rectangle2.points[2].y &&
+            rectangle1.points[2].y < rectangle2.points[0].y;
         return xOverlap && yOverlap;
     }
-    private static calculateCollisionVector(rectangle1: RectangularEntity, rectangle2: RectangularEntity): {dx: number, dy: number} {
+    private static calculateCollisionVector(rectangle1: RectangularEntity, rectangle2: RectangularEntity):
+            {dx: number, dy: number} {
         const dx1 = rectangle2.points[1].x - rectangle1.points[0].x;
         const dx2 = rectangle1.points[1].x - rectangle2.points[0].x;
         const dx = Math.min(dx1, dx2);
@@ -47,7 +50,8 @@ export class Field {
     public addObject(rectangularEntity: RectangularEntity) {
         rectangularEntity.points.forEach((point: Point) => {
             const {chunkX, chunkY} = Field.chunkCalc(point);
-            if (this._rectangularEntities[chunkX][chunkY][this._rectangularEntities[chunkX][chunkY].length - 1] !== rectangularEntity) {
+            if (this._rectangularEntities[chunkX][chunkY][this._rectangularEntities[chunkX][chunkY].length - 1] !==
+                    rectangularEntity) {
                 this._rectangularEntities[chunkX][chunkY].push(rectangularEntity);
             }
         });
@@ -57,7 +61,8 @@ export class Field {
             const {chunkX, chunkY} = Field.chunkCalc(point);
             this._rectangularEntities[chunkX][chunkY].forEach((otherRectangularEntity: RectangularEntity) => {
                 if (Field.isCross(rectangularEntity, otherRectangularEntity)){
-                    const {dx, dy} = Field.calculateCollisionVector(rectangularEntity, otherRectangularEntity);
+                    const {dx, dy} = Field.calculateCollisionVector(rectangularEntity,
+                        otherRectangularEntity);
                     rectangularEntity.movePoints(dx, dy);
                 }
             })
