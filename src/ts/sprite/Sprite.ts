@@ -14,6 +14,6 @@ export abstract class Sprite {
         this._sprite.style.top = `${point.y}px`;
     }
     public setAngle(angle: number) {
-        this._sprite.style.transform = `rotate(${angle}deg)`;
+        this._sprite.style.transform = `rotate(${angle}rad)`;
     }
 }
