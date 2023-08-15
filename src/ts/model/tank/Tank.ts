@@ -2,9 +2,7 @@ import {ITrack} from "./ITrack";
 import {ITurret} from "./ITurret";
 import {IWeapon} from "./IWeapon";
 import {HullEntity} from "./HullEntity";
-import {BulletEntity} from "./BulletEntity";
-import {IBulletManufacturing} from "./BulletEntity";
-import {LightBulletManufacturing} from "./BulletEntity";
+import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
 import {Point} from "../Point";
 
 class Tank {

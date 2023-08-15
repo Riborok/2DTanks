@@ -1,6 +1,5 @@
 import {HullSprite} from "./HullSprite";
-import {DownTrackSprite} from "./TrackSprite";
-import {UpTrackSprite} from "./TrackSprite";
+import {DownTrackSprite, UpTrackSprite} from "./TrackSprite";
 import {TurretSprite} from "./TurretSprite";
 import {WeaponSprite} from "./WeaponSprite";
 
