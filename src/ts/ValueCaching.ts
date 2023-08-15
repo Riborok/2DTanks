@@ -1,39 +1,18 @@
 class ValueCaching {
-    private readonly cache: { [index: number]: number } = { };
+    private readonly cache: Map<number, number> = new Map();
     private readonly _calcFunc: (index: number) => number;
-    private static readonly MAX_CACHE_SIZE: number = 42 << 1;
-    public constructor(calcFunc: (index: number) => number) {
-        this._calcFunc = calcFunc;
-    };
+    private static readonly MAX_CACHE_SIZE: number = 42;
 
-    private getCachedValue(index: number): number | null {
-        if (index in this.cache)
-            return this.cache[index];
-
-        return null;
-    }
-
-    private cacheValue(index: number, value: number) {
-        if (Object.keys(this.cache).length > ValueCaching.MAX_CACHE_SIZE)
-            this.cleanCache();
-
-        this.cache[index] = value;
-    }
-
-    private cleanCache() {
-        const keys : number[] = Object.keys(this.cache).map(Number);
-        const removeCount : number = keys.length >> 1;
-        for (let i : number = 0; i < removeCount; i++)
-            delete this.cache[keys[i]];
-    }
-
+    public constructor(calcFunc: (index: number) => number) { this._calcFunc = calcFunc; }
     public getValue(index: number): number {
-        const cachedValue : number = this.getCachedValue(index);
-        if (cachedValue !== null)
-            return cachedValue;
+        if (this.cache.has(index))
+            return this.cache.get(index);
 
-        const value : number = this._calcFunc(index);
-        this.cacheValue(index, value);
+        if (this.cache.size > ValueCaching.MAX_CACHE_SIZE)
+            this.cache.clear();
+
+        const value = this._calcFunc(index);
+        this.cache.set(index, value);
 
         return value;
     }
