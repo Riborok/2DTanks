@@ -2,8 +2,8 @@ import {Sprite} from "./Sprite";
 import {Point} from "../model/Point";
 
 export class WeaponSprite extends Sprite {
-    public static readonly WIDTH: number[] = [47, 49, 40, 43, 50, 36, 43, 36];
-    public static readonly HEIGHT: number[] = [14, 10, 14, 7, 11, 16, 14, 14];
+    private static readonly WIDTH: number[] = [47, 49, 40, 43, 50, 36, 43, 36];
+    private static readonly HEIGHT: number[] = [14, 10, 14, 7, 11, 16, 14, 14];
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(num: number, indentX: number, indentY: number) {
