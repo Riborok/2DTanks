@@ -55,7 +55,7 @@ export class ObstacleCreator {
         this._field.canvas.appendChild(obstacle);
     }
     public createRectVertObstacle(x: number, y: number, name: string) {
-        const angle: number = 90;
+        const angle: number = 1.57; // 90 degrees
         const obstacle = document.createElement('img');
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
@@ -63,7 +63,7 @@ export class ObstacleCreator {
         obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        obstacle.style.transform = `rotate(${angle}deg)`;
+        obstacle.style.transform = `rotate(${angle}rad)`;
         this._field.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
