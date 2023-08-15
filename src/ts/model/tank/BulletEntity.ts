@@ -2,9 +2,9 @@ import {RectangularEntity} from "../IEntity";
 import {IWeapon} from "./IWeapon";
 
 export abstract class BulletEntity extends RectangularEntity{
-    public get movementSpeed(): number { return this._movementSpeed};
-    public get damage(): number { return this._damage};
-    public get armorPenetration(): number { return this._armorPenetration};
+    public get movementSpeed(): number { return this._movementSpeed }
+    public get damage(): number { return this._damage }
+    public get armorPenetration(): number { return this._armorPenetration }
 
     protected abstract _movementSpeed: number;
     protected abstract _damage: number;
