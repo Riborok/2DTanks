@@ -1,7 +1,7 @@
-import {HullEntity, HullModel0} from "./HullEntity";
-import {ITrack, TrackModel0} from "./ITrack";
-import {ITurret, TurretModel0} from "./ITurret";
-import {IWeapon, WeaponModel0} from "./IWeapon";
+import {HullEntity} from "./HullEntity";
+import {ITrack} from "./ITrack";
+import {ITurret} from "./ITurret";
+import {IWeapon} from "./IWeapon";
 
 export class TankParts {
     private readonly _hullEntity: HullEntity;

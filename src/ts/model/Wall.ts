@@ -1,4 +1,4 @@
-import {RectangularEntity} from "../model/IEntity";
+import {RectangularEntity} from "./IEntity";
 
 export class Wall extends RectangularEntity {
     public constructor(x0: number, y0: number, width: number, height: number, angle: number) {

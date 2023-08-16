@@ -1,19 +1,26 @@
-import {EntityManager} from "./EntityManager";
-import {Wall} from "./Wall";
+import {Wall} from "../model/Wall";
 import {Field} from "./Field";
+import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 
-export class ObstacleCreator {
-    private _field: Field;
-    private _entityManager: EntityManager;
+export interface IObstacleCreator {
+    createObstaclesAroundPerimeter(name: string): void;
+    createRectHorObstacle(x: number, y: number, name: string): void;
+    createRectVertObstacle(x: number, y: number, name: string): void;
+    createSquareObstacle(x: number, y: number, name: string): void;
+}
+
+export class ObstacleCreator implements IObstacleCreator{
+    private readonly _field: Field;
+    private readonly _rectangularEntityStorage: IRectangularEntityStorage;
     private static readonly INDENT: number = 10;
     private static readonly RECT_WALL_WIDTH: number = 101;
     private static readonly RECT_WALL_HEIGHT: number = 50;
     private static readonly SQUARE_WALL_SIZE: number = ObstacleCreator.RECT_WALL_HEIGHT;
-    public constructor(field: Field, entityManager: EntityManager) {
+    public constructor(field: Field, entityManager: IRectangularEntityStorage) {
         this._field = field;
-        this._entityManager = entityManager;
+        this._rectangularEntityStorage = entityManager;
     }
-    public createObstacles(name: string) {
+    public createObstaclesAroundPerimeter(name: string) {
         const xIndent = ObstacleCreator.calculateIndent(this._field.width);
         const yIndent = ObstacleCreator.calculateIndent(this._field.height -
             (ObstacleCreator.RECT_WALL_HEIGHT << 1));
@@ -52,7 +59,7 @@ export class ObstacleCreator {
         obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, 0));
 
         this._field.canvas.appendChild(obstacle);
@@ -67,7 +74,7 @@ export class ObstacleCreator {
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
-        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
         this._field.canvas.appendChild(obstacle);
@@ -80,7 +87,7 @@ export class ObstacleCreator {
         obstacle.style.top = `${y}px`;
         obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
         obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        this._entityManager.addObject(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
+        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, 0));
 
         this._field.canvas.appendChild(obstacle);
