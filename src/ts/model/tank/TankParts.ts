@@ -8,7 +8,7 @@ export class TankParts {
     private readonly _track: ITrack;
     private readonly _turret: ITurret;
     private readonly _weapon: IWeapon;
-    constructor(hullEntity: HullEntity, track: ITrack, turret: ITurret, weapon: IWeapon) {
+    public constructor(hullEntity: HullEntity, track: ITrack, turret: ITurret, weapon: IWeapon) {
         this._hullEntity = hullEntity;
         this._track = track;
         this._turret = turret;

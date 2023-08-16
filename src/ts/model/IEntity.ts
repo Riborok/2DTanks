@@ -21,17 +21,18 @@ export abstract class RectangularEntity implements IEntity {
         return new Point((this.points[0].x + this.points[3].x) >> 1, (this.points[0].y + this.points[3].y) >> 1);
     }
     public movePoints(dx: number, dy: number){
-        this._points.forEach((point: Point) => {
+        for (const point of this._points) {
             point.x += dx;
             point.y += dy;
-        });
+        }
     }
     // Clockwise rotation
     public rotatePoints(deltaAngle: number) {
         this._angle -= deltaAngle;
         const center = this.calcCenter();
 
-        this.points.forEach((point: Point) => {RectangularEntity.rotatePoint(point, center, deltaAngle)});
+        for (const point of this.points)
+            RectangularEntity.rotatePoint(point, center, deltaAngle);
     }
     public static rotatePoint(point: Point, center: Point, deltaAngle: number) {
         const deltaX = point.x - center.x;
