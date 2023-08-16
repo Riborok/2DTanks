@@ -4,7 +4,7 @@ import {Point} from "../model/Point";
 
 export class EntityManager {
     private readonly _rectangularEntities: RectangularEntity[][][];
-    constructor(width: number, height: number) {
+    public constructor(width: number, height: number) {
         this._rectangularEntities = [];
         for (let i = 0; i < Math.ceil(width / CHUNK_SIZE); i++) {
             this._rectangularEntities[i] = [];
@@ -39,24 +39,25 @@ export class EntityManager {
         return {dx, dy};
     }
     public addObject(rectangularEntity: RectangularEntity) {
-        rectangularEntity.points.forEach((point: Point) => {
-            const {chunkX, chunkY} = EntityManager.chunkCalc(point);
+        for (const point of rectangularEntity.points) {
+            const { chunkX, chunkY } = EntityManager.chunkCalc(point);
             if (this._rectangularEntities[chunkX][chunkY][this._rectangularEntities[chunkX][chunkY].length - 1] !==
                     rectangularEntity) {
                 this._rectangularEntities[chunkX][chunkY].push(rectangularEntity);
             }
-        });
+        }
     }
     public checkForCollision(rectangularEntity: RectangularEntity){
-        rectangularEntity.points.forEach((point: Point) => {
-            const {chunkX, chunkY} = EntityManager.chunkCalc(point);
-            this._rectangularEntities[chunkX][chunkY].forEach((otherRectangularEntity: RectangularEntity) => {
-                if (EntityManager.isCross(rectangularEntity, otherRectangularEntity)){
-                    const {dx, dy} = EntityManager.calculateCollisionVector(rectangularEntity,
-                        otherRectangularEntity);
+        for (const point of rectangularEntity.points) {
+            const { chunkX, chunkY } = EntityManager.chunkCalc(point);
+            for (const otherRectangularEntity of this._rectangularEntities[chunkX][chunkY]) {
+                if (otherRectangularEntity !== rectangularEntity &&
+                        EntityManager.isCross(rectangularEntity, otherRectangularEntity)) {
+                    const { dx, dy } = EntityManager.calculateCollisionVector(
+                            rectangularEntity, otherRectangularEntity);
                     rectangularEntity.movePoints(dx, dy);
                 }
-            })
-        })
+            }
+        }
     }
 }
