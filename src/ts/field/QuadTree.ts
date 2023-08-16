@@ -2,7 +2,7 @@ import { RectangularEntity } from "../model/IEntity";
 
 class QuadtreeNode {
     private static readonly CAPACITY: number = 4;
-    private _rectangularEntities: Set<RectangularEntity> = new Set();
+    private _rectangularEntities: Map<number, RectangularEntity> = new Map();
     private _children: QuadtreeNode[] = [];
     private readonly _boundary: { x: number, y: number, width: number, height: number };
 
@@ -25,9 +25,9 @@ class QuadtreeNode {
     }
 
     private redistribute() {
-        const remainingRectangularEntity: Set<RectangularEntity> = new Set();
+        const remainingRectangularEntities: Map<number, RectangularEntity> = new Map();
 
-        for (const object of this._rectangularEntities) {
+        for (const [id, object] of this._rectangularEntities) {
             let isRedistributed = false;
             for (const child of this._children) {
                 if (child.isContains(object)) {
@@ -37,9 +37,9 @@ class QuadtreeNode {
                 }
             }
             if (!isRedistributed)
-                remainingRectangularEntity.add(object);
+                remainingRectangularEntities.set(id, object);
         }
-        this._rectangularEntities = remainingRectangularEntity;
+        this._rectangularEntities = remainingRectangularEntities;
     }
 
     public insert(rectangularEntity: RectangularEntity): void {
@@ -50,23 +50,10 @@ class QuadtreeNode {
                     return;
                 }
             }
-            this._rectangularEntities.add(rectangularEntity);
         }
-        else if (this.isContains(rectangularEntity)) {
-            if (this._rectangularEntities.size < QuadtreeNode.CAPACITY)
-                this._rectangularEntities.add(rectangularEntity);
-            else {
-                this.subdivide();
-
-                for (const child of this._children) {
-                    if (child.isContains(rectangularEntity)) {
-                        child.insert(rectangularEntity);
-                        return;
-                    }
-                }
-                this._rectangularEntities.add(rectangularEntity);
-            }
-        }
+        this._rectangularEntities.set(rectangularEntity.id, rectangularEntity);
+        if (this._rectangularEntities.size < QuadtreeNode.CAPACITY)
+            this.subdivide();
     }
 
     public remove(rectangularEntity: RectangularEntity) {
@@ -79,7 +66,7 @@ class QuadtreeNode {
             }
         }
 
-        this._rectangularEntities.delete(rectangularEntity);
+        this._rectangularEntities.delete(rectangularEntity.id);
     }
 
     public checkIntersection(rectangularEntity: RectangularEntity): RectangularEntity | null {
@@ -92,7 +79,7 @@ class QuadtreeNode {
             }
         }
 
-        for (const otherRectangularEntity of this._rectangularEntities)
+        for (const [id, otherRectangularEntity] of this._rectangularEntities)
             if (otherRectangularEntity !== rectangularEntity && this.isCross(rectangularEntity, otherRectangularEntity))
                 return otherRectangularEntity;
 
