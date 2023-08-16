@@ -2,8 +2,13 @@ import {CHUNK_SIZE} from "../constants";
 import {getRandomInt} from "../additionalFunc";
 import {Field} from "./Field";
 
-export class DecorCreator {
-    private _field: Field;
+export interface IDecorCreator {
+    fullFillBackground(name: string): void;
+    addBackgroundTile(x: number, y: number, name: string): void;
+}
+
+export class DecorCreator implements IDecorCreator {
+    private readonly _field: Field;
     public constructor(field: Field) {
         this._field = field;
     }

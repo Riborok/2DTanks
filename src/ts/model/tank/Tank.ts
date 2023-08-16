@@ -1,8 +1,7 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
-import {Point} from "../Point";
 import {TankParts} from "./TankParts";
 
-class Tank {
+export class Tank {
     private _tankParts: TankParts;
 
     private _isDeltaChanged: boolean;
@@ -21,7 +20,7 @@ class Tank {
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
-
+    public get tankParts(): TankParts { return this._tankParts }
     public shot(): BulletEntity {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
