@@ -4,7 +4,7 @@ import {CollisionUtils} from "./CollisionUtils";
 export interface IRectangularEntityStorage {
     insert(rectangularEntity: RectangularEntity): void;
     remove(rectangularEntity: RectangularEntity): void;
-    checkIntersection(rectangularEntity: RectangularEntity): RectangularEntity | null;
+    checkIntersection(rectangularEntity: RectangularEntity): boolean;
 }
 
 export class Quadtree implements IRectangularEntityStorage{
@@ -18,7 +18,7 @@ export class Quadtree implements IRectangularEntityStorage{
         this._root.insert(rectangularEntity);
     }
 
-    public checkIntersection(rectangularEntity: RectangularEntity): RectangularEntity | null {
+    public checkIntersection(rectangularEntity: RectangularEntity): boolean {
         return this._root.checkIntersection(rectangularEntity);
     }
 
@@ -101,7 +101,7 @@ class QuadtreeNode {
 
         this._rectangularEntities.delete(rectangularEntity.id);
     }
-    public checkIntersection(rectangularEntity: RectangularEntity): RectangularEntity | null {
+    public checkIntersection(rectangularEntity: RectangularEntity): boolean {
         if (!this.isContains(rectangularEntity))
             return null;
 
@@ -114,7 +114,7 @@ class QuadtreeNode {
         for (const [id, otherRectangularEntity] of this._rectangularEntities)
             if (otherRectangularEntity !== rectangularEntity &&
                     CollisionUtils.isCross(rectangularEntity, otherRectangularEntity))
-                return otherRectangularEntity;
+                return true;
 
         return null;
     }

@@ -2,19 +2,17 @@ import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./Bu
 import {TankParts} from "./TankParts";
 
 export class Tank {
-    private _tankParts: TankParts;
+    private readonly _tankParts: TankParts;
 
-    private _isDeltaChanged: boolean;
+    private _isDeltaChanged: boolean = false;
+    private _bulletQuantity: number = 0;
     private _deltaX: number;
     private _deltaY: number;
-    private _bulletQuantity: number;
     private _lastTimeShot: number;
     private _bulletManufacturing: IBulletManufacturing;
     public constructor(tankParts: TankParts) {
         this._tankParts = tankParts;
 
-        this._bulletQuantity = 0;
-        this._isDeltaChanged = false;
         this.calcDeltaCoordinates();
         this._lastTimeShot = Date.now();
 
