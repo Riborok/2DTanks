@@ -2,6 +2,7 @@ import {TankElement} from "./TankElement";
 import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
 import {Point} from "../model/Point";
+import {RectangularEntity} from "../model/IEntity";
 
 type Action = () => void;
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
@@ -21,7 +22,11 @@ export class MovementManager implements IMovementManager{
         this._collisionManager = collisionManager;
     }
     public display(tankElement: TankElement) {
-        tankElement.sprite.display(tankElement.model.tankParts.hullEntity.points[0],
+        const point = tankElement.model.tankParts.hullEntity.points[0].clone();
+        RectangularEntity.rotatePoint(point, tankElement.model.tankParts.hullEntity.calcCenter(),
+            -tankElement.model.tankParts.hullEntity.angle);
+
+        tankElement.sprite.display(point,
             tankElement.model.tankParts.hullEntity.angle,
             tankElement.model.tankParts.turret.angle);
     }
@@ -50,7 +55,9 @@ export class MovementManager implements IMovementManager{
 
         this._rectangularEntityStorage.insert(hullEntity);
 
-        spriteUpdate.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
-            tankElement.model.tankParts.turret.angle);
+        const point = tankElement.model.tankParts.hullEntity.points[0].clone();
+        RectangularEntity.rotatePoint(point, tankElement.model.tankParts.hullEntity.calcCenter(),
+            -tankElement.model.tankParts.hullEntity.angle);
+        spriteUpdate.call(tankElement.sprite, point, hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
 }

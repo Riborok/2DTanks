@@ -18,7 +18,7 @@ export abstract class RectangularEntity implements IEntity {
             new Point(x0, y0 + height),
             new Point(x0 + width, y0 + height)];
         if (angle !== 0)
-            this.rotatePoints(-angle);
+            this.rotatePoints(angle);
     }
     public get points(): Point[] { return this._points }
     public get id(): number { return this._id }
