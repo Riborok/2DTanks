@@ -4,6 +4,6 @@ export interface ITrack {
 }
 
 export class TrackModel0 implements ITrack{
-    get angleSpeed(): number { return 0.05 }
-    get movementSpeed(): number { return 3 }
+    public get angleSpeed(): number { return 0.05 }
+    public get movementSpeed(): number { return 3 }
 }

@@ -46,10 +46,12 @@ export class Tank {
     public clockwiseMovement() {
         this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(this._tankParts.track.angleSpeed);
+        this._tankParts.turret.incAngle(this._tankParts.track.angleSpeed);
     }
     public counterclockwiseMovement() {
         this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(-this._tankParts.track.angleSpeed);
+        this._tankParts.turret.incAngle(-this._tankParts.track.angleSpeed);
     }
     public moveForward() {
         if (this._isDeltaChanged) {

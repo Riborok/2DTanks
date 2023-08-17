@@ -12,8 +12,15 @@ abstract class TrackSprite extends Sprite {
     }
 
     public abstract calcPosition(point: Point, angle: number): Point;
+    private readonly _width: number;
+    private readonly _height: number;
+    public get width(): number { return this._width }
+    public get height(): number { return this._height }
     protected constructor(num: number, tankWidth: number, height: number) {
-        super(tankWidth + TrackSprite.INDENT, height);
+        const width = tankWidth + TrackSprite.INDENT;
+        super(width, height);
+        this._width = width;
+        this._height = height;
 
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;

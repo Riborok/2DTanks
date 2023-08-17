@@ -5,8 +5,11 @@ import {TURRET_HEIGHT, TURRET_WIDTH} from "../constants";
 export class TurretSprite extends Sprite {
     private readonly _indentX : number;
     private readonly _indentY : number;
+    private readonly _num: number;
+    public get num(): number { return this._num }
     public constructor(color: number, num: number, indentX: number, indentY: number) {
         super(TURRET_WIDTH[num], TURRET_HEIGHT[num]);
+        this._num = num;
         this._sprite.src = `src/img/tanks/Turrets/Turret_${num}/Turret_${color}.png`;
         this._indentX = indentX;
         this._indentY = indentY;
