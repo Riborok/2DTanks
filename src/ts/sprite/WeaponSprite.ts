@@ -5,8 +5,11 @@ import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../constants";
 export class WeaponSprite extends Sprite {
     private readonly _indentX : number;
     private readonly _indentY : number;
+    private readonly _num: number;
+    public get num(): number { return this._num }
     public constructor(num: number, indentX: number, indentY: number) {
         super(WEAPON_WIDTH[num], WEAPON_HEIGHT[num]);
+        this._num = num;
         this._sprite.src = `src/img/tanks/Weapons/Weapon_${num}.png`;
         this._indentX = indentX;
         this._indentY = indentY;

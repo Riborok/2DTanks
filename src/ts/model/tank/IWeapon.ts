@@ -11,9 +11,9 @@ export interface IWeapon {
 }
 
 export class WeaponModel0 implements IWeapon {
-    get armorPenetrationCoeff(): number { return 1 }
-    get barrelLength(): number { return WEAPON_HEIGHT[0] }
-    get damageCoeff(): number { return 1 }
-    get movementSpeedCoeff(): number { return 1 }
-    get reloadSpeed(): number { return 3000 }
+    public get armorPenetrationCoeff(): number { return 1 }
+    public get barrelLength(): number { return WEAPON_HEIGHT[0] }
+    public get damageCoeff(): number { return 1 }
+    public get movementSpeedCoeff(): number { return 1 }
+    public get reloadSpeed(): number { return 3000 }
 }
