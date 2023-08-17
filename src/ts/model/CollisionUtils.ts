@@ -3,11 +3,6 @@ import {Point} from "./Point";
 
 export class CollisionUtils {
     private constructor() { }
-    public static calculateCollisionVector(movableRectangle: RectangularEntity, immovableRectangle: RectangularEntity):
-            {dx: number, dy: number} {
-        // НЕ РАБОТАЕТ :(
-        return {dx: 0, dy: 0}
-    }
     public static isCross(rectangle1: RectangularEntity, rectangle2: RectangularEntity): boolean {
         for (const point of rectangle1.points)
             if (CollisionUtils.isPointInsideRect(point, rectangle2))

@@ -6,5 +6,6 @@ const gameMaster : GameMaster = new GameMaster(
     document.querySelector('#canvas'), window.screen.width, window.screen.height);
 
 gameMaster.createField();
+gameMaster.createTank();
 
-//onkeydown = function (keysPressed) {gameMaster.handleKeys(keysPressed)};
+onkeydown = function (keysPressed) {gameMaster.handleKeys(keysPressed)};
