@@ -22,13 +22,11 @@ export class MovementManager implements IMovementManager{
         this._collisionManager = collisionManager;
     }
     public display(tankElement: TankElement) {
-        const point = tankElement.model.tankParts.hullEntity.points[0].clone();
-        RectangularEntity.rotatePoint(point, tankElement.model.tankParts.hullEntity.calcCenter(),
-            -tankElement.model.tankParts.hullEntity.angle);
+        const hullEntity = tankElement.model.tankParts.hullEntity;
+        const point = hullEntity.points[0].clone();
+        RectangularEntity.rotatePoint(point, hullEntity.calcCenter(), -hullEntity.angle);
 
-        tankElement.sprite.display(point,
-            tankElement.model.tankParts.hullEntity.angle,
-            tankElement.model.tankParts.turret.angle);
+        tankElement.sprite.display(point, hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
@@ -55,9 +53,8 @@ export class MovementManager implements IMovementManager{
 
         this._rectangularEntityStorage.insert(hullEntity);
 
-        const point = tankElement.model.tankParts.hullEntity.points[0].clone();
-        RectangularEntity.rotatePoint(point, tankElement.model.tankParts.hullEntity.calcCenter(),
-            -tankElement.model.tankParts.hullEntity.angle);
+        const point = hullEntity.points[0].clone();
+        RectangularEntity.rotatePoint(point, hullEntity.calcCenter(), -hullEntity.angle);
         spriteUpdate.call(tankElement.sprite, point, hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
 }

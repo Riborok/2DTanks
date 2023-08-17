@@ -32,9 +32,8 @@ export abstract class RectangularEntity implements IEntity {
             point.y += dy;
         }
     }
-    // Clockwise rotation
     public rotatePoints(deltaAngle: number) {
-        this._angle -= deltaAngle;
+        this._angle += deltaAngle;
         const center = this.calcCenter();
 
         for (const point of this.points)
