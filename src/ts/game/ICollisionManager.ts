@@ -11,6 +11,6 @@ export class CollisionManager implements ICollisionManager {
         this._rectangularEntityStorage = rectangularEntityStorage;
     }
     public isSuccess(rectangularEntity: RectangularEntity) : boolean {
-        return this._rectangularEntityStorage.checkIntersection(rectangularEntity);
+        return !this._rectangularEntityStorage.isCollision(rectangularEntity);
     }
 }

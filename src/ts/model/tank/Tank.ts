@@ -57,10 +57,7 @@ export class Tank {
             this.calcDeltaCoordinates();
         }
 
-        for (const point of this._tankParts.hullEntity.points) {
-            point.x += this._deltaX;
-            point.y += this._deltaY;
-        }
+        this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);
     }
     public moveBackward() {
         if (this._isDeltaChanged) {
@@ -68,10 +65,7 @@ export class Tank {
             this.calcDeltaCoordinates();
         }
 
-        for (const point of this._tankParts.hullEntity.points) {
-            point.x -= this._deltaX;
-            point.y -= this._deltaY;
-        }
+        this._tankParts.hullEntity.movePoints(-this._deltaX, -this._deltaY);
     }
     private calcDeltaCoordinates() {
         this._deltaX = this._tankParts.track.movementSpeed * Math.cos(this._tankParts.hullEntity.angle);
