@@ -66,6 +66,6 @@ export class TankSprite {
             this._tankSpriteParts.upTrackSprite.calcPosition(point, hullAngle));
         this._tankSpriteParts.upTrackSprite.setAngle(hullAngle);
 
-        this.rotateTurretUpdate(point, turretAngle);
+        this.rotateTurretUpdate(point, hullAngle);
     }
 }
