@@ -4,7 +4,7 @@ import {CollisionUtils} from "./CollisionUtils";
 export interface IRectangularEntityStorage {
     insert(rectangularEntity: RectangularEntity): void;
     remove(rectangularEntity: RectangularEntity): void;
-    checkIntersection(rectangularEntity: RectangularEntity): boolean;
+    isCollision(rectangularEntity: RectangularEntity): boolean;
 }
 
 export class Quadtree implements IRectangularEntityStorage{
@@ -18,8 +18,8 @@ export class Quadtree implements IRectangularEntityStorage{
         this._root.insert(rectangularEntity);
     }
 
-    public checkIntersection(rectangularEntity: RectangularEntity): boolean {
-        return this._root.checkIntersection(rectangularEntity);
+    public isCollision(rectangularEntity: RectangularEntity): boolean {
+        return this._root.isCollision(rectangularEntity);
     }
 
     public remove(rectangularEntity: RectangularEntity) {
@@ -101,13 +101,13 @@ class QuadtreeNode {
 
         this._rectangularEntities.delete(rectangularEntity.id);
     }
-    public checkIntersection(rectangularEntity: RectangularEntity): boolean {
+    public isCollision(rectangularEntity: RectangularEntity): boolean {
         if (!this.isContains(rectangularEntity))
-            return null;
+            return false;
 
         for (const child of this._children) {
             if (child.isContains(rectangularEntity)) {
-                return child.checkIntersection(rectangularEntity);
+                return child.isCollision(rectangularEntity);
             }
         }
 
@@ -116,7 +116,7 @@ class QuadtreeNode {
                     CollisionUtils.isCross(rectangularEntity, otherRectangularEntity))
                 return true;
 
-        return null;
+        return false;
     }
     private mergeWithChildren() {
         for (const child of this._children) {

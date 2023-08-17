@@ -31,10 +31,6 @@ abstract class TrackSprite extends Sprite {
         this.changeState();
         super.setPosition(point);
     }
-    public setAngle(angle: number) {
-        this.changeState();
-        super.setAngle(angle);
-    }
 }
 
 export class UpTrackSprite extends TrackSprite  {

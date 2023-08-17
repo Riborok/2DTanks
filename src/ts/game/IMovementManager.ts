@@ -41,7 +41,7 @@ export class MovementManager implements IMovementManager{
         this.updateHull(tankElement, tankElement.model.moveBackward, tankElement.model.moveForward,
             tankElement.sprite.movementUpdate);
     }
-    private updateHull(tankElement: TankElement, action: Action, reverseAction: Action, updateSprites: UpdateSprites) {
+    private updateHull(tankElement: TankElement, action: Action, reverseAction: Action, spriteUpdate: UpdateSprites) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
         this._rectangularEntityStorage.remove(hullEntity)
         action.call(tankElement.model);
@@ -50,7 +50,7 @@ export class MovementManager implements IMovementManager{
 
         this._rectangularEntityStorage.insert(hullEntity);
 
-        updateSprites.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
+        spriteUpdate.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
             tankElement.model.tankParts.turret.angle);
     }
 }
