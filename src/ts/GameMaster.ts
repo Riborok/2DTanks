@@ -3,7 +3,7 @@ import {DecorCreator, IDecorCreator} from "./game/IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./game/ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./game/IObstacleCreator";
 import {Field} from "./game/Field";
-import {IRectangularEntityStorage, Quadtree} from "./model/IRectangularEntityStorage";
+import {Arr, IRectangularEntityStorage, Quadtree} from "./model/IRectangularEntityStorage";
 import {IMovementManager, MovementManager} from "./game/IMovementManager";
 import {TankElement} from "./game/TankElement";
 import {Tank} from "./model/tank/Tank";
@@ -21,7 +21,7 @@ export class GameMaster {
     private readonly _movementManager: IMovementManager;
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
-        this._rectangularEntityStorage = new Quadtree(0, 0, width, height);
+        this._rectangularEntityStorage = new Arr();
         this._collisionManager = new CollisionManager(this._rectangularEntityStorage);
         this._decorCreator = new DecorCreator(this._field);
         this._obstacleCreator = new ObstacleCreator(this._field, this._rectangularEntityStorage);

@@ -4,8 +4,7 @@ import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 
 export interface IObstacleCreator {
     createObstaclesAroundPerimeter(name: string): void;
-    createRectHorObstacle(x: number, y: number, name: string): void;
-    createRectVertObstacle(x: number, y: number, name: string): void;
+    createRectObstacle(x: number, y: number, name: string, angle: number): void;
     createSquareObstacle(x: number, y: number, name: string): void;
 }
 
@@ -37,35 +36,23 @@ export class ObstacleCreator implements IObstacleCreator{
     private createHorObstacles(name: string, xIndent: number, yIndent: number) {
         for (let x = xIndent;
              x <= this._field.width - xIndent - ObstacleCreator.RECT_WALL_WIDTH; x += ObstacleCreator.RECT_WALL_WIDTH) {
-            this.createRectHorObstacle(x, yIndent, name);
-            this.createRectHorObstacle(x, this._field.height - ObstacleCreator.RECT_WALL_HEIGHT - yIndent, name);
+            this.createRectObstacle(x, yIndent, name, 0);
+            this.createRectObstacle(x, this._field.height - ObstacleCreator.RECT_WALL_HEIGHT - yIndent, name, 0);
         }
     }
     private createVertObstacles(name: string, xIndent: number, yIndent: number) {
+        const angle : number = 1.57; // 90 degrees
+
         for (let y = yIndent + ObstacleCreator.RECT_WALL_HEIGHT + (ObstacleCreator.RECT_WALL_HEIGHT >> 1);
              y <= this._field.height - yIndent - ObstacleCreator.RECT_WALL_WIDTH;
              y += ObstacleCreator.RECT_WALL_WIDTH) {
-            this.createRectVertObstacle(xIndent - (ObstacleCreator.RECT_WALL_HEIGHT >> 1), y, name);
-            this.createRectVertObstacle(this._field.width - xIndent - ObstacleCreator.RECT_WALL_WIDTH +
+            this.createRectObstacle(xIndent - (ObstacleCreator.RECT_WALL_HEIGHT >> 1), y, name, angle);
+            this.createRectObstacle(this._field.width - xIndent - ObstacleCreator.RECT_WALL_WIDTH +
                 (ObstacleCreator.RECT_WALL_HEIGHT >> 1),
-                y, name);
+                y, name, angle);
         }
     }
-    public createRectHorObstacle(x: number, y: number, name: string) {
-        const obstacle = document.createElement('img');
-        obstacle.src = `src/img/blocks/${name}Rectangle.png`;
-        obstacle.style.position = 'absolute';
-        obstacle.style.left = `${x}px`;
-        obstacle.style.top = `${y}px`;
-        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
-        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
-        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
-            ObstacleCreator.RECT_WALL_HEIGHT, 0));
-
-        this._field.canvas.appendChild(obstacle);
-    }
-    public createRectVertObstacle(x: number, y: number, name: string) {
-        const angle: number = 1.57; // 90 degrees
+    public createRectObstacle(x: number, y: number, name: string, angle: number) {
         const obstacle = document.createElement('img');
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';

@@ -8,7 +8,7 @@ abstract class TrackSprite extends Sprite {
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     protected static readonly INDENT: number = 1;
     protected static calcHeight(width: number) {
-        return Math.round(TrackSprite.PROPORTION_WIDTH_HEIGHT * width);
+        return TrackSprite.PROPORTION_WIDTH_HEIGHT * width;
     }
 
     public abstract calcPosition(point: Point, angle: number): Point;
