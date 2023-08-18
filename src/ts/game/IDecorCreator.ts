@@ -28,8 +28,5 @@ export class DecorCreator implements IDecorCreator {
         tile.style.width = `${CHUNK_SIZE}px`;
         tile.style.height = `${CHUNK_SIZE}px`;
         this._field.canvas.appendChild(tile);
-
-        // ДЛЯ ТЕСТОВ
-        tile.style.border = '1px solid black';
     }
 }

@@ -10,18 +10,18 @@ export interface IRectangularEntityStorage {
 export class Arr implements IRectangularEntityStorage {
     private entities: RectangularEntity[] = [];
 
-    insert(rectangularEntity: RectangularEntity): void {
+    public insert(rectangularEntity: RectangularEntity): void {
         this.entities.push(rectangularEntity);
     }
 
-    remove(rectangularEntity: RectangularEntity): void {
+    public remove(rectangularEntity: RectangularEntity): void {
         const index = this.entities.indexOf(rectangularEntity);
         if (index !== -1) {
             this.entities.splice(index, 1);
         }
     }
 
-    isCollision(rectangularEntity: RectangularEntity): boolean {
+    public isCollision(rectangularEntity: RectangularEntity): boolean {
         for (const entity of this.entities) {
             if (entity !== rectangularEntity &&
                 CollisionUtils.isCross(rectangularEntity, entity)) {
@@ -161,9 +161,11 @@ class QuadtreeNode {
         return count;
     }
     private isContains(rectangularEntity: RectangularEntity): boolean {
-        return rectangularEntity.points[0].x >= this._boundary.x &&
-            rectangularEntity.points[0].x <= this._boundary.x + this._boundary.width &&
-            rectangularEntity.points[0].y >= this._boundary.y &&
-            rectangularEntity.points[0].y <= this._boundary.y + this._boundary.height;
+        for (const point of rectangularEntity.points)
+            if (point.x < this._boundary.x || point.x > this._boundary.x + this._boundary.width ||
+                point.y < this._boundary.y || point.y > this._boundary.y + this._boundary.height)
+                return false;
+
+        return true;
     }
 }
