@@ -16,11 +16,21 @@ export class CollisionUtils {
     }
     private static isPointInsideRect(point: Point, rectangle: RectangularEntity): boolean {
         return (
-            ((rectangle.points[0].x <= point.x && point.x <= rectangle.points[1].x) &&
-                (rectangle.points[0].y <= point.y && point.y <= rectangle.points[2].y))
+            (
+                ((rectangle.points[0].x <= point.x && point.x <= rectangle.points[1].x) ||
+                    (rectangle.points[0].x >= point.x && point.x >= rectangle.points[1].x))
+                &&
+                ((rectangle.points[0].y <= point.y && point.y <= rectangle.points[2].y) ||
+                    (rectangle.points[0].y >= point.y && point.y >= rectangle.points[2].y))
+            )
             ||
-            ((rectangle.points[1].x <= point.x && point.x <= rectangle.points[3].x) &&
-                (rectangle.points[1].y <= point.y && point.y <= rectangle.points[4].y))
+            (
+                ((rectangle.points[1].x <= point.x && point.x <= rectangle.points[3].x) ||
+                    (rectangle.points[1].x >= point.x && point.x >= rectangle.points[3].x))
+                &&
+                ((rectangle.points[1].y <= point.y && point.y <= rectangle.points[0].y) ||
+                    (rectangle.points[1].y >= point.y && point.y >= rectangle.points[0].y))
+            )
         );
     }
 }

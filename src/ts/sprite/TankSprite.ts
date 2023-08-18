@@ -1,6 +1,8 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../model/Point";
 import {TankParts} from "../model/tank/TankParts";
+import {RectangularEntity} from "../model/IEntity";
+import {HULL_HEIGHT, HULL_WIDTH} from "../constants";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -11,37 +13,18 @@ export class TankSprite {
     public display(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.hullSprite.setPosition(point);
         this._tankSpriteParts.hullSprite.setAngle(hullAngle);
-
-        this._tankSpriteParts.downTrackSprite.setPosition(
-            this._tankSpriteParts.downTrackSprite.calcPosition(point, hullAngle));
-        this._tankSpriteParts.downTrackSprite.setAngle(hullAngle);
-
-        this._tankSpriteParts.upTrackSprite.setPosition(
-            this._tankSpriteParts.upTrackSprite.calcPosition(point, hullAngle));
-        this._tankSpriteParts.upTrackSprite.setAngle(hullAngle);
-
-        const turretPoint = this._tankSpriteParts.turretSprite.calcPosition(point, turretAngle);
-
-        this._tankSpriteParts.turretSprite.setPosition(turretPoint);
-        this._tankSpriteParts.turretSprite.setAngle(turretAngle);
-
-        this._tankSpriteParts.weaponSprite.setPosition(
-            this._tankSpriteParts.weaponSprite.calcPosition(turretPoint, turretAngle));
-        this._tankSpriteParts.weaponSprite.setAngle(turretAngle);
     }
 
-    public movementUpdate(point: Point, hullAngle: number, turretAngle: number) {
+    public movementUpdate(point: Point, center: Point, hullAngle: number, turretAngle: number) {
+        point = point.clone();
+        RectangularEntity.rotatePoint(
+            point,
+            center,
+            -hullAngle
+        );
+
         this._tankSpriteParts.hullSprite.setPosition(point);
-
-        this._tankSpriteParts.downTrackSprite.setPosition(
-            this._tankSpriteParts.downTrackSprite.calcPosition(point, hullAngle));
-        this._tankSpriteParts.upTrackSprite.setPosition(
-            this._tankSpriteParts.upTrackSprite.calcPosition(point, hullAngle));
-
-        const turretPoint = this._tankSpriteParts.turretSprite.calcPosition(point, turretAngle);
-        this._tankSpriteParts.turretSprite.setPosition(turretPoint);
-        this._tankSpriteParts.weaponSprite.setPosition(
-            this._tankSpriteParts.weaponSprite.calcPosition(turretPoint, turretAngle));
+        this._tankSpriteParts.hullSprite.setAngle(hullAngle);
     }
 
     public rotateTurretUpdate(point: Point, turretAngle: number) {
@@ -55,17 +38,15 @@ export class TankSprite {
         this._tankSpriteParts.weaponSprite.setAngle(turretAngle);
     }
 
-    public rotateHullUpdate(point: Point, hullAngle: number, turretAngle: number) {
+    public rotateHullUpdate(point: Point, center: Point, hullAngle: number, turretAngle: number) {
+        point = point.clone();
+        RectangularEntity.rotatePoint(
+            point,
+            center,
+            -hullAngle
+        );
+
         this._tankSpriteParts.hullSprite.setAngle(hullAngle);
-
-        this._tankSpriteParts.downTrackSprite.setPosition(
-            this._tankSpriteParts.downTrackSprite.calcPosition(point, hullAngle));
-        this._tankSpriteParts.downTrackSprite.setAngle(hullAngle);
-
-        this._tankSpriteParts.upTrackSprite.setPosition(
-            this._tankSpriteParts.upTrackSprite.calcPosition(point, hullAngle));
-        this._tankSpriteParts.upTrackSprite.setAngle(hullAngle);
-
-        this.rotateTurretUpdate(point, hullAngle);
+        this._tankSpriteParts.hullSprite.setPosition(point);
     }
 }

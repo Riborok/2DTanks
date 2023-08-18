@@ -5,7 +5,7 @@ import {Point} from "../model/Point";
 import {RectangularEntity} from "../model/IEntity";
 
 type Action = () => void;
-type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
+type UpdateSprites = (point: Point, center: Point, hullAngle: number, turretAngle: number) => void;
 
 export interface IMovementManager {
     hullCounterclockwiseMovement(tankElement: TankElement): void;
@@ -23,10 +23,8 @@ export class MovementManager implements IMovementManager{
     }
     public display(tankElement: TankElement) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
-        const point = hullEntity.points[0].clone();
-        RectangularEntity.rotatePoint(point, hullEntity.calcCenter(), -hullEntity.angle);
 
-        tankElement.sprite.display(point, hullEntity.angle, tankElement.model.tankParts.turret.angle);
+        tankElement.sprite.display(hullEntity.points[0], hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
@@ -53,8 +51,6 @@ export class MovementManager implements IMovementManager{
 
         this._rectangularEntityStorage.insert(hullEntity);
 
-        const point = hullEntity.points[0].clone();
-        RectangularEntity.rotatePoint(point, hullEntity.calcCenter(), -hullEntity.angle);
-        spriteUpdate.call(tankElement.sprite, point, hullEntity.angle, tankElement.model.tankParts.turret.angle);
+        spriteUpdate.call(tankElement.sprite, hullEntity.points[0], hullEntity.calcCenter(), hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
 }
