@@ -16,6 +16,7 @@ export class KeyHandler {
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
         document.addEventListener('keyup', this.handleKeyUp.bind(this));
     }
+    public clearMask() { this._keysMask = 0 }
     public addTankElement(tankElement: TankElement) {
         this._tankElements.push(tankElement);
     }

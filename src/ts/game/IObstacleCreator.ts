@@ -55,7 +55,7 @@ export class ObstacleCreator implements IObstacleCreator{
     public createRectObstacle(x: number, y: number, name: string, angle: number) {
         const obstacle = new Image(ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT);
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
-        obstacle.style.position = 'absolute';
+        obstacle.classList.add('sprite');
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
@@ -67,7 +67,7 @@ export class ObstacleCreator implements IObstacleCreator{
     public createSquareObstacle(x: number, y: number, name: string) {
         const obstacle = new Image(ObstacleCreator.SQUARE_WALL_SIZE, ObstacleCreator.SQUARE_WALL_SIZE);
         obstacle.src = `src/img/blocks/${name}Square.png`;
-        obstacle.style.position = 'absolute';
+        obstacle.classList.add('sprite');
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,

@@ -7,3 +7,8 @@
     background-color: green;
     overflow: hidden;
 }
+
+.sprite {
+    position: absolute;
+    pointer-events: none;
+}
