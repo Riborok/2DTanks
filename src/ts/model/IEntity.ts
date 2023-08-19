@@ -8,7 +8,7 @@ export interface IEntity {
 export abstract class RectangularEntity implements IEntity {
     private static CURRENT_ID : number = 0;
 
-    protected readonly _points: Point[];
+    protected _points: Point[];
     protected _angle: number;
     private readonly _id: number;
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
