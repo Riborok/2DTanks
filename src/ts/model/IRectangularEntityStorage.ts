@@ -7,32 +7,6 @@ export interface IRectangularEntityStorage {
     isCollision(rectangularEntity: RectangularEntity): boolean;
 }
 
-export class Arr implements IRectangularEntityStorage {
-    private entities: RectangularEntity[] = [];
-
-    public insert(rectangularEntity: RectangularEntity): void {
-        this.entities.push(rectangularEntity);
-    }
-
-    public remove(rectangularEntity: RectangularEntity): void {
-        const index = this.entities.indexOf(rectangularEntity);
-        if (index !== -1) {
-            this.entities.splice(index, 1);
-        }
-    }
-
-    public isCollision(rectangularEntity: RectangularEntity): boolean {
-        for (const entity of this.entities) {
-            if (entity !== rectangularEntity &&
-                    GeomInteractionUtils.isCross(rectangularEntity, entity)) {
-                console.log(entity)
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
 export class Quadtree implements IRectangularEntityStorage{
     private readonly _root: QuadtreeNode;
 
