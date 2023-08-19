@@ -3,6 +3,8 @@ import {Point} from "./Point";
 
 export class GeomInteractionUtils {
     private constructor() { }
+
+    // TODO: Сделать чтобы логика вращения работала по часовой
     public static rotatePointAroundTarget(point: Point, targetPoint: Point, deltaAngle: number) {
         const deltaX = point.x - targetPoint.x;
         const deltaY = point.y - targetPoint.y;

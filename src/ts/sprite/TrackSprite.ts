@@ -60,7 +60,7 @@ export class DownTrackSprite extends TrackSprite  {
     }
     public override calcPosition(point: Point, angle: number): Point {
         return new Point(
-            point.x + this._deltaHeight * Math.sin(angle),
+            point.x - this._deltaHeight * Math.sin(angle),
             point.y + this._deltaHeight * Math.cos(angle)
         );
     }

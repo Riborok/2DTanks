@@ -23,7 +23,7 @@ export class MovementManager implements IMovementManager{
     public display(tankElement: TankElement) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
 
-        tankElement.sprite.display(hullEntity.points[0], hullEntity.angle, tankElement.model.tankParts.turret.angle);
+        tankElement.sprite.display(hullEntity.points[0], hullEntity.calcCenter(), hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
