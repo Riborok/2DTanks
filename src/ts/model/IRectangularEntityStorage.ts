@@ -1,5 +1,5 @@
 import {RectangularEntity} from "./IEntity";
-import {CollisionUtils} from "./CollisionUtils";
+import {GeomInteractionUtils} from "./GeomInteractionUtils";
 
 export interface IRectangularEntityStorage {
     insert(rectangularEntity: RectangularEntity): void;
@@ -24,7 +24,7 @@ export class Arr implements IRectangularEntityStorage {
     public isCollision(rectangularEntity: RectangularEntity): boolean {
         for (const entity of this.entities) {
             if (entity !== rectangularEntity &&
-                CollisionUtils.isCross(rectangularEntity, entity)) {
+                    GeomInteractionUtils.isCross(rectangularEntity, entity)) {
                 console.log(entity)
                 return true;
             }
@@ -139,7 +139,7 @@ class QuadtreeNode {
 
         for (const [id, otherRectangularEntity] of this._rectangularEntities)
             if (otherRectangularEntity !== rectangularEntity &&
-                    CollisionUtils.isCross(rectangularEntity, otherRectangularEntity))
+                    GeomInteractionUtils.isCross(rectangularEntity, otherRectangularEntity))
                 return true;
 
         return false;

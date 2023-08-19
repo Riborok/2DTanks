@@ -20,13 +20,11 @@ export class DecorCreator implements IDecorCreator {
     }
     public addBackgroundTile(x: number, y: number, name: string)
     {
-        const tile = document.createElement('img');
+        const tile = new Image(CHUNK_SIZE, CHUNK_SIZE);
         tile.src = `src/img/backgrounds/${name}Background_${getRandomInt(0, 1)}.png`;
         tile.style.position = 'absolute';
         tile.style.left = `${x}px`;
         tile.style.top = `${y}px`;
-        tile.style.width = `${CHUNK_SIZE}px`;
-        tile.style.height = `${CHUNK_SIZE}px`;
         this._field.canvas.appendChild(tile);
     }
 }

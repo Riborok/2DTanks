@@ -53,13 +53,11 @@ export class ObstacleCreator implements IObstacleCreator{
         }
     }
     public createRectObstacle(x: number, y: number, name: string, angle: number) {
-        const obstacle = document.createElement('img');
+        const obstacle = new Image(ObstacleCreator.RECT_WALL_WIDTH, ObstacleCreator.RECT_WALL_HEIGHT);
         obstacle.src = `src/img/blocks/${name}Rectangle.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
-        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
-        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
         this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
@@ -67,13 +65,11 @@ export class ObstacleCreator implements IObstacleCreator{
         this._field.canvas.appendChild(obstacle);
     }
     public createSquareObstacle(x: number, y: number, name: string) {
-        const obstacle = document.createElement('img');
+        const obstacle = new Image(ObstacleCreator.SQUARE_WALL_SIZE, ObstacleCreator.SQUARE_WALL_SIZE);
         obstacle.src = `src/img/blocks/${name}Square.png`;
         obstacle.style.position = 'absolute';
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
-        obstacle.style.width = `${ObstacleCreator.RECT_WALL_WIDTH}px`;
-        obstacle.style.height = `${ObstacleCreator.RECT_WALL_HEIGHT}px`;
         this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, 0));
 

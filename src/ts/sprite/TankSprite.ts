@@ -1,8 +1,6 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../model/Point";
-import {TankParts} from "../model/tank/TankParts";
-import {RectangularEntity} from "../model/IEntity";
-import {HULL_HEIGHT, HULL_WIDTH} from "../constants";
+import {GeomInteractionUtils} from "../model/GeomInteractionUtils";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -17,7 +15,7 @@ export class TankSprite {
 
     public movementUpdate(point: Point, center: Point, hullAngle: number, turretAngle: number) {
         point = point.clone();
-        RectangularEntity.rotatePoint(
+        GeomInteractionUtils.rotatePointAroundTarget(
             point,
             center,
             -hullAngle
@@ -40,7 +38,7 @@ export class TankSprite {
 
     public rotateHullUpdate(point: Point, center: Point, hullAngle: number, turretAngle: number) {
         point = point.clone();
-        RectangularEntity.rotatePoint(
+        GeomInteractionUtils.rotatePointAroundTarget(
             point,
             center,
             -hullAngle

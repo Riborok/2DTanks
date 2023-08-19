@@ -2,7 +2,6 @@ import {TankElement} from "./TankElement";
 import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
 import {Point} from "../model/Point";
-import {RectangularEntity} from "../model/IEntity";
 
 type Action = () => void;
 type UpdateSprites = (point: Point, center: Point, hullAngle: number, turretAngle: number) => void;
