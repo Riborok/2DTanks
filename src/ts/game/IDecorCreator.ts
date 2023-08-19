@@ -22,7 +22,7 @@ export class DecorCreator implements IDecorCreator {
     {
         const tile = new Image(CHUNK_SIZE, CHUNK_SIZE);
         tile.src = `src/img/backgrounds/${name}Background_${getRandomInt(0, 1)}.png`;
-        tile.style.position = 'absolute';
+        tile.classList.add('sprite');
         tile.style.left = `${x}px`;
         tile.style.top = `${y}px`;
         this._field.canvas.appendChild(tile);

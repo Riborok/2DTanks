@@ -5,7 +5,7 @@ export abstract class Sprite {
     public get sprite(): HTMLImageElement { return this._sprite }
     protected constructor(width: number, height: number) {
         this._sprite = new Image(width, height);
-        this._sprite.style.position = 'absolute';
+        this._sprite.classList.add('sprite');
     }
     public setPosition(point: Point) {
         this._sprite.style.left = `${point.x}px`;
