@@ -1,4 +1,4 @@
-import {GameMaster} from "./GameMaster";
+import {GameMaster} from "./game/GameMaster";
 
 window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
 
@@ -7,5 +7,3 @@ const gameMaster : GameMaster = new GameMaster(
 
 gameMaster.createField();
 gameMaster.createTank();
-
-onkeydown = function (keysPressed) {gameMaster.handleKeys(keysPressed)};

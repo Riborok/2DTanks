@@ -1,4 +1,5 @@
 import {Point} from "./Point";
+import {GeomInteractionUtils} from "./GeomInteractionUtils";
 
 export interface IEntity {
     get points(): Point[];
@@ -37,14 +38,6 @@ export abstract class RectangularEntity implements IEntity {
         const center = this.calcCenter();
 
         for (const point of this.points)
-            RectangularEntity.rotatePoint(point, center, deltaAngle);
-    }
-    public static rotatePoint(point: Point, center: Point, deltaAngle: number) {
-        const deltaX = point.x - center.x;
-        const deltaY = point.y - center.y;
-        const rotatedX = deltaX * Math.cos(deltaAngle) - deltaY * Math.sin(deltaAngle);
-        const rotatedY = deltaX * Math.sin(deltaAngle) + deltaY * Math.cos(deltaAngle);
-        point.x = rotatedX + center.x;
-        point.y = rotatedY + center.y;
+            GeomInteractionUtils.rotatePointAroundTarget(point, center, deltaAngle);
     }
 }

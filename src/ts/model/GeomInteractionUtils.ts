@@ -1,15 +1,21 @@
 import {RectangularEntity} from "./IEntity";
 import {Point} from "./Point";
 
-export class CollisionUtils {
+export class GeomInteractionUtils {
     private constructor() { }
+    public static rotatePointAroundTarget(point: Point, targetPoint: Point, deltaAngle: number) {
+        const deltaX = point.x - targetPoint.x;
+        const deltaY = point.y - targetPoint.y;
+        point.x = targetPoint.x + deltaX * Math.cos(deltaAngle) - deltaY * Math.sin(deltaAngle);
+        point.y = targetPoint.y + deltaX * Math.sin(deltaAngle) + deltaY * Math.cos(deltaAngle);
+    }
     public static isCross(rectangle1: RectangularEntity, rectangle2: RectangularEntity): boolean {
         for (const point of rectangle1.points)
-            if (CollisionUtils.isPointInsideRect(point, rectangle2))
+            if (GeomInteractionUtils.isPointInsideRect(point, rectangle2))
                 return true;
 
         for (const point of rectangle2.points)
-            if (CollisionUtils.isPointInsideRect(point, rectangle1))
+            if (GeomInteractionUtils.isPointInsideRect(point, rectangle1))
                 return true;
 
         return false;
