@@ -1,14 +1,14 @@
 export const CHUNK_SIZE: number = 115;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 
-export const VK_W = 87;
-export const VK_S = 83;
-export const VK_A = 65;
-export const VK_D = 68;
-export const VK_UP = 38;
-export const VK_DOWN = 40;
-export const VK_LEFT = 37;
-export const VK_RIGHT = 39;
+export const VK_W: number = 87;
+export const VK_S: number = 83;
+export const VK_A: number = 65;
+export const VK_D: number = 68;
+export const VK_UP: number = 38;
+export const VK_DOWN: number = 40;
+export const VK_LEFT: number = 37;
+export const VK_RIGHT: number = 39;
 
 export const HULL_WIDTH: number[] = [93, 100, 93, 79, 100, 100, 93, 86];
 export const HULL_HEIGHT: number[] = [64, 64, 50, 43, 71, 57, 50, 43];
