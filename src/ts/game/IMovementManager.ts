@@ -11,7 +11,6 @@ export interface IMovementManager {
     hullClockwiseMovement(tankElement: TankElement): void;
     moveForward(tankElement: TankElement): void;
     moveBackward(tankElement: TankElement): void;
-    display(tankElement: TankElement): void;
 }
 export class MovementManager implements IMovementManager{
     private readonly _rectangularEntityStorage: IRectangularEntityStorage;
@@ -19,11 +18,6 @@ export class MovementManager implements IMovementManager{
     constructor(rectangularEntityStorage: IRectangularEntityStorage, collisionManager: ICollisionManager) {
         this._rectangularEntityStorage = rectangularEntityStorage;
         this._collisionManager = collisionManager;
-    }
-    public display(tankElement: TankElement) {
-        const hullEntity = tankElement.model.tankParts.hullEntity;
-
-        tankElement.sprite.display(hullEntity.points[0], hullEntity.calcCenter(), hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
