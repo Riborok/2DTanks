@@ -5,6 +5,8 @@ abstract class TrackSprite extends Sprite {
     private readonly _srcState0: string;
     private readonly _srcState1: string;
     private _state: number;
+    private _counter: number;
+    private static readonly STATE_CHANGE_THRESHOLD: number = 3;
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     protected static readonly INDENT: number = 1;
     protected static calcHeight(width: number) {
@@ -25,14 +27,16 @@ abstract class TrackSprite extends Sprite {
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
         this._state = 0;
+        this._counter = 0;
         this._sprite.src = this._srcState0;
     }
     private changeState() {
-        this._state++; this._state %= 2;
-        if (this._state === 1)
-            this._sprite.src = this._srcState1;
-        else
-            this._sprite.src = this._srcState0;
+        this._counter++;
+        if (this._counter === TrackSprite.STATE_CHANGE_THRESHOLD) {
+            this._state ^= 1;
+            this._sprite.src = this._state === 1 ? this._srcState1 : this._srcState0;
+            this._counter = 0;
+        }
     }
     public setPosition(point: Point) {
         this.changeState();

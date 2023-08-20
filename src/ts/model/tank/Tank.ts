@@ -19,7 +19,7 @@ export class Tank {
         this._bulletManufacturing = new LightBulletManufacturing();
     }
     public get tankParts(): TankParts { return this._tankParts }
-    public shot(): BulletEntity {
+    public shot(): BulletEntity | null {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
             return null;
