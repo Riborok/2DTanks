@@ -21,6 +21,7 @@ export class GameMaster {
     private readonly _obstacleCreator: IObstacleCreator;
     private readonly _movementManager: IMovementManager;
     private readonly _keyHandler: KeyHandler;
+    private isGameLoopActive: boolean;
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
         this._rectangularEntityStorage = new Quadtree(0, 0, width, height);
@@ -29,7 +30,7 @@ export class GameMaster {
         this._obstacleCreator = new ObstacleCreator(this._field, this._rectangularEntityStorage);
         this._movementManager = new MovementManager(this._rectangularEntityStorage, this._collisionManager);
         this._keyHandler = new KeyHandler(this._movementManager);
-        this.startMainLoop();
+        this.startGameLoop();
     }
 
     public createField() {
@@ -62,11 +63,18 @@ export class GameMaster {
     }
 
     // Game loop
-    private startMainLoop() {
-        const loop = () => {
+    private startGameLoop() {
+        this.isGameLoopActive = true;
+        const gameLoop = () => {
+            if (!this.isGameLoopActive)
+                return;
+
             this._keyHandler.handleKeys();
-            requestAnimationFrame(loop);
+            requestAnimationFrame(gameLoop);
         };
-        loop();
+        gameLoop();
+    }
+    private stopGameLoop() {
+        this.isGameLoopActive = false;
     }
 }

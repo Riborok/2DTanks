@@ -1,5 +1,6 @@
 import {RectangularEntity} from "./IEntity";
 import {GeomInteractionUtils} from "./GeomInteractionUtils";
+import {Point} from "./Point";
 
 export interface IRectangularEntityStorage {
     insert(rectangularEntity: RectangularEntity): void;
@@ -7,11 +8,36 @@ export interface IRectangularEntityStorage {
     isCollision(rectangularEntity: RectangularEntity): boolean;
 }
 
+export class Arr implements IRectangularEntityStorage {
+    private entities: RectangularEntity[] = [];
+
+    public insert(rectangularEntity: RectangularEntity): void {
+        this.entities.push(rectangularEntity);
+    }
+
+    public remove(rectangularEntity: RectangularEntity): void {
+        const index = this.entities.indexOf(rectangularEntity);
+        if (index !== -1) {
+            this.entities.splice(index, 1);
+        }
+    }
+
+    public isCollision(rectangularEntity: RectangularEntity): boolean {
+        for (const entity of this.entities) {
+            if (entity !== rectangularEntity &&
+                GeomInteractionUtils.isCross(rectangularEntity, entity)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 export class Quadtree implements IRectangularEntityStorage{
     private readonly _root: QuadtreeNode;
 
-    public constructor(x: number, y: number, width: number, height: number) {
-        this._root = new QuadtreeNode({ x, y, width, height });
+    public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
+        this._root = new QuadtreeNode({ xStart, yStart, xLast, yLast }, null);
     }
 
     public insert(rectangularEntity: RectangularEntity) {
@@ -31,115 +57,133 @@ class QuadtreeNode {
     private static readonly CAPACITY: number = 8;
     private static readonly HALF_CAPACITY: number = QuadtreeNode.CAPACITY >> 1;
 
-    private _rectangularEntities: Map<number, RectangularEntity> = new Map();
-    private _children: QuadtreeNode[] = [];
-    private readonly _boundary: { x: number, y: number, width: number, height: number };
+    private _rectangularEntities: Set<RectangularEntity> | null = new Set<RectangularEntity>();
+    private _children: QuadtreeNode[] | null = null;
 
-    public constructor(boundary: { x: number, y: number, width: number, height: number }) {
+    private readonly _parent: QuadtreeNode | null;
+    private readonly _boundary: { xStart: number, yStart: number, xLast: number, yLast: number };
+    public constructor(boundary: { xStart: number, yStart: number, xLast: number, yLast: number },
+                       parent: QuadtreeNode | null) {
         this._boundary = boundary;
+        this._parent = parent;
     }
+    private isSubdivide(): boolean { return this._rectangularEntities === null }
     private subdivide() {
-        const x = this._boundary.x;
-        const y = this._boundary.y;
-        const width = this._boundary.width >> 1;
-        const height = this._boundary.height >> 1;
+        const xStart = this._boundary.xStart;
+        const yStart = this._boundary.yStart;
+        const xLast = this._boundary.xLast;
+        const yLast = this._boundary.yLast;
 
-        this._children.push(new QuadtreeNode({ x, y, width, height }));
-        this._children.push(new QuadtreeNode({ x: x + width, y, width, height }));
-        this._children.push(new QuadtreeNode({ x, y: y + height, width, height }));
-        this._children.push(new QuadtreeNode({ x: x + width, y: y + height, width, height }));
+        const width = (xLast - xStart) / 2;
+        const height = (yLast - yStart) / 2;
+
+        this._children = [
+            new QuadtreeNode({ xStart, yStart, xLast: xStart + width, yLast: yStart + height }, this),
+            new QuadtreeNode({ xStart: xStart + width, yStart, xLast, yLast: yStart + height }, this),
+            new QuadtreeNode({ xStart, yStart: yStart + height, xLast: xStart + width, yLast }, this),
+            new QuadtreeNode({ xStart: xStart + width, yStart: yStart + height, xLast, yLast }, this)
+        ];
 
         this.redistribute();
     }
     private redistribute() {
-        const remainingRectangularEntities: Map<number, RectangularEntity> = new Map();
+        for (const rectangularEntity of this._rectangularEntities)
+            for (const child of this._children)
+                if (child.isContainsRect(rectangularEntity))
+                    child.insert(rectangularEntity);
 
-        for (const [id, rectangularEntity] of this._rectangularEntities) {
-            let isRedistributed = false;
-            for (const child of this._children) {
-                if (child.isContains(rectangularEntity)) {
-                    child.insert(rectangularEntity);
-                    isRedistributed = true;
-                    break;
-                }
-            }
-            if (!isRedistributed)
-                remainingRectangularEntities.set(id, rectangularEntity);
-        }
-        this._rectangularEntities = remainingRectangularEntities;
+        this._rectangularEntities = null;
     }
-    public insert(rectangularEntity: RectangularEntity): void {
-        if (this._children.length > 0) {
-            for (const child of this._children) {
-                if (child.isContains(rectangularEntity)) {
+    public insert(rectangularEntity: RectangularEntity) {
+        if (this.isSubdivide()) {
+            for (const child of this._children)
+                if (child.isContainsRect(rectangularEntity))
                     child.insert(rectangularEntity);
-                    return;
-                }
-            }
         }
-        this._rectangularEntities.set(rectangularEntity.id, rectangularEntity);
-        if (this._children.length === 0 && this._rectangularEntities.size > QuadtreeNode.CAPACITY)
-            this.subdivide();
+        else {
+            this._rectangularEntities.add(rectangularEntity);
+            if (this._rectangularEntities.size > QuadtreeNode.CAPACITY)
+                this.subdivide();
+        }
     }
     public remove(rectangularEntity: RectangularEntity) {
-        if (this._children.length > 0) {
-            for (const child of this._children) {
-                if (child.isContains(rectangularEntity)) {
+        if (this.isSubdivide()) {
+            for (const child of this._children)
+                if (child.isContainsRect(rectangularEntity))
                     child.remove(rectangularEntity);
-
-                    let totalChildCount = 0;
-                    for (const child of this._children)
-                        totalChildCount += child.getRectangularEntitiesCount();
-
-                    if (totalChildCount <= QuadtreeNode.HALF_CAPACITY)
-                        this.mergeWithChildren();
-
-                    return;
-                }
-            }
+            this.mergeCheck();
         }
-
-        this._rectangularEntities.delete(rectangularEntity.id);
+        else {
+            this._rectangularEntities.delete(rectangularEntity);
+            if (this._parent !== null)
+                this._parent.mergeCheck();
+        }
     }
     public isCollision(rectangularEntity: RectangularEntity): boolean {
-        if (!this.isContains(rectangularEntity))
-            return false;
-
-        for (const child of this._children) {
-            if (child.isContains(rectangularEntity)) {
-                return child.isCollision(rectangularEntity);
-            }
+        if (this.isSubdivide()) {
+            for (const child of this._children)
+                for (const point of rectangularEntity.points)
+                    if (child.isContainsPoint(point) && child.hasPointCollision(point))
+                        return true;
         }
-
-        for (const [id, otherRectangularEntity] of this._rectangularEntities)
-            if (otherRectangularEntity !== rectangularEntity &&
-                    GeomInteractionUtils.isCross(rectangularEntity, otherRectangularEntity))
+        else {
+            for (const rectangularEntity of this._rectangularEntities)
+                if (GeomInteractionUtils.isCross(rectangularEntity, rectangularEntity))
+                    return true;
+        }
+        return false;
+    }
+    private hasPointCollision(point: Point): boolean {
+        if (this.isSubdivide()) {
+            for (const child of this._children)
+                if (child.isContainsPoint(point))
+                    return child.hasPointCollision(point);
+        }
+        else {
+            for (const rectangularEntity of this._rectangularEntities)
+                if (GeomInteractionUtils.isPointInsideRect(point, rectangularEntity))
+                    return true;
+        }
+        return false;
+    }
+    private isContainsRect(rectangularEntity: RectangularEntity): boolean {
+        for (const point of rectangularEntity.points)
+            if (this.isContainsPoint(point))
                 return true;
 
         return false;
     }
+    private isContainsPoint(point: Point): boolean {
+        return point.x > this._boundary.xStart && point.x < this._boundary.xLast &&
+            point.y > this._boundary.yStart && point.y < this._boundary.yLast;
+    }
+    private mergeCheck() {
+        let totalChildCount = 0;
+        for (const child of this._children)
+            totalChildCount += child.getRectangularEntitiesCount();
+
+        if (totalChildCount <= QuadtreeNode.HALF_CAPACITY)
+            this.mergeWithChildren();
+    }
     private mergeWithChildren() {
+        this._rectangularEntities = new Set<RectangularEntity>();
         for (const child of this._children) {
-            if (child._children.length !== 0)
+            if (child.isSubdivide())
                 child.mergeWithChildren();
-            for (const [key, value] of child._rectangularEntities)
-                this._rectangularEntities.set(key, value);
+            for (const rectangularEntity of child._rectangularEntities)
+                this._rectangularEntities.add(rectangularEntity);
         }
 
-        this._children = [];
+        this._children = null;
     }
     private getRectangularEntitiesCount(): number {
-        let count = this._rectangularEntities.size;
-        for (const child of this._children)
-            count += child.getRectangularEntitiesCount();
-        return count;
-    }
-    private isContains(rectangularEntity: RectangularEntity): boolean {
-        for (const point of rectangularEntity.points)
-            if (point.x < this._boundary.x || point.x > this._boundary.x + this._boundary.width ||
-                point.y < this._boundary.y || point.y > this._boundary.y + this._boundary.height)
-                return false;
-
-        return true;
+        if (this.isSubdivide()) {
+            let count = 0;
+            for (const child of this._children)
+                count += child.getRectangularEntitiesCount();
+            return count;
+        }
+        else
+            return this._rectangularEntities.size;
     }
 }
