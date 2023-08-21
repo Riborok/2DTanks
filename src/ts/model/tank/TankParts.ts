@@ -1,14 +1,14 @@
 import {HullEntity} from "./HullEntity";
 import {ITrack} from "./ITrack";
-import {ITurret} from "./ITurret";
+import {Turret} from "./Turret";
 import {IWeapon} from "./IWeapon";
 
 export class TankParts {
     private readonly _hullEntity: HullEntity;
     private readonly _track: ITrack;
-    private readonly _turret: ITurret;
+    private readonly _turret: Turret;
     private readonly _weapon: IWeapon;
-    public constructor(hullEntity: HullEntity, track: ITrack, turret: ITurret, weapon: IWeapon) {
+    public constructor(hullEntity: HullEntity, track: ITrack, turret: Turret, weapon: IWeapon) {
         this._hullEntity = hullEntity;
         this._track = track;
         this._turret = turret;
@@ -16,6 +16,6 @@ export class TankParts {
     }
     public get hullEntity(): HullEntity { return this._hullEntity; }
     public get track(): ITrack { return this._track; }
-    public get turret(): ITurret { return this._turret; }
+    public get turret(): Turret { return this._turret; }
     public get weapon(): IWeapon { return this._weapon; }
 }

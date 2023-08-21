@@ -10,6 +10,8 @@ export class TankElement {
     private _backwardMask: number;
     private _hullClockwiseMask: number;
     private _hullCounterClockwiseMask: number;
+    private _turretClockwiseMask: number;
+    private _turretCounterClockwiseMask: number;
     public get forwardMask(): number { return this._forwardMask }
     public set forwardMask(mask: number) { this._forwardMask = mask }
     public get backwardMask(): number { return this._backwardMask }
@@ -18,6 +20,10 @@ export class TankElement {
     public set hullClockwiseMask(mask: number) { this._hullClockwiseMask = mask }
     public get hullCounterClockwiseMask(): number { return this._hullCounterClockwiseMask }
     public set hullCounterClockwiseMask(mask: number) { this._hullCounterClockwiseMask = mask }
+    public get turretClockwiseMask(): number { return this._turretClockwiseMask }
+    public set turretClockwiseMask(mask: number) { this._turretClockwiseMask = mask }
+    public get turretCounterClockwiseMask(): number { return this._turretCounterClockwiseMask }
+    public set turretCounterClockwiseMask(mask: number) { this._turretCounterClockwiseMask = mask }
 
     private readonly _model: Tank;
     private readonly _sprite: TankSprite;
@@ -26,22 +32,18 @@ export class TankElement {
     public constructor(x0: number, y0: number, angle: number, color: number,
                        hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
                        forwardMask: number, backwardMask: number,
-                       hullClockwiseMask: number, hullCounterClockwiseMask: number) {
+                       hullClockwiseMask: number, hullCounterClockwiseMask: number,
+                       turretClockwiseMask: number, turretCounterClockwiseMask: number) {
         this._forwardMask = forwardMask;
         this._backwardMask = backwardMask;
         this._hullClockwiseMask = hullClockwiseMask;
         this._hullCounterClockwiseMask = hullCounterClockwiseMask;
+        this._turretClockwiseMask = turretClockwiseMask;
+        this._turretCounterClockwiseMask = turretCounterClockwiseMask;
 
         this._sprite = new TankSprite(new TankSpriteParts(color, hullNum, trackNum, turretNum, weaponNum));
 
-        this._model = new Tank(
-            new TankParts(
-                TankCreator.createHull(hullNum, x0, y0, angle),
-                TankCreator.createTrack(trackNum),
-                TankCreator.createTurret(turretNum),
-                TankCreator.createWeapon(weaponNum)
-            )
-        );
+        this._model = new Tank(TankCreator.createTankParts(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
     }
     public spawn(canvas: Element, rectangularEntityStorage: IRectangularEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
