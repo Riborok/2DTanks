@@ -54,7 +54,6 @@ export class TankElement {
         const hullEntity = this._model.tankParts.hullEntity;
 
         rectangularEntityStorage.insert(hullEntity);
-        this._sprite.updateSprites(hullEntity.points[0], hullEntity.calcCenter(),
-            hullEntity.angle, this._model.tankParts.turret.angle);
+        this._sprite.updateSprite(hullEntity.points[0], hullEntity.angle, this._model.tankParts.turret.angle);
     }
 }

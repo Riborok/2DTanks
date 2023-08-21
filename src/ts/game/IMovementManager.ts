@@ -1,10 +1,8 @@
 import {TankElement} from "./TankElement";
 import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
-import {Point} from "../model/Point";
 
 type Action = () => void;
-type UpdateSprites = (point: Point, center: Point, hullAngle: number, turretAngle: number) => void;
 
 export interface IMovementManager {
     hullCounterclockwiseMovement(tankElement: TankElement): void;
@@ -20,22 +18,18 @@ export class MovementManager implements IMovementManager{
         this._collisionManager = collisionManager;
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
-            tankElement.sprite.updateSprites);
+        this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
-        this.updateHull(tankElement, tankElement.model.clockwiseMovement, tankElement.model.counterclockwiseMovement,
-            tankElement.sprite.updateSprites);
+        this.updateHull(tankElement, tankElement.model.clockwiseMovement, tankElement.model.counterclockwiseMovement);
     }
     public moveForward(tankElement: TankElement) {
-        this.updateHull(tankElement, tankElement.model.moveForward, tankElement.model.moveBackward,
-            tankElement.sprite.updateSprites);
+        this.updateHull(tankElement, tankElement.model.moveForward, tankElement.model.moveBackward);
     }
     public moveBackward(tankElement: TankElement) {
-        this.updateHull(tankElement, tankElement.model.moveBackward, tankElement.model.moveForward,
-            tankElement.sprite.updateSprites);
+        this.updateHull(tankElement, tankElement.model.moveBackward, tankElement.model.moveForward);
     }
-    private updateHull(tankElement: TankElement, action: Action, reverseAction: Action, spriteUpdate: UpdateSprites) {
+    private updateHull(tankElement: TankElement, action: Action, reverseAction: Action) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
         this._rectangularEntityStorage.remove(hullEntity)
         action.call(tankElement.model);
@@ -44,6 +38,6 @@ export class MovementManager implements IMovementManager{
 
         this._rectangularEntityStorage.insert(hullEntity);
 
-        spriteUpdate.call(tankElement.sprite, hullEntity.points[0], hullEntity.calcCenter(), hullEntity.angle, tankElement.model.tankParts.turret.angle);
+        tankElement.sprite.updateSprite(hullEntity.points[0], hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }
 }

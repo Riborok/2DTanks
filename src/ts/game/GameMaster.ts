@@ -3,7 +3,7 @@ import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";
 import {Field} from "./Field";
-import {Arr, IRectangularEntityStorage, Quadtree} from "../model/IRectangularEntityStorage";
+import {IRectangularEntityStorage, Quadtree} from "../model/IRectangularEntityStorage";
 import {IMovementManager, MovementManager} from "./IMovementManager";
 import {TankElement} from "./TankElement";
 import {KeyHandler} from "./KeyHandler";

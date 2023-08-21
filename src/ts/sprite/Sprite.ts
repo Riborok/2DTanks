@@ -15,3 +15,16 @@ export abstract class Sprite {
         this._sprite.style.transform = `rotate(${angle}rad)`;
     }
 }
+
+export abstract class TankSpritePart extends Sprite {
+    private readonly _width: number;
+    private readonly _height: number;
+    public get width(): number { return this._width }
+    public get height(): number { return this._height }
+    protected constructor(width: number, height: number) {
+        super(width,height);
+        this._width = width;
+        this._height = height;
+    }
+    public abstract calcPosition(point: Point, angle: number): Point;
+}
