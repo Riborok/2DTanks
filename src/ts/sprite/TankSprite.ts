@@ -1,10 +1,7 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../model/Point";
-import {TankParts} from "../model/tank/TankParts";
-import {RectangularEntity} from "../model/IEntity";
-import {HULL_HEIGHT, HULL_WIDTH} from "../constants";
 import {GeomInteractionUtils} from "../model/GeomInteractionUtils";
-import {HullSprite} from "./HullSprite";
+import {TankSpritePart} from "./Sprite";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -12,55 +9,62 @@ export class TankSprite {
         this._tankSpriteParts = tankSpriteParts;
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
-    public updateSprites(point: Point, center: Point, hullAngle: number, turretAngle: number) {
-        let rotatedPoint = point.clone();
-        let halfWidth = this._tankSpriteParts.downTrackSprite.width >> 1;
-        let halfHeight = this._tankSpriteParts.downTrackSprite.height >> 1;
-        let sin = Math.sin(hullAngle);
-        let cos = Math.cos(hullAngle);
-        GeomInteractionUtils.rotatePointAroundTarget(
-            rotatedPoint,
-            new Point(rotatedPoint.x + halfWidth * cos - halfHeight * sin,
-                rotatedPoint.y + halfHeight * cos + halfWidth * sin),
-            -hullAngle
-        );
-        this._tankSpriteParts.upTrackSprite.setPosition(rotatedPoint);
-        this._tankSpriteParts.upTrackSprite.setAngle(hullAngle);
+    public updateSprite(point: Point, hullAngle: number, turretAngle: number) {
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
 
-        rotatedPoint = this._tankSpriteParts.hullSprite.calcPosition(point, hullAngle);
-        let tempPoint = rotatedPoint.clone();
-        halfWidth = HULL_WIDTH[this._tankSpriteParts.hullSprite.num] >> 1;
-        halfHeight = HULL_HEIGHT[this._tankSpriteParts.hullSprite.num] >> 1;
-        GeomInteractionUtils.rotatePointAroundTarget(
-            rotatedPoint,
-            new Point(rotatedPoint.x + halfWidth * cos - halfHeight * sin,
-                rotatedPoint.y + halfHeight * cos + halfWidth * sin),
-            -hullAngle
-        );
-        this._tankSpriteParts.hullSprite.setPosition(rotatedPoint);
-        this._tankSpriteParts.hullSprite.setAngle(hullAngle);
+        let tankSpritePart: TankSpritePart;
+        let rotatedPoint: Point;
 
-        rotatedPoint = this._tankSpriteParts.downTrackSprite.calcPosition(tempPoint, hullAngle);
-        halfWidth = this._tankSpriteParts.downTrackSprite.width >> 1;
-        halfHeight = this._tankSpriteParts.downTrackSprite.height >> 1;
-        GeomInteractionUtils.rotatePointAroundTarget(
-            rotatedPoint,
-            new Point(rotatedPoint.x + halfWidth * cos - halfHeight * sin,
-                rotatedPoint.y + halfHeight * cos + halfWidth * sin),
-            -hullAngle
-        );
-        this._tankSpriteParts.downTrackSprite.setPosition(rotatedPoint);
-        this._tankSpriteParts.downTrackSprite.setAngle(hullAngle);
+        tankSpritePart = this._tankSpriteParts.upTrackSprite;
+        rotatedPoint = tankSpritePart.calcPosition(point, hullAngle);
+        TankSprite.rotate(tankSpritePart, rotatedPoint, hullAngle, sin, cos);
+        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
+
+        tankSpritePart = this._tankSpriteParts.hullSprite;
+        rotatedPoint = tankSpritePart.calcPosition(point, hullAngle);
+        const hullDefPoint = rotatedPoint.clone();
+        TankSprite.rotate(tankSpritePart, rotatedPoint, hullAngle, sin, cos);
+        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
+
+        tankSpritePart = this._tankSpriteParts.downTrackSprite;
+        rotatedPoint = tankSpritePart.calcPosition(hullDefPoint, hullAngle);
+        TankSprite.rotate(tankSpritePart, rotatedPoint, hullAngle, sin, cos);
+        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
+
+        this.rotateTurretUpdate(hullDefPoint, turretAngle);
     }
-
     public rotateTurretUpdate(point: Point, turretAngle: number) {
-        const turretPoint = this._tankSpriteParts.turretSprite.calcPosition(point, turretAngle);
+        const sin = Math.sin(turretAngle);
+        const cos = Math.cos(turretAngle);
 
-        this._tankSpriteParts.turretSprite.setPosition(turretPoint);
-        this._tankSpriteParts.turretSprite.setAngle(turretAngle);
+        let tankSpritePart: TankSpritePart;
+        let rotatedPoint: Point;
 
-        this._tankSpriteParts.weaponSprite.setPosition(
-            this._tankSpriteParts.weaponSprite.calcPosition(turretPoint, turretAngle));
-        this._tankSpriteParts.weaponSprite.setAngle(turretAngle);
+        tankSpritePart = this._tankSpriteParts.turretSprite;
+        rotatedPoint = tankSpritePart.calcPosition(point, turretAngle);
+        const turretDefPoint = rotatedPoint.clone();
+        TankSprite.rotate(tankSpritePart, rotatedPoint, turretAngle, sin, cos);
+        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
+
+        tankSpritePart = this._tankSpriteParts.weaponSprite;
+        rotatedPoint = tankSpritePart.calcPosition(turretDefPoint, turretAngle);
+        TankSprite.rotate(tankSpritePart, rotatedPoint, turretAngle, sin, cos);
+        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
+    }
+    private static setPosAndAngle(tankSpritePart: TankSpritePart, point: Point, angle: number) {
+        tankSpritePart.setPosition(point);
+        tankSpritePart.setAngle(angle);
+    }
+    // CHANGE POINT VALUE
+    private static rotate(tankSpritePart: TankSpritePart, point: Point, angle: number, sin: number, cos: number) {
+        const halfWidth = tankSpritePart.width >> 1;
+        const halfHeight = tankSpritePart.height >> 1;
+        GeomInteractionUtils.rotatePointAroundTarget(
+            point,
+            new Point(point.x + halfWidth * cos - halfHeight * sin,
+                point.y + halfHeight * cos + halfWidth * sin),
+            -angle
+        );
     }
 }
