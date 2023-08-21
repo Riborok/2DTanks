@@ -21,19 +21,19 @@ export class MovementManager implements IMovementManager{
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.counterclockwiseMovement, tankElement.model.clockwiseMovement,
-            tankElement.sprite.rotateHullUpdate);
+            tankElement.sprite.updateSprites);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.clockwiseMovement, tankElement.model.counterclockwiseMovement,
-            tankElement.sprite.rotateHullUpdate);
+            tankElement.sprite.updateSprites);
     }
     public moveForward(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.moveForward, tankElement.model.moveBackward,
-            tankElement.sprite.movementUpdate);
+            tankElement.sprite.updateSprites);
     }
     public moveBackward(tankElement: TankElement) {
         this.updateHull(tankElement, tankElement.model.moveBackward, tankElement.model.moveForward,
-            tankElement.sprite.movementUpdate);
+            tankElement.sprite.updateSprites);
     }
     private updateHull(tankElement: TankElement, action: Action, reverseAction: Action, spriteUpdate: UpdateSprites) {
         const hullEntity = tankElement.model.tankParts.hullEntity;

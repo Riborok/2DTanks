@@ -37,7 +37,7 @@ export class GameMaster {
 
     // TODO: КРИВУЛЬКА
     public createTank() {
-        let tankElement = new TankElement(400, 400, 0, 0,
+        let tankElement = new TankElement(400, 400, 0, 1,
             0, 0, 0, 0,
             KeyHandler.W_MASK, KeyHandler.S_MASK, KeyHandler.D_MASK, KeyHandler.A_MASK);
         tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
