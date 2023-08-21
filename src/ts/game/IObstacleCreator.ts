@@ -5,7 +5,7 @@ import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 export interface IObstacleCreator {
     createObstaclesAroundPerimeter(name: string): void;
     createRectObstacle(x: number, y: number, name: string, angle: number): void;
-    createSquareObstacle(x: number, y: number, name: string): void;
+    createSquareObstacle(x: number, y: number, name: string, angle: number): void;
 }
 
 export class ObstacleCreator implements IObstacleCreator{
@@ -64,14 +64,15 @@ export class ObstacleCreator implements IObstacleCreator{
 
         this._field.canvas.appendChild(obstacle);
     }
-    public createSquareObstacle(x: number, y: number, name: string) {
+    public createSquareObstacle(x: number, y: number, name: string, angle: number) {
         const obstacle = new Image(ObstacleCreator.SQUARE_WALL_SIZE, ObstacleCreator.SQUARE_WALL_SIZE);
         obstacle.src = `src/img/blocks/${name}Square.png`;
         obstacle.classList.add('sprite');
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
+        obstacle.style.transform = `rotate(${angle}rad)`;
         this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
-            ObstacleCreator.SQUARE_WALL_SIZE, 0));
+            ObstacleCreator.SQUARE_WALL_SIZE, angle));
 
         this._field.canvas.appendChild(obstacle);
     }
