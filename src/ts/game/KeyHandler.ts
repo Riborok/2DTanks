@@ -31,7 +31,7 @@ import {
     VK_X,
     VK_Y,
     VK_Z
-} from "../constants";
+} from "../keyCodes";
 
 export class KeyHandler {
     public static readonly A_MASK: number = 1 << 0;
