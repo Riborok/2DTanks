@@ -7,3 +7,4 @@ const gameMaster : GameMaster = new GameMaster(
 
 gameMaster.createField();
 gameMaster.createTank();
+gameMaster.startGameLoop();

@@ -1,6 +1,5 @@
 import {Tank} from "../model/tank/Tank";
 import {TankSprite} from "../sprite/TankSprite";
-import {TankParts} from "../model/tank/TankParts";
 import {TankCreator} from "../model/tank/TankCreator";
 import {TankSpriteParts} from "../sprite/TankSpriteParts";
 import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";

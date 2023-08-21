@@ -2,7 +2,7 @@ import {
     VK_A,
     VK_B,
     VK_C,
-    VK_CTRL,
+    VK_COMMA,
     VK_D,
     VK_DOWN,
     VK_E,
@@ -18,11 +18,11 @@ import {
     VK_N,
     VK_O,
     VK_P,
+    VK_PERIOD,
     VK_Q,
     VK_R,
     VK_RIGHT,
     VK_S,
-    VK_SPACE,
     VK_T,
     VK_U,
     VK_UP,
@@ -61,8 +61,8 @@ export class KeyHandler {
     public static readonly Y_MASK: number = 1 << 24;
     public static readonly Z_MASK: number = 1 << 25;
 
-    public static readonly CTRL_MASK: number = 1 << 26;
-    public static readonly SPACE_MASK: number = 1 << 27;
+    public static readonly PERIOD_MASK: number = 1 << 26;
+    public static readonly COMMA_MASK: number = 1 << 27;
 
     public static readonly UP_MASK: number = 1 << 28;
     public static readonly DOWN_MASK: number = 1 << 29;
@@ -136,10 +136,10 @@ export class KeyHandler {
                 return KeyHandler.Y_MASK;
             case VK_Z:
                 return KeyHandler.Z_MASK;
-            case VK_CTRL:
-                return KeyHandler.CTRL_MASK;
-            case VK_SPACE:
-                return KeyHandler.SPACE_MASK;
+            case VK_PERIOD:
+                return KeyHandler.PERIOD_MASK;
+            case VK_COMMA:
+                return KeyHandler.COMMA_MASK;
             case VK_UP:
                 return KeyHandler.UP_MASK;
             case VK_DOWN:

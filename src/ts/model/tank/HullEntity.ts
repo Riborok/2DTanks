@@ -4,7 +4,7 @@ import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants";
 
 export abstract class HullEntity extends RectangularEntity {
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
-        super(x0, y0, width + TRACK_INDENT, height + TRACK_INDENT, angle);
+        super(x0, y0, width + TRACK_INDENT, height + (TRACK_INDENT << 1), angle);
     }
     protected abstract _health: number;
     protected abstract _armor: number;
