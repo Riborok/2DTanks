@@ -7,7 +7,7 @@ abstract class TrackSprite extends Sprite {
     private _state: number;
     private _counter: number;
     private static readonly STATE_CHANGE_THRESHOLD: number = 3;
-    private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
+    private static readonly PROPORTION_WIDTH_HEIGHT: number = 49 / 246;
     protected static readonly INDENT: number = 1;
     protected static calcHeight(width: number) {
         return TrackSprite.PROPORTION_WIDTH_HEIGHT * width;
