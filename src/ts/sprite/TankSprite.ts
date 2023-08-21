@@ -23,18 +23,18 @@ export class TankSprite {
 
         tankSpritePart = this._tankSpriteParts.hullSprite;
         rotatedPoint = tankSpritePart.calcPosition(point, hullAngle);
-        const hullDefPoint = rotatedPoint.clone();
+        const hullDefaultPoint = rotatedPoint.clone();
         TankSprite.rotate(tankSpritePart, rotatedPoint, hullAngle, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
         tankSpritePart = this._tankSpriteParts.downTrackSprite;
-        rotatedPoint = tankSpritePart.calcPosition(hullDefPoint, hullAngle);
+        rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullAngle);
         TankSprite.rotate(tankSpritePart, rotatedPoint, hullAngle, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
-        this.rotateTurretUpdate(hullDefPoint, turretAngle);
+        this.rotateTurretUpdate(hullDefaultPoint, turretAngle);
     }
-    public rotateTurretUpdate(point: Point, turretAngle: number) {
+    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number) {
         const sin = Math.sin(turretAngle);
         const cos = Math.cos(turretAngle);
 
@@ -42,7 +42,7 @@ export class TankSprite {
         let rotatedPoint: Point;
 
         tankSpritePart = this._tankSpriteParts.turretSprite;
-        rotatedPoint = tankSpritePart.calcPosition(point, turretAngle);
+        rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, turretAngle);
         const turretDefPoint = rotatedPoint.clone();
         TankSprite.rotate(tankSpritePart, rotatedPoint, turretAngle, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);

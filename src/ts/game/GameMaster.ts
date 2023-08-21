@@ -39,15 +39,16 @@ export class GameMaster {
     public createTank() {
         let tankElement = new TankElement(400, 400, 0, 1,
             0, 0, 0, 0,
-            KeyHandler.W_MASK, KeyHandler.S_MASK, KeyHandler.D_MASK, KeyHandler.A_MASK);
+            KeyHandler.W_MASK, KeyHandler.S_MASK, KeyHandler.D_MASK, KeyHandler.A_MASK,
+            KeyHandler.Q_MASK, KeyHandler.E_MASK);
         tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
         this._tankElements.push(tankElement);
 
-        tankElement = new TankElement(800, 800, 0, 1,
-            0, 0, 0, 0,
-            KeyHandler.UP_MASK, KeyHandler.DOWN_MASK, KeyHandler.RIGHT_MASK, KeyHandler.LEFT_MASK);
-        tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
-        this._tankElements.push(tankElement);
+        // tankElement = new TankElement(800, 800, 0, 1,
+        //     0, 0, 0, 0,
+        //     KeyHandler.UP_MASK, KeyHandler.DOWN_MASK, KeyHandler.RIGHT_MASK, KeyHandler.LEFT_MASK);
+        // tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
+        // this._tankElements.push(tankElement);
     }
 
     // Game loop
@@ -76,6 +77,10 @@ export class GameMaster {
                 this._movementManager.hullClockwiseMovement(tankElement);
             if (mask & tankElement.hullCounterClockwiseMask)
                 this._movementManager.hullCounterclockwiseMovement(tankElement);
+            if (mask & tankElement.turretClockwiseMask)
+                this._movementManager.turretClockwiseMovement(tankElement);
+            if (mask & tankElement.turretCounterClockwiseMask)
+                this._movementManager.turretCounterclockwiseMovement(tankElement);
         }
     }
 }

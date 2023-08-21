@@ -43,12 +43,18 @@ export class Tank {
     public takeNewBulletManufacturing(bulletManufacturing: IBulletManufacturing) {
         this._bulletManufacturing = bulletManufacturing;
     }
-    public clockwiseMovement() {
+    public turretClockwiseMovement() {
+        this._tankParts.turret.clockwiseMovement();
+    }
+    public turretCounterclockwiseMovement() {
+        this._tankParts.turret.counterclockwiseMovement();
+    }
+    public hullClockwiseMovement() {
         this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(this._tankParts.track.angleSpeed);
         this._tankParts.turret.incAngle(this._tankParts.track.angleSpeed);
     }
-    public counterclockwiseMovement() {
+    public hullCounterclockwiseMovement() {
         this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(-this._tankParts.track.angleSpeed);
         this._tankParts.turret.incAngle(-this._tankParts.track.angleSpeed);
