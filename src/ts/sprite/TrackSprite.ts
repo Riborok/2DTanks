@@ -17,6 +17,7 @@ abstract class TrackSprite extends TankSpritePart {
 
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
+        this._sprite.style.zIndex = `3`;
         this._state = 0;
         this._counter = 0;
         this._sprite.src = this._srcState0;

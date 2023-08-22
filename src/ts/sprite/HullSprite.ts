@@ -6,6 +6,7 @@ export class HullSprite extends TankSpritePart {
     public constructor(color: number, num: number) {
         super(HULL_WIDTH[num], HULL_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._sprite.style.zIndex = `4`;
     }
     /**
      * Calculates the initial position of the hull sprite based on a reference point,
