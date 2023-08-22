@@ -23,9 +23,9 @@ export class Arr implements IRectangularEntityStorage {
     }
 
     public isCollision(rectangularEntity: RectangularEntity): boolean {
-        for (const entity of this.entities) {
-            if (entity !== rectangularEntity &&
-                GeomInteractionUtils.isCross(rectangularEntity, entity)) {
+        for (const anotherRectangularEntity of this.entities) {
+            if (anotherRectangularEntity !== rectangularEntity &&
+                    GeomInteractionUtils.isCross(rectangularEntity, anotherRectangularEntity)) {
                 return true;
             }
         }
@@ -122,26 +122,13 @@ class QuadtreeNode {
     public isCollision(rectangularEntity: RectangularEntity): boolean {
         if (this.isSubdivide()) {
             for (const child of this._children)
-                for (const point of rectangularEntity.points)
-                    if (child.isContainsPoint(point) && child.hasPointCollision(point))
-                        return true;
-        }
-        else {
-            for (const rectangularEntity of this._rectangularEntities)
-                if (GeomInteractionUtils.isCross(rectangularEntity, rectangularEntity))
+                if (child.isContainsRect(rectangularEntity) && child.isCollision(rectangularEntity))
                     return true;
         }
-        return false;
-    }
-    private hasPointCollision(point: Point): boolean {
-        if (this.isSubdivide()) {
-            for (const child of this._children)
-                if (child.isContainsPoint(point))
-                    return child.hasPointCollision(point);
-        }
         else {
-            for (const rectangularEntity of this._rectangularEntities)
-                if (GeomInteractionUtils.isPointInsideRect(point, rectangularEntity))
+            for (const anotherRectangularEntity of this._rectangularEntities)
+                if (rectangularEntity !== anotherRectangularEntity &&
+                        GeomInteractionUtils.isCross(rectangularEntity, anotherRectangularEntity))
                     return true;
         }
         return false;
