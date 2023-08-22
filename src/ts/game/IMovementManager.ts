@@ -57,6 +57,7 @@ export class MovementManager implements IMovementManager{
                 tankParts.hullEntity.points[0],
                 Math.sin(tankParts.hullEntity.angle),
                 Math.cos(tankParts.hullEntity.angle)),
-            tankParts.turret.angle);
+            tankParts.turret.angle,
+            tankParts.hullEntity.angle);
     }
 }
