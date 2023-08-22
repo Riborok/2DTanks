@@ -1,8 +1,8 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
-import {TankParts} from "./TankParts";
+import {TankModelParts} from "./TankModelParts";
 
-export class Tank {
-    private readonly _tankParts: TankParts;
+export class TankModel {
+    private readonly _tankParts: TankModelParts;
 
     private _isDeltaChanged: boolean = false;
     private _bulletQuantity: number = 0;
@@ -10,7 +10,7 @@ export class Tank {
     private _deltaY: number;
     private _lastTimeShot: number;
     private _bulletManufacturing: IBulletManufacturing;
-    public constructor(tankParts: TankParts) {
+    public constructor(tankParts: TankModelParts) {
         this._tankParts = tankParts;
 
         this.calcDeltaCoordinates();
@@ -18,7 +18,7 @@ export class Tank {
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
-    public get tankParts(): TankParts { return this._tankParts }
+    public get tankParts(): TankModelParts { return this._tankParts }
     public shot(): BulletEntity | null {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)

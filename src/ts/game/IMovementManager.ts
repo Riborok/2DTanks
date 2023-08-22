@@ -54,7 +54,9 @@ export class MovementManager implements IMovementManager{
         const tankParts = tankElement.model.tankParts;
         tankElement.sprite.rotateTurretUpdate(
             tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(
-                tankParts.hullEntity.points[0], tankParts.hullEntity.angle),
+                tankParts.hullEntity.points[0],
+                Math.sin(tankParts.hullEntity.angle),
+                Math.cos(tankParts.hullEntity.angle)),
             tankParts.turret.angle);
     }
 }

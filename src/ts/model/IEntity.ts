@@ -32,6 +32,6 @@ export abstract class RectangularEntity implements IEntity {
         const center = this.calcCenter();
 
         for (const point of this.points)
-            GeomInteractionUtils.rotatePointAroundTarget(point, center, deltaAngle);
+            GeomInteractionUtils.rotatePointAroundTarget(point, center, Math.sin(deltaAngle), Math.cos(deltaAngle));
     }
 }

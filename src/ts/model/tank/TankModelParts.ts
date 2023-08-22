@@ -3,7 +3,7 @@ import {ITrack} from "./ITrack";
 import {Turret} from "./Turret";
 import {IWeapon} from "./IWeapon";
 
-export class TankParts {
+export class TankModelParts {
     private readonly _hullEntity: HullEntity;
     private readonly _track: ITrack;
     private readonly _turret: Turret;

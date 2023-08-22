@@ -7,10 +7,18 @@ export class HullSprite extends TankSpritePart {
         super(HULL_WIDTH[num], HULL_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
     }
-    public override calcPosition(point: Point, angle: number): Point {
+    /**
+     * Calculates the initial position of the hull sprite based on a reference point,
+     * while considering the rotation angle represented by sine and cosine values.
+     * @param point The reference point, which is the starting point of the top track sprite, for position calculation.
+     * @param sin The sine value of the rotation angle.
+     * @param cos The cosine value of the rotation angle.
+     * @returns The calculated initial position of the hull sprite.
+     */
+    public override calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(
-            point.x - TRACK_INDENT * Math.sin(angle),
-            point.y + TRACK_INDENT * Math.cos(angle)
+            point.x - TRACK_INDENT * sin,
+            point.y + TRACK_INDENT * cos
         );
     }
 }

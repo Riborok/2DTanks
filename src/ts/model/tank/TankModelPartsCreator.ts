@@ -2,17 +2,17 @@ import {HullEntity, HullModel0} from "./HullEntity";
 import {ITrack, TrackModel0} from "./ITrack";
 import {Turret, TurretModel0} from "./Turret";
 import {IWeapon, WeaponModel0} from "./IWeapon";
-import {TankParts} from "./TankParts";
+import {TankModelParts} from "./TankModelParts";
 
-export class TankCreator {
+export class TankModelPartsCreator {
     private constructor() { }
-    public static createTankParts(x0: number, y0: number, angle: number,
-                                  hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankParts {
-        return new TankParts(
-            TankCreator.createHull(hullNum, x0, y0, angle),
-            TankCreator.createTrack(trackNum),
-            TankCreator.createTurret(turretNum, angle),
-            TankCreator.createWeapon(weaponNum)
+    public static create(x0: number, y0: number, angle: number,
+                         hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
+        return new TankModelParts(
+            TankModelPartsCreator.createHull(hullNum, x0, y0, angle),
+            TankModelPartsCreator.createTrack(trackNum),
+            TankModelPartsCreator.createTurret(turretNum, angle),
+            TankModelPartsCreator.createWeapon(weaponNum)
         )
     }
     private static createHull(hullNum: number, x0: number, y0: number, angle: number): HullEntity {

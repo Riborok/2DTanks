@@ -3,12 +3,19 @@ import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";
 import {Field} from "./Field";
-import {Arr, IRectangularEntityStorage, Quadtree} from "../model/IRectangularEntityStorage";
+import {Arr, IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
 import {IMovementManager, MovementManager} from "./IMovementManager";
 import {TankElement} from "./TankElement";
 import {KeyHandler} from "./KeyHandler";
 
-export class GameMaster {
+export interface IGameMaster {
+    startGameLoop(): void;
+    stopGameLoop(): void;
+    createField(): void;
+    addTankElements(...tankElements: TankElement[]): void;
+}
+
+export class GameMaster implements IGameMaster {
     private readonly _field: Field;
     private readonly _rectangularEntityStorage: IRectangularEntityStorage;
     private readonly _collisionManager: ICollisionManager;
@@ -38,24 +45,26 @@ export class GameMaster {
         this._obstacleCreator.createRectObstacle(this._field.width >> 2, this._field.height >> 2, MATERIAL[2], 1);
     }
 
-    // TODO: КРИВУЛЬКА
-    public createTank() {
-        let tankElement = new TankElement(400, 400, 0, 0,
-            0, 0, 0, 0,
-            KeyHandler.W_MASK, KeyHandler.S_MASK, KeyHandler.D_MASK, KeyHandler.A_MASK,
-            KeyHandler.Q_MASK, KeyHandler.E_MASK);
-        tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
-        this._tankElements.push(tankElement);
-
-        tankElement = new TankElement(800, 800, 0, 1,
-            0, 0, 0, 0,
-            KeyHandler.UP_MASK, KeyHandler.DOWN_MASK, KeyHandler.RIGHT_MASK, KeyHandler.LEFT_MASK,
-            KeyHandler.COMMA_MASK, KeyHandler.PERIOD_MASK);
-        tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
-        this._tankElements.push(tankElement);
+    public addTankElements(...tankElements: TankElement[]) {
+        for (const tankElement of tankElements) {
+            if (!this._tankElements.includes(tankElement)) {
+                this._tankElements.push(tankElement);
+                tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
+            }
+        }
     }
 
     // Game loop
+    public startGameLoop() {
+        if (!this.isGameLoopActive) {
+            this.isGameLoopActive = true;
+            this._keyHandler.clearMask();
+            requestAnimationFrame(() => this.gameLoop());
+        }
+    }
+    public stopGameLoop() {
+        this.isGameLoopActive = false;
+    }
     private gameLoop() {
         if (!this.isGameLoopActive)
             return;
@@ -63,15 +72,6 @@ export class GameMaster {
         this.update();
 
         requestAnimationFrame(() => this.gameLoop());
-    }
-    public startGameLoop() {
-        if (!this.isGameLoopActive) {
-            this.isGameLoopActive = true;
-            requestAnimationFrame(() => this.gameLoop());
-        }
-    }
-    public stopGameLoop() {
-        this.isGameLoopActive = false;
     }
     private update() {
         const mask = this._keyHandler.keysMask;
