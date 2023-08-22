@@ -11,6 +11,6 @@ export abstract class Turret {
 export class TurretModel0 extends Turret{
     private static readonly ANGLE_SPEED: number = 0.02;
     public override get bulletCapacity(): number { return 10 }
-    public override clockwiseMovement(): void { this._angle -= TurretModel0.ANGLE_SPEED }
-    public override counterclockwiseMovement(): void { this._angle += TurretModel0.ANGLE_SPEED }
+    public override clockwiseMovement(): void { this._angle += TurretModel0.ANGLE_SPEED }
+    public override counterclockwiseMovement(): void { this._angle -= TurretModel0.ANGLE_SPEED }
 }

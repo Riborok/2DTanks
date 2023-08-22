@@ -18,38 +18,42 @@ export class TankSprite {
 
         tankSpritePart = this._tankSpriteParts.topTrackSprite;
         rotatedPoint = tankSpritePart.calcPosition(point, sin, cos);
-        TankSprite.rotate(tankSpritePart, rotatedPoint, sin, cos);
+        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
         tankSpritePart = this._tankSpriteParts.hullSprite;
         rotatedPoint = tankSpritePart.calcPosition(point, sin, cos);
         const hullDefaultPoint = rotatedPoint.clone();
-        TankSprite.rotate(tankSpritePart, rotatedPoint, sin, cos);
+        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
         tankSpritePart = this._tankSpriteParts.bottomTrackSprite;
         rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, sin, cos);
-        TankSprite.rotate(tankSpritePart, rotatedPoint, sin, cos);
+        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
-        this.rotateTurretUpdate(hullDefaultPoint, turretAngle);
+        this.rotateTurretUpdate(hullDefaultPoint, turretAngle, hullAngle);
     }
-    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number) {
-        const sin = Math.sin(turretAngle);
-        const cos = Math.cos(turretAngle);
+    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullAngle: number) {
+        const turretSin = Math.sin(turretAngle);
+        const turretCos = Math.cos(turretAngle);
+        const hullSin = Math.sin(hullAngle);
+        const hullCos = Math.cos(hullAngle);
 
         let tankSpritePart: TankSpritePart;
         let rotatedPoint: Point;
 
         tankSpritePart = this._tankSpriteParts.turretSprite;
-        rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, sin, cos);
-        const turretDefPoint = rotatedPoint.clone();
-        TankSprite.rotate(tankSpritePart, rotatedPoint, sin, cos);
+        rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
+        let turretDefPoint = rotatedPoint.clone();
+        TankSprite.rotateForTurretPoint(tankSpritePart, turretDefPoint,
+            hullAngle, turretAngle);
+        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
 
         tankSpritePart = this._tankSpriteParts.weaponSprite;
-        rotatedPoint = tankSpritePart.calcPosition(turretDefPoint, sin, cos);
-        TankSprite.rotate(tankSpritePart, rotatedPoint, sin, cos);
+        rotatedPoint = tankSpritePart.calcPosition(turretDefPoint, turretSin, turretCos);
+        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, turretSin, turretCos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
     }
     private static setPosAndAngle(tankSpritePart: TankSpritePart, point: Point, angle: number) {
@@ -64,7 +68,7 @@ export class TankSprite {
      * @param sin The sine value of the rotation angle.
      * @param cos The cosine value of the rotation angle.
      */
-    private static rotate(tankSpritePart: TankSpritePart, point: Point, sin: number, cos: number) {
+    private static rotateForPoint(tankSpritePart: TankSpritePart, point: Point, sin: number, cos: number) {
         const halfWidth = tankSpritePart.width >> 1;
         const halfHeight = tankSpritePart.height >> 1;
 
@@ -75,6 +79,19 @@ export class TankSprite {
             new Point(point.x + halfWidth * cos - halfHeight * sin,
                 point.y + halfHeight * cos + halfWidth * sin),
             -sin, cos
+        );
+    }
+    private static rotateForTurretPoint(tankSpritePart: TankSpritePart, point: Point,
+                                        hullAngle: number, turretAngle: number){
+        const halfWidth = tankSpritePart.width >> 1;
+        const halfHeight = tankSpritePart.height >> 1;
+
+        // Rotate the turret by the angle to align top left point to its actual position
+        GeomInteractionUtils.rotatePointAroundTarget(
+            point,
+            new Point(point.x + halfWidth * Math.cos(hullAngle) - halfHeight * Math.sin(hullAngle),
+                point.y + halfHeight * Math.cos(hullAngle) + halfWidth * Math.sin(hullAngle)),
+            Math.sin(turretAngle - hullAngle), Math.cos(turretAngle - hullAngle)
         );
     }
 }
