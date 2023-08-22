@@ -1,5 +1,5 @@
 import {TankElement} from "./TankElement";
-import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {IEntityStorage} from "../model/IEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
 
 type Action = () => void;
@@ -13,10 +13,10 @@ export interface IMovementManager {
     turretClockwiseMovement(tankElement: TankElement): void;
 }
 export class MovementManager implements IMovementManager{
-    private readonly _rectangularEntityStorage: IRectangularEntityStorage;
+    private readonly _entityStorage: IEntityStorage;
     private readonly _collisionManager: ICollisionManager;
-    constructor(rectangularEntityStorage: IRectangularEntityStorage, collisionManager: ICollisionManager) {
-        this._rectangularEntityStorage = rectangularEntityStorage;
+    constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
+        this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
     }
     public turretCounterclockwiseMovement(tankElement: TankElement) {
@@ -41,12 +41,12 @@ export class MovementManager implements IMovementManager{
     }
     private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
-        this._rectangularEntityStorage.remove(hullEntity)
+        this._entityStorage.remove(hullEntity)
         action.call(tankElement.model);
         if (!this._collisionManager.isSuccess(hullEntity))
             reverseAction.call(tankElement.model);
 
-        this._rectangularEntityStorage.insert(hullEntity);
+        this._entityStorage.insert(hullEntity);
 
         tankElement.sprite.updateSprite(hullEntity.points[0], hullEntity.angle, tankElement.model.tankParts.turret.angle);
     }

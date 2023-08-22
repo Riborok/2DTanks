@@ -1,7 +1,7 @@
 import {TankModel} from "../model/tank/TankModel";
 import {TankSprite} from "../sprite/TankSprite";
 import {TankModelPartsCreator} from "../model/tank/TankModelPartsCreator";
-import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {IEntityStorage} from "../model/IEntityStorage";
 import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
 
 export class TankElement {
@@ -44,7 +44,7 @@ export class TankElement {
 
         this._model = new TankModel(TankModelPartsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
     }
-    public spawn(canvas: Element, rectangularEntityStorage: IRectangularEntityStorage) {
+    public spawn(canvas: Element, entityStorage: IEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
         canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);
         canvas.appendChild(tankSpriteParts.bottomTrackSprite.sprite);
@@ -54,7 +54,7 @@ export class TankElement {
 
         const hullEntity = this._model.tankParts.hullEntity;
 
-        rectangularEntityStorage.insert(hullEntity);
+        entityStorage.insert(hullEntity);
         this._sprite.updateSprite(hullEntity.points[0], hullEntity.angle, this._model.tankParts.turret.angle);
     }
 }

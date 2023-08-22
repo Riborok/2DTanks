@@ -1,6 +1,6 @@
 import {Wall} from "../model/Wall";
 import {Field} from "./Field";
-import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {IEntityStorage} from "../model/IEntityStorage";
 
 export interface IObstacleCreator {
     createObstaclesAroundPerimeter(name: string): void;
@@ -10,14 +10,14 @@ export interface IObstacleCreator {
 
 export class ObstacleCreator implements IObstacleCreator{
     private readonly _field: Field;
-    private readonly _rectangularEntityStorage: IRectangularEntityStorage;
+    private readonly _entityStorage: IEntityStorage;
     private static readonly INDENT: number = 10;
     private static readonly RECT_WALL_WIDTH: number = 101;
     private static readonly RECT_WALL_HEIGHT: number = 50;
     private static readonly SQUARE_WALL_SIZE: number = ObstacleCreator.RECT_WALL_HEIGHT;
-    public constructor(field: Field, entityManager: IRectangularEntityStorage) {
+    public constructor(field: Field, entityManager: IEntityStorage) {
         this._field = field;
-        this._rectangularEntityStorage = entityManager;
+        this._entityStorage = entityManager;
     }
     public createObstaclesAroundPerimeter(name: string) {
         const xIndent = ObstacleCreator.calculateIndent(this._field.width);
@@ -59,7 +59,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
-        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._entityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
         this._field.canvas.appendChild(obstacle);
@@ -71,7 +71,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
-        this._rectangularEntityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
+        this._entityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, angle));
 
         this._field.canvas.appendChild(obstacle);

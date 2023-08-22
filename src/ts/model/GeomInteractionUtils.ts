@@ -1,4 +1,4 @@
-import {RectangularEntity} from "./IEntity";
+import {IEntity} from "./IEntity";
 import {Point} from "./Point";
 
 export class GeomInteractionUtils {
@@ -18,34 +18,76 @@ export class GeomInteractionUtils {
         point.x = targetPoint.x + deltaX * cos - deltaY * sin;
         point.y = targetPoint.y + deltaX * sin + deltaY * cos;
     }
-    public static isCross(rectangle1: RectangularEntity, rectangle2: RectangularEntity): boolean {
-        for (const point of rectangle1.points)
-            if (GeomInteractionUtils.isPointInsideRect(point, rectangle2))
-                return true;
 
-        for (const point of rectangle2.points)
-            if (GeomInteractionUtils.isPointInsideRect(point, rectangle1))
-                return true;
+    /**
+     * Checks if two entities are intersecting using the Separating Axis Theorem (SAT).
+     * @param entity1 The first entity to check for intersection.
+     * @param entity2 The second entity to check for intersection.
+     * @returns `true` if the two entities intersect, `false` otherwise.
+     */
+    public static isIntersect(entity1: IEntity, entity2: IEntity): boolean {
+        const axes = GeomInteractionUtils.getAxes(entity1).concat(GeomInteractionUtils.getAxes(entity2));
 
-        return false;
+        for (const axis of axes) {
+            const projection1 = GeomInteractionUtils.project(entity1, axis);
+            const projection2 = GeomInteractionUtils.project(entity2, axis);
+
+            if (!GeomInteractionUtils.isOverlap(projection1, projection2))
+                return false;
+        }
+
+        return true;
     }
-    public static isPointInsideRect(point: Point, rectangle: RectangularEntity): boolean {
-        return (
-            (
-                ((rectangle.points[0].x < point.x && point.x < rectangle.points[1].x) ||
-                    (rectangle.points[0].x > point.x && point.x > rectangle.points[1].x))
-                &&
-                ((rectangle.points[0].y < point.y && point.y < rectangle.points[2].y) ||
-                    (rectangle.points[0].y > point.y && point.y > rectangle.points[2].y))
-            )
-            ||
-            (
-                ((rectangle.points[1].x < point.x && point.x < rectangle.points[3].x) ||
-                    (rectangle.points[1].x > point.x && point.x > rectangle.points[3].x))
-                &&
-                ((rectangle.points[1].y < point.y && point.y < rectangle.points[0].y) ||
-                    (rectangle.points[1].y > point.y && point.y > rectangle.points[0].y))
-            )
-        );
+    private static isOverlap(projection1: Projection, projection2: Projection): boolean {
+        return projection1.min < projection2.max && projection2.min < projection1.max;
     }
+    private static getAxes(entity: IEntity): Axis[] {
+        const axes: Axis[] = [];
+        const lastIndex = entity.points.length - 1;
+
+        for (let i = 0; i < lastIndex; i++)
+            axes.push(new Axis(entity.points[i], entity.points[i + 1]));
+        axes.push(new Axis(entity.points[lastIndex], entity.points[0]));
+
+        return axes;
+    }
+    private static project(entity: IEntity, axis: Axis): Projection {
+        let min = GeomInteractionUtils.dotProduct(axis, entity.points[0]);
+        let max = min;
+
+        for (let i = 1; i < entity.points.length; i++) {
+            const dotProduct = GeomInteractionUtils.dotProduct(axis, entity.points[i]);
+            if (dotProduct < min)
+                min = dotProduct;
+            else if (dotProduct > max)
+                max = dotProduct;
+        }
+
+        return { min, max };
+    }
+    private static dotProduct(axis: Axis, point: Point): number {
+        return axis.x * point.x + axis.y * point.y;
+    }
+}
+
+class Axis {
+    private _x: number;
+    private _y: number;
+    public get x(): number { return this._x }
+    public get y(): number { return this._y }
+    public constructor(p1: Point, p2: Point) {
+        this._x = p1.y - p2.y;
+        this._y = p2.x - p1.x;
+        this.normalize();
+    }
+    private normalize() {
+        const length = Math.sqrt(this._x * this._x + this._y * this._y);
+        this._x /= length;
+        this._y /= length;
+    }
+}
+
+type Projection = {
+    min: number;
+    max: number;
 }

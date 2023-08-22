@@ -3,7 +3,7 @@ import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";
 import {Field} from "./Field";
-import {Arr, IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {IEntityStorage, Quadtree} from "../model/IEntityStorage";
 import {IMovementManager, MovementManager} from "./IMovementManager";
 import {TankElement} from "./TankElement";
 import {KeyHandler} from "./KeyHandler";
@@ -17,7 +17,7 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private readonly _field: Field;
-    private readonly _rectangularEntityStorage: IRectangularEntityStorage;
+    private readonly _entityStorage: IEntityStorage;
     private readonly _collisionManager: ICollisionManager;
     private readonly _decorCreator: IDecorCreator;
     private readonly _obstacleCreator: IObstacleCreator;
@@ -27,12 +27,12 @@ export class GameMaster implements IGameMaster {
     private readonly _tankElements: TankElement[] = [];
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
-        //this._rectangularEntityStorage = new Quadtree(0, 0, width, height);
-        this._rectangularEntityStorage = new Arr();
-        this._collisionManager = new CollisionManager(this._rectangularEntityStorage);
+        this._entityStorage = new Quadtree(0, 0, width, height);
+        //this._entityStorage = new Arr();
+        this._collisionManager = new CollisionManager(this._entityStorage);
         this._decorCreator = new DecorCreator(this._field);
-        this._obstacleCreator = new ObstacleCreator(this._field, this._rectangularEntityStorage);
-        this._movementManager = new MovementManager(this._rectangularEntityStorage, this._collisionManager);
+        this._obstacleCreator = new ObstacleCreator(this._field, this._entityStorage);
+        this._movementManager = new MovementManager(this._entityStorage, this._collisionManager);
         this._keyHandler = new KeyHandler();
     }
 
@@ -49,7 +49,7 @@ export class GameMaster implements IGameMaster {
         for (const tankElement of tankElements) {
             if (!this._tankElements.includes(tankElement)) {
                 this._tankElements.push(tankElement);
-                tankElement.spawn(this._field.canvas, this._rectangularEntityStorage);
+                tankElement.spawn(this._field.canvas, this._entityStorage);
             }
         }
     }

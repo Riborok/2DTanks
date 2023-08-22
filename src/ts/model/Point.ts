@@ -1,11 +1,13 @@
 export class Point {
-    public x: number;
-    public y: number;
+    private _x: number;
+    private _y: number;
     public constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+        this._x = x;
+        this._y = y;
     }
-    public clone() : Point{
-        return new Point(this.x, this.y);
-    }
+    public get x(): number { return this._x }
+    public set x(value: number) { this._x = value }
+    public get y(): number { return this._y }
+    public set y(value: number) { this._y = value }
+    public clone() : Point { return new Point(this._x, this._y) }
 }
