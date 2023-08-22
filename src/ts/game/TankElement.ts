@@ -1,8 +1,8 @@
-import {Tank} from "../model/tank/Tank";
+import {TankModel} from "../model/tank/TankModel";
 import {TankSprite} from "../sprite/TankSprite";
-import {TankCreator} from "../model/tank/TankCreator";
-import {TankSpriteParts} from "../sprite/TankSpriteParts";
+import {TankModelPartsCreator} from "../model/tank/TankModelPartsCreator";
 import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
 
 export class TankElement {
     private _forwardMask: number;
@@ -24,9 +24,9 @@ export class TankElement {
     public get turretCounterClockwiseMask(): number { return this._turretCounterClockwiseMask }
     public set turretCounterClockwiseMask(mask: number) { this._turretCounterClockwiseMask = mask }
 
-    private readonly _model: Tank;
+    private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
-    public get model(): Tank { return this._model }
+    public get model(): TankModel { return this._model }
     public get sprite(): TankSprite { return this._sprite }
     public constructor(x0: number, y0: number, angle: number, color: number,
                        hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
@@ -40,14 +40,14 @@ export class TankElement {
         this._turretClockwiseMask = turretClockwiseMask;
         this._turretCounterClockwiseMask = turretCounterClockwiseMask;
 
-        this._sprite = new TankSprite(new TankSpriteParts(color, hullNum, trackNum, turretNum, weaponNum));
+        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum));
 
-        this._model = new Tank(TankCreator.createTankParts(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
+        this._model = new TankModel(TankModelPartsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
     }
     public spawn(canvas: Element, rectangularEntityStorage: IRectangularEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
-        canvas.appendChild(tankSpriteParts.upTrackSprite.sprite);
-        canvas.appendChild(tankSpriteParts.downTrackSprite.sprite);
+        canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);
+        canvas.appendChild(tankSpriteParts.bottomTrackSprite.sprite);
         canvas.appendChild(tankSpriteParts.hullSprite.sprite);
         canvas.appendChild(tankSpriteParts.weaponSprite.sprite);
         canvas.appendChild(tankSpriteParts.turretSprite.sprite);
