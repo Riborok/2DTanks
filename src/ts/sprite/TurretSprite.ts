@@ -8,6 +8,7 @@ export class TurretSprite extends TankSpritePart {
     public constructor(color: number, num: number, indentX: number, indentY: number) {
         super(TURRET_WIDTH[num], TURRET_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Turrets/Turret_${num}/Turret_${color}.png`;
+        this._sprite.style.zIndex = `5`;
         this._indentX = indentX;
         this._indentY = indentY;
     }

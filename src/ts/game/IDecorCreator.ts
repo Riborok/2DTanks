@@ -25,6 +25,7 @@ export class DecorCreator implements IDecorCreator {
         tile.classList.add('sprite');
         tile.style.left = `${x}px`;
         tile.style.top = `${y}px`;
+        tile.style.zIndex = `1`;
         this._field.canvas.appendChild(tile);
     }
 }

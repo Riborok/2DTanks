@@ -59,6 +59,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
+        obstacle.style.zIndex = `2`;
         this._entityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle));
 
@@ -71,6 +72,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.left = `${x}px`;
         obstacle.style.top = `${y}px`;
         obstacle.style.transform = `rotate(${angle}rad)`;
+        obstacle.style.zIndex = `2`;
         this._entityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, angle));
 
