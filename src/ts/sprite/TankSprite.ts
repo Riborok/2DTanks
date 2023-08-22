@@ -47,7 +47,7 @@ export class TankSprite {
         rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
         let turretDefPoint = rotatedPoint.clone();
         TankSprite.rotateForTurretPoint(tankSpritePart, turretDefPoint,
-            hullAngle, turretAngle);
+            hullSin, hullCos, turretSin, turretCos);
         TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
 
@@ -81,17 +81,32 @@ export class TankSprite {
             -sin, cos
         );
     }
+    /**
+     * Rotates a point associated with a turret sprite part relative to a tank sprite's hull.
+     * The function modifies the `point` parameter with the new rotated coordinates.
+     * @param tankSpritePart The tank sprite part (hull) to which the point belongs.
+     * @param point The point to be rotated. Its coordinates will be updated.
+     * @param hullSin The sine value of the hull's rotation angle.
+     * @param hullCos The cosine value of the hull's rotation angle.
+     * @param turretSin The sine value of the turret's rotation angle relative to the hull.
+     * @param turretCos The cosine value of the turret's rotation angle relative to the hull.
+     */
     private static rotateForTurretPoint(tankSpritePart: TankSpritePart, point: Point,
-                                        hullAngle: number, turretAngle: number){
+                                        hullSin: number, hullCos: number,
+                                        turretSin: number, turretCos: number){
         const halfWidth = tankSpritePart.width >> 1;
         const halfHeight = tankSpritePart.height >> 1;
 
         // Rotate the turret by the angle to align top left point to its actual position
+        // For optimization, we replace the formulas as follows:
+        // - sin(turretAngle - hullAngle) = sin(turretAngle) * cos(hullAngle) - cos(turretAngle) * sin(hullAngle)
+        // - cos(turretAngle - hullAngle) = cos(hullAngle) * cos(turretAngle) + sin(hullAngle) * sin(turretAngle)
         GeomInteractionUtils.rotatePointAroundTarget(
             point,
-            new Point(point.x + halfWidth * Math.cos(hullAngle) - halfHeight * Math.sin(hullAngle),
-                point.y + halfHeight * Math.cos(hullAngle) + halfWidth * Math.sin(hullAngle)),
-            Math.sin(turretAngle - hullAngle), Math.cos(turretAngle - hullAngle)
+            new Point(point.x + halfWidth * hullCos - halfHeight * hullSin,
+                point.y + halfHeight * hullCos + halfWidth * hullSin),
+            turretSin * hullCos - turretCos * hullSin,
+            hullCos * turretCos + hullSin * turretSin
         );
     }
 }

@@ -25,9 +25,9 @@ export class TankModel {
             return null;
 
         const hullEntity = this._tankParts.hullEntity;
-        const xStart = ((hullEntity.points[0].x + hullEntity.points[3].x) >> 1) +
+        const xStart = ((hullEntity.points[0].x + hullEntity.points[2].x) >> 1) +
             this._tankParts.weapon.barrelLength * Math.cos(this._tankParts.turret.angle);
-        const yStart = ((hullEntity.points[0].y + hullEntity.points[3].y) >> 1) +
+        const yStart = ((hullEntity.points[0].y + hullEntity.points[2].y) >> 1) +
             this._tankParts.weapon.barrelLength * Math.sin(this._tankParts.turret.angle);
 
         const bulletEntity = this._bulletManufacturing.create(xStart, yStart, this._tankParts.turret.angle);

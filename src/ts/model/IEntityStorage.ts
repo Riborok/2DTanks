@@ -1,31 +1,31 @@
-import {RectangularEntity} from "./IEntity";
+import {IEntity} from "./IEntity";
 import {GeomInteractionUtils} from "./GeomInteractionUtils";
 import {Point} from "./Point";
 
-export interface IRectangularEntityStorage {
-    insert(rectangularEntity: RectangularEntity): void;
-    remove(rectangularEntity: RectangularEntity): void;
-    isCollision(rectangularEntity: RectangularEntity): boolean;
+export interface IEntityStorage {
+    insert(entity: IEntity): void;
+    remove(entity: IEntity): void;
+    isCollision(entity: IEntity): boolean;
 }
 
-export class Arr implements IRectangularEntityStorage {
-    private entities: RectangularEntity[] = [];
+export class Arr implements IEntityStorage {
+    private entities: IEntity[] = [];
 
-    public insert(rectangularEntity: RectangularEntity): void {
-        this.entities.push(rectangularEntity);
+    public insert(entity: IEntity): void {
+        this.entities.push(entity);
     }
 
-    public remove(rectangularEntity: RectangularEntity): void {
-        const index = this.entities.indexOf(rectangularEntity);
+    public remove(entity: IEntity): void {
+        const index = this.entities.indexOf(entity);
         if (index !== -1) {
             this.entities.splice(index, 1);
         }
     }
 
-    public isCollision(rectangularEntity: RectangularEntity): boolean {
-        for (const anotherRectangularEntity of this.entities) {
-            if (anotherRectangularEntity !== rectangularEntity &&
-                    GeomInteractionUtils.isCross(rectangularEntity, anotherRectangularEntity)) {
+    public isCollision(entity: IEntity): boolean {
+        for (const anotherEntity of this.entities) {
+            if (anotherEntity !== entity &&
+                    GeomInteractionUtils.isIntersect(entity, anotherEntity)) {
                 return true;
             }
         }
@@ -33,23 +33,23 @@ export class Arr implements IRectangularEntityStorage {
     }
 }
 
-export class Quadtree implements IRectangularEntityStorage{
+export class Quadtree implements IEntityStorage{
     private readonly _root: QuadtreeNode;
 
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
         this._root = new QuadtreeNode({ xStart, yStart, xLast, yLast }, null);
     }
 
-    public insert(rectangularEntity: RectangularEntity) {
-        this._root.insert(rectangularEntity);
+    public insert(entity: IEntity) {
+        this._root.insert(entity);
     }
 
-    public isCollision(rectangularEntity: RectangularEntity): boolean {
-        return this._root.isCollision(rectangularEntity);
+    public isCollision(entity: IEntity): boolean {
+        return this._root.isCollision(entity);
     }
 
-    public remove(rectangularEntity: RectangularEntity) {
-        this._root.remove(rectangularEntity);
+    public remove(entity: IEntity) {
+        this._root.remove(entity);
     }
 }
 
@@ -57,7 +57,7 @@ class QuadtreeNode {
     private static readonly CAPACITY: number = 8;
     private static readonly HALF_CAPACITY: number = QuadtreeNode.CAPACITY >> 1;
 
-    private _rectangularEntities: Set<RectangularEntity> | null = new Set<RectangularEntity>();
+    private _entities: Set<IEntity> | null = new Set<IEntity>();
     private _children: QuadtreeNode[] | null = null;
 
     private readonly _parent: QuadtreeNode | null;
@@ -67,7 +67,7 @@ class QuadtreeNode {
         this._boundary = boundary;
         this._parent = parent;
     }
-    private isSubdivide(): boolean { return this._rectangularEntities === null }
+    private isSubdivide(): boolean { return this._entities === null }
     private subdivide() {
         const xStart = this._boundary.xStart;
         const yStart = this._boundary.yStart;
@@ -87,54 +87,54 @@ class QuadtreeNode {
         this.redistribute();
     }
     private redistribute() {
-        for (const rectangularEntity of this._rectangularEntities)
+        for (const entity of this._entities)
             for (const child of this._children)
-                if (child.isContainsRect(rectangularEntity))
-                    child.insert(rectangularEntity);
+                if (child.isContainsEntity(entity))
+                    child.insert(entity);
 
-        this._rectangularEntities = null;
+        this._entities = null;
     }
-    public insert(rectangularEntity: RectangularEntity) {
+    public insert(entity: IEntity) {
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (child.isContainsRect(rectangularEntity))
-                    child.insert(rectangularEntity);
+                if (child.isContainsEntity(entity))
+                    child.insert(entity);
         }
         else {
-            this._rectangularEntities.add(rectangularEntity);
-            if (this._rectangularEntities.size > QuadtreeNode.CAPACITY)
+            this._entities.add(entity);
+            if (this._entities.size > QuadtreeNode.CAPACITY)
                 this.subdivide();
         }
     }
-    public remove(rectangularEntity: RectangularEntity) {
+    public remove(entity: IEntity) {
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (child.isContainsRect(rectangularEntity))
-                    child.remove(rectangularEntity);
+                if (child.isContainsEntity(entity))
+                    child.remove(entity);
             this.mergeCheck();
         }
         else {
-            this._rectangularEntities.delete(rectangularEntity);
+            this._entities.delete(entity);
             if (this._parent !== null)
                 this._parent.mergeCheck();
         }
     }
-    public isCollision(rectangularEntity: RectangularEntity): boolean {
+    public isCollision(entity: IEntity): boolean {
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (child.isContainsRect(rectangularEntity) && child.isCollision(rectangularEntity))
+                if (child.isContainsEntity(entity) && child.isCollision(entity))
                     return true;
         }
         else {
-            for (const anotherRectangularEntity of this._rectangularEntities)
-                if (rectangularEntity !== anotherRectangularEntity &&
-                        GeomInteractionUtils.isCross(rectangularEntity, anotherRectangularEntity))
+            for (const anotherEntity of this._entities)
+                if (entity !== anotherEntity &&
+                        GeomInteractionUtils.isIntersect(entity, anotherEntity))
                     return true;
         }
         return false;
     }
-    private isContainsRect(rectangularEntity: RectangularEntity): boolean {
-        for (const point of rectangularEntity.points)
+    private isContainsEntity(entity: IEntity): boolean {
+        for (const point of entity.points)
             if (this.isContainsPoint(point))
                 return true;
 
@@ -147,30 +147,30 @@ class QuadtreeNode {
     private mergeCheck() {
         let totalChildCount = 0;
         for (const child of this._children)
-            totalChildCount += child.getRectangularEntitiesCount();
+            totalChildCount += child.getEntitiesCount();
 
         if (totalChildCount <= QuadtreeNode.HALF_CAPACITY)
             this.mergeWithChildren();
     }
     private mergeWithChildren() {
-        this._rectangularEntities = new Set<RectangularEntity>();
+        this._entities = new Set<IEntity>();
         for (const child of this._children) {
             if (child.isSubdivide())
                 child.mergeWithChildren();
-            for (const rectangularEntity of child._rectangularEntities)
-                this._rectangularEntities.add(rectangularEntity);
+            for (const entity of child._entities)
+                this._entities.add(entity);
         }
 
         this._children = null;
     }
-    private getRectangularEntitiesCount(): number {
+    private getEntitiesCount(): number {
         if (this.isSubdivide()) {
             let count = 0;
             for (const child of this._children)
-                count += child.getRectangularEntitiesCount();
+                count += child.getEntitiesCount();
             return count;
         }
         else
-            return this._rectangularEntities.size;
+            return this._entities.size;
     }
 }

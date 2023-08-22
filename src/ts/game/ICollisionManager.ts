@@ -1,16 +1,16 @@
-import {RectangularEntity} from "../model/IEntity";
-import {IRectangularEntityStorage} from "../model/IRectangularEntityStorage";
+import {IEntity} from "../model/IEntity";
+import {IEntityStorage} from "../model/IEntityStorage";
 
 export interface ICollisionManager {
-    isSuccess(rectangularEntity: RectangularEntity): boolean;
+    isSuccess(entity: IEntity): boolean;
 }
 
 export class CollisionManager implements ICollisionManager {
-    private readonly _rectangularEntityStorage: IRectangularEntityStorage;
-    public constructor(rectangularEntityStorage: IRectangularEntityStorage) {
-        this._rectangularEntityStorage = rectangularEntityStorage;
+    private readonly _entityStorage: IEntityStorage;
+    public constructor(entityStorage: IEntityStorage) {
+        this._entityStorage = entityStorage;
     }
-    public isSuccess(rectangularEntity: RectangularEntity) : boolean {
-        return !this._rectangularEntityStorage.isCollision(rectangularEntity);
+    public isSuccess(entity: IEntity) : boolean {
+        return !this._entityStorage.isCollision(entity);
     }
 }

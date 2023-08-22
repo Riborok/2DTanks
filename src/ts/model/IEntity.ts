@@ -11,15 +11,15 @@ export abstract class RectangularEntity implements IEntity {
         this._angle = 0;
         this._points = [new Point(x0, y0),
             new Point(x0 + width, y0),
-            new Point(x0, y0 + height),
-            new Point(x0 + width, y0 + height)];
+            new Point(x0 + width, y0 + height),
+            new Point(x0, y0 + height)];
         if (angle !== 0)
             this.rotatePoints(angle);
     }
     public get points(): Point[] { return this._points }
     public get angle() : number { return this._angle }
     public calcCenter(): Point {
-        return new Point((this.points[0].x + this.points[3].x) >> 1, (this.points[0].y + this.points[3].y) >> 1);
+        return new Point((this._points[0].x + this._points[2].x) >> 1, (this._points[0].y + this._points[2].y) >> 1);
     }
     public movePoints(dx: number, dy: number){
         for (const point of this._points) {
