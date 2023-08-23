@@ -1,9 +1,20 @@
 import {Point} from "./Point";
 import {GeomInteractionUtils} from "./GeomInteractionUtils";
 
+/**
+ * Interface representing an entity with points.
+ */
 export interface IEntity {
+    /**
+     * Gets the points defining the entity. The points should be specified in a clockwise order.
+     */
     get points(): Point[];
 }
+
+/**
+ * An abstract base class representing a rectangular entity.
+ * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entities.
+ */
 export abstract class RectangularEntity implements IEntity {
     protected _points: Point[];
     protected _angle: number;

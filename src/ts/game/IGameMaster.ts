@@ -1,4 +1,4 @@
-import {MATERIAL} from "../constants";
+import {MATERIAL} from "../constants/gameConstants";
 import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";

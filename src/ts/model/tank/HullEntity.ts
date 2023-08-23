@@ -1,6 +1,6 @@
 import {RectangularEntity} from "../IEntity";
 import {BulletEntity} from "./BulletEntity";
-import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants";
+import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 
 export abstract class HullEntity extends RectangularEntity {
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
