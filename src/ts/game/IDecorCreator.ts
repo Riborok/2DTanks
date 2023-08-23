@@ -1,4 +1,4 @@
-import {getRandomInt} from "../additionalFunc";
+import {getRandomInt} from "../additionally/additionalFunc";
 import {Field} from "./Field";
 
 export interface IDecorCreator {

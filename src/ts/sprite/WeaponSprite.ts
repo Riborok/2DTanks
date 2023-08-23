@@ -1,6 +1,6 @@
 import {TankSpritePart} from "./Sprite";
 import {Point} from "../model/Point";
-import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../constants";
+import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../constants/gameConstants";
 
 export class WeaponSprite extends TankSpritePart {
     private readonly _indentX : number;

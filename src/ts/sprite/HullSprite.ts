@@ -1,5 +1,5 @@
 import {TankSpritePart} from "./Sprite";
-import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants";
+import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
 import {Point} from "../model/Point";
 
 export class HullSprite extends TankSpritePart {

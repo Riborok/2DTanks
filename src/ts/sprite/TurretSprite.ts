@@ -1,6 +1,6 @@
 import {TankSpritePart} from "./Sprite";
 import {Point} from "../model/Point";
-import {TURRET_HEIGHT, TURRET_WIDTH} from "../constants";
+import {TURRET_HEIGHT, TURRET_WIDTH} from "../constants/gameConstants";
 
 export class TurretSprite extends TankSpritePart {
     private readonly _indentX : number;

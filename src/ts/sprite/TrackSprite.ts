@@ -1,6 +1,6 @@
 import {TankSpritePart} from "./Sprite";
 import {Point} from "../model/Point";
-import {TRACK_INDENT} from "../constants";
+import {TRACK_INDENT} from "../constants/gameConstants";
 
 abstract class TrackSprite extends TankSpritePart {
     private readonly _srcState0: string;
