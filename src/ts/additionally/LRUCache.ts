@@ -31,8 +31,7 @@ export class LRUCache<TKey, TValue> {
      */
     public getValue(key: TKey): TValue {
         if (this._cache.has(key)) {
-            this._lruList.remove(key);
-            this._lruList.addToHead(key);
+            this._lruList.moveToHead(key);
             return this._cache.get(key);
         }
 
@@ -56,7 +55,7 @@ export class LRUCache<TKey, TValue> {
  */
 export class SinCache {
     private constructor() {}
-    private static readonly SIN_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.sin, 42);
+    private static readonly SIN_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.sin, 42 >> 1);
 
     /**
      * Gets the sine value for a given angle.
@@ -84,7 +83,7 @@ export class SinCache {
  */
 export class CosCache {
     private constructor() {}
-    private static readonly COS_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.cos, 42);
+    private static readonly COS_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.cos, 42 >> 1);
 
     /**
      * Gets the cosine value for a given angle.
@@ -98,7 +97,7 @@ export class CosCache {
         if (normalizedAngle <= HALF_PI)
             return CosCache.COS_CACHE.getValue(normalizedAngle);
         else if (normalizedAngle <= PI)
-            return -CosCache.COS_CACHE.getValue(normalizedAngle - HALF_PI);
+            return -CosCache.COS_CACHE.getValue(PI - normalizedAngle);
         else if (normalizedAngle <= THREE_HALF_PI)
             return -CosCache.COS_CACHE.getValue(normalizedAngle - PI);
         else
@@ -106,11 +105,20 @@ export class CosCache {
     }
 }
 
-const PI: number = 3.14;
+const PI: number = roundToTwoDecimalPlaces(Math.PI);
 const TWO_PI: number = PI * 2;
 const HALF_PI: number = PI / 2;
 const THREE_HALF_PI: number = 3 * HALF_PI;
 
 function normalizeAngle(angle: number): number {
-    return ((Math.floor(angle * 100) / 100) % TWO_PI + TWO_PI) % TWO_PI;
+    const roundedAngle = roundToTwoDecimalPlaces(angle);
+
+    if (roundedAngle >= 0)
+        return roundedAngle % TWO_PI;
+    else
+        return (roundedAngle % TWO_PI) + TWO_PI;
+}
+
+function roundToTwoDecimalPlaces(number: number) {
+    return Math.floor(number * 100) / 100;
 }

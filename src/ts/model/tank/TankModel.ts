@@ -1,5 +1,6 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
 import {TankModelParts} from "./TankModelParts";
+import {CosCache, SinCache} from "../../additionally/LRUCache";
 
 export class TankModel {
     private readonly _tankParts: TankModelParts;
@@ -26,9 +27,9 @@ export class TankModel {
 
         const hullEntity = this._tankParts.hullEntity;
         const xStart = ((hullEntity.points[0].x + hullEntity.points[2].x) >> 1) +
-            this._tankParts.weapon.barrelLength * Math.cos(this._tankParts.turret.angle);
+            this._tankParts.weapon.barrelLength * CosCache.getCos(this._tankParts.turret.angle);
         const yStart = ((hullEntity.points[0].y + hullEntity.points[2].y) >> 1) +
-            this._tankParts.weapon.barrelLength * Math.sin(this._tankParts.turret.angle);
+            this._tankParts.weapon.barrelLength * SinCache.getSin(this._tankParts.turret.angle);
 
         const bulletEntity = this._bulletManufacturing.create(xStart, yStart, this._tankParts.turret.angle);
         bulletEntity.launchFromWeapon(this._tankParts.weapon);
@@ -76,7 +77,7 @@ export class TankModel {
         this._tankParts.hullEntity.movePoints(-this._deltaX, -this._deltaY);
     }
     private calcDeltaCoordinates() {
-        this._deltaX = this._tankParts.track.movementSpeed * Math.cos(this._tankParts.hullEntity.angle);
-        this._deltaY = this._tankParts.track.movementSpeed * Math.sin(this._tankParts.hullEntity.angle);
+        this._deltaX = this._tankParts.track.movementSpeed * CosCache.getCos(this._tankParts.hullEntity.angle);
+        this._deltaY = this._tankParts.track.movementSpeed * SinCache.getSin(this._tankParts.hullEntity.angle);
     }
 }

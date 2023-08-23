@@ -1,5 +1,6 @@
 import {Point} from "./Point";
 import {GeomInteractionUtils} from "./GeomInteractionUtils";
+import {CosCache, SinCache} from "../additionally/LRUCache";
 
 /**
  * Interface representing an entity with points.
@@ -43,6 +44,6 @@ export abstract class RectangularEntity implements IEntity {
         const center = this.calcCenter();
 
         for (const point of this.points)
-            GeomInteractionUtils.rotatePointAroundTarget(point, center, Math.sin(deltaAngle), Math.cos(deltaAngle));
+            GeomInteractionUtils.rotatePointAroundTarget(point, center, SinCache.getSin(deltaAngle), CosCache.getCos(deltaAngle));
     }
 }

@@ -69,23 +69,25 @@ export class DoublyLinkedList<T> {
             this._tail.prev = null;
         }
     }
-    public remove(value: T) {
-        let currentNode = this._tail;
+    public moveToHead(value: T) {
+        let currentNode = this._head;
         while (currentNode !== null) {
             if (currentNode.value === value) {
-                if (currentNode === this._tail)
-                    this.removeFromTail();
-                else if (currentNode === this._head)
-                    this.removeFromHead();
-                else {
+                if (currentNode !== this._head) {
                     const prevNode = currentNode.prev;
                     const nextNode = currentNode.next;
-                    prevNode.next = nextNode;
+                    if (prevNode !== null)
+                        prevNode.next = nextNode;
                     nextNode.prev = prevNode;
+
+                    currentNode.next = null;
+                    currentNode.prev = this._head;
+                    this._head.next = currentNode;
+                    this._head = currentNode;
                 }
                 return;
             }
-            currentNode = currentNode.next;
+            currentNode = currentNode.prev;
         }
     }
 }

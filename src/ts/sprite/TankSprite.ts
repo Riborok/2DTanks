@@ -2,6 +2,7 @@ import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../model/Point";
 import {GeomInteractionUtils} from "../model/GeomInteractionUtils";
 import {TankSpritePart} from "./Sprite";
+import {CosCache, SinCache} from "../additionally/LRUCache";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -10,8 +11,8 @@ export class TankSprite {
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
     public updateSprite(point: Point, hullAngle: number, turretAngle: number) {
-        const sin = Math.sin(hullAngle);
-        const cos = Math.cos(hullAngle);
+        const sin = SinCache.getSin(hullAngle);
+        const cos = CosCache.getCos(hullAngle);
 
         let tankSpritePart: TankSpritePart;
         let rotatedPoint: Point;
@@ -35,8 +36,8 @@ export class TankSprite {
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
     }
     public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
-        const turretSin = Math.sin(turretAngle);
-        const turretCos = Math.cos(turretAngle);
+        const turretSin = SinCache.getSin(turretAngle);
+        const turretCos = CosCache.getCos(turretAngle);
 
         let tankSpritePart: TankSpritePart;
         let rotatedPoint: Point;
