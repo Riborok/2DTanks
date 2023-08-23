@@ -32,13 +32,11 @@ export class TankSprite {
         TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, hullAngle);
 
-        this.rotateTurretUpdate(hullDefaultPoint, turretAngle, hullAngle);
+        this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
     }
-    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullAngle: number) {
+    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
         const turretSin = Math.sin(turretAngle);
         const turretCos = Math.cos(turretAngle);
-        const hullSin = Math.sin(hullAngle);
-        const hullCos = Math.cos(hullAngle);
 
         let tankSpritePart: TankSpritePart;
         let rotatedPoint: Point;
