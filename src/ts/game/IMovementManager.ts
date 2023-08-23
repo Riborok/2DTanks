@@ -1,6 +1,7 @@
 import {TankElement} from "./TankElement";
 import {IEntityStorage} from "../model/IEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
+import {CosCache, SinCache} from "../additionally/LRUCache";
 
 type Action = () => void;
 
@@ -52,8 +53,8 @@ export class MovementManager implements IMovementManager{
     }
     private static turretUpdate(tankElement: TankElement) {
         const tankParts = tankElement.model.tankParts;
-        const hullSin = Math.sin(tankParts.hullEntity.angle);
-        const hullCos = Math.cos(tankParts.hullEntity.angle);
+        const hullSin = SinCache.getSin(tankParts.hullEntity.angle);
+        const hullCos = CosCache.getCos(tankParts.hullEntity.angle);
 
         tankElement.sprite.rotateTurretUpdate(
             tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(tankParts.hullEntity.points[0], hullSin, hullCos),

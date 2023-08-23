@@ -8,7 +8,7 @@ export class WeaponSprite extends TankSpritePart {
     public constructor(num: number, indentX: number, indentY: number) {
         super(WEAPON_WIDTH[num], WEAPON_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Weapons/Weapon_${num}.png`;
-        this._sprite.style.zIndex = `6`;
+        this._sprite.style.zIndex = `5`;
         this._indentX = indentX;
         this._indentY = indentY;
     }
