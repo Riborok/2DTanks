@@ -15,7 +15,7 @@ export interface IMovementManager {
 export class MovementManager implements IMovementManager{
     private readonly _entityStorage: IEntityStorage;
     private readonly _collisionManager: ICollisionManager;
-    constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
+    public constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
     }
@@ -52,12 +52,12 @@ export class MovementManager implements IMovementManager{
     }
     private static turretUpdate(tankElement: TankElement) {
         const tankParts = tankElement.model.tankParts;
+        const hullSin = Math.sin(tankParts.hullEntity.angle);
+        const hullCos = Math.cos(tankParts.hullEntity.angle);
+
         tankElement.sprite.rotateTurretUpdate(
-            tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(
-                tankParts.hullEntity.points[0],
-                Math.sin(tankParts.hullEntity.angle),
-                Math.cos(tankParts.hullEntity.angle)),
-            tankParts.turret.angle,
-            tankParts.hullEntity.angle);
+            tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(tankParts.hullEntity.points[0], hullSin, hullCos),
+            tankParts.turret.angle, hullSin, hullCos
+        );
     }
 }
