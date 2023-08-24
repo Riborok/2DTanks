@@ -86,11 +86,11 @@ export class GameMaster implements IGameMaster {
             if (mask & tankElement.hullCounterClockwiseMask)
                 this._movementManager.hullCounterclockwiseMovement(tankElement);
             if (mask & tankElement.backwardMask)
-                this._movementManager.moveBackward(tankElement);
+                this._movementManager.backwardMovement(tankElement);
             if (mask & tankElement.forwardMask)
-                this._movementManager.moveForward(tankElement);
+                this._movementManager.forwardMovement(tankElement);
             else
-                this._movementManager.stopTank(tankElement);
+                this._movementManager.removeAcceleration(tankElement);
         }
     }
 }

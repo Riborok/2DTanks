@@ -2,17 +2,19 @@ import {TankElement} from "./TankElement";
 import {IEntityStorage} from "../model/IEntityStorage";
 import {ICollisionManager} from "./ICollisionManager";
 import {TrigCache} from "../additionally/LRUCache";
+import {Point} from "../model/Point";
 
 type Action = () => void;
+type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 
 export interface IMovementManager {
     hullCounterclockwiseMovement(tankElement: TankElement): void;
     hullClockwiseMovement(tankElement: TankElement): void;
-    moveForward(tankElement: TankElement): void;
-    moveBackward(tankElement: TankElement): void;
+    forwardMovement(tankElement: TankElement): void;
+    backwardMovement(tankElement: TankElement): void;
     turretCounterclockwiseMovement(tankElement: TankElement): void;
     turretClockwiseMovement(tankElement: TankElement): void;
-    stopTank(tankElement: TankElement): void;
+    removeAcceleration(tankElement: TankElement): void;
 }
 export class MovementManager implements IMovementManager{
     private readonly _entityStorage: IEntityStorage;
@@ -21,10 +23,13 @@ export class MovementManager implements IMovementManager{
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
     }
-    public stopTank(tankElement: TankElement) {
-        tankElement.model.braking();
-        tankElement.sprite.tankSpriteParts.bottomTrackSprite.brake();
-        tankElement.sprite.tankSpriteParts.topTrackSprite.brake();
+    public removeAcceleration(tankElement: TankElement) {
+        tankElement.model.removeAcceleration();
+        const tankSpriteParts = tankElement.sprite.tankSpriteParts;
+        tankSpriteParts.bottomTrackSprite.removeAcceleration();
+        tankSpriteParts.topTrackSprite.removeAcceleration();
+        tankSpriteParts.bottomSpriteAccelerationEffect.removeAcceleration();
+        tankSpriteParts.topSpriteAccelerationEffect.removeAcceleration();
     }
     public turretCounterclockwiseMovement(tankElement: TankElement) {
         tankElement.model.turretCounterclockwiseMovement();
@@ -35,29 +40,34 @@ export class MovementManager implements IMovementManager{
         MovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.model.hullClockwiseMovement);
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement,
+            tankElement.model.hullClockwiseMovement, tankElement.sprite.updateSprite);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.model.hullCounterclockwiseMovement);
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement,
+            tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateSprite);
     }
-    public moveForward(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.model.rollback);
+    public forwardMovement(tankElement: TankElement) {
+        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.model.rollback,
+            tankElement.sprite.updateForwardAction);
     }
-    public moveBackward(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollback);
+    public backwardMovement(tankElement: TankElement) {
+        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollback,
+            tankElement.sprite.updateSprite);
     }
-    private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action) {
+    private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action, updateSprites: UpdateSprites) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
         this._entityStorage.remove(hullEntity)
         action.call(tankElement.model);
         if (!this._collisionManager.isSuccess(hullEntity)) {
             reverseAction.call(tankElement.model);
-            this.stopTank(tankElement);
+            this.removeAcceleration(tankElement);
         }
 
         this._entityStorage.insert(hullEntity);
 
-        tankElement.sprite.updateSprite(hullEntity.points[0], hullEntity.angle, tankElement.model.tankParts.turret.angle);
+        updateSprites.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
+            tankElement.model.tankParts.turret.angle);
     }
     private static turretUpdate(tankElement: TankElement) {
         const tankParts = tankElement.model.tankParts;
