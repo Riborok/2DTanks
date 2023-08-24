@@ -61,7 +61,7 @@ export class TankModel {
     public forwardMovement() {
         const track = this._tankParts.track;
         if (this._currentSpeed < track.finishMovementSpeed)
-            this._currentSpeed += track.MovementAcceleration;
+            this._currentSpeed += track.movementAcceleration;
 
         this.calcDeltaCoordinates(this._currentSpeed);
         this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);

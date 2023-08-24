@@ -8,9 +8,10 @@ export class TankModelPartsCreator {
     private constructor() { }
     public static create(x0: number, y0: number, angle: number,
                          hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
+        const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle);
         return new TankModelParts(
-            TankModelPartsCreator.createHull(hullNum, x0, y0, angle),
-            TankModelPartsCreator.createTrack(trackNum),
+            hull,
+            TankModelPartsCreator.createTrack(trackNum, hull.severityCoeff),
             TankModelPartsCreator.createTurret(turretNum, angle),
             TankModelPartsCreator.createWeapon(weaponNum)
         )
@@ -23,10 +24,10 @@ export class TankModelPartsCreator {
                 throw new Error(`Hull model ${hullNum} was not found`);
         }
     }
-    private static createTrack(trackNum: number): ITrack {
+    private static createTrack(trackNum: number, severityCoeff: number): ITrack {
         switch (trackNum) {
             case 0:
-                return new TrackModel0();
+                return new TrackModel0(severityCoeff);
             default:
                 throw new Error(`Track model ${trackNum} was not found`);
         }

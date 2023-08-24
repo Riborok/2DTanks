@@ -7,7 +7,9 @@ abstract class TrackSprite extends TankSpritePart {
     private readonly _srcState1: string;
     private _state: number;
     private _counter: number;
-    private static readonly STATE_CHANGE_THRESHOLD: number = 3;
+    private _currentThreshold: number;
+    private static readonly MIN_STATE_CHANGE_THRESHOLD: number = 2;
+    private static readonly MAX_STATE_CHANGE_THRESHOLD: number = 15;
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     protected static calcHeight(width: number) {
         return TrackSprite.PROPORTION_WIDTH_HEIGHT * width;
@@ -21,18 +23,24 @@ abstract class TrackSprite extends TankSpritePart {
         this._state = 0;
         this._counter = 0;
         this._sprite.src = this._srcState0;
+        this._currentThreshold = TrackSprite.MAX_STATE_CHANGE_THRESHOLD;
     }
     private changeState() {
         this._counter++;
-        if (this._counter === TrackSprite.STATE_CHANGE_THRESHOLD) {
+        if (this._counter === this._currentThreshold) {
             this._state ^= 1;
             this._sprite.src = this._state === 1 ? this._srcState1 : this._srcState0;
             this._counter = 0;
+            if (this._currentThreshold > TrackSprite.MIN_STATE_CHANGE_THRESHOLD)
+                this._currentThreshold--;
         }
     }
     public setPosition(point: Point) {
         this.changeState();
         super.setPosition(point);
+    }
+    public brake() {
+        this._currentThreshold = TrackSprite.MAX_STATE_CHANGE_THRESHOLD;
     }
 }
 
