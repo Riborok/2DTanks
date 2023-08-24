@@ -60,11 +60,11 @@ export class TankModel {
     }
     public forwardMovement() {
         const track = this._tankParts.track;
-        this.movement(track.forwardAcceleration, track.finishForwardSpeed);
+        this.movement(track.movementParameters.forwardAcceleration, track.movementParameters.finishForwardSpeed);
     }
     public backwardMovement() {
         const track = this._tankParts.track;
-        this.movement(-track.backwardAcceleration, track.finishBackwardSpeed);
+        this.movement(-track.movementParameters.backwardAcceleration, track.movementParameters.finishBackwardSpeed);
     }
     private movement(acceleration: number, finishSpeed: number) {
         if (Math.abs(this._currentSpeed) < finishSpeed)

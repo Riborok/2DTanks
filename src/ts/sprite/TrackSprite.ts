@@ -1,21 +1,45 @@
 import {TankSpritePart} from "./Sprite";
 import {Point} from "../model/Point";
 import {TRACK_INDENT} from "../constants/gameConstants";
+import {MovementParameters} from "../additionally/type";
 
 abstract class TrackSprite extends TankSpritePart {
-    private static readonly MIN_STATE_CHANGE_THRESHOLD: number = 2;
-    private static readonly MAX_STATE_CHANGE_THRESHOLD: number = 15;
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
+    private static readonly MIN_THRESHOLD_COEFF: number = 5;
+    private static readonly MAX_THRESHOLD_COEFF: number = 0.155;
+    private static readonly MIN_STATE_CHANGE_THRESHOLD_MINIMUM: number = 2;
+    private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 20;
     private readonly _srcState0: string;
     private readonly _srcState1: string;
     private _state: number;
     private _counter: number;
     private _currentThreshold: number;
-    protected static calcHeight(width: number) {
-        return TrackSprite.PROPORTION_WIDTH_HEIGHT * width;
+    private _isForwardMovement: boolean;
+    private readonly _minStateChangeThreshold: number[];
+    private readonly _maxStateChangeThreshold: number[];
+    protected static calcHeight(width: number) { return TrackSprite.PROPORTION_WIDTH_HEIGHT * width; }
+    public set isForwardMovement(value: boolean) {
+        if (this._isForwardMovement !== value) {
+            this._isForwardMovement = value;
+            this._currentThreshold = this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0];
+        }
     }
-    protected constructor(num: number, tankWidth: number, height: number) {
+    protected constructor(num: number, tankWidth: number, height: number, movementParameters: MovementParameters) {
         super(tankWidth + TRACK_INDENT, height);
+
+        this._minStateChangeThreshold = [
+            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / movementParameters.finishBackwardSpeed),
+                TrackSprite.MIN_STATE_CHANGE_THRESHOLD_MINIMUM),
+            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / movementParameters.finishForwardSpeed),
+                TrackSprite.MIN_STATE_CHANGE_THRESHOLD_MINIMUM)
+        ];
+
+        this._maxStateChangeThreshold = [
+            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.backwardAcceleration),
+                TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM),
+            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.forwardAcceleration),
+                TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM)
+        ];
 
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
@@ -23,7 +47,8 @@ abstract class TrackSprite extends TankSpritePart {
         this._state = 0;
         this._sprite.src = this._srcState0;
         this._counter = 0;
-        this._currentThreshold = TrackSprite.MAX_STATE_CHANGE_THRESHOLD;
+        this._isForwardMovement = true;
+        this._currentThreshold = this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0];
     }
     private changeState() {
         this._counter++;
@@ -31,7 +56,7 @@ abstract class TrackSprite extends TankSpritePart {
             this._counter = 0;
             this._state ^= 1;
             this._sprite.src = this._state === 1 ? this._srcState1 : this._srcState0;
-            if (this._currentThreshold > TrackSprite.MIN_STATE_CHANGE_THRESHOLD)
+            if (this._currentThreshold > this._minStateChangeThreshold[this._isForwardMovement ? 1 : 0])
                 this._currentThreshold--;
         }
     }
@@ -40,13 +65,13 @@ abstract class TrackSprite extends TankSpritePart {
         super.setPosition(point);
     }
     public removeAcceleration() {
-        this._currentThreshold = TrackSprite.MAX_STATE_CHANGE_THRESHOLD;
+        this._currentThreshold = this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0];
     }
 }
 
 export class TopTrackSprite extends TrackSprite  {
-    public constructor(num: number, tankWidth: number) {
-        super(num, tankWidth, TrackSprite.calcHeight(tankWidth));
+    public constructor(num: number, tankWidth: number, movementParameters: MovementParameters) {
+        super(num, tankWidth, TrackSprite.calcHeight(tankWidth), movementParameters);
     }
     /**
      * Calculates the initial position of the top track sprite based on a reference point.
@@ -58,9 +83,9 @@ export class TopTrackSprite extends TrackSprite  {
 }
 export class BottomTrackSprite extends TrackSprite  {
     private readonly _deltaHeight: number;
-    public constructor(num: number, tankWidth: number, tankHeight: number) {
+    public constructor(num: number, tankWidth: number, tankHeight: number, movementParameters: MovementParameters) {
         const height = TrackSprite.calcHeight(tankWidth);
-        super(num, tankWidth, height);
+        super(num, tankWidth, height, movementParameters);
         this._deltaHeight = tankHeight + TRACK_INDENT - height;
     }
     /**

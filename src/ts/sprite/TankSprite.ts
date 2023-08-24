@@ -10,7 +10,14 @@ export class TankSprite {
         this._tankSpriteParts = tankSpriteParts;
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
+    public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
+        this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
+        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
+        this.updateSprite(point, hullAngle, turretAngle);
+    }
     public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
+        this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
+        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = true;
         const sin = TrigCache.getSin(hullAngle);
         const cos = TrigCache.getCos(hullAngle);
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);

@@ -41,9 +41,10 @@ export class TankElement {
         this._turretClockwiseMask = turretClockwiseMask;
         this._turretCounterClockwiseMask = turretCounterClockwiseMask;
 
-        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum));
-
         this._model = new TankModel(TankModelPartsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
+
+        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum,
+            this._model.tankParts.track.movementParameters));
     }
     public spawn(canvas: Element, entityStorage: IEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
