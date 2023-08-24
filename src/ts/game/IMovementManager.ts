@@ -63,11 +63,11 @@ export class MovementManager implements IMovementManager{
             reverseAction.call(tankElement.model);
             this.removeAcceleration(tankElement);
         }
+        else
+            updateSprites.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
+                tankElement.model.tankParts.turret.angle);
 
         this._entityStorage.insert(hullEntity);
-
-        updateSprites.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
-            tankElement.model.tankParts.turret.angle);
     }
     private static turretUpdate(tankElement: TankElement) {
         const tankParts = tankElement.model.tankParts;

@@ -4,6 +4,7 @@ import {Point} from "../model/Point";
 export abstract class SpriteAccelerationEffect extends TankSpritePart {
     private static readonly THRESHOLD: number = 7;
     private static readonly LAST_STATE: number = 19;
+    private static readonly WORKING_STATE: number = 10;
     private static readonly DEFAULT_SRC : string = 'src/img/tanks/Effects/Movement/Movement_';
     private static readonly SRC: string[] = [
         `${SpriteAccelerationEffect.DEFAULT_SRC}0.png`,
@@ -45,6 +46,9 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
         this._sprite.src = SpriteAccelerationEffect.SRC[this._state];
     }
     private changeState() {
+        if (this._state === SpriteAccelerationEffect.LAST_STATE)
+            this._state = SpriteAccelerationEffect.WORKING_STATE;
+
         this._counter++;
         if (this._counter === SpriteAccelerationEffect.THRESHOLD) {
             this._counter = 0;
@@ -55,8 +59,7 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
     public setPosition(point: Point) {
         if (this._state === 0 && this._counter === 0)
             this._canvas.appendChild(this._sprite);
-        if (this._state !== SpriteAccelerationEffect.LAST_STATE)
-            this.changeState();
+        this.changeState();
         super.setPosition(point);
     }
     public removeAcceleration() {
