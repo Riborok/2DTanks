@@ -28,13 +28,13 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
         `${SpriteAccelerationEffect.DEFAULT_SRC}18.png`,
         `${SpriteAccelerationEffect.DEFAULT_SRC}19.png`
     ];
-    protected static readonly SIZE: number = 100;
+    protected static readonly SIZE: number = 85;
 
     private _state: number;
     private _counter: number;
     private readonly _canvas: Element;
-    protected readonly _indentX: number;
-    protected readonly _indentY: number;
+    protected _indentX: number;
+    protected _indentY: number;
     protected constructor(canvas: Element, indentX: number, indentY: number) {
         super(SpriteAccelerationEffect.SIZE, SpriteAccelerationEffect.SIZE);
         this._canvas = canvas;
@@ -68,28 +68,24 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
         this._sprite.src = SpriteAccelerationEffect.SRC[this._state];
         this._sprite.remove();
     }
+    public calcPosition(point: Point, sin: number, cos: number): Point {
+        return new Point(
+            point.x + this._indentX * cos - this._indentY * sin -
+            SpriteAccelerationEffect.SIZE / 2 * cos + SpriteAccelerationEffect.SIZE / 1.517 * sin ,
+            point.y + this._indentY * cos + this._indentX * sin -
+            SpriteAccelerationEffect.SIZE / 1.517 * cos - SpriteAccelerationEffect.SIZE / 2 * sin
+        );
+    }
 }
 
 export class TopSpriteAccelerationEffect extends SpriteAccelerationEffect {
     public constructor(canvas: Element, indentX: number, tankWidth: number) {
-        super(canvas, indentX, tankWidth * 3 / 4);
-    }
-    public calcPosition(point: Point, sin: number, cos: number): Point {
-        return new Point(
-            point.x + this._indentX * cos - this._indentY * sin,
-            point.y + this._indentY * cos + this._indentX * sin
-        );
+        super(canvas, indentX, tankWidth * 9 / 16);
     }
 }
 
 export class BottomSpriteAccelerationEffect extends SpriteAccelerationEffect {
     public constructor(canvas: Element, indentX: number, tankWidth: number) {
-        super(canvas, indentX, tankWidth / 4);
-    }
-    public calcPosition(point: Point, sin: number, cos: number): Point {
-        return new Point(
-            point.x + this._indentX * cos - this._indentY * sin,
-            point.y + this._indentY * cos + this._indentX * sin
-        );
+        super(canvas, indentX, tankWidth * 7 / 16);
     }
 }
