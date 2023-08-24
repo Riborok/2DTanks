@@ -9,10 +9,11 @@ export class TankModelPartsCreator {
     public static create(x0: number, y0: number, angle: number,
                          hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
         const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle);
+        const turret = TankModelPartsCreator.createTurret(turretNum, angle);
         return new TankModelParts(
             hull,
-            TankModelPartsCreator.createTrack(trackNum, hull.severityCoeff),
-            TankModelPartsCreator.createTurret(turretNum, angle),
+            TankModelPartsCreator.createTrack(trackNum, hull.severityCoeff + turret.severityCoeff),
+            turret,
             TankModelPartsCreator.createWeapon(weaponNum)
         )
     }

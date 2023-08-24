@@ -15,6 +15,7 @@ export class TrackModel0 implements ITrack{
     public get finishMovementSpeed(): number { return this._finishMovementSpeed }
     public get movementAcceleration(): number { return this._movementAcceleration }
     public constructor(severityCoeff: number) {
+        severityCoeff += 1;
         this._angleSpeed *= severityCoeff;
         this._initialMovementSpeed *= severityCoeff;
         this._finishMovementSpeed *= severityCoeff;
