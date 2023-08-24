@@ -23,6 +23,8 @@ export class MovementManager implements IMovementManager{
     }
     public stopTank(tankElement: TankElement) {
         tankElement.model.braking();
+        tankElement.sprite.tankSpriteParts.bottomTrackSprite.brake();
+        tankElement.sprite.tankSpriteParts.topTrackSprite.brake();
     }
     public turretCounterclockwiseMovement(tankElement: TankElement) {
         tankElement.model.turretCounterclockwiseMovement();
