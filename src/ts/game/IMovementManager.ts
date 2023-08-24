@@ -53,7 +53,7 @@ export class MovementManager implements IMovementManager{
     }
     public backwardMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollback,
-            tankElement.sprite.updateSprite);
+            tankElement.sprite.updateBackwardAction);
     }
     private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action, updateSprites: UpdateSprites) {
         const hullEntity = tankElement.model.tankParts.hullEntity;
