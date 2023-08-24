@@ -1,6 +1,13 @@
 import {HullSprite} from "./HullSprite";
 import {BottomTrackSprite, TopTrackSprite} from "./TrackSprite";
-import {HULL_HEIGHT, HULL_WIDTH, TURRET_HEIGHT, TURRET_INDENT_X, TURRET_WIDTH, WEAPON_HEIGHT} from "../constants/gameConstants";
+import {
+    HULL_HEIGHT,
+    HULL_WIDTH,
+    TURRET_HEIGHT,
+    TURRET_INDENT_X,
+    TURRET_WIDTH,
+    WEAPON_HEIGHT
+} from "../constants/gameConstants";
 import {TurretSprite} from "./TurretSprite";
 import {WeaponSprite} from "./WeaponSprite";
 import {TankSpriteParts} from "./TankSpriteParts";
