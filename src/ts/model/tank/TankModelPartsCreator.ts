@@ -12,7 +12,7 @@ export class TankModelPartsCreator {
         const turret = TankModelPartsCreator.createTurret(turretNum, angle);
         return new TankModelParts(
             hull,
-            TankModelPartsCreator.createTrack(trackNum, hull.severityCoeff + turret.severityCoeff),
+            TankModelPartsCreator.createTrack(trackNum, hull.weight + turret.weight),
             turret,
             TankModelPartsCreator.createWeapon(weaponNum)
         )
@@ -25,10 +25,10 @@ export class TankModelPartsCreator {
                 throw new Error(`Hull model ${hullNum} was not found`);
         }
     }
-    private static createTrack(trackNum: number, severityCoeff: number): ITrack {
+    private static createTrack(trackNum: number, weight: number): ITrack {
         switch (trackNum) {
             case 0:
-                return new TrackModel0(severityCoeff);
+                return new TrackModel0(weight);
             default:
                 throw new Error(`Track model ${trackNum} was not found`);
         }
