@@ -1,24 +1,29 @@
 export interface ITrack {
     get angleSpeed(): number;
-    get initialMovementSpeed(): number;
-    get finishMovementSpeed(): number;
-    get movementAcceleration(): number;
+    get finishBackwardSpeed(): number;
+    get finishForwardSpeed(): number;
+    get forwardAcceleration(): number;
+    get backwardAcceleration(): number;
 }
 
 export class TrackModel0 implements ITrack{
-    private readonly _movementAcceleration: number = 0.00625;
-    private readonly _angleSpeed: number = 0.025;
-    private readonly _finishMovementSpeed: number = 3;
-    private readonly _initialMovementSpeed: number = 1;
+    private readonly _angleSpeed: number = 0.02;
+    private readonly _forwardAcceleration: number = 0.025;
+    private readonly _backwardAcceleration: number = 0.0125;
+    private readonly _finishForwardSpeed: number = 3;
+    private readonly _finishBackwardSpeed: number = 1.5;
     public get angleSpeed(): number { return this._angleSpeed }
-    public get initialMovementSpeed(): number { return this._initialMovementSpeed }
-    public get finishMovementSpeed(): number { return this._finishMovementSpeed }
-    public get movementAcceleration(): number { return this._movementAcceleration }
-    public constructor(severityCoeff: number) {
-        severityCoeff += 1;
-        this._angleSpeed *= severityCoeff;
-        this._initialMovementSpeed *= severityCoeff;
-        this._finishMovementSpeed *= severityCoeff;
-        this._movementAcceleration *= severityCoeff;
+    public get finishBackwardSpeed(): number { return this._finishBackwardSpeed }
+    public get finishForwardSpeed(): number { return this._finishForwardSpeed }
+    public get forwardAcceleration(): number { return this._forwardAcceleration }
+    public get backwardAcceleration(): number { return this._backwardAcceleration }
+    public constructor(weight: number) {
+        const weightCoefficient = 1 - weight * 0.05;
+
+        this._angleSpeed *= weightCoefficient;
+        this._forwardAcceleration *= weightCoefficient;
+        this._backwardAcceleration *= weightCoefficient;
+        this._finishForwardSpeed *= weightCoefficient;
+        this._finishBackwardSpeed *= weightCoefficient;
     }
 }
