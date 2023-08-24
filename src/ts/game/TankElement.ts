@@ -3,6 +3,7 @@ import {TankSprite} from "../sprite/TankSprite";
 import {TankModelPartsCreator} from "../model/tank/TankModelPartsCreator";
 import {IEntityStorage} from "../model/IEntityStorage";
 import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
+import {BottomSpriteAccelerationEffect, TopSpriteAccelerationEffect} from "../sprite/SpriteAccelerationEffect";
 
 export class TankElement {
     private _forwardMask: number;
@@ -46,11 +47,18 @@ export class TankElement {
     }
     public spawn(canvas: Element, entityStorage: IEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
+        const hullSprite = tankSpriteParts.hullSprite;
         canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);
         canvas.appendChild(tankSpriteParts.bottomTrackSprite.sprite);
-        canvas.appendChild(tankSpriteParts.hullSprite.sprite);
+        canvas.appendChild(hullSprite.sprite);
         canvas.appendChild(tankSpriteParts.weaponSprite.sprite);
         canvas.appendChild(tankSpriteParts.turretSprite.sprite);
+
+
+        tankSpriteParts.topSpriteAccelerationEffect = new TopSpriteAccelerationEffect(canvas,
+            hullSprite.accelerationEffectIndentX, hullSprite.width);
+        tankSpriteParts.bottomSpriteAccelerationEffect = new BottomSpriteAccelerationEffect(canvas,
+            hullSprite.accelerationEffectIndentX, hullSprite.width);
 
         const hullEntity = this._model.tankParts.hullEntity;
 

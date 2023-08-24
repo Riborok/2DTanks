@@ -1,10 +1,13 @@
 import {TankSpritePart} from "./Sprite";
-import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
+import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
 import {Point} from "../model/Point";
 
 export class HullSprite extends TankSpritePart {
+    private readonly _accelerationEffectIndentX: number;
+    public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
         super(HULL_WIDTH[num], HULL_HEIGHT[num]);
+        this._accelerationEffectIndentX = ACCELERATION_EFFECT_INDENT_X[num];
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
         this._sprite.style.zIndex = `4`;
     }

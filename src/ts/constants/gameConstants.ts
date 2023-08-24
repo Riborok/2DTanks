@@ -7,3 +7,4 @@ export const TURRET_WIDTH: number[] = [43, 50, 36, 36, 29, 36, 43, 29];
 export const TURRET_HEIGHT: number[] = [36, 36, 22, 36, 29, 29, 36, 29];
 export const WEAPON_WIDTH: number[] = [47, 49, 40, 43, 50, 36, 43, 36];
 export const WEAPON_HEIGHT: number[] = [14, 10, 14, 7, 11, 16, 14, 14];
+export const ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];

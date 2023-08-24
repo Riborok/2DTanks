@@ -18,7 +18,7 @@ export class TankModel {
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
-    public braking() { this._currentSpeed = this._tankParts.track.initialMovementSpeed; }
+    public removeAcceleration() { this._currentSpeed = this._tankParts.track.initialMovementSpeed; }
     public get tankParts(): TankModelParts { return this._tankParts }
     public shot(): BulletEntity | null {
         const dateNow = Date.now();
