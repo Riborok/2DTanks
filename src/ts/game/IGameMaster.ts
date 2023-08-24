@@ -76,18 +76,21 @@ export class GameMaster implements IGameMaster {
     private update() {
         const mask = this._keyHandler.keysMask;
         for (const tankElement of this._tankElements) {
-            if (mask & tankElement.forwardMask)
-                this._movementManager.moveForward(tankElement);
-            if (mask & tankElement.backwardMask)
-                this._movementManager.moveBackward(tankElement);
-            if (mask & tankElement.hullClockwiseMask)
-                this._movementManager.hullClockwiseMovement(tankElement);
-            if (mask & tankElement.hullCounterClockwiseMask)
-                this._movementManager.hullCounterclockwiseMovement(tankElement);
             if (mask & tankElement.turretClockwiseMask)
                 this._movementManager.turretClockwiseMovement(tankElement);
             if (mask & tankElement.turretCounterClockwiseMask)
                 this._movementManager.turretCounterclockwiseMovement(tankElement);
+
+            if (mask & tankElement.hullClockwiseMask)
+                this._movementManager.hullClockwiseMovement(tankElement);
+            if (mask & tankElement.hullCounterClockwiseMask)
+                this._movementManager.hullCounterclockwiseMovement(tankElement);
+            if (mask & tankElement.backwardMask)
+                this._movementManager.moveBackward(tankElement);
+            if (mask & tankElement.forwardMask)
+                this._movementManager.moveForward(tankElement);
+            else
+                this._movementManager.stopTank(tankElement);
         }
     }
 }

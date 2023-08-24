@@ -1,24 +1,24 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
 import {TankModelParts} from "./TankModelParts";
-import {CosCache, SinCache} from "../../additionally/LRUCache";
+import {TrigCache} from "../../additionally/LRUCache";
 
 export class TankModel {
     private readonly _tankParts: TankModelParts;
 
-    private _isDeltaChanged: boolean = false;
     private _bulletQuantity: number = 0;
-    private _deltaX: number;
-    private _deltaY: number;
     private _lastTimeShot: number;
     private _bulletManufacturing: IBulletManufacturing;
+    private _currentSpeed: number;
+    private _deltaX: number;
+    private _deltaY: number;
     public constructor(tankParts: TankModelParts) {
         this._tankParts = tankParts;
-
-        this.calcDeltaCoordinates();
         this._lastTimeShot = Date.now();
+        this._currentSpeed = tankParts.track.initialMovementSpeed;
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
+    public braking() { this._currentSpeed = this._tankParts.track.initialMovementSpeed; }
     public get tankParts(): TankModelParts { return this._tankParts }
     public shot(): BulletEntity | null {
         const dateNow = Date.now();
@@ -27,9 +27,9 @@ export class TankModel {
 
         const hullEntity = this._tankParts.hullEntity;
         const xStart = ((hullEntity.points[0].x + hullEntity.points[2].x) >> 1) +
-            this._tankParts.weapon.barrelLength * CosCache.getCos(this._tankParts.turret.angle);
+            this._tankParts.weapon.barrelLength * TrigCache.getCos(this._tankParts.turret.angle);
         const yStart = ((hullEntity.points[0].y + hullEntity.points[2].y) >> 1) +
-            this._tankParts.weapon.barrelLength * SinCache.getSin(this._tankParts.turret.angle);
+            this._tankParts.weapon.barrelLength * TrigCache.getSin(this._tankParts.turret.angle);
 
         const bulletEntity = this._bulletManufacturing.create(xStart, yStart, this._tankParts.turret.angle);
         bulletEntity.launchFromWeapon(this._tankParts.weapon);
@@ -51,33 +51,30 @@ export class TankModel {
         this._tankParts.turret.counterclockwiseMovement();
     }
     public hullClockwiseMovement() {
-        this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(this._tankParts.track.angleSpeed);
         this._tankParts.turret.incAngle(this._tankParts.track.angleSpeed);
     }
     public hullCounterclockwiseMovement() {
-        this._isDeltaChanged = true;
         this._tankParts.hullEntity.rotatePoints(-this._tankParts.track.angleSpeed);
         this._tankParts.turret.incAngle(-this._tankParts.track.angleSpeed);
     }
-    public moveForward() {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
-        }
+    public forwardMovement() {
+        const track = this._tankParts.track;
+        if (this._currentSpeed < track.finishMovementSpeed)
+            this._currentSpeed += track.MovementAcceleration;
 
+        this.calcDeltaCoordinates(this._currentSpeed);
         this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);
     }
-    public moveBackward() {
-        if (this._isDeltaChanged) {
-            this._isDeltaChanged = false;
-            this.calcDeltaCoordinates();
-        }
-
+    public backwardMovement() {
+        this.calcDeltaCoordinates(-this._tankParts.track.initialMovementSpeed);
+        this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);
+    }
+    public rollback() {
         this._tankParts.hullEntity.movePoints(-this._deltaX, -this._deltaY);
     }
-    private calcDeltaCoordinates() {
-        this._deltaX = this._tankParts.track.movementSpeed * CosCache.getCos(this._tankParts.hullEntity.angle);
-        this._deltaY = this._tankParts.track.movementSpeed * SinCache.getSin(this._tankParts.hullEntity.angle);
+    private calcDeltaCoordinates(speed: number){
+        this._deltaX = speed * TrigCache.getCos(this._tankParts.hullEntity.angle);
+        this._deltaY = speed * TrigCache.getSin(this._tankParts.hullEntity.angle);
     }
 }

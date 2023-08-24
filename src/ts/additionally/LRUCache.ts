@@ -50,12 +50,19 @@ export class LRUCache<TKey, TValue> {
 }
 
 /**
- * A utility class for caching sine values.
+ * A utility class for caching sine and cosine values.
  * It uses the ValueCaching class to cache sine values based on angles.
  */
-export class SinCache {
+export class TrigCache {
     private constructor() {}
+
     private static readonly SIN_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.sin, 42 >> 1);
+    private static readonly COS_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.cos, 42 >> 1);
+
+    private static readonly PI: number = Math.PI;
+    private static readonly TWO_PI: number = TrigCache.PI * 2;
+    private static readonly HALF_PI: number = TrigCache.PI / 2;
+    private static readonly THREE_HALF_PI: number = 3 * TrigCache.HALF_PI;
 
     /**
      * Gets the sine value for a given angle.
@@ -64,26 +71,17 @@ export class SinCache {
      * @returns The cached sine value or a newly calculated sine value.
      */
     public static getSin(angle: number): number {
-        const normalizedAngle = normalizeAngle(angle);
+        const normalizedAngle = TrigCache.normalizeAngle(angle);
 
-        if (normalizedAngle <= HALF_PI)
-            return SinCache.SIN_CACHE.getValue(normalizedAngle);
-        else if (normalizedAngle <= PI)
-            return SinCache.SIN_CACHE.getValue(PI - normalizedAngle);
-        else if (normalizedAngle <= THREE_HALF_PI)
-            return -SinCache.SIN_CACHE.getValue(normalizedAngle - PI);
+        if (normalizedAngle <= TrigCache.HALF_PI)
+            return TrigCache.SIN_CACHE.getValue(normalizedAngle);
+        else if (normalizedAngle <= TrigCache.PI)
+            return TrigCache.SIN_CACHE.getValue(TrigCache.PI - normalizedAngle);
+        else if (normalizedAngle <= TrigCache.THREE_HALF_PI)
+            return -TrigCache.SIN_CACHE.getValue(normalizedAngle - TrigCache.PI);
         else
-            return -SinCache.SIN_CACHE.getValue(TWO_PI - normalizedAngle);
+            return -TrigCache.SIN_CACHE.getValue(TrigCache.TWO_PI - normalizedAngle);
     }
-}
-
-/**
- * A utility class for caching cosine values.
- * It uses the ValueCaching class to cache cosine values based on angles.
- */
-export class CosCache {
-    private constructor() {}
-    private static readonly COS_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.cos, 42 >> 1);
 
     /**
      * Gets the cosine value for a given angle.
@@ -92,33 +90,22 @@ export class CosCache {
      * @returns The cached cosine value or a newly calculated cosine value.
      */
     public static getCos(angle: number): number {
-        const normalizedAngle = normalizeAngle(angle);
+        const normalizedAngle = TrigCache.normalizeAngle(angle);
 
-        if (normalizedAngle <= HALF_PI)
-            return CosCache.COS_CACHE.getValue(normalizedAngle);
-        else if (normalizedAngle <= PI)
-            return -CosCache.COS_CACHE.getValue(PI - normalizedAngle);
-        else if (normalizedAngle <= THREE_HALF_PI)
-            return -CosCache.COS_CACHE.getValue(normalizedAngle - PI);
+        if (normalizedAngle <= TrigCache.HALF_PI)
+            return TrigCache.COS_CACHE.getValue(normalizedAngle);
+        else if (normalizedAngle <= TrigCache.PI)
+            return -TrigCache.COS_CACHE.getValue(TrigCache.PI - normalizedAngle);
+        else if (normalizedAngle <= TrigCache.THREE_HALF_PI)
+            return -TrigCache.COS_CACHE.getValue(normalizedAngle - TrigCache.PI);
         else
-            return CosCache.COS_CACHE.getValue(TWO_PI - normalizedAngle);
+            return TrigCache.COS_CACHE.getValue(TrigCache.TWO_PI - normalizedAngle);
     }
-}
 
-const PI: number = roundToTwoDecimalPlaces(Math.PI);
-const TWO_PI: number = PI * 2;
-const HALF_PI: number = PI / 2;
-const THREE_HALF_PI: number = 3 * HALF_PI;
-
-function normalizeAngle(angle: number): number {
-    const roundedAngle = roundToTwoDecimalPlaces(angle);
-
-    if (roundedAngle >= 0)
-        return roundedAngle % TWO_PI;
-    else
-        return (roundedAngle % TWO_PI) + TWO_PI;
-}
-
-function roundToTwoDecimalPlaces(number: number) {
-    return Math.floor(number * 100) / 100;
+    private static normalizeAngle(angle: number): number {
+        if (angle >= 0)
+            return angle % TrigCache.TWO_PI;
+        else
+            return (angle % TrigCache.TWO_PI) + TrigCache.TWO_PI;
+    }
 }
