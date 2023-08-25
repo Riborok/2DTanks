@@ -12,10 +12,12 @@ export class TankModel {
     private _currentSpeed: number;
     private _deltaX: number;
     private _deltaY: number;
+    private _isBraking: boolean;
     public constructor(tankParts: TankModelParts) {
         this._tankParts = tankParts;
         this._lastTimeShot = Date.now();
         this._currentSpeed = 0;
+        this._isBraking = false;
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
@@ -53,35 +55,60 @@ export class TankModel {
         this._tankParts.turret.counterclockwiseMovement();
     }
     public hullClockwiseMovement(resistanceForce: number) {
-        const angleSpeed = this._tankParts.track.angleSpeed - resistanceForce;
+        const angleSpeed = this.calculateAngleSpeed(resistanceForce);
         this._tankParts.hullEntity.rotatePoints(angleSpeed);
         this._tankParts.turret.incAngle(angleSpeed);
     }
     public hullCounterclockwiseMovement(resistanceForce: number) {
-        const angleSpeed = - (this._tankParts.track.angleSpeed - resistanceForce);
+        const angleSpeed = - this.calculateAngleSpeed(resistanceForce);
         this._tankParts.hullEntity.rotatePoints(angleSpeed);
         this._tankParts.turret.incAngle(angleSpeed);
+    }
+    private calculateAngleSpeed(resistanceForce: number): number {
+        let angleSpeed = this._tankParts.track.angleSpeed - resistanceForce;
+
+        if (this._currentSpeed !== 0) {
+            const speedModule = Math.abs(this._currentSpeed);
+            const speedFactor = 1 - speedModule /
+                (this._tankParts.track.movementParameters.finishForwardSpeed * 8);
+            const massFactor = 1 - this._tankParts.mass / 10;
+            angleSpeed *= massFactor * speedFactor;
+            if (this._isBraking)
+                angleSpeed *= (1 + speedModule / 7)
+            else
+                this._currentSpeed *= (1 - massFactor * angleSpeed);
+        }
+        return angleSpeed;
     }
     public rollback() {
         this._tankParts.hullEntity.movePoints(-this._deltaX, -this._deltaY);
     }
     public forwardMovement(resistanceForce: number) {
         const track = this._tankParts.track;
-        if (this._currentSpeed < 0)
+        if (this._currentSpeed < 0) {
+            this._isBraking = true;
             this._currentSpeed += track.movementParameters.forwardAcceleration + resistanceForce;
-        else if (this._currentSpeed < track.movementParameters.finishForwardSpeed)
+        }
+        else if (this._currentSpeed < track.movementParameters.finishForwardSpeed) {
+            this._isBraking = false;
             this._currentSpeed += track.movementParameters.forwardAcceleration - resistanceForce;
+        }
         this.movement();
     }
     public backwardMovement(resistanceForce: number) {
         const track = this._tankParts.track;
-        if (this._currentSpeed > 0)
+        if (this._currentSpeed > 0) {
+            this._isBraking = true;
             this._currentSpeed -= (track.movementParameters.backwardAcceleration + resistanceForce);
-        else if (Math.abs(this._currentSpeed) < track.movementParameters.finishBackwardSpeed)
+        }
+        else if (-this._currentSpeed < track.movementParameters.finishBackwardSpeed) {
+            this._isBraking = false;
             this._currentSpeed -= (track.movementParameters.backwardAcceleration - resistanceForce);
+        }
         this.movement();
     }
-    public ResidualMovement(resistanceForce: number) {
+    public residualMovement(resistanceForce: number) {
+        this._isBraking = false;
         if (this._currentSpeed > 0) {
             this._currentSpeed -= resistanceForce;
             if (this._currentSpeed < 0)

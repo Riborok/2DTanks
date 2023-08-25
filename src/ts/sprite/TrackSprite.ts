@@ -43,7 +43,7 @@ abstract class TrackSprite extends TankSpritePart {
             Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.forwardAcceleration),
                 TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM)
         ];
-        console.log(this)
+
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
         this._sprite.style.zIndex = `3`;

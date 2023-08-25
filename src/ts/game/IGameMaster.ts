@@ -75,6 +75,9 @@ export class GameMaster implements IGameMaster {
         requestAnimationFrame(() => this.gameLoop());
     }
     private update() {
+        this.updateTanks();
+    }
+    private updateTanks() {
         const mask = this._keyHandler.keysMask;
         for (const tankElement of this._tankElements) {
             if (mask & tankElement.turretClockwiseMask)
