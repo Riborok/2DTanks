@@ -5,8 +5,8 @@ import {MovementParameters} from "../additionally/type";
 
 abstract class TrackSprite extends TankSpritePart {
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
-    private static readonly MIN_THRESHOLD_COEFF: number = 5;
-    private static readonly MAX_THRESHOLD_COEFF: number = 0.155;
+    private static readonly MIN_THRESHOLD_COEFF: number = 8.8;
+    private static readonly MAX_THRESHOLD_COEFF: number = 0.42;
     private static readonly MIN_STATE_CHANGE_THRESHOLD_MINIMUM: number = 2;
     private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 20;
     private readonly _srcState0: string;
@@ -15,15 +15,18 @@ abstract class TrackSprite extends TankSpritePart {
     private _counter: number;
     private _currentThreshold: number;
     private _isForwardMovement: boolean;
+    public _isResidualMovement: boolean;
     private readonly _minStateChangeThreshold: number[];
     private readonly _maxStateChangeThreshold: number[];
     protected static calcHeight(width: number) { return TrackSprite.PROPORTION_WIDTH_HEIGHT * width; }
     public set isForwardMovement(value: boolean) {
+        this._isResidualMovement = false;
         if (this._isForwardMovement !== value) {
             this._isForwardMovement = value;
             this._currentThreshold = this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0];
         }
     }
+    public setResidualMovement() { this._isResidualMovement = true }
     protected constructor(num: number, tankWidth: number, height: number, movementParameters: MovementParameters) {
         super(tankWidth + TRACK_INDENT, height);
 
@@ -40,7 +43,7 @@ abstract class TrackSprite extends TankSpritePart {
             Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.forwardAcceleration),
                 TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM)
         ];
-
+        console.log(this)
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
         this._sprite.style.zIndex = `3`;
@@ -56,7 +59,11 @@ abstract class TrackSprite extends TankSpritePart {
             this._counter = 0;
             this._state ^= 1;
             this._sprite.src = this._state === 1 ? this._srcState1 : this._srcState0;
-            if (this._currentThreshold > this._minStateChangeThreshold[this._isForwardMovement ? 1 : 0])
+            if (this._isResidualMovement) {
+                if (this._currentThreshold < this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0])
+                    this._currentThreshold++;
+            }
+            else if (this._currentThreshold > this._minStateChangeThreshold[this._isForwardMovement ? 1 : 0])
                 this._currentThreshold--;
         }
     }
@@ -64,7 +71,7 @@ abstract class TrackSprite extends TankSpritePart {
         this.changeState();
         super.setPosition(point);
     }
-    public removeAcceleration() {
+    public stopped() {
         this._currentThreshold = this._maxStateChangeThreshold[this._isForwardMovement ? 1 : 0];
     }
 }

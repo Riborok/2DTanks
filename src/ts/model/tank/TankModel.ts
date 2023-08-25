@@ -1,6 +1,7 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
 import {TankModelParts} from "./TankModelParts";
 import {TrigCache} from "../../additionally/LRUCache";
+import {GRAVITY_ACCELERATION} from "../../constants/gameConstants";
 
 export class TankModel {
     private readonly _tankParts: TankModelParts;
@@ -18,7 +19,8 @@ export class TankModel {
 
         this._bulletManufacturing = new LightBulletManufacturing();
     }
-    public removeAcceleration() { this._currentSpeed = 0 }
+    public isIdle(): boolean { return  this._currentSpeed === 0 }
+    public stop() { this._currentSpeed = 0 }
     public get tankParts(): TankModelParts { return this._tankParts }
     public shot(): BulletEntity | null {
         const dateNow = Date.now();
@@ -50,31 +52,51 @@ export class TankModel {
     public turretCounterclockwiseMovement() {
         this._tankParts.turret.counterclockwiseMovement();
     }
-    public hullClockwiseMovement() {
-        this._tankParts.hullEntity.rotatePoints(this._tankParts.track.angleSpeed);
-        this._tankParts.turret.incAngle(this._tankParts.track.angleSpeed);
+    public hullClockwiseMovement(resistanceForce: number) {
+        const angleSpeed = this._tankParts.track.angleSpeed - resistanceForce;
+        this._tankParts.hullEntity.rotatePoints(angleSpeed);
+        this._tankParts.turret.incAngle(angleSpeed);
     }
-    public hullCounterclockwiseMovement() {
-        this._tankParts.hullEntity.rotatePoints(-this._tankParts.track.angleSpeed);
-        this._tankParts.turret.incAngle(-this._tankParts.track.angleSpeed);
-    }
-    public forwardMovement() {
-        const track = this._tankParts.track;
-        this.movement(track.movementParameters.forwardAcceleration, track.movementParameters.finishForwardSpeed);
-    }
-    public backwardMovement() {
-        const track = this._tankParts.track;
-        this.movement(-track.movementParameters.backwardAcceleration, track.movementParameters.finishBackwardSpeed);
-    }
-    private movement(acceleration: number, finishSpeed: number) {
-        if (Math.abs(this._currentSpeed) < finishSpeed)
-            this._currentSpeed += acceleration;
-
-        this.calcDeltaCoordinates();
-        this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);
+    public hullCounterclockwiseMovement(resistanceForce: number) {
+        const angleSpeed = - (this._tankParts.track.angleSpeed - resistanceForce);
+        this._tankParts.hullEntity.rotatePoints(angleSpeed);
+        this._tankParts.turret.incAngle(angleSpeed);
     }
     public rollback() {
         this._tankParts.hullEntity.movePoints(-this._deltaX, -this._deltaY);
+    }
+    public forwardMovement(resistanceForce: number) {
+        const track = this._tankParts.track;
+        if (this._currentSpeed < 0)
+            this._currentSpeed += track.movementParameters.forwardAcceleration + resistanceForce;
+        else if (this._currentSpeed < track.movementParameters.finishForwardSpeed)
+            this._currentSpeed += track.movementParameters.forwardAcceleration - resistanceForce;
+        this.movement();
+    }
+    public backwardMovement(resistanceForce: number) {
+        const track = this._tankParts.track;
+        if (this._currentSpeed > 0)
+            this._currentSpeed -= (track.movementParameters.backwardAcceleration + resistanceForce);
+        else if (Math.abs(this._currentSpeed) < track.movementParameters.finishBackwardSpeed)
+            this._currentSpeed -= (track.movementParameters.backwardAcceleration - resistanceForce);
+        this.movement();
+    }
+    public ResidualMovement(resistanceForce: number) {
+        if (this._currentSpeed > 0) {
+            this._currentSpeed -= resistanceForce;
+            if (this._currentSpeed < 0)
+                this._currentSpeed = 0;
+        }
+        else {
+            this._currentSpeed += resistanceForce;
+            if (this._currentSpeed > 0)
+                this._currentSpeed = 0;
+        }
+        this.movement();
+    }
+    private movement() {
+        this.calcDeltaCoordinates();
+        this._tankParts.hullEntity.movePoints(this._deltaX, this._deltaY);
     }
     private calcDeltaCoordinates(){
         this._deltaX = this._currentSpeed * TrigCache.getCos(this._tankParts.hullEntity.angle);

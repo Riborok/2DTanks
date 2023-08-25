@@ -1,4 +1,4 @@
-import {MATERIAL} from "../constants/gameConstants";
+import {MATERIAL, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";
@@ -11,7 +11,7 @@ import {KeyHandler} from "./KeyHandler";
 export interface IGameMaster {
     startGameLoop(): void;
     stopGameLoop(): void;
-    createField(): void;
+    createField(backgroundMaterial: number, obstaclesMaterial: number): void;
     addTankElements(...tankElements: TankElement[]): void;
 }
 
@@ -36,9 +36,10 @@ export class GameMaster implements IGameMaster {
         this._keyHandler = new KeyHandler();
     }
 
-    public createField() {
-        this._decorCreator.fullFillBackground(MATERIAL[1]);
-        this._obstacleCreator.createObstaclesAroundPerimeter(MATERIAL[2]);
+    public createField(backgroundMaterial: number, obstaclesMaterial: number) {
+        this._decorCreator.fullFillBackground(MATERIAL[backgroundMaterial]);
+        this._obstacleCreator.createObstaclesAroundPerimeter(MATERIAL[obstaclesMaterial]);
+        this._movementManager.setResistanceForce(RESISTANCE_COEFFICIENT[backgroundMaterial]);
 
         // Additional obstacles
         this._obstacleCreator.createSquareObstacle(this._field.width >> 1, this._field.height >> 1, MATERIAL[2], 0.79);
@@ -90,9 +91,11 @@ export class GameMaster implements IGameMaster {
                 this._movementManager.backwardMovement(tankElement);
             if (mask & tankElement.forwardMask)
                 this._movementManager.forwardMovement(tankElement);
-
-            if ((mask & tankElement.backwardMask) === 0 && (mask & tankElement.forwardMask) === 0)
-                this._movementManager.removeAcceleration(tankElement);
+            else {
+                this._movementManager.removeSpriteAccelerationEffect(tankElement);
+                if (!(mask & tankElement.backwardMask))
+                    this._movementManager.residualMovement(tankElement);
+            }
         }
     }
 }
