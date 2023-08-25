@@ -1,7 +1,6 @@
 import {BulletEntity, IBulletManufacturing, LightBulletManufacturing} from "./BulletEntity";
 import {TankModelParts} from "./TankModelParts";
 import {TrigCache} from "../../additionally/LRUCache";
-import {GRAVITY_ACCELERATION} from "../../constants/gameConstants";
 
 export class TankModel {
     private readonly _tankParts: TankModelParts;

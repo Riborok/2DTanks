@@ -8,17 +8,16 @@ export class TankModelPartsCreator {
     private constructor() { }
     public static create(x0: number, y0: number, angle: number,
                          hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
-        const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle);
         const turret = TankModelPartsCreator.createTurret(turretNum, angle);
         const weapon = TankModelPartsCreator.createWeapon(weaponNum);
-        const mass = hull.mass + turret.mass + weapon.mass;
-        const track = TankModelPartsCreator.createTrack(trackNum, mass);
-        return new TankModelParts(hull, track, turret, weapon, mass);
+        const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle, turret.mass + weapon.mass);
+        const track = TankModelPartsCreator.createTrack(trackNum, hull.mass);
+        return new TankModelParts(hull, track, turret, weapon, hull.mass);
     }
-    private static createHull(hullNum: number, x0: number, y0: number, angle: number): HullEntity {
+    private static createHull(hullNum: number, x0: number, y0: number, angle: number, mass: number): HullEntity {
         switch (hullNum) {
             case 0:
-                return new HullModel0(x0, y0, angle);
+                return new HullModel0(x0, y0, angle, mass);
             default:
                 throw new Error(`Hull model ${hullNum} was not found`);
         }

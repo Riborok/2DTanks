@@ -1,4 +1,4 @@
-import {MATERIAL, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
+import {RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator, IDecorCreator} from "./IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./ICollisionManager";
 import {IObstacleCreator, ObstacleCreator} from "./IObstacleCreator";
@@ -37,13 +37,15 @@ export class GameMaster implements IGameMaster {
     }
 
     public createField(backgroundMaterial: number, obstaclesMaterial: number) {
-        this._decorCreator.fullFillBackground(MATERIAL[backgroundMaterial]);
-        this._obstacleCreator.createObstaclesAroundPerimeter(MATERIAL[obstaclesMaterial]);
+        this._decorCreator.fullFillBackground(backgroundMaterial);
+        this._obstacleCreator.createObstaclesAroundPerimeter(obstaclesMaterial);
         this._movementManager.setResistanceForce(RESISTANCE_COEFFICIENT[backgroundMaterial]);
 
         // Additional obstacles
-        this._obstacleCreator.createSquareObstacle(this._field.width >> 1, this._field.height >> 1, MATERIAL[2], 0.79);
-        this._obstacleCreator.createRectObstacle(this._field.width >> 2, this._field.height >> 2, MATERIAL[2], 1);
+        this._obstacleCreator.createSquareObstacle(this._field.width >> 1, this._field.height >> 1, 0.79,
+            2, true);
+        this._obstacleCreator.createRectObstacle(this._field.width >> 2, this._field.height >> 2, 1,
+            2, true);
     }
 
     public addTankElements(...tankElements: TankElement[]) {
