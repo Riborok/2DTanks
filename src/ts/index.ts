@@ -7,7 +7,7 @@ window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event
 const gameMaster : IGameMaster = new GameMaster(
     document.querySelector('#canvas'), window.screen.width, window.screen.height);
 
-gameMaster.createField();
+gameMaster.createField(1,2);
 gameMaster.addTankElements(
     new TankElement(400, 400, 0, 0,
         0, 0, 0, 0,

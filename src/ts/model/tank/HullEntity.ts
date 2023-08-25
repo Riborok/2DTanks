@@ -23,7 +23,7 @@ export abstract class HullEntity extends RectangularEntity {
 export class HullModel0 extends HullEntity{
     protected _armor: number = 100;
     protected _health: number = 100;
-    protected _weight: number = 5;
+    protected _weight: number = 1;
     protected _armorStrength: number = 1;
     public constructor(x0: number, y0: number, angle: number) {
         super(x0, y0, HULL_WIDTH[0], HULL_HEIGHT[0], angle);

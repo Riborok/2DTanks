@@ -63,6 +63,9 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
         super.setPosition(point);
     }
     public removeAcceleration() {
+        if (this._state === 0 && this._counter === 0)
+            return
+
         this._state = 0;
         this._counter = 0;
         this._sprite.src = SpriteAccelerationEffect.SRC[this._state];
