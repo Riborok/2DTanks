@@ -9,8 +9,8 @@ export abstract class BulletEntity extends RectangularEntity {
     protected abstract _movementSpeed: number;
     protected abstract _damage: number;
     protected abstract _armorPenetration: number;
-    protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
-        super(x0, y0, width, height, angle);
+    protected constructor(x0: number, y0: number, width: number, height: number, angle: number, mass: number) {
+        super(x0, y0, width, height, angle, mass);
     }
     public launchFromWeapon(weapon: IWeapon) {
         this._movementSpeed *= weapon.movementSpeedCoeff;
@@ -24,6 +24,7 @@ export interface IBulletManufacturing {
 }
 
 class LightBullet extends BulletEntity {
+    private static readonly OWN_MASS: number = 0.0000015;
     public static readonly WIDTH: number = 20;
     public static readonly HEIGHT: number = 45;
 
@@ -31,7 +32,7 @@ class LightBullet extends BulletEntity {
     protected _damage: number = 15;
     protected _movementSpeed: number = 50;
     public constructor(x0: number, y0: number, angle: number) {
-        super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle);
+        super(x0, y0, LightBullet.WIDTH, LightBullet.HEIGHT, angle, LightBullet.OWN_MASS);
     }
 }
 

@@ -10,6 +10,7 @@ export interface IEntity {
      * Gets the points defining the entity. The points should be specified in a clockwise order.
      */
     get points(): Point[];
+    get mass(): number;
 }
 
 /**
@@ -19,8 +20,10 @@ export interface IEntity {
 export abstract class RectangularEntity implements IEntity {
     protected _points: Point[];
     protected _angle: number;
-    protected constructor(x0: number, y0: number, width: number, height: number, angle: number) {
+    protected _mass: number;
+    protected constructor(x0: number, y0: number, width: number, height: number, angle: number, mass: number) {
         this._angle = 0;
+        this._mass = mass;
         this._points = [new Point(x0, y0),
             new Point(x0 + width, y0),
             new Point(x0 + width, y0 + height),
@@ -29,7 +32,8 @@ export abstract class RectangularEntity implements IEntity {
             this.rotatePoints(angle);
     }
     public get points(): Point[] { return this._points }
-    public get angle() : number { return this._angle }
+    public get angle(): number { return this._angle }
+    public get mass(): number { return this._mass }
     public calcCenter(): Point {
         return new Point((this._points[0].x + this._points[2].x) >> 1, (this._points[0].y + this._points[2].y) >> 1);
     }
