@@ -12,11 +12,27 @@ class DoublyLinkedListNode<T> {
     }
 }
 
-export class DoublyLinkedList<T> {
+export class DoublyLinkedList<T> implements Iterable<T> {
     private _head: DoublyLinkedListNode<T> | null = null;
     private _tail: DoublyLinkedListNode<T> | null = null;
-    public get tail(): DoublyLinkedListNode<T> | null { return this._tail; }
-    public get head(): DoublyLinkedListNode<T> | null { return this._head; }
+    public get tail(): DoublyLinkedListNode<T> | null { return this._tail }
+    public get head(): DoublyLinkedListNode<T> | null { return this._head }
+    [Symbol.iterator](): Iterator<T> {
+        let currentNode = this._tail;
+
+        return {
+            next: (): IteratorResult<T> => {
+                if (currentNode !== null) {
+                    const value = currentNode.value;
+                    currentNode = currentNode.next;
+
+                    return { done: false, value: value }
+                }
+                else
+                    return { done: true, value: null }
+            }
+        };
+    }
     public addToTail(value: T) {
         const newNode = new DoublyLinkedListNode(value);
 

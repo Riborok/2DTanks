@@ -43,7 +43,7 @@ export class MovementManager implements IMovementManager{
             tankSpriteParts.bottomTrackSprite.setResidualMovement();
             tankSpriteParts.topTrackSprite.setResidualMovement();
             this.hullUpdate(tankElement,
-                tankElement.model.ResidualMovement,
+                tankElement.model.residualMovement,
                 tankElement.model.rollback,
                 tankElement.sprite.updateSprite
             );
