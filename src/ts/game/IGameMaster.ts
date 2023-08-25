@@ -82,11 +82,6 @@ export class GameMaster implements IGameMaster {
             if (mask & tankElement.turretCounterClockwiseMask)
                 this._movementManager.turretCounterclockwiseMovement(tankElement);
 
-            if (mask & tankElement.hullClockwiseMask)
-                this._movementManager.hullClockwiseMovement(tankElement);
-            if (mask & tankElement.hullCounterClockwiseMask)
-                this._movementManager.hullCounterclockwiseMovement(tankElement);
-
             if (mask & tankElement.backwardMask)
                 this._movementManager.backwardMovement(tankElement);
             if (mask & tankElement.forwardMask)
@@ -96,6 +91,11 @@ export class GameMaster implements IGameMaster {
                 if (!(mask & tankElement.backwardMask))
                     this._movementManager.residualMovement(tankElement);
             }
+
+            if (mask & tankElement.hullClockwiseMask)
+                this._movementManager.hullClockwiseMovement(tankElement);
+            if (mask & tankElement.hullCounterClockwiseMask)
+                this._movementManager.hullCounterclockwiseMovement(tankElement);
         }
     }
 }

@@ -10,12 +10,10 @@ export class TankModelPartsCreator {
                          hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
         const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle);
         const turret = TankModelPartsCreator.createTurret(turretNum, angle);
-        return new TankModelParts(
-            hull,
-            TankModelPartsCreator.createTrack(trackNum, hull.weight + turret.weight),
-            turret,
-            TankModelPartsCreator.createWeapon(weaponNum)
-        )
+        const weapon = TankModelPartsCreator.createWeapon(weaponNum);
+        const mass = hull.mass + turret.mass + weapon.mass;
+        const track = TankModelPartsCreator.createTrack(trackNum, mass);
+        return new TankModelParts(hull, track, turret, weapon, mass);
     }
     private static createHull(hullNum: number, x0: number, y0: number, angle: number): HullEntity {
         switch (hullNum) {
@@ -25,10 +23,10 @@ export class TankModelPartsCreator {
                 throw new Error(`Hull model ${hullNum} was not found`);
         }
     }
-    private static createTrack(trackNum: number, weight: number): ITrack {
+    private static createTrack(trackNum: number, mass: number): ITrack {
         switch (trackNum) {
             case 0:
-                return new TrackModel0(weight);
+                return new TrackModel0(mass);
             default:
                 throw new Error(`Track model ${trackNum} was not found`);
         }

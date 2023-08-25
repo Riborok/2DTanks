@@ -79,7 +79,7 @@ export class MovementManager implements IMovementManager{
         action.call(tankElement.model, this._resistanceForce);
         if (!this._collisionManager.isSuccess(hullEntity)) {
             reverseAction.call(tankElement.model, this._resistanceForce);
-            this.residualMovement(tankElement);
+            this.removeSpriteAccelerationEffect(tankElement);
             tankElement.model.stop();
         }
         else
