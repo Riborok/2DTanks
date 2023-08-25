@@ -15,11 +15,11 @@ export class TrackModel0 implements ITrack{
     }
     public get angleSpeed(): number { return this._angleSpeed }
     public get movementParameters(): MovementParameters { return this._movementParameters }
-    public constructor(weight: number) {
-        this._angleSpeed /= weight;
-        this._movementParameters.forwardAcceleration /= weight;
-        this._movementParameters.backwardAcceleration /= weight;
-        this._movementParameters.finishForwardSpeed /= weight;
-        this._movementParameters.finishBackwardSpeed /= weight;
+    public constructor(mass: number) {
+        this._angleSpeed /= mass;
+        this._movementParameters.forwardAcceleration /= mass;
+        this._movementParameters.backwardAcceleration /= mass;
+        this._movementParameters.finishForwardSpeed /= mass;
+        this._movementParameters.finishBackwardSpeed /= mass;
     }
 }

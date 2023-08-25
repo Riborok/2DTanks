@@ -8,6 +8,7 @@ export interface IWeapon {
     get movementSpeedCoeff(): number;
 
     get barrelLength(): number;
+    get mass(): number;
 }
 
 export class WeaponModel0 implements IWeapon {
@@ -16,4 +17,5 @@ export class WeaponModel0 implements IWeapon {
     public get damageCoeff(): number { return 1 }
     public get movementSpeedCoeff(): number { return 1 }
     public get reloadSpeed(): number { return 3000 }
+    public get mass(): number { return 0.15 }
 }
