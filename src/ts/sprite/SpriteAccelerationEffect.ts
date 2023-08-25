@@ -82,13 +82,13 @@ export abstract class SpriteAccelerationEffect extends TankSpritePart {
 }
 
 export class TopSpriteAccelerationEffect extends SpriteAccelerationEffect {
-    public constructor(canvas: Element, indentX: number, tankWidth: number) {
-        super(canvas, indentX, tankWidth * 9 / 16);
+    public constructor(canvas: Element, indentX: number, tankHeight: number) {
+        super(canvas, indentX, tankHeight * 28 / 42);
     }
 }
 
 export class BottomSpriteAccelerationEffect extends SpriteAccelerationEffect {
-    public constructor(canvas: Element, indentX: number, tankWidth: number) {
-        super(canvas, indentX, tankWidth * 7 / 16);
+    public constructor(canvas: Element, indentX: number, tankHeight: number) {
+        super(canvas, indentX, tankHeight * 37 / 42);
     }
 }

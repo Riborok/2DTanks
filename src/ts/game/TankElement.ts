@@ -57,9 +57,9 @@ export class TankElement {
 
 
         tankSpriteParts.topSpriteAccelerationEffect = new TopSpriteAccelerationEffect(canvas,
-            hullSprite.accelerationEffectIndentX, hullSprite.width);
+            hullSprite.accelerationEffectIndentX, hullSprite.height);
         tankSpriteParts.bottomSpriteAccelerationEffect = new BottomSpriteAccelerationEffect(canvas,
-            hullSprite.accelerationEffectIndentX, hullSprite.width);
+            hullSprite.accelerationEffectIndentX, hullSprite.height);
 
         const hullEntity = this._model.tankParts.hullEntity;
 
