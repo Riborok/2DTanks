@@ -1,5 +1,5 @@
 import {TankSpritePart} from "./Sprite";
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 import {TRACK_INDENT} from "../constants/gameConstants";
 import {MovementParameters} from "../additionally/type";
 

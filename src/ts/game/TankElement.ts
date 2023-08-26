@@ -1,7 +1,7 @@
 import {TankModel} from "../model/tank/TankModel";
 import {TankSprite} from "../sprite/TankSprite";
 import {TankModelPartsCreator} from "../model/tank/TankModelPartsCreator";
-import {IEntityStorage} from "../model/IEntityStorage";
+import {IEntityStorage} from "../model/IEntityCollisionSystem";
 import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
 import {BottomSpriteAccelerationEffect, TopSpriteAccelerationEffect} from "../sprite/SpriteAccelerationEffect";
 

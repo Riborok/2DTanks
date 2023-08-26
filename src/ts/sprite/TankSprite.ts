@@ -1,8 +1,8 @@
 import {TankSpriteParts} from "./TankSpriteParts";
-import {Point} from "../model/Point";
-import {GeomInteractionUtils} from "../model/GeomInteractionUtils";
-import {TankSpritePart} from "./Sprite";
+import {Point} from "../geometry/Point";
 import {TrigCache} from "../additionally/LRUCache";
+import {TankSpritePart} from "./Sprite";
+import {PointRotator} from "../geometry/PointRotator";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -79,7 +79,7 @@ export class TankSprite {
 
         // Rotate the figure by the reverse angle to align it to 0 degrees
         // Utilizes the properties of sine and cosine: sin(-a) = -sin(a) and cos(-a) = cos(a)
-        GeomInteractionUtils.rotatePointAroundTarget(
+        PointRotator.rotatePointAroundTarget(
             point,
             new Point(point.x + halfWidth * cos - halfHeight * sin,
                 point.y + halfHeight * cos + halfWidth * sin),
@@ -106,7 +106,7 @@ export class TankSprite {
         // For optimization, we replace the formulas as follows:
         // - sin(turretAngle - hullAngle) = sin(turretAngle) * cos(hullAngle) - cos(turretAngle) * sin(hullAngle)
         // - cos(turretAngle - hullAngle) = cos(hullAngle) * cos(turretAngle) + sin(hullAngle) * sin(turretAngle)
-        GeomInteractionUtils.rotatePointAroundTarget(
+        PointRotator.rotatePointAroundTarget(
             point,
             new Point(point.x + halfWidth * hullCos - halfHeight * hullSin,
                 point.y + halfHeight * hullCos + halfWidth * hullSin),

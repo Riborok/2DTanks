@@ -1,4 +1,4 @@
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 
 export abstract class Sprite {
     protected _sprite : HTMLImageElement;

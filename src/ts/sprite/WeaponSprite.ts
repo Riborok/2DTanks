@@ -1,5 +1,5 @@
 import {TankSpritePart} from "./Sprite";
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../constants/gameConstants";
 
 export class WeaponSprite extends TankSpritePart {

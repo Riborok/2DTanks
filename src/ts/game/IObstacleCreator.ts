@@ -1,6 +1,6 @@
 import {Wall} from "../model/Wall";
 import {Field} from "./Field";
-import {IEntityStorage} from "../model/IEntityStorage";
+import {IEntityStorage} from "../model/IEntityCollisionSystem";
 import {MATERIAL, RECT_OBSTACLE_MASS, SQUARE_OBSTACLE_MASS} from "../constants/gameConstants";
 
 export interface IObstacleCreator {

@@ -1,5 +1,5 @@
 import {IEntity} from "../model/IEntity";
-import {ICollisionDetection} from "../model/IEntityStorage";
+import {ICollisionDetection} from "../model/IEntityCollisionSystem";
 
 export interface ICollisionManager {
     isSuccess(entity: IEntity): boolean;
