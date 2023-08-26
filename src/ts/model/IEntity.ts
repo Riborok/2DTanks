@@ -1,4 +1,4 @@
-import {Point} from "./Point";
+import {Point, Vector} from "./Point";
 import {GeomInteractionUtils} from "./GeomInteractionUtils";
 import {TrigCache} from "../additionally/LRUCache";
 
@@ -11,6 +11,8 @@ export interface IEntity {
      */
     get points(): Point[];
     get mass(): number;
+    get speed(): number;
+    get movementVector(): Vector;
 }
 
 /**
@@ -21,6 +23,8 @@ export abstract class RectangularEntity implements IEntity {
     protected _points: Point[];
     protected _angle: number;
     protected _mass: number;
+    protected _speed: number = 0;
+    protected _movementVector: Vector = new Vector(0, 0);
     protected constructor(x0: number, y0: number, width: number, height: number, angle: number, mass: number) {
         this._angle = 0;
         this._mass = mass;
@@ -34,20 +38,36 @@ export abstract class RectangularEntity implements IEntity {
     public get points(): Point[] { return this._points }
     public get angle(): number { return this._angle }
     public get mass(): number { return this._mass }
+    public get speed(): number { return this._speed }
+    public get movementVector(): Vector { return this._movementVector }
     public calcCenter(): Point {
-        return new Point((this._points[0].x + this._points[2].x) >> 1, (this._points[0].y + this._points[2].y) >> 1);
+        return new Point((this._points[0].x + this._points[2].x) / 2, (this._points[0].y + this._points[2].y) / 2);
     }
-    public movePoints(dx: number, dy: number){
+    public movement() {
+        this.calcMovementVector();
         for (const point of this._points) {
-            point.x += dx;
-            point.y += dy;
+            point.x += this._movementVector.x;
+            point.y += this._movementVector.y;
         }
     }
+    public rollback() {
+        for (const point of this._points) {
+            point.x -= this._movementVector.x;
+            point.y -= this._movementVector.y;
+        }
+    }
+    public increaseSpeedBy(amount: number){ this._speed += amount }
+    public scaleSpeedBy(factor: number) { this._speed *= factor }
     public rotatePoints(deltaAngle: number) {
         this._angle += deltaAngle;
         const center = this.calcCenter();
 
         for (const point of this.points)
-            GeomInteractionUtils.rotatePointAroundTarget(point, center, TrigCache.getSin(deltaAngle), TrigCache.getCos(deltaAngle));
+            GeomInteractionUtils.rotatePointAroundTarget(point, center,
+                TrigCache.getSin(deltaAngle), TrigCache.getCos(deltaAngle));
+    }
+    private calcMovementVector() {
+        this.movementVector.x = this.speed * TrigCache.getCos(this.angle);
+        this.movementVector.y = this.speed * TrigCache.getSin(this.angle);
     }
 }
