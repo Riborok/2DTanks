@@ -1,7 +1,7 @@
-import {TankModel} from "../model/tank/TankModel";
+import {TankModel} from "../model/TankModel";
 import {TankSprite} from "../sprite/TankSprite";
-import {TankModelPartsCreator} from "../model/tank/TankModelPartsCreator";
-import {IEntityStorage} from "../model/IEntityCollisionSystem";
+import {TankComponentsCreator} from "../model/TankComponentsCreator";
+import {IEntityStorage} from "../model/entities/IEntityCollisionSystem";
 import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
 import {BottomSpriteAccelerationEffect, TopSpriteAccelerationEffect} from "../sprite/SpriteAccelerationEffect";
 
@@ -41,10 +41,10 @@ export class TankElement {
         this._turretClockwiseMask = turretClockwiseMask;
         this._turretCounterClockwiseMask = turretCounterClockwiseMask;
 
-        this._model = new TankModel(TankModelPartsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
+        this._model = new TankModel(TankComponentsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
 
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum,
-            this._model.tankParts.track.movementParameters));
+            this._model.tankComponents.track.movementParameters));
     }
     public spawn(canvas: Element, entityStorage: IEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
@@ -61,9 +61,9 @@ export class TankElement {
         tankSpriteParts.bottomSpriteAccelerationEffect = new BottomSpriteAccelerationEffect(canvas,
             hullSprite.accelerationEffectIndentX, hullSprite.height);
 
-        const hullEntity = this._model.tankParts.hullEntity;
+        const tankEntity = this._model.tankComponents.tankEntity;
 
-        entityStorage.insert(hullEntity);
-        this._sprite.updateSprite(hullEntity.points[0], hullEntity.angle, this._model.tankParts.turret.angle);
+        entityStorage.insert(tankEntity);
+        this._sprite.updateSprite(tankEntity.points[0], tankEntity.angle, this._model.tankComponents.turret.angle);
     }
 }

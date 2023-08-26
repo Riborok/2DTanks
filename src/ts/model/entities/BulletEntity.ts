@@ -1,5 +1,5 @@
-import {RectangularEntity} from "../IEntity";
-import {IWeapon} from "./IWeapon";
+import {RectangularEntity} from "./IEntity";
+import {IWeapon} from "../tank parts/IWeapon";
 
 export abstract class BulletEntity extends RectangularEntity {
     public get movementSpeed(): number { return this._movementSpeed }

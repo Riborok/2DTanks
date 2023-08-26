@@ -1,6 +1,6 @@
-import {Point, Vector} from "../geometry/Point";
-import {TrigCache} from "../additionally/LRUCache";
-import {PointRotator} from "../geometry/PointRotator";
+import {Point, Vector} from "../../geometry/Point";
+import {TrigCache} from "../../additionally/LRUCache";
+import {PointRotator} from "../../geometry/PointRotator";
 
 
 /**

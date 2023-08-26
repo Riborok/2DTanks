@@ -1,5 +1,5 @@
 import {TankElement} from "./TankElement";
-import {IEntityStorage} from "../model/IEntityCollisionSystem";
+import {IEntityStorage} from "../model/entities/IEntityCollisionSystem";
 import {ICollisionManager} from "./ICollisionManager";
 import {TrigCache} from "../additionally/LRUCache";
 import {Point} from "../geometry/Point";
@@ -74,28 +74,28 @@ export class MovementManager implements IMovementManager{
             tankElement.sprite.updateBackwardAction);
     }
     private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action, updateSprites: UpdateSprites) {
-        const hullEntity = tankElement.model.tankParts.hullEntity;
-        this._entityStorage.remove(hullEntity)
+        const tankEntity = tankElement.model.tankComponents.tankEntity;
+        this._entityStorage.remove(tankEntity)
         action.call(tankElement.model, this._resistanceForce);
-        if (!this._collisionManager.isSuccess(hullEntity)) {
+        if (!this._collisionManager.isSuccess(tankEntity)) {
             reverseAction.call(tankElement.model, this._resistanceForce);
             this.removeSpriteAccelerationEffect(tankElement);
             tankElement.model.stop();
         }
         else
-            updateSprites.call(tankElement.sprite, hullEntity.points[0], hullEntity.angle,
-                tankElement.model.tankParts.turret.angle);
+            updateSprites.call(tankElement.sprite, tankEntity.points[0], tankEntity.angle,
+                tankElement.model.tankComponents.turret.angle);
 
-        this._entityStorage.insert(hullEntity);
+        this._entityStorage.insert(tankEntity);
     }
     private static turretUpdate(tankElement: TankElement) {
-        const tankParts = tankElement.model.tankParts;
-        const hullSin = TrigCache.getSin(tankParts.hullEntity.angle);
-        const hullCos = TrigCache.getCos(tankParts.hullEntity.angle);
+        const tankComponents = tankElement.model.tankComponents;
+        const hullSin = TrigCache.getSin(tankComponents.tankEntity.angle);
+        const hullCos = TrigCache.getCos(tankComponents.tankEntity.angle);
 
         tankElement.sprite.rotateTurretUpdate(
-            tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(tankParts.hullEntity.points[0], hullSin, hullCos),
-            tankParts.turret.angle, hullSin, hullCos
+            tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(tankComponents.tankEntity.points[0], hullSin, hullCos),
+            tankComponents.turret.angle, hullSin, hullCos
         );
     }
 }
