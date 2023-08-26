@@ -6,12 +6,12 @@ export interface ITrack {
 }
 
 export class TrackModel0 implements ITrack{
-    private readonly _angleSpeed: number = 0.045;
+    private readonly _angleSpeed: number = 0.04;
     private readonly _movementParameters: MovementParameters = {
         forwardAcceleration: 0.045,
         backwardAcceleration: 0.035,
-        finishForwardSpeed: 4.8,
-        finishBackwardSpeed: 2.4
+        finishForwardSpeed: 5.2,
+        finishBackwardSpeed: 2.6
     }
     public get angleSpeed(): number { return this._angleSpeed }
     public get movementParameters(): MovementParameters { return this._movementParameters }
