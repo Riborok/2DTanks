@@ -1,6 +1,6 @@
-import {Wall} from "../model/Wall";
+import {WallEntity} from "../model/entities/WallEntity";
 import {Field} from "./Field";
-import {IEntityStorage} from "../model/IEntityCollisionSystem";
+import {IEntityStorage} from "../model/entities/IEntityCollisionSystem";
 import {MATERIAL, RECT_OBSTACLE_MASS, SQUARE_OBSTACLE_MASS} from "../constants/gameConstants";
 
 export interface IObstacleCreator {
@@ -62,7 +62,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.transform = `rotate(${angle}rad)`;
         obstacle.style.zIndex = `2`;
         const mass = hasMass ? RECT_OBSTACLE_MASS[num] : Infinity;
-        this._entityStorage.insert(new Wall(x, y, ObstacleCreator.RECT_WALL_WIDTH,
+        this._entityStorage.insert(new WallEntity(x, y, ObstacleCreator.RECT_WALL_WIDTH,
             ObstacleCreator.RECT_WALL_HEIGHT, angle, mass));
 
         this._field.canvas.appendChild(obstacle);
@@ -76,7 +76,7 @@ export class ObstacleCreator implements IObstacleCreator{
         obstacle.style.transform = `rotate(${angle}rad)`;
         obstacle.style.zIndex = `2`;
         const mass = hasMass ? SQUARE_OBSTACLE_MASS[num] : Infinity;
-        this._entityStorage.insert(new Wall(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
+        this._entityStorage.insert(new WallEntity(x, y, ObstacleCreator.SQUARE_WALL_SIZE,
             ObstacleCreator.SQUARE_WALL_SIZE, angle, mass));
 
         this._field.canvas.appendChild(obstacle);

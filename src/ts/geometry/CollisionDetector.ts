@@ -1,4 +1,4 @@
-import {IEntity} from "../model/IEntity";
+import {IEntity} from "../model/entities/IEntity";
 import {Axis, calcDotProduct} from "./Point";
 
 /**

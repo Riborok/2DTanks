@@ -1,6 +1,6 @@
 import {IEntity} from "./IEntity";
-import {CollisionDetector} from "../geometry/CollisionDetector";
-import {Point} from "../geometry/Point";
+import {CollisionDetector} from "../../geometry/CollisionDetector";
+import {Point} from "../../geometry/Point";
 
 export interface IEntityStorage {
     insert(entity: IEntity): void;

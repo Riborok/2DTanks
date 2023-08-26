@@ -1,23 +1,26 @@
-import {HullEntity, HullModel0} from "./HullEntity";
-import {ITrack, TrackModel0} from "./ITrack";
-import {Turret, TurretModel0} from "./Turret";
-import {IWeapon, WeaponModel0} from "./IWeapon";
-import {TankModelParts} from "./TankModelParts";
+import {Hull, HullModel0} from "./tank parts/Hull";
+import {ITrack, TrackModel0} from "./tank parts/ITrack";
+import {Turret, TurretModel0} from "./tank parts/Turret";
+import {IWeapon, WeaponModel0} from "./tank parts/IWeapon";
+import {TankComponents} from "./TankComponents";
+import {TankEntity} from "./entities/TankEntity";
 
-export class TankModelPartsCreator {
+export class TankComponentsCreator {
     private constructor() { }
     public static create(x0: number, y0: number, angle: number,
-                         hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankModelParts {
-        const turret = TankModelPartsCreator.createTurret(turretNum, angle);
-        const weapon = TankModelPartsCreator.createWeapon(weaponNum);
-        const hull = TankModelPartsCreator.createHull(hullNum, x0, y0, angle, turret.mass + weapon.mass);
-        const track = TankModelPartsCreator.createTrack(trackNum, hull.mass);
-        return new TankModelParts(hull, track, turret, weapon, hull.mass);
+                         hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankComponents {
+        const turret = TankComponentsCreator.createTurret(turretNum, angle);
+        const weapon = TankComponentsCreator.createWeapon(weaponNum);
+        const hull = TankComponentsCreator.createHull(hullNum);
+        const mass = hull.mass + weapon.mass + turret.mass;
+        const track = TankComponentsCreator.createTrack(trackNum, mass);
+        const tankEntity = new TankEntity(x0, y0, hullNum, angle, mass);
+        return new TankComponents(hull, track, turret, weapon, tankEntity);
     }
-    private static createHull(hullNum: number, x0: number, y0: number, angle: number, mass: number): HullEntity {
+    private static createHull(hullNum: number): Hull {
         switch (hullNum) {
             case 0:
-                return new HullModel0(x0, y0, angle, mass);
+                return new HullModel0();
             default:
                 throw new Error(`Hull model ${hullNum} was not found`);
         }

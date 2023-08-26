@@ -66,9 +66,9 @@ export class TankSprite {
         tankSpritePart.setAngle(angle);
     }
     /**
-     * Rotates a point associated with a tank sprite part using the provided sine and cosine values.
+     * Rotates a point associated with a tank parts sprite part using the provided sine and cosine values.
      * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param tankSpritePart The tank sprite part to which the point belongs.
+     * @param tankSpritePart The tank parts sprite part to which the point belongs.
      * @param point The point to be rotated. Its coordinates will be updated.
      * @param sin The sine value of the rotation angle.
      * @param cos The cosine value of the rotation angle.
@@ -87,9 +87,9 @@ export class TankSprite {
         );
     }
     /**
-     * Rotates a point associated with a turret sprite part relative to a tank sprite's hull.
+     * Rotates a point associated with a turret sprite part relative to a tank parts sprite's hull.
      * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param tankSpritePart The tank sprite part (hull) to which the point belongs.
+     * @param tankSpritePart The tank parts sprite part (hull) to which the point belongs.
      * @param point The point to be rotated. Its coordinates will be updated.
      * @param hullSin The sine value of the hull's rotation angle.
      * @param hullCos The cosine value of the hull's rotation angle.
