@@ -1,5 +1,5 @@
 import {IEntity} from "./IEntity";
-import {Point} from "./Point";
+import {Axis, Point} from "./Point";
 
 export class GeomInteractionUtils {
     private constructor() { }
@@ -52,11 +52,11 @@ export class GeomInteractionUtils {
         return axes;
     }
     private static project(entity: IEntity, axis: Axis): Projection {
-        let min = GeomInteractionUtils.dotProduct(axis, entity.points[0]);
+        let min = Point.dot(axis, entity.points[0]);
         let max = min;
 
         for (let i = 1; i < entity.points.length; i++) {
-            const dotProduct = GeomInteractionUtils.dotProduct(axis, entity.points[i]);
+            const dotProduct = Point.dot(axis, entity.points[i]);
             if (dotProduct < min)
                 min = dotProduct;
             else if (dotProduct > max)
@@ -65,28 +65,7 @@ export class GeomInteractionUtils {
 
         return { min, max };
     }
-    private static dotProduct(axis: Axis, point: Point): number {
-        return axis.x * point.x + axis.y * point.y;
-    }
 }
-
-class Axis {
-    private _x: number;
-    private _y: number;
-    public get x(): number { return this._x }
-    public get y(): number { return this._y }
-    public constructor(p1: Point, p2: Point) {
-        this._x = p1.y - p2.y;
-        this._y = p2.x - p1.x;
-        this.normalize();
-    }
-    private normalize() {
-        const length = Math.sqrt(this._x * this._x + this._y * this._y);
-        this._x /= length;
-        this._y /= length;
-    }
-}
-
 type Projection = {
     min: number;
     max: number;

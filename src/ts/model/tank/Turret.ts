@@ -10,7 +10,7 @@ export abstract class Turret {
 }
 
 export class TurretModel0 extends Turret{
-    private static readonly ANGLE_SPEED: number = 0.02;
+    private static readonly ANGLE_SPEED: number = 0.0125;
     public override get bulletCapacity(): number { return 10 }
     public override get mass(): number { return 0.35 }
     public override clockwiseMovement(): void { this._angle += TurretModel0.ANGLE_SPEED }
