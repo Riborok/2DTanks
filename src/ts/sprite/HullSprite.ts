@@ -1,6 +1,6 @@
 import {TankSpritePart} from "./Sprite";
 import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 
 export class HullSprite extends TankSpritePart {
     private readonly _accelerationEffectIndentX: number;

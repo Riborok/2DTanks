@@ -87,6 +87,7 @@ export class TankModel {
             this._isBraking = false;
             hullEntity.increaseSpeedBy(track.movementParameters.forwardAcceleration - resistanceForce);
         }
+        hullEntity.calcMovementVector();
         hullEntity.movement();
     }
     public backwardMovement(resistanceForce: number) {
@@ -100,6 +101,7 @@ export class TankModel {
             this._isBraking = false;
             hullEntity.increaseSpeedBy(- (track.movementParameters.backwardAcceleration - resistanceForce));
         }
+        hullEntity.calcMovementVector();
         hullEntity.movement();
     }
     public residualMovement(resistanceForce: number) {
@@ -110,7 +112,7 @@ export class TankModel {
             hullEntity.increaseSpeedBy(speed - resistanceForce < 0 ? speed : -resistanceForce);
         else
             hullEntity.increaseSpeedBy(speed - resistanceForce > 0 ? speed : resistanceForce);
-
+        hullEntity.calcMovementVector();
         hullEntity.movement();
     }
     public rollback() {

@@ -1,5 +1,5 @@
 import {TankSpritePart} from "./Sprite";
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 
 export abstract class SpriteAccelerationEffect extends TankSpritePart {
     private static readonly THRESHOLD: number = 7;

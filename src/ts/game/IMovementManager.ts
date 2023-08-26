@@ -1,8 +1,8 @@
 import {TankElement} from "./TankElement";
-import {IEntityStorage} from "../model/IEntityStorage";
+import {IEntityStorage} from "../model/IEntityCollisionSystem";
 import {ICollisionManager} from "./ICollisionManager";
 import {TrigCache} from "../additionally/LRUCache";
-import {Point} from "../model/Point";
+import {Point} from "../geometry/Point";
 import {GRAVITY_ACCELERATION} from "../constants/gameConstants";
 
 type Action = (resistanceCoefficient: number) => void;

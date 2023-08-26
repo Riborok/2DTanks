@@ -1,6 +1,6 @@
 import {IEntity} from "./IEntity";
-import {GeomInteractionUtils} from "./GeomInteractionUtils";
-import {Point} from "./Point";
+import {CollisionDetector} from "../geometry/CollisionDetector";
+import {Point} from "../geometry/Point";
 
 export interface IEntityStorage {
     insert(entity: IEntity): void;
@@ -11,7 +11,9 @@ export interface ICollisionDetection {
     getCollisions(entity: IEntity): IEntity[];
 }
 
-export interface IEntityCollisionSystem extends IEntityStorage, ICollisionDetection { }
+export interface IEntityCollisionSystem extends IEntityStorage, ICollisionDetection {
+
+}
 
 export class Quadtree implements IEntityCollisionSystem{
     private readonly _root: QuadtreeNode;
@@ -105,7 +107,7 @@ class QuadtreeNode {
         }
         else {
             for (const anotherEntity of this._entities)
-                if (entity !== anotherEntity && GeomInteractionUtils.isIntersect(entity, anotherEntity))
+                if (entity !== anotherEntity && CollisionDetector.isIntersect(entity, anotherEntity))
                     collisions.push(anotherEntity);
         }
 
