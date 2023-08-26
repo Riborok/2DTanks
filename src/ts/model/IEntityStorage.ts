@@ -5,49 +5,25 @@ import {Point} from "./Point";
 export interface IEntityStorage {
     insert(entity: IEntity): void;
     remove(entity: IEntity): void;
-    isCollision(entity: IEntity): boolean;
 }
 
-export class Arr implements IEntityStorage {
-    private entities: IEntity[] = [];
-
-    public insert(entity: IEntity): void {
-        this.entities.push(entity);
-    }
-
-    public remove(entity: IEntity): void {
-        const index = this.entities.indexOf(entity);
-        if (index !== -1) {
-            this.entities.splice(index, 1);
-        }
-    }
-
-    public isCollision(entity: IEntity): boolean {
-        for (const anotherEntity of this.entities) {
-            if (anotherEntity !== entity &&
-                    GeomInteractionUtils.isIntersect(entity, anotherEntity)) {
-                return true;
-            }
-        }
-        return false;
-    }
+export interface ICollisionDetection {
+    getCollisions(entity: IEntity): IEntity[];
 }
 
-export class Quadtree implements IEntityStorage{
+export interface IEntityCollisionSystem extends IEntityStorage, ICollisionDetection { }
+
+export class Quadtree implements IEntityCollisionSystem{
     private readonly _root: QuadtreeNode;
-
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
         this._root = new QuadtreeNode({ xStart, yStart, xLast, yLast }, null);
     }
-
     public insert(entity: IEntity) {
         this._root.insert(entity);
     }
-
-    public isCollision(entity: IEntity): boolean {
-        return this._root.isCollision(entity);
+    public getCollisions(entity: IEntity): IEntity[] {
+        return this._root.getCollisions(entity);
     }
-
     public remove(entity: IEntity) {
         this._root.remove(entity);
     }
@@ -119,19 +95,21 @@ class QuadtreeNode {
                 this._parent.mergeCheck();
         }
     }
-    public isCollision(entity: IEntity): boolean {
+    public getCollisions(entity: IEntity): IEntity[] {
+        const collisions: IEntity[] = [];
+
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (child.isContainsEntity(entity) && child.isCollision(entity))
-                    return true;
+                if (child.isContainsEntity(entity))
+                    collisions.push(...child.getCollisions(entity));
         }
         else {
             for (const anotherEntity of this._entities)
-                if (entity !== anotherEntity &&
-                        GeomInteractionUtils.isIntersect(entity, anotherEntity))
-                    return true;
+                if (entity !== anotherEntity && GeomInteractionUtils.isIntersect(entity, anotherEntity))
+                    collisions.push(anotherEntity);
         }
-        return false;
+
+        return collisions;
     }
     private isContainsEntity(entity: IEntity): boolean {
         for (const point of entity.points)
