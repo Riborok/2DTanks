@@ -8,6 +8,6 @@ export class BulletModel {
         this._bullet = bullet;
         this._bulletEntity = bulletEntity;
     }
-    get bullet(): Bullet { return this._bullet }
-    get bulletEntity(): RectangularEntity { return this._bulletEntity }
+    public get bullet(): Bullet { return this._bullet }
+    public get bulletEntity(): RectangularEntity { return this._bulletEntity }
 }
