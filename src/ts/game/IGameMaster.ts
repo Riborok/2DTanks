@@ -7,6 +7,7 @@ import {IEntityCollisionSystem, Quadtree} from "../model/entities/IEntityCollisi
 import {IMovementManager, MovementManager} from "./IMovementManager";
 import {TankElement} from "./TankElement";
 import {KeyHandler} from "./KeyHandler";
+import {RectangularEntity} from "../model/entities/IEntity";
 
 export interface IGameMaster {
     startGameLoop(): void;
@@ -24,7 +25,8 @@ export class GameMaster implements IGameMaster {
     private readonly _movementManager: IMovementManager;
     private readonly _keyHandler: KeyHandler;
     private isGameLoopActive: boolean = false;
-    private readonly _tankElements: TankElement[] = [];
+    private _tankElements: TankElement[] = [];
+    private _obstacles: RectangularEntity[];
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
         this._entityCollisionSystem = new Quadtree(0, 0, width, height);
@@ -36,15 +38,15 @@ export class GameMaster implements IGameMaster {
     }
 
     public createField(backgroundMaterial: number, obstaclesMaterial: number) {
-        this._decorCreator.fullFillBackground(backgroundMaterial);
-        this._obstacleCreator.createObstaclesAroundPerimeter(obstaclesMaterial);
         this._movementManager.setResistanceForce(RESISTANCE_COEFFICIENT[backgroundMaterial]);
+        this._decorCreator.fullFillBackground(backgroundMaterial);
+        this._obstacles = this._obstacleCreator.createObstaclesAroundPerimeter(obstaclesMaterial);
 
         // Additional obstacles
-        this._obstacleCreator.createSquareObstacle(this._field.width >> 1, this._field.height >> 1, 0.79,
-            2, true);
-        this._obstacleCreator.createRectObstacle(this._field.width >> 2, this._field.height >> 2, 1,
-            2, true);
+        this._obstacles.push(this._obstacleCreator.createSquareObstacle(
+            this._field.width >> 1, this._field.height >> 1, 0.79, 2, true));
+        this._obstacles.push(this._obstacleCreator.createRectObstacle(
+            this._field.width >> 2, this._field.height >> 2, 1, 2, true));
     }
 
     public addTankElements(...tankElements: TankElement[]) {
