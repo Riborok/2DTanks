@@ -1,4 +1,3 @@
-import {RectangularEntity} from "../entities/IEntity";
 import {IWeapon} from "../tank parts/IWeapon";
 
 export abstract class Bullet {
