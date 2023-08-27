@@ -1,8 +1,8 @@
 import {Bullet, LightBullet} from "./Bullet";
 import {BulletModel} from "./BulletModel";
-import {RectangularEntity} from "../entities/IEntity";
+import {RectangularEntity} from "../entitiy/IEntity";
 import {BULLET_HEIGHT, BULLET_WIDTH} from "../../constants/gameConstants";
-import {IDTracker} from "../entities/IDTracker";
+import {IDTracker} from "../../game/id/IDTracker";
 
 export class BulletModelCreator {
     private constructor() { }

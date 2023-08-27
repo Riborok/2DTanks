@@ -1,8 +1,8 @@
 import {TankSpriteParts} from "./TankSpriteParts";
-import {Point} from "../geometry/Point";
-import {TrigCache} from "../additionally/LRUCache";
-import {TankSpritePart} from "./Sprite";
-import {PointRotator} from "../geometry/PointRotator";
+import {Point} from "../../geometry/Point";
+import {TrigCache} from "../../additionally/LRUCache";
+import {SpritePart} from "../Sprite";
+import {PointRotator} from "../../geometry/PointRotator";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -10,38 +10,6 @@ export class TankSprite {
         this._tankSpriteParts = tankSpriteParts;
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
-    public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
-        this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
-        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
-        this.updateSprite(point, hullAngle, turretAngle);
-    }
-    public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
-        this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
-        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = true;
-        const sin = TrigCache.getSin(hullAngle);
-        const cos = TrigCache.getCos(hullAngle);
-        const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
-        this.update(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
-
-        TankSprite.updateSpritePart(this._tankSpriteParts.topSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
-    }
-    public updateSprite(point: Point, hullAngle: number, turretAngle: number) {
-        const sin = TrigCache.getSin(hullAngle);
-        const cos = TrigCache.getCos(hullAngle);
-        const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
-        this.update(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
-    }
-    private update(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number,
-                         hullDefaultPoint: Point) {
-        TankSprite.updateSpritePart(this._tankSpriteParts.topTrackSprite, point, sin, cos, hullAngle)
-
-        TankSprite.updateSpritePart(this._tankSpriteParts.hullSprite, point, sin, cos, hullAngle);
-
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, hullDefaultPoint, sin, cos, hullAngle)
-
-        this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
-    }
     public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
         const turretSin = TrigCache.getSin(turretAngle);
         const turretCos = TrigCache.getCos(turretAngle);
@@ -56,12 +24,44 @@ export class TankSprite {
 
         TankSprite.updateSpritePart(this._tankSpriteParts.weaponSprite, turretDefPoint, turretSin, turretCos, turretAngle);
     }
-    private static updateSpritePart(tankSpritePart: TankSpritePart, point: Point, sin: number, cos: number, angle: number) {
+    public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
+        this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
+        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
+        this.updateAfterAction(point, hullAngle, turretAngle);
+    }
+    public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
+        this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
+        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = true;
+        const sin = TrigCache.getSin(hullAngle);
+        const cos = TrigCache.getCos(hullAngle);
+        const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
+        this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
+
+        TankSprite.updateSpritePart(this._tankSpriteParts.topSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
+        TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
+    }
+    public updateAfterAction(point: Point, hullAngle: number, turretAngle: number) {
+        const sin = TrigCache.getSin(hullAngle);
+        const cos = TrigCache.getCos(hullAngle);
+        const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
+        this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
+    }
+    private updateSprite(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number,
+                         hullDefaultPoint: Point) {
+        TankSprite.updateSpritePart(this._tankSpriteParts.topTrackSprite, point, sin, cos, hullAngle)
+
+        TankSprite.updateSpritePart(this._tankSpriteParts.hullSprite, point, sin, cos, hullAngle);
+
+        TankSprite.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, hullDefaultPoint, sin, cos, hullAngle)
+
+        this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
+    }
+    private static updateSpritePart(tankSpritePart: SpritePart, point: Point, sin: number, cos: number, angle: number) {
         const rotatedPoint = tankSpritePart.calcPosition(point, sin, cos);
         TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
         TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, angle);
     }
-    private static setPosAndAngle(tankSpritePart: TankSpritePart, point: Point, angle: number) {
+    private static setPosAndAngle(tankSpritePart: SpritePart, point: Point, angle: number) {
         tankSpritePart.setPosition(point);
         tankSpritePart.setAngle(angle);
     }
@@ -73,7 +73,7 @@ export class TankSprite {
      * @param sin The sine value of the rotation angle.
      * @param cos The cosine value of the rotation angle.
      */
-    private static rotateForPoint(tankSpritePart: TankSpritePart, point: Point, sin: number, cos: number) {
+    private static rotateForPoint(tankSpritePart: SpritePart, point: Point, sin: number, cos: number) {
         const halfWidth = tankSpritePart.width >> 1;
         const halfHeight = tankSpritePart.height >> 1;
 
@@ -96,7 +96,7 @@ export class TankSprite {
      * @param turretSin The sine value of the turret's rotation angle relative to the hull.
      * @param turretCos The cosine value of the turret's rotation angle relative to the hull.
      */
-    private static rotateForTurretPoint(tankSpritePart: TankSpritePart, point: Point,
+    private static rotateForTurretPoint(tankSpritePart: SpritePart, point: Point,
                                         hullSin: number, hullCos: number,
                                         turretSin: number, turretCos: number){
         const halfWidth = tankSpritePart.width >> 1;

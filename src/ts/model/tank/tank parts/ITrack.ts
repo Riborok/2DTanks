@@ -1,4 +1,4 @@
-import {MovementParameters} from "../../additionally/type";
+import {MovementParameters} from "../../../additionally/type";
 
 export interface ITrack {
     get angleSpeed(): number;

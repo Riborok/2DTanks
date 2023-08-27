@@ -2,8 +2,8 @@ export class IDTracker {
     private constructor() { }
 
     public static readonly STARTING_TANK_ID: number = 0;
-    public static readonly STARTING_WALL_ID: number = 1000;
-    public static readonly STARTING_BULLET_ID: number = 2000;
+    public static readonly STARTING_WALL_ID: number = this.STARTING_TANK_ID + 420_000;
+    public static readonly STARTING_BULLET_ID: number = this.STARTING_WALL_ID + 420_000;
 
     private static TANK_ID: number = IDTracker.STARTING_TANK_ID;
     private static WALL_ID: number = IDTracker.STARTING_WALL_ID;

@@ -2,25 +2,17 @@ import {Hull, HullModel0} from "./tank parts/Hull";
 import {ITrack, TrackModel0} from "./tank parts/ITrack";
 import {Turret, TurretModel0} from "./tank parts/Turret";
 import {IWeapon, WeaponModel0} from "./tank parts/IWeapon";
-import {TankComponents} from "./TankComponents";
-import {RectangularEntity} from "./entities/IEntity";
-import {IDTracker} from "./entities/IDTracker";
-import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
+import {TankParts} from "./TankParts";
 
-export class TankComponentsCreator {
+export class TankPartsCreator {
     private constructor() { }
-    public static create(x0: number, y0: number, angle: number,
-                         hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankComponents {
-        const turret = TankComponentsCreator.createTurret(turretNum, angle);
-        const weapon = TankComponentsCreator.createWeapon(weaponNum);
-        const hull = TankComponentsCreator.createHull(hullNum);
+    public static create(angle: number, hullNum: number, trackNum: number, turretNum: number, weaponNum: number): TankParts {
+        const turret = TankPartsCreator.createTurret(turretNum, angle);
+        const weapon = TankPartsCreator.createWeapon(weaponNum);
+        const hull = TankPartsCreator.createHull(hullNum);
         const mass = hull.mass + weapon.mass + turret.mass;
-        const track = TankComponentsCreator.createTrack(trackNum, mass);
-        const tankEntity = new RectangularEntity(x0, y0,
-            HULL_WIDTH[hullNum] + TRACK_INDENT,
-            HULL_HEIGHT[hullNum] + (TRACK_INDENT << 1),
-            angle, mass, IDTracker.tankId);
-        return new TankComponents(hull, track, turret, weapon, tankEntity);
+        const track = TankPartsCreator.createTrack(trackNum, mass);
+        return new TankParts(hull, track, turret, weapon);
     }
     private static createHull(hullNum: number): Hull {
         switch (hullNum) {

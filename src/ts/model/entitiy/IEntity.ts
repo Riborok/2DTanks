@@ -1,11 +1,12 @@
 import {Point} from "../../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
+import {IIdentifiable} from "../../game/id/IIdentifiable";
 
 
 /**
  * Interface representing an entity with points.
  */
-export interface IEntity {
+export interface IEntity extends IIdentifiable{
     /**
      * Gets the points defining the entity. The points should be specified in a clockwise order.
      */
@@ -15,12 +16,12 @@ export interface IEntity {
     get directionAngle(): number;
     set speed(value: number);
     set directionAngle(value: number);
-    get id(): number;
+    calcCenter(): Point;
 }
 
 /**
  * An abstract base class representing a rectangular entity.
- * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entities.
+ * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entitiy.
  */
 export class RectangularEntity implements IEntity {
     protected _points: Point[];

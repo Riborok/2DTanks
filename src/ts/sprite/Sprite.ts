@@ -16,7 +16,7 @@ export abstract class Sprite {
     }
 }
 
-export abstract class TankSpritePart extends Sprite {
+export abstract class SpritePart extends Sprite {
     private readonly _width: number;
     private readonly _height: number;
     public get width(): number { return this._width }
@@ -27,12 +27,12 @@ export abstract class TankSpritePart extends Sprite {
         this._height = height;
     }
     /**
-     * Calculates the initial position of the tank parts sprite part based on a reference point,
+     * Calculates the initial position of the sprite part based on a reference point,
      * while taking into account the rotation angle represented by sine and cosine values.
      * @param point The reference point around which the part's position is calculated.
      * @param sin The sine value of the rotation angle.
      * @param cos The cosine value of the rotation angle.
-     * @returns The calculated initial position of the tank parts sprite part.
+     * @returns The calculated initial position of the sprite part.
      */
     public abstract calcPosition(point: Point, sin: number, cos: number): Point;
 }

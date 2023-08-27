@@ -1,8 +1,8 @@
-import {IEntity} from "../model/entities/IEntity";
+import {IEntity} from "../model/entitiy/IEntity";
 import {Axis, calcDotProduct} from "./Point";
 
 /**
- * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).
+ * Utility class for detecting collisions between entitiy using the Separating Axis Theorem (SAT).
  */
 export class CollisionDetector {
     private constructor() { }

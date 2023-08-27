@@ -1,8 +1,8 @@
-import {TankSpritePart} from "./Sprite";
-import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
-import {Point} from "../geometry/Point";
+import {SpritePart} from "../../Sprite";
+import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../../constants/gameConstants";
+import {Point} from "../../../geometry/Point";
 
-export class HullSprite extends TankSpritePart {
+export class HullSprite extends SpritePart {
     private readonly _accelerationEffectIndentX: number;
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {

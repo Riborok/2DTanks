@@ -1,8 +1,8 @@
-import {TankSpritePart} from "./Sprite";
-import {Point} from "../geometry/Point";
-import {TURRET_HEIGHT, TURRET_WIDTH} from "../constants/gameConstants";
+import {SpritePart} from "../../Sprite";
+import {Point} from "../../../geometry/Point";
+import {TURRET_HEIGHT, TURRET_WIDTH} from "../../../constants/gameConstants";
 
-export class TurretSprite extends TankSpritePart {
+export class TurretSprite extends SpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(color: number, num: number, indentX: number, indentY: number) {

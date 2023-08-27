@@ -1,9 +1,9 @@
-import {TankSpritePart} from "./Sprite";
-import {Point} from "../geometry/Point";
-import {TRACK_INDENT} from "../constants/gameConstants";
-import {MovementParameters} from "../additionally/type";
+import {SpritePart} from "../../Sprite";
+import {Point} from "../../../geometry/Point";
+import {TRACK_INDENT} from "../../../constants/gameConstants";
+import {MovementParameters} from "../../../additionally/type";
 
-abstract class TrackSprite extends TankSpritePart {
+abstract class TrackSprite extends SpritePart {
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     private static readonly MIN_THRESHOLD_COEFF: number = 8.8;
     private static readonly MAX_THRESHOLD_COEFF: number = 0.42;

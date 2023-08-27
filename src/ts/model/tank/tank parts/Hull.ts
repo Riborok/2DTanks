@@ -1,4 +1,4 @@
-import {Bullet} from "../bullet/Bullet";
+import {Bullet} from "../../bullet/Bullet";
 
 export abstract class Hull {
     protected abstract _health: number;
