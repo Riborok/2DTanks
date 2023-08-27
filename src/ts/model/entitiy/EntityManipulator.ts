@@ -3,23 +3,23 @@ import {PointRotator} from "../../geometry/PointRotator";
 import {IEntity} from "./IEntity";
 import {Point, Vector} from "../../geometry/Point";
 
-type CalcVector = (entity: IEntity) => Vector;
+type CalcVelocity = (entity: IEntity) => Vector;
 export class EntityManipulator {
     private constructor() { }
-    public static movement(entity: IEntity, calcVector: CalcVector = EntityManipulator.calcMovement) {
-        const vector = calcVector(entity);
+    public static movement(entity: IEntity, calcVelocity: CalcVelocity = EntityManipulator.calcVelocity) {
+        const velocity = calcVelocity(entity);
         for (const point of entity.points) {
-            point.x += vector.x;
-            point.y += vector.y;
+            point.x += velocity.x;
+            point.y += velocity.y;
         }
     }
-    public static calcOppositeMovement(entity: IEntity): Vector {
+    public static calcOppositeVelocity(entity: IEntity): Vector {
         return new Vector(
             -entity.speed * TrigCache.getCos(entity.directionAngle),
             -entity.speed * TrigCache.getSin(entity.directionAngle)
         );
     }
-    public static calcMovement(entity: IEntity): Vector {
+    public static calcVelocity(entity: IEntity): Vector {
         return new Vector(
             entity.speed * TrigCache.getCos(entity.directionAngle),
             entity.speed * TrigCache.getSin(entity.directionAngle)
@@ -32,5 +32,9 @@ export class EntityManipulator {
 
         for (const point of entity.points)
             PointRotator.rotatePointAroundTarget(point, target, sin, cos);
+    }
+    public static setVelocity(entity: IEntity, velocity: Vector) {
+        entity.speed = velocity.length;
+        entity.directionAngle = Math.atan2(velocity.y, velocity.x);
     }
 }

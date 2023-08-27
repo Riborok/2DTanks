@@ -1,4 +1,4 @@
-import {WEAPON_HEIGHT} from "../../constants/gameConstants";
+import {WEAPON_HEIGHT} from "../../../constants/gameConstants";
 
 export interface IWeapon {
     get reloadSpeed(): number;

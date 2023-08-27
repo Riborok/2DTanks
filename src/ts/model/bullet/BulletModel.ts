@@ -1,13 +1,12 @@
 import {Bullet} from "./Bullet";
-import {RectangularEntity} from "../entities/IEntity";
+import {IEntity} from "../entitiy/IEntity";
+import {Model} from "../Model";
 
-export class BulletModel {
+export class BulletModel extends Model {
     private readonly _bullet: Bullet;
-    private readonly _bulletEntity: RectangularEntity;
-    public constructor(bullet: Bullet, bulletEntity: RectangularEntity) {
+    public constructor(bullet: Bullet, entity: IEntity) {
+        super(entity);
         this._bullet = bullet;
-        this._bulletEntity = bulletEntity;
     }
     public get bullet(): Bullet { return this._bullet }
-    public get bulletEntity(): RectangularEntity { return this._bulletEntity }
 }

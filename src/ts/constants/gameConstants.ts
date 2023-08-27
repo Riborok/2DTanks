@@ -1,6 +1,9 @@
+export const BACKGROUND_SIZE: number = 115;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
-export const RECT_OBSTACLE_MASS: number[] = [2, 3, 4];
-export const SQUARE_OBSTACLE_MASS: number[] = [0.7, 1, 1.3];
+export const SHAPE: string[] = ['Rect', 'Square'];
+export const WALL_WIDTH: number[] = [101, 50];
+export const WALL_HEIGHT: number[] = [50, 50];
+export const WALL_MASS: number[][] = [[2.5, 1.25], [3.5, 1.75], [4.5, 2.25]];
 export const RESISTANCE_COEFFICIENT: number[] = [0.55, 0.7, 0.85];
 export const TRACK_INDENT: number = 5;
 export const HULL_WIDTH: number[] = [76, 81, 77, 64, 81, 81, 76, 69];

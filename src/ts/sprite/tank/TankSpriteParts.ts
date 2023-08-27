@@ -1,12 +1,12 @@
-import {HullSprite} from "./HullSprite";
-import {BottomTrackSprite, TopTrackSprite} from "./TrackSprite";
-import {TurretSprite} from "./TurretSprite";
-import {WeaponSprite} from "./WeaponSprite";
+import {HullSprite} from "./tank parts/HullSprite";
+import {BottomTrackSprite, TopTrackSprite} from "./tank parts/TrackSprite";
+import {TurretSprite} from "./tank parts/TurretSprite";
+import {WeaponSprite} from "./tank parts/WeaponSprite";
 import {
     BottomSpriteAccelerationEffect,
     SpriteAccelerationEffect,
     TopSpriteAccelerationEffect
-} from "./SpriteAccelerationEffect";
+} from "./tank parts/SpriteAccelerationEffect";
 
 export class TankSpriteParts {
     private readonly _hullSprite: HullSprite;

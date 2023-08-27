@@ -1,5 +1,5 @@
-import {HullSprite} from "./HullSprite";
-import {BottomTrackSprite, TopTrackSprite} from "./TrackSprite";
+import {HullSprite} from "./tank parts/HullSprite";
+import {BottomTrackSprite, TopTrackSprite} from "./tank parts/TrackSprite";
 import {
     HULL_HEIGHT,
     HULL_WIDTH,
@@ -7,11 +7,11 @@ import {
     TURRET_INDENT_X,
     TURRET_WIDTH,
     WEAPON_HEIGHT
-} from "../constants/gameConstants";
-import {TurretSprite} from "./TurretSprite";
-import {WeaponSprite} from "./WeaponSprite";
+} from "../../constants/gameConstants";
+import {TurretSprite} from "./tank parts/TurretSprite";
+import {WeaponSprite} from "./tank parts/WeaponSprite";
 import {TankSpriteParts} from "./TankSpriteParts";
-import {MovementParameters} from "../additionally/type";
+import {MovementParameters} from "../../additionally/type";
 
 export class TankSpritePartsCreator {
     private constructor() {}

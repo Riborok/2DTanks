@@ -1,11 +1,18 @@
-import {TankModel} from "../model/TankModel";
-import {TankSprite} from "../sprite/TankSprite";
-import {TankComponentsCreator} from "../model/TankComponentsCreator";
-import {IEntityStorage} from "../model/entities/IEntityCollisionSystem";
-import {TankSpritePartsCreator} from "../sprite/TankSpritePartsCreator";
-import {BottomSpriteAccelerationEffect, TopSpriteAccelerationEffect} from "../sprite/SpriteAccelerationEffect";
+import {TankModel} from "../../model/tank/TankModel";
+import {TankSprite} from "../../sprite/tank/TankSprite";
+import {TankPartsCreator} from "../../model/tank/TankPartsCreator";
+import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
+import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
+import {
+    BottomSpriteAccelerationEffect,
+    TopSpriteAccelerationEffect
+} from "../../sprite/tank/tank parts/SpriteAccelerationEffect";
+import {RectangularEntity} from "../../model/entitiy/IEntity";
+import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
+import {IDTracker} from "../id/IDTracker";
+import {IIdentifiable} from "../id/IIdentifiable";
 
-export class TankElement {
+export class TankElement implements IIdentifiable {
     private _forwardMask: number;
     private _backwardMask: number;
     private _hullClockwiseMask: number;
@@ -27,8 +34,10 @@ export class TankElement {
 
     private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
+    private readonly _id: number;
     public get model(): TankModel { return this._model }
     public get sprite(): TankSprite { return this._sprite }
+    public get id(): number { return this._id }
     public constructor(x0: number, y0: number, angle: number, color: number,
                        hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
                        forwardMask: number, backwardMask: number,
@@ -41,10 +50,15 @@ export class TankElement {
         this._turretClockwiseMask = turretClockwiseMask;
         this._turretCounterClockwiseMask = turretCounterClockwiseMask;
 
-        this._model = new TankModel(TankComponentsCreator.create(x0, y0, angle, hullNum, trackNum, turretNum, weaponNum));
+        const tankParts = TankPartsCreator.create(angle, hullNum, trackNum, turretNum, weaponNum);
+        const rectangularEntity = new RectangularEntity(x0, y0,
+            HULL_WIDTH[hullNum] + TRACK_INDENT, HULL_HEIGHT[hullNum] + (TRACK_INDENT << 1), angle,
+            tankParts.turret.mass + tankParts.weapon.mass + tankParts.weapon.mass, IDTracker.tankId);
+        this._model = new TankModel(tankParts, rectangularEntity);
 
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum,
-            this._model.tankComponents.track.movementParameters));
+            this._model.tankParts.track.movementParameters));
+        this._id = rectangularEntity.id;
     }
     public spawn(canvas: Element, entityStorage: IEntityStorage) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
@@ -61,9 +75,9 @@ export class TankElement {
         tankSpriteParts.bottomSpriteAccelerationEffect = new BottomSpriteAccelerationEffect(canvas,
             hullSprite.accelerationEffectIndentX, hullSprite.height);
 
-        const tankEntity = this._model.tankComponents.tankEntity;
+        const entity = this._model.entity;
 
-        entityStorage.insert(tankEntity);
-        this._sprite.updateSprite(tankEntity.points[0], tankEntity.directionAngle, this._model.tankComponents.turret.angle);
+        entityStorage.insert(entity);
+        this._sprite.updateAfterAction(entity.points[0], entity.directionAngle, this._model.tankParts.turret.angle);
     }
 }

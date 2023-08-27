@@ -1,4 +1,4 @@
-import {IWeapon} from "../tank parts/IWeapon";
+import {IWeapon} from "../tank/tank parts/IWeapon";
 
 export abstract class Bullet {
     public get acceleration(): number { return this._acceleration }
