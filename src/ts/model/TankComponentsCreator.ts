@@ -3,7 +3,9 @@ import {ITrack, TrackModel0} from "./tank parts/ITrack";
 import {Turret, TurretModel0} from "./tank parts/Turret";
 import {IWeapon, WeaponModel0} from "./tank parts/IWeapon";
 import {TankComponents} from "./TankComponents";
-import {TankEntity} from "./entities/TankEntity";
+import {RectangularEntity} from "./entities/IEntity";
+import {IDTracker} from "./entities/IDTracker";
+import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../constants/gameConstants";
 
 export class TankComponentsCreator {
     private constructor() { }
@@ -14,7 +16,10 @@ export class TankComponentsCreator {
         const hull = TankComponentsCreator.createHull(hullNum);
         const mass = hull.mass + weapon.mass + turret.mass;
         const track = TankComponentsCreator.createTrack(trackNum, mass);
-        const tankEntity = new TankEntity(x0, y0, hullNum, angle, mass);
+        const tankEntity = new RectangularEntity(x0, y0,
+            HULL_WIDTH[hullNum] + TRACK_INDENT,
+            HULL_HEIGHT[hullNum] + (TRACK_INDENT << 1),
+            angle, mass, IDTracker.tankId);
         return new TankComponents(hull, track, turret, weapon, tankEntity);
     }
     private static createHull(hullNum: number): Hull {

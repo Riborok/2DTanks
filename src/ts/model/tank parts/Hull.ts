@@ -1,4 +1,4 @@
-import {BulletEntity} from "../entities/BulletEntity";
+import {Bullet} from "../bullet/Bullet";
 
 export abstract class Hull {
     protected abstract _health: number;
@@ -9,9 +9,9 @@ export abstract class Hull {
     public get armor() { return this._armor }
     public get mass() { return this._mass }
     public get armorStrength() { return this._armorStrength }
-    public takeDamage(bullet: BulletEntity) {
+    public takeDamage(bullet: Bullet) {
         this._armorStrength -= bullet.armorPenetration;
-        this._health -= (bullet.damage - this._armor * Math.min(this._armorStrength, 1));
+        this._health -= bullet.damage - this._armor * Math.max(this._armorStrength, 0);
     }
 }
 

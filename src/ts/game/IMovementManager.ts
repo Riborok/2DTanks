@@ -83,15 +83,15 @@ export class MovementManager implements IMovementManager{
             tankElement.model.stop();
         }
         else
-            updateSprites.call(tankElement.sprite, tankEntity.points[0], tankEntity.angle,
+            updateSprites.call(tankElement.sprite, tankEntity.points[0], tankEntity.directionAngle,
                 tankElement.model.tankComponents.turret.angle);
 
         this._entityStorage.insert(tankEntity);
     }
     private static turretUpdate(tankElement: TankElement) {
         const tankComponents = tankElement.model.tankComponents;
-        const hullSin = TrigCache.getSin(tankComponents.tankEntity.angle);
-        const hullCos = TrigCache.getCos(tankComponents.tankEntity.angle);
+        const hullSin = TrigCache.getSin(tankComponents.tankEntity.directionAngle);
+        const hullCos = TrigCache.getCos(tankComponents.tankEntity.directionAngle);
 
         tankElement.sprite.rotateTurretUpdate(
             tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(tankComponents.tankEntity.points[0], hullSin, hullCos),

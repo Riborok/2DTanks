@@ -64,6 +64,6 @@ export class TankElement {
         const tankEntity = this._model.tankComponents.tankEntity;
 
         entityStorage.insert(tankEntity);
-        this._sprite.updateSprite(tankEntity.points[0], tankEntity.angle, this._model.tankComponents.turret.angle);
+        this._sprite.updateSprite(tankEntity.points[0], tankEntity.directionAngle, this._model.tankComponents.turret.angle);
     }
 }
