@@ -1,5 +1,5 @@
 import {Sprite} from "../Sprite";
-import {BACKGROUND_SIZE, MATERIAL, SHAPE, WALL_HEIGHT, WALL_WIDTH} from "../../constants/gameConstants";
+import {BACKGROUND_SIZE, MATERIAL} from "../../constants/gameConstants";
 import {getRandomInt} from "../../additionally/additionalFunc";
 
 export class BackgroundSprite extends Sprite {

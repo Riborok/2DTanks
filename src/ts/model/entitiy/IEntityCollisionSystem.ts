@@ -1,6 +1,7 @@
 import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../../geometry/CollisionDetector";
 import {Point} from "../../geometry/Point";
+import {CollisionPack} from "../../additionally/type";
 
 export interface IEntityStorage {
     insert(entity: IEntity): void;
@@ -8,7 +9,7 @@ export interface IEntityStorage {
 }
 
 export interface ICollisionDetection {
-    getCollisions(entity: IEntity): IEntity[];
+    getCollisions(entity: IEntity): CollisionPack[];
 }
 
 export interface IEntityCollisionSystem extends IEntityStorage, ICollisionDetection {
@@ -23,7 +24,7 @@ export class Quadtree implements IEntityCollisionSystem{
     public insert(entity: IEntity) {
         this._root.insert(entity);
     }
-    public getCollisions(entity: IEntity): IEntity[] {
+    public getCollisions(entity: IEntity): CollisionPack[] {
         return this._root.getCollisions(entity);
     }
     public remove(entity: IEntity) {
@@ -97,21 +98,23 @@ class QuadtreeNode {
                 this._parent.mergeCheck();
         }
     }
-    public getCollisions(entity: IEntity): IEntity[] {
-        const collisions: IEntity[] = [];
+    public getCollisions(entity: IEntity): CollisionPack[] {
+        const collisionPacks: CollisionPack[] = [];
 
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
-                    collisions.push(...child.getCollisions(entity));
+                    collisionPacks.push(...child.getCollisions(entity));
         }
         else {
-            for (const anotherEntity of this._entities)
-                if (entity !== anotherEntity && CollisionDetector.isIntersect(entity, anotherEntity))
-                    collisions.push(anotherEntity);
+            for (const anotherEntity of this._entities) {
+                const collisionPoint = CollisionDetector.getCollisionPoint(entity, anotherEntity);
+                if (collisionPoint)
+                    collisionPacks.push({ entity: anotherEntity, collisionPoint: collisionPoint });
+            }
         }
 
-        return collisions;
+        return collisionPacks;
     }
     private isContainsEntity(entity: IEntity): boolean {
         for (const point of entity.points)

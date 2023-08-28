@@ -1,6 +1,4 @@
-import {getRandomInt} from "../../additionally/additionalFunc";
-import {Field} from "../Field";
-import {BACKGROUND_SIZE, MATERIAL} from "../../constants/gameConstants";
+import {BACKGROUND_SIZE} from "../../constants/gameConstants";
 import {BackgroundSprite} from "../../sprite/background/BackgroundSprite";
 import {Point} from "../../geometry/Point";
 
