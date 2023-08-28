@@ -1,7 +1,3 @@
-export function calcDotProduct(point1: Point, point2: Point): number {
-    return point1.x * point2.x + point1.y * point2.y;
-}
-
 export class Point {
     private _x: number;
     private _y: number;
@@ -22,18 +18,6 @@ export class Vector extends Point{
         const length = this.length;
         this.x /= length;
         this.y /= length;
-    }
-    public scale(scalar: number) {
-        this.x *= scalar;
-        this.y *= scalar;
-    }
-    public add(vector: Vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-    }
-    public subtract(vector: Vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
     }
     public clone(): Vector { return new Vector(this.x, this.y) }
 }
