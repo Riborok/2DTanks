@@ -105,7 +105,7 @@ export class TankModel extends Model {
         const forwardData = this._tankParts.track.forwardData;
         if (entity.speed < 0) {
             this._isBraking = true;
-            entity.speed += this.calculateAccelerationWithBraking(forwardData.force, resistanceCoeff, airResistanceCoeff);
+            entity.speed -= this.calculateAcceleration(-forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         else if (entity.speed < forwardData.finishSpeed) {
             this._isBraking = false;
@@ -119,7 +119,7 @@ export class TankModel extends Model {
         const entity = this._entity;
         if (entity.speed > 0) {
             this._isBraking = true;
-            entity.speed -= this.calculateAccelerationWithBraking(backwardData.force, resistanceCoeff, airResistanceCoeff);
+            entity.speed += this.calculateAcceleration(-backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         else if (-entity.speed < backwardData.finishSpeed) {
             this._isBraking = false;
@@ -141,11 +141,5 @@ export class TankModel extends Model {
     public rollbackAngularMovement() {
         EntityManipulator.rotateEntity(this._entity, -this._entity.angularVelocity);
         this._tankParts.turret.incAngle(-this._entity.angularVelocity);
-    }
-    private calculateAccelerationWithBraking(thrust: number, resistanceCoeff: number, airResistanceCoeff: number): number {
-        const frictionForce = resistanceCoeff * this._entity.mass * GRAVITY_ACCELERATION;
-        const airResistanceForce = airResistanceCoeff * this._entity.speed * this._entity.speed;
-
-        return (thrust + frictionForce + airResistanceForce) / this._entity.mass;
     }
 }
