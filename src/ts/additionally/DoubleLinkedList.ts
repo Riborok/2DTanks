@@ -1,22 +1,22 @@
-class DoublyLinkedListNode<T> {
+class DoubleLinkedListNode<T> {
     private readonly _value: T;
-    private _prev: DoublyLinkedListNode<T> | null = null;
-    private _next: DoublyLinkedListNode<T> | null = null;
+    private _prev: DoubleLinkedListNode<T> | null = null;
+    private _next: DoubleLinkedListNode<T> | null = null;
     public get value(): T { return this._value }
-    public get prev(): DoublyLinkedListNode<T> | null { return this._prev }
-    public get next(): DoublyLinkedListNode<T> | null { return this._next }
-    public set next(listNode: DoublyLinkedListNode<T> | null) { this._next = listNode }
-    public set prev(listNode: DoublyLinkedListNode<T> | null) { this._prev = listNode }
+    public get prev(): DoubleLinkedListNode<T> | null { return this._prev }
+    public get next(): DoubleLinkedListNode<T> | null { return this._next }
+    public set next(listNode: DoubleLinkedListNode<T> | null) { this._next = listNode }
+    public set prev(listNode: DoubleLinkedListNode<T> | null) { this._prev = listNode }
     public constructor(value: T) {
         this._value = value;
     }
 }
 
-export class DoublyLinkedList<T> implements Iterable<T> {
-    private _head: DoublyLinkedListNode<T> | null = null;
-    private _tail: DoublyLinkedListNode<T> | null = null;
-    public get tail(): DoublyLinkedListNode<T> | null { return this._tail }
-    public get head(): DoublyLinkedListNode<T> | null { return this._head }
+export class DoubleLinkedList<T> implements Iterable<T> {
+    private _head: DoubleLinkedListNode<T> | null = null;
+    private _tail: DoubleLinkedListNode<T> | null = null;
+    public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
+    public get head(): DoubleLinkedListNode<T> | null { return this._head }
     [Symbol.iterator](): Iterator<T> {
         let currentNode = this._tail;
 
@@ -34,7 +34,7 @@ export class DoublyLinkedList<T> implements Iterable<T> {
         };
     }
     public addToTail(value: T) {
-        const newNode = new DoublyLinkedListNode(value);
+        const newNode = new DoubleLinkedListNode(value);
 
         if (this._tail === null) {
             this._head = newNode;
@@ -47,7 +47,7 @@ export class DoublyLinkedList<T> implements Iterable<T> {
         }
     }
     public addToHead(value: T) {
-        const newNode = new DoublyLinkedListNode(value);
+        const newNode = new DoubleLinkedListNode(value);
 
         if (this._head === null) {
             this._head = newNode;
