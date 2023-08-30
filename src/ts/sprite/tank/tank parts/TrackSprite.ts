@@ -1,14 +1,14 @@
 import {SpritePart} from "../../Sprite";
 import {Point} from "../../../geometry/Point";
 import {TRACK_INDENT} from "../../../constants/gameConstants";
-import {MovementParameters} from "../../../additionally/type";
+import {MotionData} from "../../../additionally/type";
 
 abstract class TrackSprite extends SpritePart {
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
-    private static readonly MIN_THRESHOLD_COEFF: number = 8.8;
-    private static readonly MAX_THRESHOLD_COEFF: number = 0.42;
+    private static readonly MIN_THRESHOLD_COEFF: number = 17.5;
+    private static readonly MAX_THRESHOLD_COEFF: number = 0.25;
     private static readonly MIN_STATE_CHANGE_THRESHOLD_MINIMUM: number = 2;
-    private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 20;
+    private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 30;
     private readonly _srcState0: string;
     private readonly _srcState1: string;
     private _state: number;
@@ -27,20 +27,20 @@ abstract class TrackSprite extends SpritePart {
         }
     }
     public setResidualMovement() { this._isResidualMovement = true }
-    protected constructor(num: number, tankWidth: number, height: number, movementParameters: MovementParameters) {
+    protected constructor(num: number, tankWidth: number, height: number, forwardData: MotionData, backwardData: MotionData) {
         super(tankWidth + TRACK_INDENT, height);
 
         this._minStateChangeThreshold = [
-            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / movementParameters.finishBackwardSpeed),
+            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / backwardData.finishSpeed),
                 TrackSprite.MIN_STATE_CHANGE_THRESHOLD_MINIMUM),
-            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / movementParameters.finishForwardSpeed),
+            Math.max(Math.round(TrackSprite.MIN_THRESHOLD_COEFF / forwardData.finishSpeed),
                 TrackSprite.MIN_STATE_CHANGE_THRESHOLD_MINIMUM)
         ];
 
         this._maxStateChangeThreshold = [
-            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.backwardAcceleration),
+            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / backwardData.force),
                 TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM),
-            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / movementParameters.forwardAcceleration),
+            Math.min(Math.round(TrackSprite.MAX_THRESHOLD_COEFF / forwardData.force),
                 TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM)
         ];
 
@@ -77,8 +77,8 @@ abstract class TrackSprite extends SpritePart {
 }
 
 export class TopTrackSprite extends TrackSprite  {
-    public constructor(num: number, tankWidth: number, movementParameters: MovementParameters) {
-        super(num, tankWidth, TrackSprite.calcHeight(tankWidth), movementParameters);
+    public constructor(num: number, tankWidth: number, forwardData: MotionData, backwardData: MotionData) {
+        super(num, tankWidth, TrackSprite.calcHeight(tankWidth), forwardData, backwardData);
     }
     /**
      * Calculates the initial position of the top track sprite based on a reference point.
@@ -90,9 +90,9 @@ export class TopTrackSprite extends TrackSprite  {
 }
 export class BottomTrackSprite extends TrackSprite  {
     private readonly _deltaHeight: number;
-    public constructor(num: number, tankWidth: number, tankHeight: number, movementParameters: MovementParameters) {
+    public constructor(num: number, tankWidth: number, tankHeight: number, forwardData: MotionData, backwardData: MotionData) {
         const height = TrackSprite.calcHeight(tankWidth);
-        super(num, tankWidth, height, movementParameters);
+        super(num, tankWidth, height, forwardData, backwardData);
         this._deltaHeight = tankHeight + TRACK_INDENT - height;
     }
     /**

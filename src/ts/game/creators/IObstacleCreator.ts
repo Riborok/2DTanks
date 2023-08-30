@@ -26,8 +26,9 @@ export class ObstacleCreator {
                                       width: number, height: number) : WallElement[] {
         const result: WallElement[] = [];
         for (let x = xIndent; x <= width - xIndent - WALL_WIDTH[this.RECT_NUM]; x += WALL_WIDTH[this.RECT_NUM]) {
-            result.push(this.createWall(x, yIndent, 0, materialNum, this.RECT_NUM));
-            result.push(this.createWall(x, height - WALL_HEIGHT[this.RECT_NUM] - yIndent, 0, materialNum, this.RECT_NUM));
+            result.push(this.createWall(new Point(x, yIndent), 0, materialNum, this.RECT_NUM));
+            result.push(this.createWall(new Point(x, height - WALL_HEIGHT[this.RECT_NUM] - yIndent),
+                0, materialNum, this.RECT_NUM));
         }
         return result;
     }
@@ -36,20 +37,21 @@ export class ObstacleCreator {
         const result: WallElement[] = [];
         for (let y = yIndent + WALL_HEIGHT[this.RECT_NUM] + (WALL_HEIGHT[this.RECT_NUM] >> 1);
                 y <= height - yIndent - WALL_WIDTH[this.RECT_NUM]; y += WALL_WIDTH[this.RECT_NUM]) {
-            result.push(this.createWall(xIndent - (WALL_HEIGHT[this.RECT_NUM] >> 1), y, this.RAD_90, materialNum, this.RECT_NUM));
-            result.push(this.createWall(width - xIndent - WALL_WIDTH[this.RECT_NUM] +
-                (WALL_HEIGHT[this.RECT_NUM] >> 1), y, this.RAD_90, materialNum, this.RECT_NUM));
+            result.push(this.createWall(new Point(xIndent - (WALL_HEIGHT[this.RECT_NUM] >> 1), y),
+                this.RAD_90, materialNum, this.RECT_NUM));
+            result.push(this.createWall(new Point(width - xIndent - WALL_WIDTH[this.RECT_NUM] +
+                (WALL_HEIGHT[this.RECT_NUM] >> 1), y), this.RAD_90, materialNum, this.RECT_NUM));
         }
         return result;
     }
-    public static createWall(x: number, y: number, angle: number, materialNum: number,
+    public static createWall(point: Point, angle: number, materialNum: number,
                              shapeNum: number, hasMass: boolean = false) : WallElement {
         const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : Infinity;
-        const model = new WallModel(new RectangularEntity(x, y,
+        const model = new WallModel(new RectangularEntity(point,
             WALL_WIDTH[shapeNum], WALL_HEIGHT[shapeNum], angle, mass, IDTracker.wallId));
 
         const sprite = new WallSprite(materialNum, shapeNum);
-        sprite.setPosition(new Point(x, y));
+        sprite.setPosition(point);
         sprite.setAngle(angle);
 
         return new WallElement(model, sprite);

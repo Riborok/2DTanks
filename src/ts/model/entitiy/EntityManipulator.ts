@@ -1,7 +1,7 @@
 import {TrigCache} from "../../additionally/LRUCache";
 import {PointRotator} from "../../geometry/PointRotator";
 import {IEntity} from "./IEntity";
-import {Point, Vector} from "../../geometry/Point";
+import {Vector} from "../../geometry/Point";
 
 type CalcVelocity = (entity: IEntity) => Vector;
 export class EntityManipulator {
@@ -25,13 +25,23 @@ export class EntityManipulator {
             entity.speed * TrigCache.getSin(entity.directionAngle)
         );
     }
-    public static rotatePointAroundTarget(entity: IEntity, deltaAngle: number, target: Point) {
+    public static angularMovement(entity: IEntity) {
+        entity.directionAngle += entity.angularVelocity;
+        const sin = TrigCache.getSin(entity.angularVelocity);
+        const cos = TrigCache.getCos(entity.angularVelocity);
+        const center = entity.calcCenter();
+
+        for (const point of entity.points)
+            PointRotator.rotatePointAroundTarget(point, center, sin, cos);
+    }
+    public static rotateEntity(entity: IEntity, deltaAngle: number) {
         entity.directionAngle += deltaAngle;
         const sin = TrigCache.getSin(deltaAngle);
         const cos = TrigCache.getCos(deltaAngle);
+        const center = entity.calcCenter();
 
         for (const point of entity.points)
-            PointRotator.rotatePointAroundTarget(point, target, sin, cos);
+            PointRotator.rotatePointAroundTarget(point, center, sin, cos);
     }
     public static setVelocity(entity: IEntity, velocity: Vector) {
         entity.speed = velocity.length;
