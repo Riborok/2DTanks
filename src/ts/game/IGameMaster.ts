@@ -1,4 +1,4 @@
-import {RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
+import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager, ICollisionManager} from "./managers/ICollisionManager";
 import {Field} from "./Field";
@@ -10,6 +10,7 @@ import {WallElement} from "./elements/WallElement";
 import {ObstacleCreator} from "./creators/IObstacleCreator";
 import {findIndex} from "./id/IIdentifiable";
 import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
+import {Point} from "../geometry/Point";
 
 export interface IGameMaster {
     startGameLoop(): void;
@@ -37,7 +38,8 @@ export class GameMaster implements IGameMaster {
     }
 
     public createField(backgroundMaterial: number, wallMaterial: number) {
-        this._movementManager.setResistanceForce(RESISTANCE_COEFFICIENT[backgroundMaterial]);
+        this._movementManager.resistanceCoeff = RESISTANCE_COEFFICIENT[backgroundMaterial];
+        this._movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
 
         this.createBackgroundSprites(backgroundMaterial);
         this.createWalls(wallMaterial);
@@ -60,9 +62,9 @@ export class GameMaster implements IGameMaster {
 
         // Additional walls
         this._wallElements.push(ObstacleCreator.createWall(
-            width >> 1, height >> 1, 0.79, 2, 0, true));
+            new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
         this._wallElements.push(ObstacleCreator.createWall(
-            width >> 2, height >> 2, 1, 2, 1, true));
+            new Point(width >> 2, height >> 2), 1, 2, 1, true));
 
         for (const wallElement of this._wallElements)
             wallElement.spawn(this._field.canvas, this._entityCollisionSystem);
@@ -101,25 +103,44 @@ export class GameMaster implements IGameMaster {
     private updateTanks() {
         const mask = this._keyHandler.keysMask;
         for (const tankElement of this._tankElements) {
-            if (mask & tankElement.turretClockwiseMask)
-                this._movementManager.turretClockwiseMovement(tankElement);
-            if (mask & tankElement.turretCounterClockwiseMask)
-                this._movementManager.turretCounterclockwiseMovement(tankElement);
+            const control = tankElement.control;
 
-            if (mask & tankElement.forwardMask)
-                this._movementManager.forwardMovement(tankElement);
-            else {
-                this._movementManager.removeSpriteAccelerationEffect(tankElement);
-                if (mask & tankElement.backwardMask)
-                    this._movementManager.backwardMovement(tankElement);
-                else
-                    this._movementManager.residualMovement(tankElement);
+            let action, oppositeAction: boolean;
+
+            action = (mask & control.turretClockwiseMask) !== 0;
+            oppositeAction = (mask & control.turretCounterClockwiseMask) !== 0;
+            if ((action && !oppositeAction) || (!action && oppositeAction)) {
+                if (action)
+                    this._movementManager.turretClockwiseMovement(tankElement);
+                else if (oppositeAction)
+                    this._movementManager.turretCounterclockwiseMovement(tankElement);
             }
 
-            if (mask & tankElement.hullClockwiseMask)
-                this._movementManager.hullClockwiseMovement(tankElement);
-            if (mask & tankElement.hullCounterClockwiseMask)
-                this._movementManager.hullCounterclockwiseMovement(tankElement);
+            action = (mask & control.forwardMask) !== 0;
+            oppositeAction = (mask & control.backwardMask) !== 0;
+            if ((action && !oppositeAction) || (!action && oppositeAction)) {
+                if (action)
+                    this._movementManager.forwardMovement(tankElement);
+                else if (oppositeAction) {
+                    this._movementManager.removeSpriteAccelerationEffect(tankElement);
+                    this._movementManager.backwardMovement(tankElement);
+                }
+            }
+            else {
+                this._movementManager.removeSpriteAccelerationEffect(tankElement);
+                this._movementManager.residualMovement(tankElement);
+            }
+
+            action = (mask & control.hullClockwiseMask) !== 0;
+            oppositeAction = (mask & control.hullCounterClockwiseMask) !== 0;
+            if ((action && !oppositeAction) || (!action && oppositeAction)) {
+                if (action)
+                    this._movementManager.hullClockwiseMovement(tankElement);
+                else if (oppositeAction)
+                    this._movementManager.hullCounterclockwiseMovement(tankElement);
+            }
+            else
+                this._movementManager.residualAngularMovement(tankElement);
         }
     }
 }

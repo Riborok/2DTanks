@@ -11,16 +11,16 @@ import {
 import {TurretSprite} from "./tank parts/TurretSprite";
 import {WeaponSprite} from "./tank parts/WeaponSprite";
 import {TankSpriteParts} from "./TankSpriteParts";
-import {MovementParameters} from "../../additionally/type";
+import {MotionData} from "../../additionally/type";
 
 export class TankSpritePartsCreator {
     private constructor() {}
     public static create(color: number, hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
-                         movementParameters: MovementParameters): TankSpriteParts {
+                         forwardData: MotionData, backwardData: MotionData): TankSpriteParts {
         return new TankSpriteParts(
             new HullSprite(color, hullNum),
-            new BottomTrackSprite(trackNum, HULL_WIDTH[hullNum], HULL_HEIGHT[hullNum], movementParameters),
-            new TopTrackSprite(trackNum, HULL_WIDTH[hullNum], movementParameters),
+            new BottomTrackSprite(trackNum, HULL_WIDTH[hullNum], HULL_HEIGHT[hullNum], forwardData, backwardData),
+            new TopTrackSprite(trackNum, HULL_WIDTH[hullNum], forwardData, backwardData),
             new TurretSprite(color, turretNum,
                 TURRET_INDENT_X[hullNum], (HULL_HEIGHT[hullNum] >> 1) - (TURRET_HEIGHT[turretNum] >> 1)),
             new WeaponSprite(weaponNum,

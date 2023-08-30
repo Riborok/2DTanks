@@ -9,13 +9,13 @@ export class DecorCreator {
         const result: BackgroundSprite[] = [];
         for (let i: number = 0; i < width; i += BACKGROUND_SIZE)
             for (let j: number = 0; j < height; j += BACKGROUND_SIZE)
-                result.push(this.addBackgroundTile(i, j, num));
+                result.push(this.addBackgroundTile(new Point(i, j), num));
         return result;
     }
-    public static addBackgroundTile(x: number, y: number, num: number): BackgroundSprite
+    public static addBackgroundTile(point: Point, num: number): BackgroundSprite
     {
         const sprite = new BackgroundSprite(num);
-        sprite.setPosition(new Point(x, y));
+        sprite.setPosition(point);
         return sprite;
     }
 }

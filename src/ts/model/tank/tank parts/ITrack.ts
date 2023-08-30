@@ -1,25 +1,16 @@
-import {MovementParameters} from "../../../additionally/type";
+import {MotionData} from "../../../additionally/type";
 
 export interface ITrack {
-    get angleSpeed(): number;
-    get movementParameters(): MovementParameters;
+    get angularData(): MotionData;
+    get forwardData(): MotionData;
+    get backwardData(): MotionData;
 }
 
 export class TrackModel0 implements ITrack{
-    private readonly _angleSpeed: number = 0.04;
-    private readonly _movementParameters: MovementParameters = {
-        forwardAcceleration: 0.045,
-        backwardAcceleration: 0.035,
-        finishForwardSpeed: 5.2,
-        finishBackwardSpeed: 2.6
-    }
-    public get angleSpeed(): number { return this._angleSpeed }
-    public get movementParameters(): MovementParameters { return this._movementParameters }
-    public constructor(mass: number) {
-        this._angleSpeed /= mass;
-        this._movementParameters.forwardAcceleration /= mass;
-        this._movementParameters.backwardAcceleration /= mass;
-        this._movementParameters.finishForwardSpeed /= mass;
-        this._movementParameters.finishBackwardSpeed /= mass;
-    }
+    private readonly _angularData: MotionData = { finishSpeed: 0.0175, force: 0.02 }
+    private readonly _forwardData: MotionData = { finishSpeed: 4, force: 0.0125 }
+    private readonly _backwardData: MotionData = { finishSpeed: 2.75, force: 0.01 }
+    public get angularData(): MotionData { return this._angularData }
+    public get forwardData(): MotionData { return this._forwardData }
+    public get backwardData(): MotionData { return this._backwardData }
 }

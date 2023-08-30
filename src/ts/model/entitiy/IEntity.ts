@@ -1,6 +1,7 @@
 import {Point} from "../../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
 import {IIdentifiable} from "../../game/id/IIdentifiable";
+import {calcDistance} from "../../geometry/additionalFunc";
 
 
 /**
@@ -13,10 +14,13 @@ export interface IEntity extends IIdentifiable{
     get points(): Point[];
     get mass(): number;
     get speed(): number;
+    get angularVelocity(): number;
     get directionAngle(): number;
     set speed(value: number);
     set directionAngle(value: number);
+    set angularVelocity(value: number);
     calcCenter(): Point;
+    get radiusLength(): number;
 }
 
 /**
@@ -24,28 +28,34 @@ export interface IEntity extends IIdentifiable{
  * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entitiy.
  */
 export class RectangularEntity implements IEntity {
-    protected _points: Point[];
-    protected readonly _mass: number;
-    protected readonly _id: number;
-    protected _speed: number = 0;
-    protected _angle: number = 0;
-    public constructor(x0: number, y0: number, width: number, height: number, angle: number, mass: number, id: number) {
+    private readonly _points: Point[];
+    private readonly _mass: number;
+    private readonly _id: number;
+    private _angularVelocity: number = 0;
+    private _speed: number = 0;
+    private _angle: number = 0;
+    private readonly _radiusLength: number;
+    public constructor(point: Point, width: number, height: number, angle: number, mass: number, id: number) {
         this._mass = mass;
         this._id = id;
-        this._points = [new Point(x0, y0),
-            new Point(x0 + width, y0),
-            new Point(x0 + width, y0 + height),
-            new Point(x0, y0 + height)];
+        this._points = [point.clone(),
+            new Point(point.x + width, point.y),
+            new Point(point.x + width, point.y + height),
+            new Point(point.x, point.y + height)];
         if (angle !== 0)
-            EntityManipulator.rotatePointAroundTarget(this, angle, this.calcCenter());
+            EntityManipulator.rotateEntity(this, angle);
+        this._radiusLength = calcDistance(this.calcCenter(), this._points[0]);
     }
     public get points(): Point[] { return this._points }
     public get directionAngle(): number { return this._angle }
     public get mass(): number { return this._mass }
+    public get angularVelocity(): number { return this._angularVelocity }
     public get speed(): number { return this._speed }
     public get id(): number { return this._id }
     public set speed(value: number) { this._speed = value }
+    public get radiusLength(): number { return this._radiusLength }
     public set directionAngle(value: number) { this._angle = value }
+    public set angularVelocity(value: number) { this._angularVelocity = value }
     public calcCenter(): Point {
         return new Point((this._points[0].x + this._points[2].x) / 2, (this._points[0].y + this._points[2].y) / 2);
     }

@@ -3,9 +3,9 @@ import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
 import {ICollisionManager} from "./ICollisionManager";
 import {TrigCache} from "../../additionally/LRUCache";
 import {Point} from "../../geometry/Point";
-import {GRAVITY_ACCELERATION} from "../../constants/gameConstants";
 
-type Action = (resistanceCoefficient: number) => void;
+type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
+type Rollback = () => void;
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 
 export interface IMovementManager {
@@ -16,14 +16,19 @@ export interface IMovementManager {
     turretCounterclockwiseMovement(tankElement: TankElement): void;
     turretClockwiseMovement(tankElement: TankElement): void;
     residualMovement(tankElement: TankElement): void;
-    setResistanceForce(resistanceCoeff: number): void;
     removeSpriteAccelerationEffect(tankElement: TankElement): void;
+    residualAngularMovement(tankElement: TankElement): void;
+
+    set resistanceCoeff(resistanceCoeff: number);
+    set airResistanceCoeff(airResistanceCoefficient: number);
 }
 export class MovementManager implements IMovementManager{
     private readonly _entityStorage: IEntityStorage;
     private readonly _collisionManager: ICollisionManager;
-    private _resistanceForce: number = 0;
-    public setResistanceForce(resistanceCoeff: number) { this._resistanceForce = resistanceCoeff * GRAVITY_ACCELERATION }
+    private _resistanceCoeff: number = 0;
+    private _airResistanceCoeff: number = 0
+    public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
+    public set airResistanceCoeff(airResistanceCoefficient: number) { this._airResistanceCoeff = airResistanceCoefficient }
     public constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
@@ -44,7 +49,16 @@ export class MovementManager implements IMovementManager{
             tankSpriteParts.topTrackSprite.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
-                tankElement.model.rollback,
+                tankElement.model.rollbackMovement,
+                tankElement.sprite.updateAfterAction
+            );
+        }
+    }
+    public residualAngularMovement(tankElement: TankElement) {
+        if (!tankElement.model.isAngularMotionStopped()) {
+            this.hullUpdate(tankElement,
+                tankElement.model.residualAngularMovement,
+                tankElement.model.rollbackAngularMovement,
                 tankElement.sprite.updateAfterAction
             );
         }
@@ -59,32 +73,32 @@ export class MovementManager implements IMovementManager{
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement,
-            tankElement.model.hullClockwiseMovement, tankElement.sprite.updateAfterAction);
+            tankElement.model.rollbackAngularMovement, tankElement.sprite.updateAfterAction);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement,
-            tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateAfterAction);
+            tankElement.model.rollbackAngularMovement, tankElement.sprite.updateAfterAction);
     }
     public forwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.model.rollback,
+        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.model.rollbackMovement,
             tankElement.sprite.updateForwardAction);
     }
     public backwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollback,
+        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollbackMovement,
             tankElement.sprite.updateBackwardAction);
     }
-    private hullUpdate(tankElement: TankElement, action: Action, reverseAction: Action, updateSprites: UpdateSprites) {
+    private hullUpdate(tankElement: TankElement, action: Action, rollback: Rollback, updateSprites: UpdateSprites) {
         const entity = tankElement.model.entity;
         this._entityStorage.remove(entity)
-        action.call(tankElement.model, this._resistanceForce);
+        action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff);
         if (!this._collisionManager.isSuccess(entity)) {
-            reverseAction.call(tankElement.model, this._resistanceForce);
+            rollback.call(tankElement.model);
             this.removeSpriteAccelerationEffect(tankElement);
             tankElement.model.stop();
         }
-        else
-            updateSprites.call(tankElement.sprite, entity.points[0], entity.directionAngle,
-                tankElement.model.tankParts.turret.angle);
+
+        updateSprites.call(tankElement.sprite, entity.points[0], entity.directionAngle,
+            tankElement.model.tankParts.turret.angle);
 
         this._entityStorage.insert(entity);
     }

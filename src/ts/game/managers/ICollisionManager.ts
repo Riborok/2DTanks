@@ -11,11 +11,11 @@ export class CollisionManager implements ICollisionManager {
         this._collisionDetection = collisionDetection;
     }
     public isSuccess(entity: IEntity) : boolean {
-        const collisions = this._collisionDetection.getCollisions(entity);
+        const collisionPacks = this._collisionDetection.getCollisions(entity);
 
-        // for (const collision of collisions)
-        //     CollisionResolver.resolveCollision(entity, collision);
+        // for (const collisionPack of collisionPacks)
+        //     CollisionResolver.resolveCollision(entity, collisionPack);
 
-        return collisions.length === 0;
+        return collisionPacks.length === 0;
     }
 }
