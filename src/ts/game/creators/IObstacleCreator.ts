@@ -12,12 +12,12 @@ export class ObstacleCreator {
     private static readonly RECT_NUM: number = 0;
     private constructor() { }
     public static createWallsAroundPerimeter(materialNum: number, width: number, height: number): WallElement[] {
-        const xIndent = this.calculateIndent(width);
-        const yIndent = this.calculateIndent(height - (WALL_HEIGHT[this.RECT_NUM] << 1));
+        const xIndent = this.calcIndent(width);
+        const yIndent = this.calcIndent(height - (WALL_HEIGHT[this.RECT_NUM] << 1));
         return this.createHorWalls(materialNum, xIndent, yIndent, width, height).concat(
             this.createVertWalls(materialNum, xIndent, yIndent, width, height));
     }
-    private static calculateIndent(totalLength: number): number {
+    private static calcIndent(totalLength: number): number {
         const currLength = totalLength - (this.INDENT << 1);
         const indent = currLength - WALL_WIDTH[this.RECT_NUM] * Math.floor(currLength / WALL_WIDTH[this.RECT_NUM]);
         return (indent >> 1) + this.INDENT;

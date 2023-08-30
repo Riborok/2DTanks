@@ -6,7 +6,6 @@ import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../entitiy/IEntity";
 import {Model} from "../Model";
 import {Point} from "../../geometry/Point";
-import {GRAVITY_ACCELERATION} from "../../constants/gameConstants";
 
 export class TankModel extends Model {
     private readonly _tankParts: TankParts;
@@ -62,9 +61,8 @@ export class TankModel extends Model {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity += this.calculateAcceleration(angularData.force, resistanceCoeff,
+            entity.angularVelocity += this.calcAcceleration(angularData.force, resistanceCoeff,
                 airResistanceCoeff, entity.angularVelocity) / entity.radiusLength;
-
 
         this.updateAngularVelocity();
 
@@ -75,7 +73,7 @@ export class TankModel extends Model {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (-entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity -= this.calculateAcceleration(angularData.force, resistanceCoeff,
+            entity.angularVelocity -= this.calcAcceleration(angularData.force, resistanceCoeff,
                 airResistanceCoeff, entity.angularVelocity) / entity.radiusLength;
 
         this.updateAngularVelocity();
@@ -85,18 +83,18 @@ export class TankModel extends Model {
     }
     private updateAngularVelocity() {
         if (!this.isIdle()) {
+            const entity = this._entity;
             const track = this._tankParts.track;
 
-            const speedModule = Math.abs(this._entity.speed);
+            const speedModule = Math.abs(entity.speed);
             const speedFactor = speedModule / (track.forwardData.finishSpeed * 20);
-            const massFactor =  this._entity.mass / 200;
+            const massFactor =  entity.mass / 200;
 
-            if (this._isBraking) {
-                this._entity.angularVelocity *= (1 + massFactor / 10) * (1 + speedFactor / 10);
-            }
+            if (this._isBraking)
+                entity.angularVelocity *= (1 + massFactor / 10) * (1 + speedFactor / 10);
             else {
-                this._entity.angularVelocity *= (1 - massFactor) * (1 - speedFactor);
-                this._entity.speed *= (1 - massFactor);
+                entity.angularVelocity *= (1 - massFactor) * (1 - speedFactor);
+                entity.speed *= (1 - massFactor);
             }
         }
     }
@@ -105,25 +103,25 @@ export class TankModel extends Model {
         const forwardData = this._tankParts.track.forwardData;
         if (entity.speed < 0) {
             this._isBraking = true;
-            entity.speed -= this.calculateAcceleration(-forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
+            entity.speed -= this.calcAcceleration(-forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         else if (entity.speed < forwardData.finishSpeed) {
             this._isBraking = false;
-            entity.speed += this.calculateAcceleration(forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
+            entity.speed += this.calcAcceleration(forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         console.log(entity.speed)
         EntityManipulator.movement(entity);
     }
     public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
-        const backwardData = this._tankParts.track.backwardData;
         const entity = this._entity;
+        const backwardData = this._tankParts.track.backwardData;
         if (entity.speed > 0) {
             this._isBraking = true;
-            entity.speed += this.calculateAcceleration(-backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
+            entity.speed += this.calcAcceleration(-backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         else if (-entity.speed < backwardData.finishSpeed) {
             this._isBraking = false;
-            entity.speed -= this.calculateAcceleration(backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
+            entity.speed -= this.calcAcceleration(backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
         EntityManipulator.movement(entity);
     }
