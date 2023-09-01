@@ -6,7 +6,7 @@ import {MotionData} from "../../../additionally/type";
 abstract class TrackSprite extends SpritePart {
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     private static readonly MIN_THRESHOLD_COEFF: number = 17.5;
-    private static readonly MAX_THRESHOLD_COEFF: number = 0.25;
+    private static readonly MAX_THRESHOLD_COEFF: number = 0.5;
     private static readonly MIN_STATE_CHANGE_THRESHOLD_MINIMUM: number = 2;
     private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 30;
     private readonly _srcState0: string;

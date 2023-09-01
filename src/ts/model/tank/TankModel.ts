@@ -24,7 +24,6 @@ export class TankModel extends Model {
     }
     public isIdle(): boolean { return  this._entity.speed === 0 }
     public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
-    public stop() { this._entity.speed = 0; this._entity.angularVelocity = 0; }
     public get tankParts(): TankParts { return this._tankParts }
     public shot(): BulletModel | null {
         const dateNow = Date.now();
@@ -109,7 +108,6 @@ export class TankModel extends Model {
             this._isBraking = false;
             entity.speed += this.calcAcceleration(forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
         }
-        console.log(entity.speed)
         EntityManipulator.movement(entity);
     }
     public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
@@ -132,12 +130,5 @@ export class TankModel extends Model {
     public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         super.residualAngularMovement(resistanceCoeff, airResistanceCoeff);
         this._tankParts.turret.incAngle(this._entity.angularVelocity);
-    }
-    public rollbackMovement() {
-        EntityManipulator.movement(this._entity, EntityManipulator.calcOppositeVelocity);
-    }
-    public rollbackAngularMovement() {
-        EntityManipulator.rotateEntity(this._entity, -this._entity.angularVelocity);
-        this._tankParts.turret.incAngle(-this._entity.angularVelocity);
     }
 }
