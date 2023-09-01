@@ -6,11 +6,6 @@ export type MotionData = {
     force: number;
 }
 
-export type CollisionPack = {
-    entity: IEntity,
-    collisionPoint: Point
-}
-
 export type Control = {
     forwardMask: number,
     backwardMask: number,
@@ -18,4 +13,14 @@ export type Control = {
     hullCounterClockwiseMask: number,
     turretClockwiseMask: number,
     turretCounterClockwiseMask: number,
+}
+
+export type CollisionInfo = {
+    entity: IEntity,
+    collisionResult: CollisionResult;
+}
+
+export type CollisionResult = {
+    collisionPoint: Point;
+    overlap: number;
 }

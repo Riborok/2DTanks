@@ -1,8 +1,9 @@
 import {IEntity} from "../../model/entitiy/IEntity";
 import {ICollisionDetection} from "../../model/entitiy/IEntityCollisionSystem";
+import {CollisionResolver} from "../../geometry/CollisionResolver";
 
 export interface ICollisionManager {
-    isSuccess(entity: IEntity): boolean;
+    hasCollision(entity: IEntity): boolean;
 }
 
 export class CollisionManager implements ICollisionManager {
@@ -10,12 +11,12 @@ export class CollisionManager implements ICollisionManager {
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;
     }
-    public isSuccess(entity: IEntity) : boolean {
-        const collisionPacks = this._collisionDetection.getCollisions(entity);
+    public hasCollision(entity: IEntity) : boolean {
+        const collisionsInfo = this._collisionDetection.getCollisions(entity);
 
-        // for (const collisionPack of collisionPacks)
-        //     CollisionResolver.resolveCollision(entity, collisionPack);
+         for (const collisionInfo of collisionsInfo)
+             CollisionResolver.resolveCollision(entity, collisionInfo);
 
-        return collisionPacks.length === 0;
+        return collisionsInfo.length === 0;
     }
 }

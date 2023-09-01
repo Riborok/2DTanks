@@ -32,7 +32,7 @@ export class TankElement implements IIdentifiable {
         const tankParts = TankPartsCreator.create(angle, hullNum, trackNum, turretNum, weaponNum);
         const rectangularEntity = new RectangularEntity(point,
             HULL_WIDTH[hullNum] + TRACK_INDENT, HULL_HEIGHT[hullNum] + (TRACK_INDENT << 1), angle,
-            tankParts.turret.mass + tankParts.weapon.mass + tankParts.weapon.mass, IDTracker.tankId);
+            tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, IDTracker.tankId);
         this._model = new TankModel(tankParts, rectangularEntity);
         this._id = rectangularEntity.id;
 

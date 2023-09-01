@@ -5,7 +5,6 @@ import {TrigCache} from "../../additionally/LRUCache";
 import {Point} from "../../geometry/Point";
 
 type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
-type Rollback = () => void;
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 
 export interface IMovementManager {
@@ -49,7 +48,6 @@ export class MovementManager implements IMovementManager{
             tankSpriteParts.topTrackSprite.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
-                tankElement.model.rollbackMovement,
                 tankElement.sprite.updateAfterAction
             );
         }
@@ -58,7 +56,6 @@ export class MovementManager implements IMovementManager{
         if (!tankElement.model.isAngularMotionStopped()) {
             this.hullUpdate(tankElement,
                 tankElement.model.residualAngularMovement,
-                tankElement.model.rollbackAngularMovement,
                 tankElement.sprite.updateAfterAction
             );
         }
@@ -72,30 +69,23 @@ export class MovementManager implements IMovementManager{
         MovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement,
-            tankElement.model.rollbackAngularMovement, tankElement.sprite.updateAfterAction);
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateAfterAction);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement,
-            tankElement.model.rollbackAngularMovement, tankElement.sprite.updateAfterAction);
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.updateAfterAction);
     }
     public forwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.model.rollbackMovement,
-            tankElement.sprite.updateForwardAction);
+        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction);
     }
     public backwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.model.rollbackMovement,
-            tankElement.sprite.updateBackwardAction);
+        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.sprite.updateBackwardAction);
     }
-    private hullUpdate(tankElement: TankElement, action: Action, rollback: Rollback, updateSprites: UpdateSprites) {
+    private hullUpdate(tankElement: TankElement, action: Action, updateSprites: UpdateSprites) {
         const entity = tankElement.model.entity;
         this._entityStorage.remove(entity)
         action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff);
-        if (!this._collisionManager.isSuccess(entity)) {
-            rollback.call(tankElement.model);
+        if (!this._collisionManager.hasCollision(entity))
             this.removeSpriteAccelerationEffect(tankElement);
-            tankElement.model.stop();
-        }
 
         updateSprites.call(tankElement.sprite, entity.points[0], entity.directionAngle,
             tankElement.model.tankParts.turret.angle);

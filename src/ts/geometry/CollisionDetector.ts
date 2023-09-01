@@ -2,6 +2,7 @@ import {IEntity} from "../model/entitiy/IEntity";
 import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {PointUtils} from "./PointUtils";
+import {CollisionResult} from "../additionally/type";
 
 /**
  * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).
@@ -15,7 +16,7 @@ export class CollisionDetector {
      * @param entity2 The second entity to check for intersection.
      * @returns `true` if the two entities intersect, `false` otherwise.
      */
-    public static getCollisionPoint(entity1: IEntity, entity2: IEntity): Point | null {
+    public static getCollisionResult(entity1: IEntity, entity2: IEntity): CollisionResult | null {
         const axes = CollisionDetector.getAxes(entity1).concat(CollisionDetector.getAxes(entity2));
 
         let smallestOverlap = Number.MAX_VALUE;
@@ -36,9 +37,10 @@ export class CollisionDetector {
             }
         }
 
-        return CollisionDetector.findClosestVertex(entity1, entity2, collisionAxis);
+        return {collisionPoint: CollisionDetector.findClosestVertex(entity1, entity2, collisionAxis),
+            overlap: smallestOverlap};
     }
-    private static readonly EPSILON: number = 5;
+    private static readonly EPSILON: number = 2;
     private static findClosestVertex(entity1: IEntity, entity2: IEntity, axis: Axis): Point {
         let minDistance = Number.MAX_VALUE;
         let closestVertex = new Point(0, 0);
@@ -55,8 +57,8 @@ export class CollisionDetector {
             }
         }
 
-        updateClosestVertex(entity1.points[0], entity2.points);
-        updateClosestVertex(entity2.points[0], entity1.points);
+        updateClosestVertex(entity1.calcCenter(), entity2.points);
+        updateClosestVertex(entity2.calcCenter(), entity1.points);
 
         return closestVertex;
     }
@@ -70,7 +72,7 @@ export class CollisionDetector {
 
         return axes;
     }
-    public static getProject(entity: IEntity, axis: Vector): Projection {
+    private static getProject(entity: IEntity, axis: Vector): Projection {
         let min = VectorUtils.dotProduct(axis, entity.points[0]);
         let max = min;
 
@@ -85,7 +87,7 @@ export class CollisionDetector {
         return { min, max };
     }
 }
-export type Projection = {
+type Projection = {
     min: number;
     max: number;
 }
