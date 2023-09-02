@@ -1,11 +1,12 @@
 import {TankParts} from "./TankParts";
-import {TrigCache} from "../../additionally/LRUCache";
 import {EntityManipulator} from "../entitiy/EntityManipulator";
 import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../entitiy/IEntity";
 import {Model} from "../Model";
 import {Point} from "../../geometry/Point";
+import {DEGREE_TO_RADIAN} from "../../constants/gameConstants";
+import {MotionData} from "../../additionally/type";
 
 export class TankModel extends Model {
     private readonly _tankParts: TankParts;
@@ -22,7 +23,7 @@ export class TankModel extends Model {
 
         this._bulletNum = 0;
     }
-    public isIdle(): boolean { return  this._entity.speed === 0 }
+    public isIdle(): boolean { return  this._entity.velocity.length === 0 }
     public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
     public get tankParts(): TankParts { return this._tankParts }
     public shot(): BulletModel | null {
@@ -31,10 +32,9 @@ export class TankModel extends Model {
             return null;
 
         const center = this._entity.calcCenter();
-        const xStart = center.x +
-            this._tankParts.weapon.barrelLength * TrigCache.getCos(this._tankParts.turret.angle);
-        const yStart = center.y +
-            this._tankParts.weapon.barrelLength * TrigCache.getSin(this._tankParts.turret.angle);
+        const muzzleLength = this._tankParts.turret.width / 2 + this._tankParts.weapon.barrelLength;
+        const xStart = center.x + muzzleLength * Math.cos(this._tankParts.turret.angle);
+        const yStart = center.y + muzzleLength * Math.sin(this._tankParts.turret.angle);
 
         const bulletModel = BulletModelCreator.create(this._bulletNum, new Point(xStart, yStart),
             this._tankParts.turret.angle);
@@ -83,44 +83,49 @@ export class TankModel extends Model {
     private updateAngularVelocity() {
         if (!this.isIdle()) {
             const entity = this._entity;
-            const track = this._tankParts.track;
+            const velocity = entity.velocity;
 
-            const speedModule = Math.abs(entity.speed);
-            const speedFactor = speedModule / (track.forwardData.finishSpeed * 20);
-            const massFactor =  entity.mass / 200;
-
-            if (this._isBraking)
-                entity.angularVelocity *= (1 + massFactor / 10) * (1 + speedFactor / 10);
+            if (this._isBraking) {
+                const speedFactor = 1 + velocity.length / (this._tankParts.track.forwardData.finishSpeed * 200);
+                const massFactor = 1 + entity.mass / 2000;
+                entity.angularVelocity *= massFactor * speedFactor;
+            }
             else {
-                entity.angularVelocity *= (1 - massFactor) * (1 - speedFactor);
-                entity.speed *= (1 - massFactor);
+                const speedFactor = 1 - velocity.length / (this._tankParts.track.forwardData.finishSpeed * 20);
+                const massFactor = 1 - entity.mass / 200;
+                entity.angularVelocity *= massFactor * speedFactor;
+                velocity.x *= massFactor;
+                velocity.y *= massFactor;
             }
         }
     }
     public forwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
-        const entity = this._entity;
-        const forwardData = this._tankParts.track.forwardData;
-        if (entity.speed < 0) {
-            this._isBraking = true;
-            entity.speed -= this.calcAcceleration(-forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
-        }
-        else if (entity.speed < forwardData.finishSpeed) {
-            this._isBraking = false;
-            entity.speed += this.calcAcceleration(forwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
-        }
-        EntityManipulator.movement(entity);
+        this.movement(this._tankParts.track.forwardData, this._entity.angle,
+            resistanceCoeff, airResistanceCoeff);
     }
     public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+        this.movement(this._tankParts.track.backwardData, this._entity.angle - Math.PI,
+            resistanceCoeff, airResistanceCoeff);
+    }
+    private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
-        const backwardData = this._tankParts.track.backwardData;
-        if (entity.speed > 0) {
-            this._isBraking = true;
-            entity.speed += this.calcAcceleration(-backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
-        }
-        else if (-entity.speed < backwardData.finishSpeed) {
+        const speed = entity.velocity.length;
+
+        const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
+        const deltaAngle = Math.abs(angle - velocityAngle);
+
+        let acceleration: number;
+        if (speed < data.finishSpeed && deltaAngle < DEGREE_TO_RADIAN) {
             this._isBraking = false;
-            entity.speed -= this.calcAcceleration(backwardData.force, resistanceCoeff, airResistanceCoeff, entity.speed);
+            acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, speed);
         }
+        else {
+            this._isBraking = true;
+            acceleration = this.calcAcceleration(data.force * Math.cos(deltaAngle),
+                resistanceCoeff, airResistanceCoeff, speed);
+        }
+        entity.velocity.x += acceleration * Math.cos(velocityAngle);
+        entity.velocity.y += acceleration * Math.sin(velocityAngle);
         EntityManipulator.movement(entity);
     }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {

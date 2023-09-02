@@ -19,6 +19,7 @@ export class Vector extends Point{
         this.x /= length;
         this.y /= length;
     }
+    public get angle(): number { return Math.atan2(this.y, this.x) }
     public clone(): Vector { return new Vector(this.x, this.y) }
 }
 

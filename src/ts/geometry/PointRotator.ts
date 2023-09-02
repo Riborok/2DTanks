@@ -18,4 +18,9 @@ export class PointRotator {
         point.x = targetPoint.x + deltaX * cos - deltaY * sin;
         point.y = targetPoint.y + deltaX * sin + deltaY * cos;
     }
+    public static rotatePoint(point: Point, sin: number, cos: number) {
+        const x = point.x, y = point.y;
+        point.x = x * cos - y * sin;
+        point.y = x * sin + y * cos;
+    }
 }
