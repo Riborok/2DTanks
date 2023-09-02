@@ -58,6 +58,6 @@ export class TankElement implements IIdentifiable {
         const entity = this._model.entity;
 
         entityStorage.insert(entity);
-        this._sprite.updateAfterAction(entity.points[0], entity.directionAngle, this._model.tankParts.turret.angle);
+        this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.tankParts.turret.angle);
     }
 }

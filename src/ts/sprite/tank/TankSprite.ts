@@ -1,6 +1,5 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../../geometry/Point";
-import {TrigCache} from "../../additionally/LRUCache";
 import {SpritePart} from "../Sprite";
 import {PointRotator} from "../../geometry/PointRotator";
 
@@ -11,8 +10,8 @@ export class TankSprite {
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
     public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
-        const turretSin = TrigCache.getSin(turretAngle);
-        const turretCos = TrigCache.getCos(turretAngle);
+        const turretSin = Math.sin(turretAngle);
+        const turretCos = Math.cos(turretAngle);
 
         const tankSpritePart = this._tankSpriteParts.turretSprite;
         const rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
@@ -32,8 +31,8 @@ export class TankSprite {
     public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
         this._tankSpriteParts.bottomTrackSprite.isForwardMovement = true;
-        const sin = TrigCache.getSin(hullAngle);
-        const cos = TrigCache.getCos(hullAngle);
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
 
@@ -41,8 +40,8 @@ export class TankSprite {
         TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
     }
     public updateAfterAction(point: Point, hullAngle: number, turretAngle: number) {
-        const sin = TrigCache.getSin(hullAngle);
-        const cos = TrigCache.getCos(hullAngle);
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
     }

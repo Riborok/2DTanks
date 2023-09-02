@@ -1,7 +1,6 @@
 import {TankElement} from "../elements/TankElement";
 import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
 import {ICollisionManager} from "./ICollisionManager";
-import {TrigCache} from "../../additionally/LRUCache";
 import {Point} from "../../geometry/Point";
 
 type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
@@ -87,15 +86,16 @@ export class MovementManager implements IMovementManager{
         if (!this._collisionManager.hasCollision(entity))
             this.removeSpriteAccelerationEffect(tankElement);
 
-        updateSprites.call(tankElement.sprite, entity.points[0], entity.directionAngle,
+        updateSprites.call(tankElement.sprite, entity.points[0], entity.angle,
             tankElement.model.tankParts.turret.angle);
 
         this._entityStorage.insert(entity);
     }
     private static turretUpdate(tankElement: TankElement) {
         const model = tankElement.model;
-        const hullSin = TrigCache.getSin(model.entity.directionAngle);
-        const hullCos = TrigCache.getCos(model.entity.directionAngle);
+        const angle = model.entity.angle;
+        const hullSin = Math.sin(angle);
+        const hullCos = Math.cos(angle);
 
         tankElement.sprite.rotateTurretUpdate(
             tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(model.entity.points[0], hullSin, hullCos),

@@ -1,3 +1,5 @@
+import {TURRET_WIDTH} from "../../../constants/gameConstants";
+
 export abstract class Turret {
     protected _angle: number;
     public get angle(): number { return this._angle }
@@ -5,6 +7,7 @@ export abstract class Turret {
     public incAngle(deltaAngle: number) { this._angle += deltaAngle }
     public abstract get bulletCapacity(): number;
     public abstract get mass(): number;
+    public abstract get width(): number;
     public abstract clockwiseMovement(): void;
     public abstract counterclockwiseMovement(): void;
 }
@@ -15,4 +18,5 @@ export class TurretModel0 extends Turret{
     public override get mass(): number { return 0.35 }
     public override clockwiseMovement(): void { this._angle += TurretModel0.ANGLE_SPEED }
     public override counterclockwiseMovement(): void { this._angle -= TurretModel0.ANGLE_SPEED }
+    public get width(): number { return TURRET_WIDTH[0] }
 }

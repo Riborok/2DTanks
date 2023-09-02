@@ -5,7 +5,7 @@ import {DoubleLinkedList} from "./DoubleLinkedList";
  * The class holds a cache (implemented using a Map) and a calculation function.
  * It allows storing and retrieving calculated values while keeping the cache size limited.
  */
-export class LRUCache<TKey, TValue> {
+class LRUCache<TKey, TValue> {
     private readonly _cache: Map<TKey, TValue> = new Map();
     private readonly _calcFunc: (key: TKey) => TValue;
     private readonly _maxCacheSize: number;
@@ -53,16 +53,17 @@ export class LRUCache<TKey, TValue> {
  * A utility class for caching sine and cosine values.
  * It uses the ValueCaching class to cache sine values based on angles.
  */
-export class TrigCache {
+class TrigCache {
     private constructor() {}
 
     private static readonly SIN_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.sin, 42 >> 1);
     private static readonly COS_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.cos, 42 >> 1);
+    private static readonly ATAN_CACHE: LRUCache<number, number> = new LRUCache<number, number>(Math.atan, 42 >> 1);
 
     private static readonly PI: number = Math.PI;
-    private static readonly TWO_PI: number = TrigCache.PI * 2;
-    private static readonly HALF_PI: number = TrigCache.PI / 2;
-    private static readonly THREE_HALF_PI: number = 3 * TrigCache.HALF_PI;
+    private static readonly TWO_PI: number = this.PI * 2;
+    private static readonly HALF_PI: number = this.PI / 2;
+    private static readonly THREE_HALF_PI: number = 3 * this.HALF_PI;
 
     /**
      * Gets the sine value for a given angle.
@@ -70,17 +71,17 @@ export class TrigCache {
      * @param angle The angle (in radians) for which to retrieve the sine value.
      * @returns The cached sine value or a newly calculated sine value.
      */
-    public static getSin(angle: number): number {
-        const normalizedAngle = TrigCache.normalizeAngle(angle);
+    public static sin(angle: number): number {
+        const normalizedAngle = this.roundNumber(this.normalizeAngle(angle), 10000);
 
-        if (normalizedAngle <= TrigCache.HALF_PI)
-            return TrigCache.SIN_CACHE.getValue(normalizedAngle);
-        else if (normalizedAngle <= TrigCache.PI)
-            return TrigCache.SIN_CACHE.getValue(TrigCache.PI - normalizedAngle);
-        else if (normalizedAngle <= TrigCache.THREE_HALF_PI)
-            return -TrigCache.SIN_CACHE.getValue(normalizedAngle - TrigCache.PI);
+        if (normalizedAngle <= this.HALF_PI)
+            return this.SIN_CACHE.getValue(normalizedAngle);
+        else if (normalizedAngle <= this.PI)
+            return this.SIN_CACHE.getValue(this.PI - normalizedAngle);
+        else if (normalizedAngle <= this.THREE_HALF_PI)
+            return -this.SIN_CACHE.getValue(normalizedAngle - this.PI);
         else
-            return -TrigCache.SIN_CACHE.getValue(TrigCache.TWO_PI - normalizedAngle);
+            return -this.SIN_CACHE.getValue(this.TWO_PI - normalizedAngle);
     }
 
     /**
@@ -89,23 +90,43 @@ export class TrigCache {
      * @param angle The angle (in radians) for which to retrieve the cosine value.
      * @returns The cached cosine value or a newly calculated cosine value.
      */
-    public static getCos(angle: number): number {
-        const normalizedAngle = TrigCache.normalizeAngle(angle);
+    public static cos(angle: number): number {
+        const normalizedAngle = this.roundNumber(this.normalizeAngle(angle), 10000);
 
-        if (normalizedAngle <= TrigCache.HALF_PI)
-            return TrigCache.COS_CACHE.getValue(normalizedAngle);
-        else if (normalizedAngle <= TrigCache.PI)
-            return -TrigCache.COS_CACHE.getValue(TrigCache.PI - normalizedAngle);
-        else if (normalizedAngle <= TrigCache.THREE_HALF_PI)
-            return -TrigCache.COS_CACHE.getValue(normalizedAngle - TrigCache.PI);
+        if (normalizedAngle <= this.HALF_PI)
+            return this.COS_CACHE.getValue(normalizedAngle);
+        else if (normalizedAngle <= this.PI)
+            return -this.COS_CACHE.getValue(this.PI - normalizedAngle);
+        else if (normalizedAngle <= this.THREE_HALF_PI)
+            return -this.COS_CACHE.getValue(normalizedAngle - this.PI);
         else
-            return TrigCache.COS_CACHE.getValue(TrigCache.TWO_PI - normalizedAngle);
+            return this.COS_CACHE.getValue(this.TWO_PI - normalizedAngle);
     }
 
+    /**
+     * Gets the arc tangent value for a given pair of (y, x) values.
+     * If the value is not cached, it calculates the arc tangent value and stores it in the cache.
+     * @param y The value for the y-coordinate.
+     * @param x The value for the x-coordinate.
+     * @returns The cached arc tangent value or a newly calculated arc tangent value.
+     */
+    public static atan(y: number, x: number): number {
+        if (x === 0) {
+            if (y > 0)
+                return this.HALF_PI;
+            else if (y < 0)
+                return this.THREE_HALF_PI;
+            else
+                return 0;
+        }
+        const result = this.ATAN_CACHE.getValue(this.roundNumber(y / x, 100));
+        return (x < 0) ? this.PI + result : result;
+    }
+
+    private static roundNumber(number: number, rounding: number): number {
+        return Math.round(number * rounding) / rounding;
+    }
     private static normalizeAngle(angle: number): number {
-        if (angle >= 0)
-            return angle % TrigCache.TWO_PI;
-        else
-            return (angle % TrigCache.TWO_PI) + TrigCache.TWO_PI;
+        return angle >= 0 ? angle % this.TWO_PI : (angle % this.TWO_PI) + this.TWO_PI;
     }
 }
