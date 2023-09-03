@@ -6,7 +6,7 @@ import {
     BottomSpriteAccelerationEffect,
     SpriteAccelerationEffect,
     TopSpriteAccelerationEffect
-} from "./tank parts/SpriteAccelerationEffect";
+} from "../effects/SpriteAccelerationEffect";
 
 export class TankSpriteParts {
     private readonly _hullSprite: HullSprite;

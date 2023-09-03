@@ -1,32 +1,28 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../../geometry/Point";
-import {SpritePart} from "../Sprite";
-import {PointRotator} from "../../geometry/PointRotator";
+import {Sprite} from "../Sprite";
+import {TankTireTrackManager} from "../../game/managers/TankTireTrackManager";
+import {SpriteManipulator} from "../SpriteManipulator";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
+    private _tireTrackManager: TankTireTrackManager;
     public constructor(tankSpriteParts: TankSpriteParts) {
         this._tankSpriteParts = tankSpriteParts;
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
-    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
-        const turretSin = Math.sin(turretAngle);
-        const turretCos = Math.cos(turretAngle);
+    public spawnTireTracks(canvas: Element, point: Point, hullAngle: number){
+        this._tireTrackManager = new TankTireTrackManager(canvas, this._tankSpriteParts.topTrackSprite.width,
+            this._tankSpriteParts.topTrackSprite.height);
 
-        const tankSpritePart = this._tankSpriteParts.turretSprite;
-        const rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
-        let turretDefPoint = rotatedPoint.clone();
-        TankSprite.rotateForTurretPoint(tankSpritePart, turretDefPoint,
-            hullSin, hullCos, turretSin, turretCos);
-        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
-        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
 
-        TankSprite.updateSpritePart(this._tankSpriteParts.weaponSprite, turretDefPoint, turretSin, turretCos, turretAngle);
-    }
-    public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
-        this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
-        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
-        this.updateAfterAction(point, hullAngle, turretAngle);
+        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos
+        )
+
+        this._tireTrackManager.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
     }
     public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
@@ -36,8 +32,49 @@ export class TankSprite {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
 
-        TankSprite.updateSpritePart(this._tankSpriteParts.topSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, hullDefaultPoint, sin, cos, hullAngle);
+        let position = this._tankSpriteParts.topSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
+        TankSprite.updateSpritePart(this._tankSpriteParts.topSpriteAccelerationEffect, position, sin, cos, hullAngle);
+
+        position = this._tankSpriteParts.bottomSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
+        TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, position, sin, cos, hullAngle);
+
+        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos
+        )
+
+        if (this._tireTrackManager.checkForForwardUpdate(firstTopChainPoint, firstBottomChainPoint)){
+            this._tireTrackManager.forwardUpdate(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
+        }
+    }
+    public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
+        this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
+        this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
+        this.updateAfterAction(point, hullAngle, turretAngle);
+
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
+
+        let { lastTopChainPoint, lastBottomChainPoint } = this._tireTrackManager.calcLastTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos
+        )
+
+        if (this._tireTrackManager.checkForBackwardUpdate(lastTopChainPoint, lastBottomChainPoint)){
+            this._tireTrackManager.backwardUpdate(lastTopChainPoint, lastBottomChainPoint, hullAngle, sin, cos);
+        }
+    }
+    updateRotateAction(point: Point, hullAngle: number, turretAngle: number){
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
+
+        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos
+        )
+
+        if (this._tireTrackManager.checkForRotateUpdate(hullAngle)){
+            this._tireTrackManager.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
+        }
+
+        this.updateAfterAction(point, hullAngle, turretAngle);
     }
     public updateAfterAction(point: Point, hullAngle: number, turretAngle: number) {
         const sin = Math.sin(hullAngle);
@@ -45,72 +82,36 @@ export class TankSprite {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
     }
+    public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
+        const turretSin = Math.sin(turretAngle);
+        const turretCos = Math.cos(turretAngle);
+
+        const tankSpritePart = this._tankSpriteParts.turretSprite;
+        const rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
+        let turretDefPoint = rotatedPoint.clone();
+        SpriteManipulator.rotateForTurretPoint(tankSpritePart, turretDefPoint,
+            hullSin, hullCos, turretSin, turretCos);
+        SpriteManipulator.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
+        SpriteManipulator.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
+
+        let position = this._tankSpriteParts.weaponSprite.calcPosition(turretDefPoint, turretSin, turretCos);
+        TankSprite.updateSpritePart(this._tankSpriteParts.weaponSprite, position, turretSin, turretCos, turretAngle);
+    }
     private updateSprite(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number,
                          hullDefaultPoint: Point) {
-        TankSprite.updateSpritePart(this._tankSpriteParts.topTrackSprite, point, sin, cos, hullAngle)
+        let position = this._tankSpriteParts.topTrackSprite.calcPosition(point);
+        TankSprite.updateSpritePart(this._tankSpriteParts.topTrackSprite, position, sin, cos, hullAngle);
 
-        TankSprite.updateSpritePart(this._tankSpriteParts.hullSprite, point, sin, cos, hullAngle);
+        position = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
+        TankSprite.updateSpritePart(this._tankSpriteParts.hullSprite, position, sin, cos, hullAngle);
 
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, hullDefaultPoint, sin, cos, hullAngle)
+        position = this._tankSpriteParts.bottomTrackSprite.calcPosition(hullDefaultPoint, sin, cos);
+        TankSprite.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, position, sin, cos, hullAngle)
 
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
     }
-    private static updateSpritePart(tankSpritePart: SpritePart, point: Point, sin: number, cos: number, angle: number) {
-        const rotatedPoint = tankSpritePart.calcPosition(point, sin, cos);
-        TankSprite.rotateForPoint(tankSpritePart, rotatedPoint, sin, cos);
-        TankSprite.setPosAndAngle(tankSpritePart, rotatedPoint, angle);
-    }
-    private static setPosAndAngle(tankSpritePart: SpritePart, point: Point, angle: number) {
-        tankSpritePart.setPosition(point);
-        tankSpritePart.setAngle(angle);
-    }
-    /**
-     * Rotates a point associated with a tank parts sprite part using the provided sine and cosine values.
-     * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param tankSpritePart The tank parts sprite part to which the point belongs.
-     * @param point The point to be rotated. Its coordinates will be updated.
-     * @param sin The sine value of the rotation angle.
-     * @param cos The cosine value of the rotation angle.
-     */
-    private static rotateForPoint(tankSpritePart: SpritePart, point: Point, sin: number, cos: number) {
-        const halfWidth = tankSpritePart.width >> 1;
-        const halfHeight = tankSpritePart.height >> 1;
-
-        // Rotate the figure by the reverse angle to align it to 0 degrees
-        // Utilizes the properties of sine and cosine: sin(-a) = -sin(a) and cos(-a) = cos(a)
-        PointRotator.rotatePointAroundTarget(
-            point,
-            new Point(point.x + halfWidth * cos - halfHeight * sin,
-                point.y + halfHeight * cos + halfWidth * sin),
-            -sin, cos
-        );
-    }
-    /**
-     * Rotates a point associated with a turret sprite part relative to a tank parts sprite's hull.
-     * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param tankSpritePart The tank parts sprite part (hull) to which the point belongs.
-     * @param point The point to be rotated. Its coordinates will be updated.
-     * @param hullSin The sine value of the hull's rotation angle.
-     * @param hullCos The cosine value of the hull's rotation angle.
-     * @param turretSin The sine value of the turret's rotation angle relative to the hull.
-     * @param turretCos The cosine value of the turret's rotation angle relative to the hull.
-     */
-    private static rotateForTurretPoint(tankSpritePart: SpritePart, point: Point,
-                                        hullSin: number, hullCos: number,
-                                        turretSin: number, turretCos: number){
-        const halfWidth = tankSpritePart.width >> 1;
-        const halfHeight = tankSpritePart.height >> 1;
-
-        // Rotate the turret by the angle to align top left point to its actual position
-        // For optimization, we replace the formulas as follows:
-        // - sin(turretAngle - hullAngle) = sin(turretAngle) * cos(hullAngle) - cos(turretAngle) * sin(hullAngle)
-        // - cos(turretAngle - hullAngle) = cos(hullAngle) * cos(turretAngle) + sin(hullAngle) * sin(turretAngle)
-        PointRotator.rotatePointAroundTarget(
-            point,
-            new Point(point.x + halfWidth * hullCos - halfHeight * hullSin,
-                point.y + halfHeight * hullCos + halfWidth * hullSin),
-            turretSin * hullCos - turretCos * hullSin,
-            hullCos * turretCos + hullSin * turretSin
-        );
+    private static updateSpritePart(tankSpritePart: Sprite, position: Point, sin: number, cos: number, angle: number) {
+        SpriteManipulator.rotateForPoint(tankSpritePart, position, sin, cos);
+        SpriteManipulator.setPosAndAngle(tankSpritePart, position, angle);
     }
 }

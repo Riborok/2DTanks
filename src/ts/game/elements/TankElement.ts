@@ -6,7 +6,7 @@ import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {
     BottomSpriteAccelerationEffect,
     TopSpriteAccelerationEffect
-} from "../../sprite/tank/tank parts/SpriteAccelerationEffect";
+} from "../../sprite/effects/SpriteAccelerationEffect";
 import {RectangularEntity} from "../../model/entitiy/IEntity";
 import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 import {IDTracker} from "../id/IDTracker";
@@ -58,6 +58,8 @@ export class TankElement implements IIdentifiable {
         const entity = this._model.entity;
 
         entityStorage.insert(entity);
+
+        this._sprite.spawnTireTracks(canvas, entity.points[0], entity.angle);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.tankParts.turret.angle);
     }
 }

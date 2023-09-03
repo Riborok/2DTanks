@@ -1,8 +1,8 @@
-import {SpritePart} from "../../Sprite";
+import {ITankSpritePart, Sprite} from "../../Sprite";
 import {Point} from "../../../geometry/Point";
 import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../../../constants/gameConstants";
 
-export class WeaponSprite extends SpritePart {
+export class WeaponSprite extends Sprite implements ITankSpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(num: number, indentX: number, indentY: number) {
@@ -20,7 +20,7 @@ export class WeaponSprite extends SpritePart {
      * @param cos The cosine value of the rotation angle.
      * @returns The calculated initial position of the weapon sprite.
      */
-    public override calcPosition(point: Point, sin: number, cos: number): Point {
+    public calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(
             point.x + this._indentX * cos - this._indentY * sin,
             point.y + this._indentY * cos + this._indentX * sin

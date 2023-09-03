@@ -1,7 +1,7 @@
-import {SpritePart} from "../../Sprite";
-import {Point} from "../../../geometry/Point";
+import {ITankSpritePart, Sprite} from "../Sprite";
+import {Point} from "../../geometry/Point";
 
-export abstract class SpriteAccelerationEffect extends SpritePart {
+export abstract class SpriteAccelerationEffect extends Sprite implements ITankSpritePart {
     private static readonly THRESHOLD: number = 7;
     private static readonly LAST_STATE: number = 19;
     private static readonly WORKING_STATE: number = 10;

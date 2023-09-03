@@ -1,9 +1,10 @@
-import {SpritePart} from "../../Sprite";
+import {ITankSpritePart, Sprite} from "../../Sprite";
 import {Point} from "../../../geometry/Point";
 import {TRACK_INDENT} from "../../../constants/gameConstants";
 import {MotionData} from "../../../additionally/type";
 
-abstract class TrackSprite extends SpritePart {
+export abstract class TrackSprite extends Sprite implements ITankSpritePart {
+    abstract calcPosition(point: Point, sin: number, cos: number): Point;
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
     private static readonly MIN_THRESHOLD_COEFF: number = 17.5;
     private static readonly MAX_THRESHOLD_COEFF: number = 0.5;
@@ -86,7 +87,7 @@ export class TopTrackSprite extends TrackSprite  {
      * @param point The reference point, which is the starting point of the top track sprite, for position calculation.
      * @returns A copy of the provided reference point, representing the initial position of the top track sprite.
      */
-    public override calcPosition(point: Point): Point { return point.clone(); }
+    public calcPosition(point: Point): Point { return point.clone(); }
 }
 export class BottomTrackSprite extends TrackSprite  {
     private readonly _deltaHeight: number;
@@ -103,7 +104,7 @@ export class BottomTrackSprite extends TrackSprite  {
      * @param cos The cosine value of the rotation angle.
      * @returns The calculated initial position of the bottom track sprite.
      */
-    public override calcPosition(point: Point, sin: number, cos: number): Point {
+    public calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(
             point.x - this._deltaHeight * sin,
             point.y + this._deltaHeight * cos
