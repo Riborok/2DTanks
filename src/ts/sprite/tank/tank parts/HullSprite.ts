@@ -1,8 +1,8 @@
-import {SpritePart} from "../../Sprite";
+import {ITankSpritePart, Sprite} from "../../Sprite";
 import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 
-export class HullSprite extends SpritePart {
+export class HullSprite extends Sprite implements ITankSpritePart {
     private readonly _accelerationEffectIndentX: number;
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
@@ -19,7 +19,7 @@ export class HullSprite extends SpritePart {
      * @param cos The cosine value of the rotation angle.
      * @returns The calculated initial position of the hull sprite.
      */
-    public override calcPosition(point: Point, sin: number, cos: number): Point {
+    public calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(
             point.x - TRACK_INDENT * sin,
             point.y + TRACK_INDENT * cos

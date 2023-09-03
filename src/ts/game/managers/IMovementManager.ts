@@ -68,10 +68,10 @@ export class MovementManager implements IMovementManager{
         MovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateAfterAction);
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateRotateAction);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.updateAfterAction);
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.updateRotateAction);
     }
     public forwardMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction);

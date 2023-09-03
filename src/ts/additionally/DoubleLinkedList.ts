@@ -1,4 +1,4 @@
-class DoubleLinkedListNode<T> {
+export class DoubleLinkedListNode<T> {
     private readonly _value: T;
     private _prev: DoubleLinkedListNode<T> | null = null;
     private _next: DoubleLinkedListNode<T> | null = null;
@@ -84,6 +84,16 @@ export class DoubleLinkedList<T> implements Iterable<T> {
             this._tail = this._tail.next;
             this._tail.prev = null;
         }
+    }
+    private clearRecursion(node: DoubleLinkedListNode<T>){
+        if (node !== null) {
+            node.prev = null;
+            this.clearRecursion(node.next);
+            node.next = null;
+        }
+    }
+    public clear(){
+        this.clearRecursion(this._head);
     }
     public moveToHead(value: T) {
         let currentNode = this._head;

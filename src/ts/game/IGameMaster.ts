@@ -11,6 +11,7 @@ import {ObstacleCreator} from "./creators/IObstacleCreator";
 import {findIndex} from "./id/IIdentifiable";
 import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
 import {Point} from "../geometry/Point";
+import {VanishingTireTracksManager} from "./managers/VanishingTireTrackManager";
 
 export interface IGameMaster {
     startGameLoop(): void;
@@ -93,6 +94,7 @@ export class GameMaster implements IGameMaster {
         if (!this._isGameLoopActive)
             return;
 
+        VanishingTireTracksManager.reduceOpacity();
         this.update();
 
         requestAnimationFrame(() => this.gameLoop());
