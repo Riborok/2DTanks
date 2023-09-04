@@ -4,45 +4,47 @@ import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../entitiy/IEntity";
 import {Model} from "../Model";
-import {Point} from "../../geometry/Point";
-import {DEGREE_TO_RADIAN} from "../../constants/gameConstants";
+import {Point, Vector} from "../../geometry/Point";
+import {EPSILON_RADIAN} from "../../constants/gameConstants";
 import {MotionData} from "../../additionally/type";
+import {PointRotator} from "../../geometry/PointRotator";
+import {clampAngle} from "../../geometry/additionalFunc";
 
 export class TankModel extends Model {
     private readonly _tankParts: TankParts;
 
-    private _bulletQuantity: number = 0;
     private _lastTimeShot: number;
-    private _bulletNum: number;
-    private _isBraking: boolean;
+    private _bulletQuantity: number = 0;
+    private _bulletNum: number = 0;
+    private _isBraking: boolean = false;
+    private _isDrift: boolean = false;
     public constructor(tankParts: TankParts, entity: IEntity) {
         super(entity);
         this._tankParts = tankParts;
         this._lastTimeShot = Date.now();
-        this._isBraking = false;
-
-        this._bulletNum = 0;
     }
-    public isIdle(): boolean { return  this._entity.velocity.length === 0 }
     public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
     public get tankParts(): TankParts { return this._tankParts }
+    public get isDrift(): boolean { return this._isDrift }
     public shot(): BulletModel | null {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
             return null;
 
-        const center = this._entity.calcCenter();
-        const muzzleLength = this._tankParts.turret.width / 2 + this._tankParts.weapon.barrelLength;
-        const xStart = center.x + muzzleLength * Math.cos(this._tankParts.turret.angle);
-        const yStart = center.y + muzzleLength * Math.sin(this._tankParts.turret.angle);
-
-        const bulletModel = BulletModelCreator.create(this._bulletNum, new Point(xStart, yStart),
+        const bulletModel = BulletModelCreator.create(this._bulletNum, this.calcBulletExit(),
             this._tankParts.turret.angle);
         bulletModel.bullet.launchFromWeapon(this._tankParts.weapon);
         this._lastTimeShot = dateNow;
         this._bulletQuantity--;
 
         return bulletModel;
+    }
+    private calcBulletExit(): Point {
+        const center = this._entity.calcCenter();
+        const muzzleLength = this._tankParts.turret.width / 2 + this._tankParts.weapon.barrelLength;
+        const x = center.x + muzzleLength * Math.cos(this._tankParts.turret.angle);
+        const y = center.y + muzzleLength * Math.sin(this._tankParts.turret.angle);
+        return new Point(x, y);
     }
     public incBulletQuantity(quantity: number) {
         this._bulletQuantity = Math.min(this._bulletQuantity + quantity, this._tankParts.turret.bulletCapacity);
@@ -81,52 +83,106 @@ export class TankModel extends Model {
         this._tankParts.turret.incAngle(entity.angularVelocity);
     }
     private updateAngularVelocity() {
-        if (!this.isIdle()) {
-            const entity = this._entity;
-            const velocity = entity.velocity;
+        if (this.isIdle())
+            return;
 
-            if (this._isBraking) {
-                const speedFactor = 1 + velocity.length / (this._tankParts.track.forwardData.finishSpeed * 200);
-                const massFactor = 1 + entity.mass / 2000;
-                entity.angularVelocity *= massFactor * speedFactor;
-            }
-            else {
-                const speedFactor = 1 - velocity.length / (this._tankParts.track.forwardData.finishSpeed * 20);
-                const massFactor = 1 - entity.mass / 200;
-                entity.angularVelocity *= massFactor * speedFactor;
-                velocity.x *= massFactor;
-                velocity.y *= massFactor;
-            }
-        }
+        const entity = this._entity;
+        const velocity = entity.velocity;
+
+        if (this._isDrift || this._isBraking)
+            this.adjustAngularVelocityForDriftAndBrake(entity, velocity);
+
+        if (!this._isBraking)
+            this.adjustAngularVelocityForAcceleration(entity, velocity);
+    }
+    private adjustAngularVelocityForDriftAndBrake(entity: IEntity, velocity: Vector) {
+        const coeff = this.calculateDriftAndBrakeCoefficient();
+        const speedFactor = 1 + velocity.length / (this._tankParts.track.forwardData.finishSpeed * coeff);
+        const massFactor = 1 + entity.mass / (coeff * 10);
+        entity.angularVelocity *= massFactor * speedFactor;
+    }
+    private calculateDriftAndBrakeCoefficient(): number {
+        let coeff: number = 100;
+        if (this._isDrift)
+            coeff -= 25;
+        if (this._isBraking)
+            coeff -= 5;
+        return coeff;
+    }
+    private adjustAngularVelocityForAcceleration(entity: IEntity, velocity: Vector) {
+        const coeff: number = 20;
+        const speedFactor = 1 - velocity.length / (this._tankParts.track.forwardData.finishSpeed * coeff);
+        const massFactor = 1 - entity.mass / (coeff * 10);
+        entity.angularVelocity *= massFactor * speedFactor;
+        velocity.scale(massFactor);
     }
     public forwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         this.movement(this._tankParts.track.forwardData, this._entity.angle,
             resistanceCoeff, airResistanceCoeff);
     }
     public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
-        this.movement(this._tankParts.track.backwardData, this._entity.angle - Math.PI,
+        this.movement(this._tankParts.track.backwardData, clampAngle((this._entity.angle + Math.PI)),
             resistanceCoeff, airResistanceCoeff);
     }
+    private static readonly velocityRecoveryCoefficient: number = 0.01;
     private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
         const speed = entity.velocity.length;
 
         const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
-        const deltaAngle = Math.abs(angle - velocityAngle);
+        const deltaAngle = Math.abs(clampAngle(angle - velocityAngle));
+        let turn = clampAngle(angle - velocityAngle, 0);
 
-        let acceleration: number;
-        if (speed < data.finishSpeed && deltaAngle < DEGREE_TO_RADIAN) {
-            this._isBraking = false;
-            acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, speed);
+        this.calcBrakingStatus(turn);
+
+        if (this.isStraightMovement(deltaAngle))
+            this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, speed, velocityAngle);
+        else
+            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, deltaAngle, velocityAngle);
+
+        if (!this.isReverseMovement(deltaAngle)) {
+            if (this._isBraking) { turn = this.adjustTurnForBraking(turn); }
+            this.applyTurn(this.adjustTurnForRecovery(turn));
         }
-        else {
-            this._isBraking = true;
-            acceleration = this.calcAcceleration(data.force * Math.cos(deltaAngle),
-                resistanceCoeff, airResistanceCoeff, speed);
-        }
-        entity.velocity.x += acceleration * Math.cos(velocityAngle);
-        entity.velocity.y += acceleration * Math.sin(velocityAngle);
         EntityManipulator.movement(entity);
+    }
+    private calcBrakingStatus(turn: number) {
+        this._isBraking = (turn > Math.PI / 2) && (turn < Math.PI * 3/2);
+    }
+    private isStraightMovement(deltaAngle: number): boolean {
+        return deltaAngle <= EPSILON_RADIAN;
+    }
+    private isReverseMovement(deltaAngle: number): boolean {
+        return Math.abs(deltaAngle - Math.PI) <= EPSILON_RADIAN;
+    }
+    private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number,
+                                   speed: number, velocityAngle: number) {
+        this._isDrift = false;
+        if (speed < data.finishSpeed) {
+            const acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, speed);
+            this._entity.velocity.addToCoordinates(acceleration * Math.cos(velocityAngle),
+                acceleration * Math.sin(velocityAngle));
+        }
+    }
+    private handleDriftMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number,
+                                speed: number, deltaAngle: number, velocityAngle: number) {
+        this._isDrift = true;
+        if (this._isBraking || speed < data.finishSpeed) {
+            const acceleration = this.calcAcceleration(data.force * Math.cos(deltaAngle),
+                resistanceCoeff, airResistanceCoeff, speed);
+            this.applyVelocityChange(acceleration, velocityAngle);
+        }
+    }
+    private adjustTurnForBraking(turn: number): number {
+        return clampAngle(turn - Math.PI / 2, 0);
+    }
+    private adjustTurnForRecovery(turn: number): number {
+        const oppositeTurn = turn - 2 * Math.PI;
+        return (turn > Math.abs(oppositeTurn)) ? oppositeTurn : turn;
+    }
+    private applyTurn(turn: number) {
+        turn *= TankModel.velocityRecoveryCoefficient;
+        PointRotator.rotatePoint(this._entity.velocity, Math.sin(turn), Math.cos(turn));
     }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         this._isBraking = false;
