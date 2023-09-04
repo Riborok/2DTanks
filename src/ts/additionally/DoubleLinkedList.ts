@@ -1,4 +1,4 @@
-export class DoubleLinkedListNode<T> {
+class DoubleLinkedListNode<T> {
     private readonly _value: T;
     private _prev: DoubleLinkedListNode<T> | null = null;
     private _next: DoubleLinkedListNode<T> | null = null;
@@ -9,6 +9,16 @@ export class DoubleLinkedListNode<T> {
     public set prev(listNode: DoubleLinkedListNode<T> | null) { this._prev = listNode }
     public constructor(value: T) {
         this._value = value;
+    }
+    public remove() {
+        if (this._prev !== null)
+            this._prev.next = this._next;
+
+        if (this._next !== null)
+            this._next.prev = this._prev;
+
+        this._prev = null;
+        this._next = null;
     }
 }
 
@@ -32,6 +42,15 @@ export class DoubleLinkedList<T> implements Iterable<T> {
                     return { done: true, value: null }
             }
         };
+    }
+    public remove(node: DoubleLinkedListNode<T>) {
+        if (node === this._head)
+            this._head = node.prev;
+
+        if (node === this._tail)
+            this._tail = node.next;
+
+        node.remove();
     }
     public addToTail(value: T) {
         const newNode = new DoubleLinkedListNode(value);
@@ -91,9 +110,6 @@ export class DoubleLinkedList<T> implements Iterable<T> {
             this.clearRecursion(node.next);
             node.next = null;
         }
-    }
-    public clear(){
-        this.clearRecursion(this._head);
     }
     public moveToHead(value: T) {
         let currentNode = this._head;

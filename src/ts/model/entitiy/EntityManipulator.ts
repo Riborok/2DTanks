@@ -4,10 +4,8 @@ import {IEntity} from "./IEntity";
 export class EntityManipulator {
     private constructor() { }
     public static movement(entity: IEntity) {
-        for (const point of entity.points) {
-            point.x += entity.velocity.x;
-            point.y += entity.velocity.y;
-        }
+        for (const point of entity.points)
+            point.addToCoordinates(entity.velocity.x, entity.velocity.y);
     }
     public static angularMovement(entity: IEntity) {
         EntityManipulator.rotateEntity(entity, entity.angularVelocity);

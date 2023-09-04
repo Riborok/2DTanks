@@ -1,6 +1,6 @@
 export class Point {
-    private _x: number;
-    private _y: number;
+    protected _x: number;
+    protected _y: number;
     public constructor(x: number, y: number) {
         this._x = x;
         this._y = y;
@@ -10,17 +10,29 @@ export class Point {
     public get y(): number { return this._y }
     public set y(value: number) { this._y = value }
     public clone() : Point { return new Point(this._x, this._y) }
+    public addToCoordinates(dx: number, dy: number) {
+        this._x += dx;
+        this._y += dy;
+    }
 }
 
 export class Vector extends Point{
     public get length(): number { return Math.sqrt(this.x * this.x + this.y * this.y) }
     public normalize() {
         const length = this.length;
-        this.x /= length;
-        this.y /= length;
+        this._x /= length;
+        this._y /= length;
     }
     public get angle(): number { return Math.atan2(this.y, this.x) }
     public clone(): Vector { return new Vector(this.x, this.y) }
+    public addVector(vector: Vector) {
+        this._x += vector._x;
+        this._y += vector._y;
+    }
+    public scale(scalar: number) {
+        this._x *= scalar;
+        this._y *= scalar;
+    }
 }
 
 export class Axis extends Vector{
@@ -30,5 +42,5 @@ export class Axis extends Vector{
         axis.normalize();
         return axis;
     }
-    public clone(): Axis { return new Axis(this.x, this.y) }
+    public clone(): Axis { return new Axis(this._x, this._y) }
 }

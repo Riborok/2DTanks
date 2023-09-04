@@ -40,7 +40,7 @@ export class CollisionDetector {
         return {collisionPoint: CollisionDetector.findClosestVertex(entity1, entity2, collisionAxis),
             overlap: smallestOverlap};
     }
-    private static readonly EPSILON: number = 2;
+    private static readonly EPSILON: number = 6;
     private static findClosestVertex(entity1: IEntity, entity2: IEntity, axis: Axis): Point {
         let minDistance = Number.MAX_VALUE;
         let closestVertex = new Point(0, 0);

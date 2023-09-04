@@ -63,9 +63,9 @@ export class GameMaster implements IGameMaster {
 
         // Additional walls
         this._wallElements.push(ObstacleCreator.createWall(
-            new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
+            new Point(width >> 1, height >> 1), 0.79, 2, 0, false));
         this._wallElements.push(ObstacleCreator.createWall(
-            new Point(width >> 2, height >> 2), 1, 2, 1, true));
+            new Point(width >> 2, height >> 2), 1, 2, 1, false));
 
         for (const wallElement of this._wallElements)
             wallElement.spawn(this._field.canvas, this._entityCollisionSystem);
@@ -101,16 +101,29 @@ export class GameMaster implements IGameMaster {
     }
     private update() {
         this.updateTanks();
+        this.updateWalls();
+    }
+    private updateWalls() {
+        // let currNode = this._wallToProcess.tail;
+        // while (currNode !== null) {
+        //     if (currNode.value.model.isIdle()) {
+        //         const prevNode = currNode;
+        //         currNode = currNode.next;
+        //         this._wallToProcess.remove(prevNode);
+        //     }
+        //     else {
+        //
+        //         currNode = currNode.next;
+        //     }
+        // }
     }
     private updateTanks() {
         const mask = this._keyHandler.keysMask;
         for (const tankElement of this._tankElements) {
             const control = tankElement.control;
 
-            let action, oppositeAction: boolean;
-
-            action = (mask & control.turretClockwiseMask) !== 0;
-            oppositeAction = (mask & control.turretCounterClockwiseMask) !== 0;
+            let action = (mask & control.turretClockwiseMask) !== 0;
+            let oppositeAction = (mask & control.turretCounterClockwiseMask) !== 0;
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
                     this._movementManager.turretClockwiseMovement(tankElement);

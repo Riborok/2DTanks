@@ -18,9 +18,9 @@ export class TankSprite {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
 
-        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+        const { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos
-        )
+        );
 
         this._tireTrackManager.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
     }
@@ -38,47 +38,48 @@ export class TankSprite {
         position = this._tankSpriteParts.bottomSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
         TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, position, sin, cos, hullAngle);
 
-        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+        const { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos
-        )
+        );
 
-        if (this._tireTrackManager.checkForForwardUpdate(firstTopChainPoint, firstBottomChainPoint)){
+        if (this._tireTrackManager.checkForForwardUpdate(firstTopChainPoint, firstBottomChainPoint))
             this._tireTrackManager.forwardUpdate(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
-        }
     }
     public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
         this._tankSpriteParts.bottomTrackSprite.isForwardMovement = false;
-        this.updateAfterAction(point, hullAngle, turretAngle);
 
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
 
-        let { lastTopChainPoint, lastBottomChainPoint } = this._tireTrackManager.calcLastTopBottomChainPoints(
-            this._tankSpriteParts, point, sin, cos
-        )
+        this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
 
-        if (this._tireTrackManager.checkForBackwardUpdate(lastTopChainPoint, lastBottomChainPoint)){
+        const { lastTopChainPoint, lastBottomChainPoint } = this._tireTrackManager.calcLastTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos
+        );
+
+        if (this._tireTrackManager.checkForBackwardUpdate(lastTopChainPoint, lastBottomChainPoint))
             this._tireTrackManager.backwardUpdate(lastTopChainPoint, lastBottomChainPoint, hullAngle, sin, cos);
-        }
     }
-    updateRotateAction(point: Point, hullAngle: number, turretAngle: number){
+    public updateRotateAction(point: Point, hullAngle: number, turretAngle: number){
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
 
-        let { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
+        const { firstTopChainPoint, firstBottomChainPoint } = this._tireTrackManager.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos
-        )
+        );
 
-        if (this._tireTrackManager.checkForRotateUpdate(hullAngle)){
+        if (this._tireTrackManager.checkForRotateUpdate(hullAngle))
             this._tireTrackManager.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
-        }
 
-        this.updateAfterAction(point, hullAngle, turretAngle);
+        this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
     }
     public updateAfterAction(point: Point, hullAngle: number, turretAngle: number) {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
+        this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
+    }
+    private defaultUpdate(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number) {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
     }
@@ -88,7 +89,7 @@ export class TankSprite {
 
         const tankSpritePart = this._tankSpriteParts.turretSprite;
         const rotatedPoint = tankSpritePart.calcPosition(hullDefaultPoint, hullSin, hullCos);
-        let turretDefPoint = rotatedPoint.clone();
+        const turretDefPoint = rotatedPoint.clone();
         SpriteManipulator.rotateForTurretPoint(tankSpritePart, turretDefPoint,
             hullSin, hullCos, turretSin, turretCos);
         SpriteManipulator.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
