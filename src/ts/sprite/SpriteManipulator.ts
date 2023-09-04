@@ -7,14 +7,14 @@ export class SpriteManipulator{
     /**
      * Rotates a point associated with a tank parts sprite part using the provided sine and cosine values.
      * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param tankSpritePart The tank parts sprite part to which the point belongs.
+     * @param sprite The tank parts sprite part to which the point belongs.
      * @param point The point to be rotated. Its coordinates will be updated.
      * @param sin The sine value of the rotation angle.
      * @param cos The cosine value of the rotation angle.
      */
-    public static rotateForPoint(tankSpritePart: Sprite, point: Point, sin: number, cos: number) {
-        const halfWidth = tankSpritePart.width >> 1;
-        const halfHeight = tankSpritePart.height >> 1;
+    public static rotateForPoint(sprite: Sprite, point: Point, sin: number, cos: number) {
+        const halfWidth = sprite.width >> 1;
+        const halfHeight = sprite.height >> 1;
 
         // Rotate the figure by the reverse angle to align it to 0 degrees
         // Utilizes the properties of sine and cosine: sin(-a) = -sin(a) and cos(-a) = cos(a)

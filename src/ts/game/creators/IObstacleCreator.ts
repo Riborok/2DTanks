@@ -46,7 +46,7 @@ export class ObstacleCreator {
     }
     public static createWall(point: Point, angle: number, materialNum: number,
                              shapeNum: number, hasMass: boolean = false) : WallElement {
-        const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : 0;
+        const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : Infinity;
         const model = new WallModel(new RectangularEntity(point,
             WALL_WIDTH[shapeNum], WALL_HEIGHT[shapeNum], angle, mass, IDTracker.wallId));
 

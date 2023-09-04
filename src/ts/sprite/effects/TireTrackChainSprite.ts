@@ -3,7 +3,7 @@ import {Sprite} from "../Sprite";
 export class TireTrackChainSprite extends Sprite{
     private _opacity: number = 1;
     private static readonly REDUCING_OPACITY_NUMBER: number = 0.01;
-    get opacity() { return this._opacity }
+    public get opacity() { return this._opacity }
     public constructor(width: number, height: number, type: number) {
         super(width, height);
         this._sprite.src = `src/img/tanks/Effects/Tire Tracks/Tire_Track_Chain_${type}.png`;

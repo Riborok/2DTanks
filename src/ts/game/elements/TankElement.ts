@@ -10,11 +10,11 @@ import {
 import {RectangularEntity} from "../../model/entitiy/IEntity";
 import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 import {IDTracker} from "../id/IDTracker";
-import {IIdentifiable} from "../id/IIdentifiable";
 import {Control} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
+import {IElement} from "./IElement";
 
-export class TankElement implements IIdentifiable {
+export class TankElement implements IElement {
     private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
     private readonly _id: number;
@@ -59,7 +59,6 @@ export class TankElement implements IIdentifiable {
 
         entityStorage.insert(entity);
 
-        this._sprite.spawnTireTracks(canvas, entity.points[0], entity.angle);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.tankParts.turret.angle);
     }
 }

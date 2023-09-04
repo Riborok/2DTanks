@@ -1,36 +1,9 @@
-import {TankElement} from "../elements/TankElement";
-import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
-import {ICollisionManager} from "./ICollisionManager";
-import {Point} from "../../geometry/Point";
+import {TankElement} from "../../elements/TankElement";
+import {Point} from "../../../geometry/Point";
+import {Action, ITankMovementManager, MovementManager} from "./MovementManager";
 
-type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
-
-export interface IMovementManager {
-    hullCounterclockwiseMovement(tankElement: TankElement): void;
-    hullClockwiseMovement(tankElement: TankElement): void;
-    forwardMovement(tankElement: TankElement): void;
-    backwardMovement(tankElement: TankElement): void;
-    turretCounterclockwiseMovement(tankElement: TankElement): void;
-    turretClockwiseMovement(tankElement: TankElement): void;
-    residualMovement(tankElement: TankElement): void;
-    removeSpriteAccelerationEffect(tankElement: TankElement): void;
-    residualAngularMovement(tankElement: TankElement): void;
-
-    set resistanceCoeff(resistanceCoeff: number);
-    set airResistanceCoeff(airResistanceCoefficient: number);
-}
-export class MovementManager implements IMovementManager{
-    private readonly _entityStorage: IEntityStorage;
-    private readonly _collisionManager: ICollisionManager;
-    private _resistanceCoeff: number = 0;
-    private _airResistanceCoeff: number = 0
-    public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
-    public set airResistanceCoeff(airResistanceCoefficient: number) { this._airResistanceCoeff = airResistanceCoefficient }
-    public constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
-        this._entityStorage = entityStorage;
-        this._collisionManager = collisionManager;
-    }
+export class TankMovementManager extends MovementManager implements ITankMovementManager{
     public removeSpriteAccelerationEffect(tankElement: TankElement) {
         const tankSpriteParts = tankElement.sprite.tankSpriteParts;
         tankSpriteParts.bottomSpriteAccelerationEffect.removeAcceleration();
@@ -61,11 +34,11 @@ export class MovementManager implements IMovementManager{
     }
     public turretCounterclockwiseMovement(tankElement: TankElement) {
         tankElement.model.turretCounterclockwiseMovement();
-        MovementManager.turretUpdate(tankElement);
+        TankMovementManager.turretUpdate(tankElement);
     }
     public turretClockwiseMovement(tankElement: TankElement) {
         tankElement.model.turretClockwiseMovement();
-        MovementManager.turretUpdate(tankElement);
+        TankMovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateRotateAction);
