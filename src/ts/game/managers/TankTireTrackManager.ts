@@ -86,7 +86,6 @@ export class TankTireTrackManager{
         return {lastTopChainPoint, lastBottomChainPoint};
     }
     public checkForRotateUpdate(hullAngle: number){
-        console.log(Math.abs(hullAngle - this._delayedHullAngle));
         return Math.abs(hullAngle - this._delayedHullAngle) >= TankTireTrackManager.UPDATE_ANGLE_DIFFERENCE;
     }
     private vanishFullTrack(){
@@ -108,7 +107,7 @@ export class TankTireTrackManager{
             currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
             this._listOfTirePairs.addToTail(currTirePair);
 
-            if (i === TankTireTrackManager.AMOUNT_OF_CHAINS){
+            if (i === TankTireTrackManager.AMOUNT_OF_CHAINS - 1){
                 this._topLastChainPoint = topPoint.clone();
                 this._bottomLastChainPoint = bottomPoint.clone();
             }
