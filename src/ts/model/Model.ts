@@ -9,6 +9,7 @@ export abstract class Model {
     }
     public get entity(): IEntity { return this._entity }
     public isIdle(): boolean { return  this._entity.velocity.length === 0 }
+    public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
         const acceleration = this.calcAcceleration(0, resistanceCoeff, airResistanceCoeff, entity.velocity.length);

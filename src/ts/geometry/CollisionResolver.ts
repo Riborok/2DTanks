@@ -1,36 +1,33 @@
 import {IEntity} from "../model/entitiy/IEntity";
 import {CollisionInfo} from "../additionally/type";
-import {Vector} from "./Point";
+import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 
 export class CollisionResolver {
     private constructor() {}
-    private static readonly coefficientOfRestitution: number = 0.65;
+    private static readonly coefficientOfRestitution: number = 0.6;
     public static resolveCollision(impartingEntity: IEntity, collisionInfo: CollisionInfo) {
-        const center = impartingEntity.calcCenter();
-        const collisionNormal = new Vector(
-            collisionInfo.collisionResult.collisionPoint.x - center.x,
-            collisionInfo.collisionResult.collisionPoint.y - center.y
-        );
-        collisionNormal.normalize();
+        const collisionNormal = this.calcCollisionNormal(impartingEntity.calcCenter(),
+            collisionInfo.collisionResult.collisionPoint);
+
         this.separateEntities(impartingEntity, collisionInfo, collisionNormal);
-        this.updateVelocity(impartingEntity, collisionInfo, collisionNormal);
+        this.updateVelocity(impartingEntity, collisionInfo.entity, collisionNormal);
     }
-    private static updateVelocity(impartingEntity: IEntity, collisionInfo: CollisionInfo, collisionNormal: Vector) {
-        const relativeVelocity = VectorUtils.subtract(impartingEntity.velocity, collisionInfo.entity.velocity);
+    private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionNormal: Vector) {
+        const relativeVelocity = VectorUtils.subtract(impartingEntity.velocity, receivingEntity.velocity);
 
         const impulseMagnitude = VectorUtils.dotProduct(relativeVelocity, collisionNormal) * 2 /
-            (impartingEntity.mass + collisionInfo.entity.mass) * this.coefficientOfRestitution;
+            (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.coefficientOfRestitution;
 
-        const impulse1 = VectorUtils.scale(collisionNormal, -impulseMagnitude * impartingEntity.mass);
-        const impulse2 = VectorUtils.scale(collisionNormal, impulseMagnitude * collisionInfo.entity.mass);
+        let newImpulse = VectorUtils.scale(collisionNormal, -impulseMagnitude / impartingEntity.mass);
+        impartingEntity.velocity.addVector(newImpulse);
 
-        impartingEntity.velocity.addVector(impulse1);
-        if (collisionInfo.entity.mass !== 0)
-            collisionInfo.entity.velocity.addVector(impulse2);
+        newImpulse = VectorUtils.scale(collisionNormal, impulseMagnitude / receivingEntity.mass);
+        receivingEntity.velocity.addVector(newImpulse);
     }
     private static separateEntities(impartingEntity: IEntity, collisionInfo: CollisionInfo, collisionNormal: Vector) {
-        const totalMass = impartingEntity.mass + collisionInfo.entity.mass;
+        const isReceivingEntityImmovable = this.isImmovable(collisionInfo.entity);
+        const totalMass = impartingEntity.mass + (isReceivingEntityImmovable ? 0 : collisionInfo.entity.mass);
 
         let factor = (1 + impartingEntity.mass / totalMass);
         let correctionX = -collisionNormal.x * collisionInfo.collisionResult.overlap * factor;
@@ -38,12 +35,21 @@ export class CollisionResolver {
         for (const point of impartingEntity.points)
             point.addToCoordinates(correctionX, correctionY);
 
-        if (collisionInfo.entity.mass !== 0) {
+        if (!isReceivingEntityImmovable) {
             factor = (1 + collisionInfo.entity.mass / totalMass);
             correctionX = collisionNormal.x * collisionInfo.collisionResult.overlap * factor;
             correctionY = collisionNormal.y * collisionInfo.collisionResult.overlap * factor;
             for (const point of collisionInfo.entity.points)
                 point.addToCoordinates(correctionX, correctionY);
         }
+    }
+    private static isImmovable(entity: IEntity): boolean { return entity.mass === Infinity }
+    private static calcCollisionNormal(center: Point, collisionPoint: Point): Vector {
+        const collisionNormal = new Vector(
+            collisionPoint.x - center.x,
+            collisionPoint.y - center.y
+        );
+        collisionNormal.normalize();
+        return collisionNormal;
     }
 }

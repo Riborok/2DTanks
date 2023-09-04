@@ -23,7 +23,6 @@ export class TankModel extends Model {
         this._tankParts = tankParts;
         this._lastTimeShot = Date.now();
     }
-    public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
     public get tankParts(): TankParts { return this._tankParts }
     public get isDrift(): boolean { return this._isDrift }
     public shot(): BulletModel | null {
