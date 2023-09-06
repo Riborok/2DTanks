@@ -1,23 +1,18 @@
 import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../../geometry/CollisionDetector";
 import {Point} from "../../geometry/Point";
-import {CollisionInfo} from "../../additionally/type";
-
-export interface IEntityStorage {
-    insert(entity: IEntity): void;
-    remove(entity: IEntity): void;
-}
+import {CollisionInfo, IStorage} from "../../additionally/type";
 
 export interface ICollisionDetection {
     getCollisions(entity: IEntity): CollisionInfo[];
 }
 
-export interface IEntityCollisionSystem extends IEntityStorage, ICollisionDetection {
+export interface IEntityCollisionSystem extends IStorage<IEntity>, ICollisionDetection {
 
 }
 
 export class Quadtree implements IEntityCollisionSystem{
-    private readonly _root: QuadtreeNode;
+    private _root: QuadtreeNode;
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
         this._root = new QuadtreeNode({ xStart, yStart, xLast, yLast }, null);
     }
@@ -29,6 +24,9 @@ export class Quadtree implements IEntityCollisionSystem{
     }
     public remove(entity: IEntity) {
         this._root.remove(entity);
+    }
+    public clear() {
+        this._root = null;
     }
 }
 

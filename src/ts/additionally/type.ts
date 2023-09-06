@@ -1,6 +1,12 @@
 import {IEntity} from "../model/entitiy/IEntity";
 import {Point} from "../geometry/Point";
 
+export interface IStorage<T> {
+    insert(t: T): void;
+    remove(t: T): void;
+    clear(): void;
+}
+
 export type MotionData = {
     finishSpeed: number;
     force: number;

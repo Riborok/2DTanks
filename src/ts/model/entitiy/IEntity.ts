@@ -1,8 +1,6 @@
 import {Point, Vector} from "../../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
 import {IIdentifiable} from "../../game/id/IIdentifiable";
-import {calcDistance} from "../../geometry/additionalFunc";
-
 
 /**
  * Interface representing an entity with points.
@@ -19,6 +17,7 @@ export interface IEntity extends IIdentifiable{
     set angularVelocity(value: number);
     calcCenter(): Point;
     get radiusLength(): number;
+    get momentOfInertia(): number;
 }
 
 /**
@@ -30,9 +29,13 @@ export class RectangularEntity implements IEntity {
     private readonly _mass: number;
     private readonly _id: number;
     private _angularVelocity: number = 0;
-    private _velocity: Vector = new Vector(0, 0);
+    private readonly _velocity: Vector = new Vector(0, 0);
     private readonly _radiusLength: number;
+    private readonly _momentOfInertia: number;
     public constructor(point: Point, width: number, height: number, angle: number, mass: number, id: number) {
+        const sumOfSquares = width * width + height * height;
+        this._radiusLength = (1 / 2) * Math.sqrt(sumOfSquares);
+        this._momentOfInertia = (1 / 12) * mass * sumOfSquares;
         this._mass = mass;
         this._id = id;
         this._points = [point.clone(),
@@ -41,16 +44,16 @@ export class RectangularEntity implements IEntity {
             new Point(point.x, point.y + height)];
         if (angle !== 0)
             EntityManipulator.rotateEntity(this, angle);
-        this._radiusLength = calcDistance(this.calcCenter(), this._points[0]);
     }
     public get velocity(): Vector { return this._velocity }
     public get angle(): number { return Math.atan2(this._points[1].y - this._points[0].y, this._points[1].x - this._points[0].x) }
     public get points(): Point[] { return this._points }
     public get mass(): number { return this._mass }
     public get angularVelocity(): number { return this._angularVelocity }
+    public set angularVelocity(value: number) { this._angularVelocity = value }
     public get id(): number { return this._id }
     public get radiusLength(): number { return this._radiusLength }
-    public set angularVelocity(value: number) { this._angularVelocity = value }
+    public get momentOfInertia(): number { return this._momentOfInertia }
     public calcCenter(): Point {
         return new Point((this._points[0].x + this._points[2].x) / 2, (this._points[0].y + this._points[2].y) / 2);
     }

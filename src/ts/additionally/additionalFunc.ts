@@ -32,29 +32,3 @@ export function binarySearch<T>(arr: T[], target: T, comparator: (a: T, b: T) =>
     }
     return -1;
 }
-
-/**
- * Generic binary search with a comparator.
- * @param arr Sorted array of elements.
- * @param targetValue Target value to search for in the array elements.
- * @param field Name of the field in the array elements for comparison.
- * @param comparator Function to compare two values.
- * @returns Index of the found element, or -1 if the value is not found.
- */
-export function binarySearchByField<T, K extends keyof T, V>(arr: T[], targetValue: V, field: K, comparator: (a: T[K], b: V) => number): number {
-    let left = 0;
-    let right = arr.length - 1;
-
-    while (left <= right) {
-        const mid = (left + right) >> 1;
-        const compareResult = comparator(arr[mid][field], targetValue);
-
-        if (compareResult > 0)
-            right = mid - 1;
-        else if (compareResult < 0)
-            left = mid + 1;
-        else
-            return mid;
-    }
-    return -1;
-}
