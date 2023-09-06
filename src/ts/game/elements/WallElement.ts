@@ -1,7 +1,8 @@
 import {WallModel} from "../../model/obstacle/WallModel";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
-import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
 import {IElement} from "./IElement";
+import {IStorage} from "../../additionally/type";
+import {IEntity} from "../../model/entitiy/IEntity";
 
 export class WallElement implements IElement {
     private readonly _model: WallModel;
@@ -15,7 +16,7 @@ export class WallElement implements IElement {
     public get model(): WallModel { return this._model }
     public get sprite(): WallSprite { return this._sprite }
     public get id(): number { return this._id }
-    public spawn(canvas: Element, entityStorage: IEntityStorage) {
+    public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
         canvas.appendChild(this._sprite.sprite);
 
         entityStorage.insert(this._model.entity);

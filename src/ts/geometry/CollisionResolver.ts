@@ -5,10 +5,10 @@ import {VectorUtils} from "./VectorUtils";
 
 export class CollisionResolver {
     private constructor() {}
-    private static readonly coefficientOfRestitution: number = 0.6;
+    private static readonly coefficientOfRestitution: number = 0.55;
     public static resolveCollision(impartingEntity: IEntity, collisionInfo: CollisionInfo) {
-        const collisionNormal = this.calcCollisionNormal(impartingEntity.calcCenter(),
-            collisionInfo.collisionResult.collisionPoint);
+        const collisionNormal = this.calcCollisionNormal(collisionInfo.collisionResult.collisionPoint,
+            impartingEntity.calcCenter());
 
         this.separateEntities(impartingEntity, collisionInfo, collisionNormal);
         this.updateVelocity(impartingEntity, collisionInfo.entity, collisionNormal);
@@ -44,11 +44,8 @@ export class CollisionResolver {
         }
     }
     private static isImmovable(entity: IEntity): boolean { return entity.mass === Infinity }
-    private static calcCollisionNormal(center: Point, collisionPoint: Point): Vector {
-        const collisionNormal = new Vector(
-            collisionPoint.x - center.x,
-            collisionPoint.y - center.y
-        );
+    private static calcCollisionNormal(collisionPoint: Point, center: Point): Vector {
+        const collisionNormal = VectorUtils.subtract(collisionPoint, center);
         collisionNormal.normalize();
         return collisionNormal;
     }

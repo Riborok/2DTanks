@@ -21,7 +21,7 @@ export class WallHandlingManagers extends HandlingManagers<WallElement, WallMove
             else {
                 const prevNode = currNode;
                 currNode = currNode.next;
-                this._wallToProcess.remove(prevNode);
+                this._wallToProcess.removeNode(prevNode);
             }
         }
     }

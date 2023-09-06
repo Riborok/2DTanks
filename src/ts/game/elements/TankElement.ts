@@ -1,16 +1,15 @@
 import {TankModel} from "../../model/tank/TankModel";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../model/tank/TankPartsCreator";
-import {IEntityStorage} from "../../model/entitiy/IEntityCollisionSystem";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {
     BottomSpriteAccelerationEffect,
     TopSpriteAccelerationEffect
 } from "../../sprite/effects/SpriteAccelerationEffect";
-import {RectangularEntity} from "../../model/entitiy/IEntity";
+import {IEntity, RectangularEntity} from "../../model/entitiy/IEntity";
 import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 import {IDTracker} from "../id/IDTracker";
-import {Control} from "../../additionally/type";
+import {Control, IStorage} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
 
@@ -40,7 +39,7 @@ export class TankElement implements IElement {
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum,
             track.forwardData, track.backwardData));
     }
-    public spawn(canvas: Element, entityStorage: IEntityStorage) {
+    public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
         const hullSprite = tankSpriteParts.hullSprite;
         canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);

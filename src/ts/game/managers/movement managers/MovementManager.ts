@@ -1,22 +1,23 @@
 import {TankElement} from "../../elements/TankElement";
-import {IEntityStorage} from "../../../model/entitiy/IEntityCollisionSystem";
 import {ICollisionManager} from "../ICollisionManager";
 import {WallElement} from "../../elements/WallElement";
+import {IStorage} from "../../../additionally/type";
+import {IEntity} from "../../../model/entitiy/IEntity";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
 
 export abstract class MovementManager {
-    protected readonly _entityStorage: IEntityStorage;
+    protected readonly _entityStorage: IStorage<IEntity>;
     protected readonly _collisionManager: ICollisionManager;
     protected _resistanceCoeff: number = 0;
     protected _airResistanceCoeff: number = 0;
     public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
     public set airResistanceCoeff(airResistanceCoefficient: number) { this._airResistanceCoeff = airResistanceCoefficient }
-    public constructor(entityStorage: IEntityStorage, collisionManager: ICollisionManager) {
+    public constructor(entityStorage: IStorage<IEntity>, collisionManager: ICollisionManager) {
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
     }
-    get entityStorage(): IEntityStorage { return this._entityStorage }
+    get entityStorage(): IStorage<IEntity> { return this._entityStorage }
     get collisionManager(): ICollisionManager { return this._collisionManager }
 }
 interface setCoefficients {

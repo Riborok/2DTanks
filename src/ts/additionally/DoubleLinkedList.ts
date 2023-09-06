@@ -1,3 +1,5 @@
+import {IStorage} from "./type";
+
 class DoubleLinkedListNode<T> {
     private readonly _value: T;
     private _prev: DoubleLinkedListNode<T> | null = null;
@@ -22,7 +24,14 @@ class DoubleLinkedListNode<T> {
     }
 }
 
-export class DoubleLinkedList<T> implements Iterable<T> {
+/**
+ * Represents a double-linked list where the left side represents the tail of the list,
+ * and the right side represents the head of the list.
+ *
+ * To traverse from the tail to the head, follow the 'next' references.
+ * To traverse from the head to the tail, follow the 'prev' references.
+ */
+export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
     private _head: DoubleLinkedListNode<T> | null = null;
     private _tail: DoubleLinkedListNode<T> | null = null;
     public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
@@ -43,7 +52,20 @@ export class DoubleLinkedList<T> implements Iterable<T> {
             }
         };
     }
-    public remove(node: DoubleLinkedListNode<T>) {
+    public insert(value: T) {
+        this.addToTail(value);
+    }
+    public remove(value: T) {
+        let currentNode = this._tail;
+        while (currentNode !== null) {
+            if (currentNode.value === value) {
+                this.removeNode(currentNode);
+                return;
+            }
+            currentNode = currentNode.next;
+        }
+    }
+    public removeNode(node: DoubleLinkedListNode<T>) {
         if (node === this._head)
             this._head = node.prev;
 
