@@ -29,7 +29,7 @@ export class CollisionManager implements ICollisionManager {
     }
     private processCollision(entity: IEntity, collisionInfo: CollisionInfo) {
         if (this.isWallCollision(collisionInfo))
-            this._wallsForProcessing.addToHead(collisionInfo.entity.id);
+            this._wallsForProcessing.addToTail(collisionInfo.entity.id);
     }
 
     private isWallCollision(collisionInfo: CollisionInfo): boolean {

@@ -24,8 +24,8 @@ export class TireTracksManager {
             if (node.topTire.opacity <= 0) { counter++; }
         }
         for (; counter > 0; counter--) {
-            this.removeTireTrackPair(this._vanishingListOfTirePairs.head.value);
-            this._vanishingListOfTirePairs.removeFromHead();
+            this.removeTireTrackPair(this._vanishingListOfTirePairs.tail.value);
+            this._vanishingListOfTirePairs.removeFromTail();
         }
     }
 }

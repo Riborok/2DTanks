@@ -9,12 +9,12 @@ export class WallHandlingManagers extends HandlingManagers<WallElement, WallMove
     private addToProcess(): void {
         const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;
         for (const wallID of wallsForProcessing)
-            this._wallToProcess.addToHead(this._elements[findIndex(this._elements, wallID)]);
+            this._wallToProcess.addToTail(this._elements[findIndex(this._elements, wallID)]);
         wallsForProcessing.clear();
     }
     public handle(): void {
         this.addToProcess();
-        let currNode = this._wallToProcess.tail;
+        let currNode = this._wallToProcess.head;
         while (currNode !== null) {
             if (this._movementManager.hasAnyResidualMovement(currNode.value))
                 currNode = currNode.next;
