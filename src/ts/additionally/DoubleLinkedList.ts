@@ -1,5 +1,3 @@
-import {IStorage} from "./type";
-
 class DoubleLinkedListNode<T> {
     private readonly _value: T;
     private _prev: DoubleLinkedListNode<T> | null = null;
@@ -24,29 +22,51 @@ class DoubleLinkedListNode<T> {
     }
 }
 
-export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
+export interface IDoubleLinkedList<T> extends Iterable<T> {
+    get head(): DoubleLinkedListNode<T> | null;
+    get tail(): DoubleLinkedListNode<T> | null;
+    remove(value: T): void;
+    removeNode(node: DoubleLinkedListNode<T>): void;
+    addToHead(value: T): void;
+    addToTail(value: T): void;
+    removeFromTail(): void;
+    removeFromHead(): void;
+    moveToTail(value: T): void;
+    moveToHead(value: T): void;
+    clear(): void;
+    isEmpty(): boolean;
+    merge(otherList: IDoubleLinkedList<T>): void
+}
+
+export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
     private _tail: DoubleLinkedListNode<T> | null = null;
     private _head: DoubleLinkedListNode<T> | null = null;
     public get head(): DoubleLinkedListNode<T> | null { return this._head }
     public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
-    [Symbol.iterator](): Iterator<T> {
+    *[Symbol.iterator](): Iterator<T> {
         let currentNode = this._head;
 
-        return {
-            next: (): IteratorResult<T> => {
-                if (currentNode !== null) {
-                    const value = currentNode.value;
-                    currentNode = currentNode.next;
-
-                    return { done: false, value: value }
-                }
-                else
-                    return { done: true, value: null }
-            }
-        };
+        while (currentNode !== null) {
+            yield currentNode.value;
+            currentNode = currentNode.next;
+        }
     }
-    public insert(value: T) {
-        this.addToTail(value);
+    public isEmpty(): boolean { return this._head === null }
+    public merge(otherList: IDoubleLinkedList<T>): void {
+        if (otherList.isEmpty())
+            return;
+
+        if (this.isEmpty()) {
+            this._head = otherList.head;
+            this._tail = otherList.tail;
+        }
+        else {
+            this._tail.next = otherList.head;
+            otherList.head.prev = this._tail;
+            this._tail = otherList.tail;
+        }
+
+        otherList.clear();
     }
     public remove(value: T) {
         let currentNode = this._head;
@@ -94,12 +114,8 @@ export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
         }
     }
     public removeFromTail() {
-        if (this._tail === null)
-            return;
-
         if (this._tail === this._head) {
-            this._tail = null;
-            this._head = null;
+            this.clear();
         }
         else {
             this._tail = this._tail.prev;
@@ -107,12 +123,8 @@ export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
         }
     }
     public removeFromHead() {
-        if (this._head === null)
-            return;
-
         if (this._tail === this._head) {
-            this._tail = null;
-            this._head = null;
+            this.clear();
         }
         else {
             this._head = this._head.next;

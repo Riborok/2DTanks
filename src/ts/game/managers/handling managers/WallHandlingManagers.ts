@@ -2,15 +2,13 @@ import {HandlingManagers, IWallHandlingManagers} from "./HandlingManagers";
 import {WallElement} from "../../elements/WallElement";
 import {WallMovementManager} from "../movement managers/WallMovementManager";
 import {DoubleLinkedList} from "../../../additionally/DoubleLinkedList";
-import {findIndex} from "../../id/IIdentifiable";
 
 export class WallHandlingManagers extends HandlingManagers<WallElement, WallMovementManager> implements IWallHandlingManagers {
     private _wallToProcess: DoubleLinkedList<WallElement> = new DoubleLinkedList<WallElement>;
     private addToProcess(): void {
         const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;
         for (const wallID of wallsForProcessing)
-            this._wallToProcess.addToTail(this._elements[findIndex(this._elements, wallID)]);
-        wallsForProcessing.clear();
+            this._wallToProcess.addToTail(this._elements.get(wallID));
     }
     public handle(): void {
         this.addToProcess();

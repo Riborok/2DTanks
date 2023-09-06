@@ -9,11 +9,12 @@ import {KeyHandler} from "./KeyHandler";
 import {ObstacleCreator} from "./creators/IObstacleCreator";
 import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
 import {Point} from "../geometry/Point";
-import {TireTracksManager} from "./managers/TireTracksManager";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
 import {ITankHandlingManagers, IWallHandlingManagers} from "./managers/handling managers/HandlingManagers";
 import {TankHandlingManagers} from "./managers/handling managers/TankHandlingManagers";
 import {WallHandlingManagers} from "./managers/handling managers/WallHandlingManagers";
+import {ILinkedList, LinkedList} from "../additionally/ILinkedList";
+import {WallElement} from "./elements/WallElement";
 
 export interface IGameMaster {
     startGameLoop(): void;
@@ -24,7 +25,7 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private _isGameLoopActive: boolean = false;
-    private _backgroundSprites: BackgroundSprite[] = [];
+    private _backgroundSprites: ILinkedList<BackgroundSprite> = new LinkedList<BackgroundSprite>;
 
     private readonly _field: Field;
     private readonly _tankHandlingManagers: ITankHandlingManagers;
@@ -38,13 +39,10 @@ export class GameMaster implements IGameMaster {
         const collisionManager = new CollisionManager(entityCollisionSystem);
 
         this._tankHandlingManagers = new TankHandlingManagers(
-            [],
             new TankMovementManager(entityCollisionSystem, collisionManager),
-            this._field,
-            new TireTracksManager()
+            this._field
         );
         this._wallHandlingManagers = new WallHandlingManagers(
-            [],
             new WallMovementManager(entityCollisionSystem, collisionManager),
             this._field
         );
@@ -64,8 +62,7 @@ export class GameMaster implements IGameMaster {
         this._wallHandlingManagers.movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
     }
     private createBackgroundSprites(material: number) {
-        this._backgroundSprites = this._backgroundSprites.concat(DecorCreator.fullFillBackground(
-            material, this._field.width, this._field.height));
+        DecorCreator.fullFillBackground(material, this._field.width, this._field.height, this._backgroundSprites);
 
         for (const backgroundSprite of this._backgroundSprites)
             this._field.canvas.appendChild(backgroundSprite.sprite);
@@ -73,17 +70,15 @@ export class GameMaster implements IGameMaster {
     private createWalls(material: number) {
         const width = this._field.width;
         const height = this._field.height;
-
-        const wallElements = ObstacleCreator.createWallsAroundPerimeter(
-            material, width, height);
+        this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, width, height));
 
         // Additional walls
-        wallElements.push(ObstacleCreator.createWall(
+        const list = new LinkedList<WallElement>;
+        list.addToHead(ObstacleCreator.createWall(
             new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
-        wallElements.push(ObstacleCreator.createWall(
+        list.addToHead(ObstacleCreator.createWall(
             new Point(width >> 2, height >> 2), 1, 2, 1, true));
-
-        this._wallHandlingManagers.add(wallElements);
+        this._wallHandlingManagers.add(list);
     }
 
     public addTankElements(...tankElements: TankElement[]) {

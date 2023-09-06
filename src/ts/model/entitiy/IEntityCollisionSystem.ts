@@ -1,10 +1,17 @@
 import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../../geometry/CollisionDetector";
 import {Point} from "../../geometry/Point";
-import {CollisionInfo, IStorage} from "../../additionally/type";
+import {CollisionInfo} from "../../additionally/type";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/DoubleLinkedList";
+
+export interface IStorage<T> {
+    insert(t: T): void;
+    remove(t: T): void;
+    clear(): void;
+}
 
 export interface ICollisionDetection {
-    getCollisions(entity: IEntity): CollisionInfo[];
+    getCollisions(entity: IEntity): Iterable<CollisionInfo>;
 }
 
 export interface IEntityCollisionSystem extends IStorage<IEntity>, ICollisionDetection {
@@ -19,7 +26,7 @@ export class Quadtree implements IEntityCollisionSystem{
     public insert(entity: IEntity) {
         this._root.insert(entity);
     }
-    public getCollisions(entity: IEntity): CollisionInfo[] {
+    public getCollisions(entity: IEntity): Iterable<CollisionInfo> {
         return this._root.getCollisions(entity);
     }
     public remove(entity: IEntity) {
@@ -96,19 +103,19 @@ class QuadtreeNode {
                 this._parent.mergeCheck();
         }
     }
-    public getCollisions(entity: IEntity): CollisionInfo[] {
-        const collisionsInfo: CollisionInfo[] = [];
+    public getCollisions(entity: IEntity): IDoubleLinkedList<CollisionInfo> {
+        const collisionsInfo = new DoubleLinkedList<CollisionInfo>;
 
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
-                    collisionsInfo.push(...child.getCollisions(entity));
+                    collisionsInfo.merge(child.getCollisions(entity));
         }
         else {
             for (const anotherEntity of this._entities) {
                 const collisionResult = CollisionDetector.getCollisionResult(entity, anotherEntity);
                 if (collisionResult)
-                    collisionsInfo.push({ entity: anotherEntity, collisionResult: collisionResult });
+                    collisionsInfo.addToTail({ entity: anotherEntity, collisionResult: collisionResult });
             }
         }
 

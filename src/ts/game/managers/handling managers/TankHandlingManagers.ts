@@ -1,19 +1,14 @@
 import {HandlingManagers, ITankHandlingManagers} from "./HandlingManagers";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
-import {ITireTracksManager} from "../TireTracksManager";
-import {Field} from "../../Field";
+import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 
 export class TankHandlingManagers extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManagers {
-    private readonly _tireTracksManager: ITireTracksManager;
-    public constructor(elements: TankElement[], movementManager: TankMovementManager, field: Field, tireTracksManager: ITireTracksManager) {
-        super(elements, movementManager, field);
-        this._tireTracksManager = tireTracksManager;
-    }
+    private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
     public handle(mask: number): void {
         this._tireTracksManager.reduceOpacity();
 
-        for (const tankElement of this._elements) {
+        for (const tankElement of this._elements.values()) {
             const control = tankElement.control;
 
             let action = (mask & control.turretClockwiseMask) !== 0;
@@ -52,7 +47,7 @@ export class TankHandlingManagers extends HandlingManagers<TankElement, TankMove
                 this._movementManager.residualAngularMovement(tankElement);
         }
     }
-    public add(elements: TankElement[]) {
+    public add(elements: Iterable<TankElement>) {
         super.add(elements);
         for (const element of elements) {
             const entity = element.model.entity;
