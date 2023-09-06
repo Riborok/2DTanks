@@ -24,20 +24,13 @@ class DoubleLinkedListNode<T> {
     }
 }
 
-/**
- * Represents a double-linked list where the left side represents the tail of the list,
- * and the right side represents the head of the list.
- *
- * To traverse from the tail to the head, follow the 'next' references.
- * To traverse from the head to the tail, follow the 'prev' references.
- */
 export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
-    private _head: DoubleLinkedListNode<T> | null = null;
     private _tail: DoubleLinkedListNode<T> | null = null;
-    public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
+    private _head: DoubleLinkedListNode<T> | null = null;
     public get head(): DoubleLinkedListNode<T> | null { return this._head }
+    public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
     [Symbol.iterator](): Iterator<T> {
-        let currentNode = this._tail;
+        let currentNode = this._head;
 
         return {
             next: (): IteratorResult<T> => {
@@ -56,7 +49,7 @@ export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
         this.addToTail(value);
     }
     public remove(value: T) {
-        let currentNode = this._tail;
+        let currentNode = this._head;
         while (currentNode !== null) {
             if (currentNode.value === value) {
                 this.removeNode(currentNode);
@@ -66,64 +59,87 @@ export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
         }
     }
     public removeNode(node: DoubleLinkedListNode<T>) {
-        if (node === this._head)
-            this._head = node.prev;
-
         if (node === this._tail)
-            this._tail = node.next;
+            this._tail = node.prev;
+
+        if (node === this._head)
+            this._head = node.next;
 
         node.remove();
-    }
-    public addToTail(value: T) {
-        const newNode = new DoubleLinkedListNode(value);
-
-        if (this._tail === null) {
-            this._head = newNode;
-            this._tail = newNode;
-        }
-        else {
-            newNode.next = this._tail;
-            this._tail.prev = newNode;
-            this._tail = newNode;
-        }
     }
     public addToHead(value: T) {
         const newNode = new DoubleLinkedListNode(value);
 
         if (this._head === null) {
-            this._head = newNode;
             this._tail = newNode;
+            this._head = newNode;
         }
         else {
-            newNode.prev = this._head;
-            this._head.next = newNode;
+            newNode.next = this._head;
+            this._head.prev = newNode;
             this._head = newNode;
         }
     }
-    public removeFromHead() {
-        if (this._head === null)
-            return;
+    public addToTail(value: T) {
+        const newNode = new DoubleLinkedListNode(value);
 
-        if (this._head === this._tail) {
-            this._head = null;
-            this._tail = null;
+        if (this._tail === null) {
+            this._tail = newNode;
+            this._head = newNode;
         }
         else {
-            this._head = this._head.prev;
-            this._head.next = null;
+            newNode.prev = this._tail;
+            this._tail.next = newNode;
+            this._tail = newNode;
         }
     }
     public removeFromTail() {
         if (this._tail === null)
             return;
 
-        if (this._head === this._tail) {
-            this._head = null;
+        if (this._tail === this._head) {
             this._tail = null;
+            this._head = null;
         }
         else {
-            this._tail = this._tail.next;
-            this._tail.prev = null;
+            this._tail = this._tail.prev;
+            this._tail.next = null;
+        }
+    }
+    public removeFromHead() {
+        if (this._head === null)
+            return;
+
+        if (this._tail === this._head) {
+            this._tail = null;
+            this._head = null;
+        }
+        else {
+            this._head = this._head.next;
+            this._head.prev = null;
+        }
+    }
+    public moveToTail(value: T) {
+        let currentNode = this._tail;
+        while (currentNode !== null) {
+            if (currentNode.value === value) {
+                if (currentNode !== this._tail) {
+                    const prevNode = currentNode.prev;
+                    const nextNode = currentNode.next;
+
+                    if (prevNode !== null)
+                        prevNode.next = nextNode;
+                    if (nextNode !== null)
+                        nextNode.prev = prevNode;
+
+                    currentNode.next = null;
+                    currentNode.prev = this._tail;
+                    this._tail.next = currentNode;
+                    this._tail = currentNode;
+                }
+                return;
+            }
+            currentNode = currentNode.prev;
         }
     }
     public moveToHead(value: T) {
@@ -133,22 +149,23 @@ export class DoubleLinkedList<T> implements Iterable<T>, IStorage<T> {
                 if (currentNode !== this._head) {
                     const prevNode = currentNode.prev;
                     const nextNode = currentNode.next;
+
                     if (prevNode !== null)
                         prevNode.next = nextNode;
-                    nextNode.prev = prevNode;
+                    if (nextNode !== null)
+                        nextNode.prev = prevNode;
 
-                    currentNode.next = null;
-                    currentNode.prev = this._head;
-                    this._head.next = currentNode;
+                    currentNode.next = this._head;
+                    currentNode.prev = null;
+                    this._head.prev = currentNode;
                     this._head = currentNode;
                 }
                 return;
             }
-            currentNode = currentNode.prev;
+            currentNode = currentNode.next;
         }
     }
     public clear() {
-        this._head = null;
-        this._tail = null;
+        this._tail = this._head = null;
     }
 }
