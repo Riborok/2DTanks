@@ -3,6 +3,7 @@ import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {PointUtils} from "./PointUtils";
 import {CollisionResult} from "../additionally/type";
+import {DoubleLinkedList, IDoubleLinkedList} from "../additionally/DoubleLinkedList";
 
 /**
  * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).
@@ -17,7 +18,8 @@ export class CollisionDetector {
      * @returns `true` if the two entities intersect, `false` otherwise.
      */
     public static getCollisionResult(entity1: IEntity, entity2: IEntity): CollisionResult | null {
-        const axes = CollisionDetector.getAxes(entity1).concat(CollisionDetector.getAxes(entity2));
+        const axes = CollisionDetector.getAxes(entity1);
+        axes.merge(CollisionDetector.getAxes(entity2));
 
         let smallestOverlap = Number.MAX_VALUE;
         let collisionAxis: Axis;
@@ -62,13 +64,13 @@ export class CollisionDetector {
 
         return closestVertex;
     }
-    private static getAxes(entity: IEntity): Axis[] {
-        const axes: Axis[] = [];
+    private static getAxes(entity: IEntity): IDoubleLinkedList<Axis> {
+        const axes = new DoubleLinkedList<Axis>;
         const lastIndex = entity.points.length - 1;
 
         for (let i = 0; i < lastIndex; i++)
-            axes.push(Axis.create(entity.points[i], entity.points[i + 1]));
-        axes.push(Axis.create(entity.points[lastIndex], entity.points[0]));
+            axes.addToTail(Axis.create(entity.points[i], entity.points[i + 1]));
+        axes.addToTail(Axis.create(entity.points[lastIndex], entity.points[0]));
 
         return axes;
     }

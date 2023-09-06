@@ -9,9 +9,10 @@ import {
 import {IEntity, RectangularEntity} from "../../model/entitiy/IEntity";
 import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 import {IDTracker} from "../id/IDTracker";
-import {Control, IStorage} from "../../additionally/type";
+import {Control} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
+import {IStorage} from "../../model/entitiy/IEntityCollisionSystem";
 
 export class TankElement implements IElement {
     private readonly _model: TankModel;
