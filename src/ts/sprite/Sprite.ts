@@ -22,7 +22,7 @@ export abstract class Sprite {
     }
 }
 
-export interface ITankSpritePart{
+export interface ISpritePart {
     /**
      * Calculates the initial position of the sprite part based on a reference point,
      * while taking into account the rotation angle represented by sine and cosine values.

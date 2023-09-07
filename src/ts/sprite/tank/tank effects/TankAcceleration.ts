@@ -1,6 +1,6 @@
-import {Point} from "../../geometry/Point";
-import {SpriteManipulator} from "../SpriteManipulator";
-import {SpriteAcceleration} from "../effects/SpriteAcceleration";
+import {Point} from "../../../geometry/Point";
+import {SpriteManipulator} from "../../SpriteManipulator";
+import {SpriteAcceleration} from "../../effects/SpriteAcceleration";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;

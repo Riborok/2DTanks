@@ -5,14 +5,14 @@ import {Action, ITankMovementManager, MovementManager} from "./MovementManager";
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 export class TankMovementManager extends MovementManager implements ITankMovementManager{
     public residualMovement(tankElement: TankElement) {
-        const tankSpriteParts = tankElement.sprite.tankSpriteParts;
+        const sprite = tankElement.sprite;
         if (tankElement.model.isIdle()) {
-            tankSpriteParts.bottomTrackSprite.stopped();
-            tankSpriteParts.topTrackSprite.stopped();
+            sprite.tankTrackEffect.stopped();
+            sprite.tankTrackEffect.stopped();
         }
         else {
-            tankSpriteParts.bottomTrackSprite.setResidualMovement();
-            tankSpriteParts.topTrackSprite.setResidualMovement();
+            sprite.tankTrackEffect.setResidualMovement();
+            sprite.tankTrackEffect.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
                 tankElement.sprite.preUpdateAction

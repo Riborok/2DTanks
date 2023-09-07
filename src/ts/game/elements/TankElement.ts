@@ -33,8 +33,8 @@ export class TankElement implements IElement {
         this._id = rectangularEntity.id;
 
         const track = tankParts.track;
-        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum,
-            track.forwardData, track.backwardData));
+        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum),
+            track.forwardData, track.backwardData);
     }
     public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;

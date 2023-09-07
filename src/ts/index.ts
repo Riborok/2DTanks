@@ -20,7 +20,7 @@ const control1: Control = {
     turretCounterClockwiseMask: KeyHandler.Q_MASK
 }
 const tank1 = new TankElement(new Point(300, 300), 0, 0,
-    0, 3, 0, 0, control1);
+    0, 0, 0, 0, control1);
 
 const control2: Control = {
     forwardMask: KeyHandler.UP_MASK,
