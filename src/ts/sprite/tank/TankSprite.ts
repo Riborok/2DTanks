@@ -19,11 +19,35 @@ export class TankSprite {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
 
-        const { firstTopChainPoint, firstBottomChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
+        const { topFirstChainPoint, bottomFirstChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos
         );
 
-        this._tankTireTrack.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
+        this._tankTireTrack.makeFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
+    }
+    private updateTireTrack(point: Point, hullAngle: number, sin: number, cos: number){
+        const { topFirstChainPoint, bottomFirstChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos);
+        const { topLastChainPoint, bottomLastChainPoint } = this._tankTireTrack.calcLastTopBottomChainPoints(
+            this._tankSpriteParts, point, sin, cos);
+
+        const { isUpdate, prevPoint, currPoint } =
+            this._tankTireTrack.checkForUpdate(topFirstChainPoint, bottomFirstChainPoint, topLastChainPoint, bottomLastChainPoint)
+        if (isUpdate) {
+            this._tankTireTrack.updateAllChainPoints(topFirstChainPoint, bottomFirstChainPoint, topLastChainPoint, bottomLastChainPoint);
+            const direction = this._tankTireTrack.detectMovementDirection(prevPoint, currPoint, hullAngle);
+            switch (direction){
+                case 1:
+                    this._tankTireTrack.forwardUpdate(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
+                    break;
+                case 0:
+                    this._tankTireTrack.makeFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
+                    break;
+                case -1:
+                    this._tankTireTrack.backwardUpdate(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
+                    break;
+            }
+        }
     }
     public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.topTrackSprite.isForwardMovement = true;
@@ -39,12 +63,7 @@ export class TankSprite {
         position = this._tankSpriteParts.bottomSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
         TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, position, sin, cos, hullAngle);
 
-        const { firstTopChainPoint, firstBottomChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
-            this._tankSpriteParts, point, sin, cos
-        );
-
-        if (this._tankTireTrack.checkForForwardUpdate(firstTopChainPoint, firstBottomChainPoint))
-            this._tankTireTrack.forwardUpdate(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
+        this.updateTireTrack(point, hullAngle, sin, cos);
     }
     public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankSpriteParts.topTrackSprite.isForwardMovement = false;
@@ -55,23 +74,12 @@ export class TankSprite {
 
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
 
-        const { lastTopChainPoint, lastBottomChainPoint } = this._tankTireTrack.calcLastTopBottomChainPoints(
-            this._tankSpriteParts, point, sin, cos
-        );
-
-        if (this._tankTireTrack.checkForBackwardUpdate(lastTopChainPoint, lastBottomChainPoint))
-            this._tankTireTrack.backwardUpdate(lastTopChainPoint, lastBottomChainPoint, hullAngle, sin, cos);
+        this.updateTireTrack(point, hullAngle, sin, cos);
     }
-    public updateRotateAction(point: Point, hullAngle: number, turretAngle: number){
-        const sin = Math.sin(hullAngle);
-        const cos = Math.cos(hullAngle);
-
-        const { firstTopChainPoint, firstBottomChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
-            this._tankSpriteParts, point, sin, cos
-        );
-
-        if (this._tankTireTrack.checkForRotateUpdate(hullAngle))
-            this._tankTireTrack.makeFullTireTrack(firstTopChainPoint, firstBottomChainPoint, hullAngle, sin, cos);
+    public preUpdateAction(point: Point, hullAngle: number, turretAngle: number){
+        const sin: number = Math.sin(hullAngle);
+        const cos: number = Math.cos(hullAngle);
+        this.updateTireTrack(point, hullAngle, sin, cos);
 
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
     }
@@ -93,7 +101,7 @@ export class TankSprite {
         const turretDefPoint = rotatedPoint.clone();
         SpriteManipulator.rotateForTurretPoint(tankSpritePart, turretDefPoint,
             hullSin, hullCos, turretSin, turretCos);
-        SpriteManipulator.rotateForPoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
+        SpriteManipulator.rotateToDefaultSpritePoint(tankSpritePart, rotatedPoint, hullSin, hullCos);
         SpriteManipulator.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
 
         let position = this._tankSpriteParts.weaponSprite.calcPosition(turretDefPoint, turretSin, turretCos);
@@ -113,7 +121,7 @@ export class TankSprite {
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
     }
     private static updateSpritePart(tankSpritePart: Sprite, position: Point, sin: number, cos: number, angle: number) {
-        SpriteManipulator.rotateForPoint(tankSpritePart, position, sin, cos);
+        SpriteManipulator.rotateToDefaultSpritePoint(tankSpritePart, position, sin, cos);
         SpriteManipulator.setPosAndAngle(tankSpritePart, position, angle);
     }
 }

@@ -20,7 +20,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
             tankSpriteParts.topTrackSprite.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
-                tankElement.sprite.updateAfterAction
+                tankElement.sprite.preUpdateAction
             );
         }
     }
@@ -28,7 +28,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         if (!tankElement.model.isAngularMotionStopped()) {
             this.hullUpdate(tankElement,
                 tankElement.model.residualAngularMovement,
-                tankElement.sprite.updateAfterAction
+                tankElement.sprite.preUpdateAction
             );
         }
     }
@@ -41,10 +41,10 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         TankMovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.updateRotateAction);
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.preUpdateAction);
     }
     public hullClockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.updateRotateAction);
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.preUpdateAction);
     }
     public forwardMovement(tankElement: TankElement) {
         this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction);

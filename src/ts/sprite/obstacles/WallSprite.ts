@@ -11,7 +11,7 @@ export class WallSprite extends Sprite {
     }
     public updateAfterAction(point: Point, angle: number) {
         point = point.clone();
-        SpriteManipulator.rotateForPoint(this, point, Math.sin(angle), Math.cos(angle));
+        SpriteManipulator.rotateToDefaultSpritePoint(this, point, Math.sin(angle), Math.cos(angle));
         SpriteManipulator.setPosAndAngle(this, point, angle);
     }
 }
