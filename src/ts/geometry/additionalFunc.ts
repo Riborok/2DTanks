@@ -13,13 +13,13 @@ export function calcDistance(point1: Point, point2: Point) {
 }
 
 /**
- * Clamps an angle to the specified range, defaulting to [-2π, 2π].
+ * Clamps an angle to the specified range, defaulting to [0, 2π).
  * @param angle - The input angle in radians.
- * @param minRange - The minimum angle value of the range (default: -2π).
+ * @param minRange - The minimum angle value of the range (default: 0).
  * @param maxRange - The maximum angle value of the range (default: 2π).
  * @returns The angle clamped within the specified range.
  */
-export function clampAngle(angle: number, minRange: number = -2 * Math.PI, maxRange: number = 2 * Math.PI): number {
+export function clampAngle(angle: number, minRange: number = 0, maxRange: number = 2 * Math.PI): number {
     while (angle < minRange)
         angle += maxRange - minRange;
     while (angle >= maxRange)
