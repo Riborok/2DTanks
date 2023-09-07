@@ -2,7 +2,7 @@ import {Point} from "../../geometry/Point";
 import {TireTrackChainSprite} from "../effects/TireTrackChainSprite";
 import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
 import {SpriteManipulator} from "../SpriteManipulator";
-import {calcDistance} from "../../geometry/additionalFunc";
+import {calcDistance, clampAngle} from "../../geometry/additionalFunc";
 import {TankSpriteParts} from "./TankSpriteParts";
 
 export type TirePair = { topTire: TireTrackChainSprite, bottomTire: TireTrackChainSprite }
@@ -15,11 +15,10 @@ export class TankTireTrack {
     private readonly _trackHeight: number;
     private readonly _chainWidth: number;
     private _topFirstChainPoint: Point;
-    private _topLastChainPoint: Point;
     private _bottomFirstChainPoint: Point;
+    private _topLastChainPoint: Point;
     private _bottomLastChainPoint: Point;
-    private _delayedHullAngle: number;
-    private static readonly UPDATE_ANGLE_DIFFERENCE: number = 0.174533;
+    private static readonly DIRECTION_ANGLE_DIFFERENCE: number = 0.6;
     private static readonly AMOUNT_OF_CHAINS: number = 10;
     public get chainWidth () { return this._chainWidth }
     public constructor(canvas: Element, trackWidth: number, trackHeight: number, vanishingListOfTirePairs: DoubleLinkedList<TirePair>) {
@@ -54,8 +53,8 @@ export class TankTireTrack {
         const rotatedTopPoint = topPoint.clone();
         const rotatedBottomPoint = bottomPoint.clone();
 
-        SpriteManipulator.rotateForPoint(currTirePair.topTire, rotatedTopPoint, sin, cos);
-        SpriteManipulator.rotateForPoint(currTirePair.bottomTire, rotatedBottomPoint, sin, cos);
+        SpriteManipulator.rotateToDefaultSpritePoint(currTirePair.topTire, rotatedTopPoint, sin, cos);
+        SpriteManipulator.rotateToDefaultSpritePoint(currTirePair.bottomTire, rotatedBottomPoint, sin, cos);
 
         SpriteManipulator.setPosAndAngle(currTirePair.topTire, rotatedTopPoint, hullAngle);
         SpriteManipulator.setPosAndAngle(currTirePair.bottomTire, rotatedBottomPoint, hullAngle);
@@ -63,7 +62,7 @@ export class TankTireTrack {
         return currTirePair;
     }
     public calcFirstTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
-        {firstTopChainPoint: Point, firstBottomChainPoint: Point} {
+        {topFirstChainPoint: Point, bottomFirstChainPoint: Point} {
         const firstTopChainPoint = this.calcPositionOfFirstChain(point,
             this._trackWidth, this.chainWidth, sin, cos);
         const hullDefaultPoint = tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
@@ -71,29 +70,24 @@ export class TankTireTrack {
         firstBottomChainPoint = this.calcPositionOfFirstChain(firstBottomChainPoint,
             this._trackWidth, this.chainWidth, sin, cos);
 
-        return {firstTopChainPoint, firstBottomChainPoint};
+        return {topFirstChainPoint: firstTopChainPoint, bottomFirstChainPoint: firstBottomChainPoint};
     }
     public calcLastTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
-        {lastTopChainPoint: Point, lastBottomChainPoint: Point} {
+        {topLastChainPoint: Point, bottomLastChainPoint: Point} {
 
-        const lastTopChainPoint = point;
+        const lastTopChainPoint = point.clone();
         const hullDefaultPoint = tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         const lastBottomChainPoint = tankSpriteParts.bottomTrackSprite.calcPosition(hullDefaultPoint, sin, cos);
 
-        return {lastTopChainPoint, lastBottomChainPoint};
-    }
-    public checkForRotateUpdate(hullAngle: number){
-        return Math.abs(hullAngle - this._delayedHullAngle) >= TankTireTrack.UPDATE_ANGLE_DIFFERENCE;
+        return {topLastChainPoint: lastTopChainPoint, bottomLastChainPoint: lastBottomChainPoint};
     }
     private vanishFullTrack(){
         for (const node of this._listOfTirePairs){
-            this._vanishingListOfTirePairs.addToTail(this._listOfTirePairs.tail.value);
-            this._listOfTirePairs.removeFromTail();
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
+            this._listOfTirePairs.removeFromHead();
         }
     }
     public makeFullTireTrack(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
-        this._delayedHullAngle = hullAngle;
-
         this._topFirstChainPoint = topPoint.clone();
         this._bottomFirstChainPoint = bottomPoint.clone();
 
@@ -101,7 +95,7 @@ export class TankTireTrack {
 
         for (let i = 0; i < TankTireTrack.AMOUNT_OF_CHAINS; i++){
             const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
-            this._listOfTirePairs.addToTail(currTirePair);
+            this._listOfTirePairs.addToHead(currTirePair);
 
             if (i === TankTireTrack.AMOUNT_OF_CHAINS - 1){
                 this._topLastChainPoint = topPoint.clone();
@@ -112,56 +106,65 @@ export class TankTireTrack {
             this.moveToNextChain(bottomPoint, sin, cos);
         }
     }
-    public checkForForwardUpdate(topPoint: Point, bottomPoint: Point): boolean{
-        return calcDistance(topPoint, this._topFirstChainPoint) >= this._chainWidth ||
-            calcDistance(bottomPoint, this._bottomFirstChainPoint) >= this._chainWidth;
+    public updateAllChainPoints(topFirstPoint: Point, bottomFirstPoint: Point,
+                                topLastPoint: Point, bottomLastPoint: Point){
+        this._topFirstChainPoint = topFirstPoint;
+        this._bottomFirstChainPoint = bottomFirstPoint;
+        this._topLastChainPoint = topLastPoint;
+        this._bottomLastChainPoint = bottomLastPoint;
+    }
+    public checkForUpdate(topFirstPoint: Point, bottomFirstPoint: Point,
+                          topLastPoint: Point, bottomLastPoint: Point): { isUpdate: boolean, prevPoint?: Point, currPoint?: Point } {
+        const topFirstDistance = calcDistance(topFirstPoint, this._topFirstChainPoint);
+        const bottomFirstDistance = calcDistance(bottomFirstPoint, this._bottomFirstChainPoint);
+        const topLastDistance = calcDistance(topLastPoint, this._topLastChainPoint);
+        const bottomLastDistance = calcDistance(bottomLastPoint, this._bottomLastChainPoint);
+        if (topFirstDistance >= this._chainWidth)
+            return {isUpdate: true, prevPoint: this._topFirstChainPoint, currPoint: topFirstPoint};
+        else if (bottomFirstDistance >= this._chainWidth)
+            return {isUpdate: true, prevPoint: this._bottomFirstChainPoint, currPoint: bottomFirstPoint};
+        else if (topLastDistance >= this._chainWidth)
+            return {isUpdate: true, prevPoint: this._topLastChainPoint, currPoint: topLastPoint};
+        else if (bottomLastDistance >= this._chainWidth)
+            return {isUpdate: true, prevPoint: this._bottomLastChainPoint, currPoint: bottomLastPoint};
+        else
+            return { isUpdate: false };
+    }
+    private getMovementAngle(firstPoint: Point, lastPoint: Point){
+        const deltaX: number = lastPoint.x - firstPoint.x;
+        const deltaY: number = lastPoint.y - firstPoint.y;
+
+        return Math.atan2(deltaY, deltaX);
+    }
+    public detectMovementDirection(prevPoint: Point, newPoint: Point, hullAngle: number): number{
+        const movementAngle = this.getMovementAngle(prevPoint, newPoint);
+        let lowBorder = clampAngle(hullAngle - TankTireTrack.DIRECTION_ANGLE_DIFFERENCE,
+            -Math.PI, Math.PI);
+        let highBorder = clampAngle(hullAngle + TankTireTrack.DIRECTION_ANGLE_DIFFERENCE,
+            -Math.PI, Math.PI);
+        if (lowBorder >= Math.PI / 2 && lowBorder <= Math.PI && highBorder >= -Math.PI && highBorder <= -Math.PI / 2){
+            if (movementAngle >= 0) { highBorder = clampAngle(highBorder, 0, 2 * Math.PI) }
+            else { lowBorder = clampAngle(lowBorder, -2 * Math.PI, 0) }
+        }
+        if (movementAngle >= lowBorder && movementAngle <= highBorder ||
+            movementAngle <= lowBorder && movementAngle >= highBorder) { return 1 }
+        else {
+            const oppositeMovementAngle: number = clampAngle(movementAngle - Math.PI, -Math.PI, Math.PI);
+            if (oppositeMovementAngle >= lowBorder && oppositeMovementAngle <= highBorder ||
+                oppositeMovementAngle <= lowBorder && oppositeMovementAngle >= highBorder) { return -1 }
+            else { return 0 }
+        }
     }
     public forwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
-        this._delayedHullAngle = hullAngle;
-
-        const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
-        this._listOfTirePairs.addToHead(currTirePair);
-        this._vanishingListOfTirePairs.addToTail(this._listOfTirePairs.tail.value);
-        this._listOfTirePairs.removeFromTail();
-
-        this._topFirstChainPoint = topPoint;
-        this._bottomFirstChainPoint = bottomPoint;
-
-        const rotatedTopLastChainPoint: Point = new Point(this._listOfTirePairs.tail.value.topTire.sprite.x,
-            this._listOfTirePairs.tail.value.topTire.sprite.y);
-        const rotatedBottomLastChainPoint: Point = new Point(this._listOfTirePairs.tail.value.bottomTire.sprite.x,
-            this._listOfTirePairs.tail.value.bottomTire.sprite.y);
-
-        SpriteManipulator.rotateForPoint(this._listOfTirePairs.tail.value.topTire, rotatedTopLastChainPoint, -sin, cos);
-        SpriteManipulator.rotateForPoint(this._listOfTirePairs.tail.value.bottomTire, rotatedBottomLastChainPoint, -sin, cos);
-
-        this._topLastChainPoint = rotatedTopLastChainPoint;
-        this._bottomLastChainPoint = rotatedBottomLastChainPoint;
-    }
-    public checkForBackwardUpdate(topPoint: Point, bottomPoint: Point): boolean{
-        return calcDistance(topPoint, this._topLastChainPoint) >= this._chainWidth ||
-            calcDistance(bottomPoint, this._bottomLastChainPoint) >= this._chainWidth;
-    }
-    public backwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
-        this._delayedHullAngle = hullAngle;
-
         const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
         this._listOfTirePairs.addToTail(currTirePair);
-        this._vanishingListOfTirePairs.addToTail(this._listOfTirePairs.head.value);
+        this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
         this._listOfTirePairs.removeFromHead();
-
-        this._topLastChainPoint = topPoint;
-        this._bottomLastChainPoint = bottomPoint;
-
-        const rotatedTopFirstChainPoint: Point = new Point(this._listOfTirePairs.head.value.topTire.sprite.x,
-            this._listOfTirePairs.head.value.topTire.sprite.y);
-        const rotatedBottomFirstChainPoint: Point = new Point(this._listOfTirePairs.head.value.bottomTire.sprite.x,
-            this._listOfTirePairs.head.value.bottomTire.sprite.y);
-
-        SpriteManipulator.rotateForPoint(this._listOfTirePairs.head.value.topTire, rotatedTopFirstChainPoint, -sin, cos);
-        SpriteManipulator.rotateForPoint(this._listOfTirePairs.head.value.bottomTire, rotatedBottomFirstChainPoint, -sin, cos);
-
-        this._topFirstChainPoint = rotatedTopFirstChainPoint;
-        this._bottomFirstChainPoint = rotatedBottomFirstChainPoint;
+    }
+    public backwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
+        const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
+        this._listOfTirePairs.addToHead(currTirePair);
+        this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail.value);
+        this._listOfTirePairs.removeFromTail();
     }
 }
