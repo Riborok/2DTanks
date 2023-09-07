@@ -32,3 +32,17 @@ export function binarySearch<T>(arr: T[], target: T, comparator: (a: T, b: T) =>
     }
     return -1;
 }
+
+/**
+ * Remaps a value from one numeric range to another using linear interpolation.
+ * @param value The original value to be remapped.
+ * @param currentRangeMin The minimum value of the current range.
+ * @param currentRangeMax The maximum value of the current range.
+ * @param targetRangeMin The minimum value of the target range.
+ * @param targetRangeMax The maximum value of the target range.
+ * @returns The remapped value within the target range.
+ */
+export function remapValueToRange(value: number, currentRangeMin: number, currentRangeMax: number, targetRangeMin: number,
+                           targetRangeMax: number): number {
+    return (value - currentRangeMin) / (currentRangeMax - currentRangeMin) * (targetRangeMax - targetRangeMin) + targetRangeMin;
+}
