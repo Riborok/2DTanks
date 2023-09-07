@@ -4,6 +4,7 @@ import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
 import {SpriteManipulator} from "../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../geometry/additionalFunc";
 import {TankSpriteParts} from "./TankSpriteParts";
+import {TopTrackSprite} from "./tank parts/TrackSprite";
 
 export type TirePair = { topTire: TireTrackChainSprite, bottomTire: TireTrackChainSprite }
 
@@ -12,8 +13,9 @@ export class TankTireTrack {
     private readonly _vanishingListOfTirePairs: DoubleLinkedList<TirePair>;
     private readonly _canvas: Element;
     private readonly _trackWidth: number;
-    private readonly _trackHeight: number;
     private readonly _chainWidth: number;
+    private readonly _chainHeight: number;
+    private readonly _chainType: number;
     private _topFirstChainPoint: Point;
     private _bottomFirstChainPoint: Point;
     private _topLastChainPoint: Point;
@@ -21,12 +23,13 @@ export class TankTireTrack {
     private static readonly DIRECTION_ANGLE_DIFFERENCE: number = 0.6;
     private static readonly AMOUNT_OF_CHAINS: number = 10;
     public get chainWidth () { return this._chainWidth }
-    public constructor(canvas: Element, trackWidth: number, trackHeight: number, vanishingListOfTirePairs: DoubleLinkedList<TirePair>) {
+    public constructor(canvas: Element, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: DoubleLinkedList<TirePair>) {
         this._vanishingListOfTirePairs = vanishingListOfTirePairs;
         this._canvas = canvas;
-        this._trackWidth = trackWidth;
-        this._trackHeight = trackHeight;
+        this._trackWidth = topTrackSprite.width;
         this._chainWidth = this.calcWidthOfChain();
+        this._chainHeight = topTrackSprite.height;
+        this._chainType = topTrackSprite.trackType % 2;
     }
     private calcWidthOfChain(): number{
         return this._trackWidth / TankTireTrack.AMOUNT_OF_CHAINS;
@@ -44,8 +47,8 @@ export class TankTireTrack {
     }
     private createNewTireTrackPair(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number): TirePair {
         const currTirePair = {
-            topTire: new TireTrackChainSprite(this._chainWidth, this._trackHeight, 0),
-            bottomTire: new TireTrackChainSprite(this._chainWidth, this._trackHeight, 0),
+            topTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
+            bottomTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
         }
         this._canvas.appendChild(currTirePair.topTire.sprite);
         this._canvas.appendChild(currTirePair.bottomTire.sprite);

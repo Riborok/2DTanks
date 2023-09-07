@@ -24,6 +24,9 @@ export class TankPartsCreator {
     private static createTrack(trackNum: number): ITrack {
         switch (trackNum) {
             case 0:
+            case 1:
+            case 2:
+            case 3:
                 return new TrackModel0();
             default:
                 throw new Error(`Track model ${trackNum} was not found`);

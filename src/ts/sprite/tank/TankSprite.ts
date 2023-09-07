@@ -18,8 +18,7 @@ export class TankSprite {
     }
     public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
     public spawnTireTracks(canvas: Element, point: Point, hullAngle: number, vanishingListOfTirePairs: DoubleLinkedList<TirePair>){
-        this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite.width,
-            this._tankSpriteParts.topTrackSprite.height, vanishingListOfTirePairs);
+        this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
 
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
