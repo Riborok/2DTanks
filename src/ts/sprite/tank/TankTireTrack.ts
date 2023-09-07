@@ -1,6 +1,6 @@
 import {Point} from "../../geometry/Point";
 import {TireTrackChainSprite} from "../effects/TireTrackChainSprite";
-import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
 import {SpriteManipulator} from "../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../geometry/additionalFunc";
 import {TankSpriteParts} from "./TankSpriteParts";
@@ -9,8 +9,8 @@ import {TopTrackSprite} from "./tank parts/TrackSprite";
 export type TirePair = { topTire: TireTrackChainSprite, bottomTire: TireTrackChainSprite }
 
 export class TankTireTrack {
-    private readonly _listOfTirePairs : DoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>();
-    private readonly _vanishingListOfTirePairs: DoubleLinkedList<TirePair>;
+    private readonly _listOfTirePairs : IDoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>();
+    private readonly _vanishingListOfTirePairs: IDoubleLinkedList<TirePair>;
     private readonly _canvas: Element;
     private readonly _trackWidth: number;
     private readonly _chainWidth: number;
@@ -23,7 +23,7 @@ export class TankTireTrack {
     private static readonly DIRECTION_ANGLE_DIFFERENCE: number = 0.6;
     private static readonly AMOUNT_OF_CHAINS: number = 10;
     public get chainWidth () { return this._chainWidth }
-    public constructor(canvas: Element, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: DoubleLinkedList<TirePair>) {
+    public constructor(canvas: Element, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: IDoubleLinkedList<TirePair>) {
         this._vanishingListOfTirePairs = vanishingListOfTirePairs;
         this._canvas = canvas;
         this._trackWidth = topTrackSprite.width;

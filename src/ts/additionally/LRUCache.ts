@@ -1,4 +1,4 @@
-import {DoubleLinkedList} from "./DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "./data structures/IDoubleLinkedList";
 
 /**
  * A generic class for caching values based on keys.
@@ -9,7 +9,7 @@ class LRUCache<TKey, TValue> {
     private readonly _cache: Map<TKey, TValue> = new Map();
     private readonly _calcFunc: (key: TKey) => TValue;
     private readonly _maxCacheSize: number;
-    private readonly _lruList: DoubleLinkedList<TKey> = new DoubleLinkedList<TKey>();
+    private readonly _lruList: IDoubleLinkedList<TKey> = new DoubleLinkedList<TKey>();
 
     /**
      * Creates a new instance of ValueCaching.

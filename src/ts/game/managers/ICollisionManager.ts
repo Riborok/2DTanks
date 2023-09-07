@@ -3,7 +3,7 @@ import {ICollisionDetection} from "../../model/entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {IDTracker} from "../id/IDTracker";
 import {CollisionInfo} from "../../additionally/type";
-import {ILinkedList, LinkedList} from "../../additionally/ILinkedList";
+import {ILinkedList, LinkedList} from "../../additionally/data structures/ILinkedList";
 
 export interface ICollisionManager {
     hasCollision(entity: IEntity): boolean;
