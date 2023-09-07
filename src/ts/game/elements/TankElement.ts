@@ -2,10 +2,6 @@ import {TankModel} from "../../model/tank/TankModel";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../model/tank/TankPartsCreator";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
-import {
-    BottomSpriteAccelerationEffect,
-    TopSpriteAccelerationEffect
-} from "../../sprite/effects/SpriteAccelerationEffect";
 import {IEntity, RectangularEntity} from "../../model/entitiy/IEntity";
 import {HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../constants/gameConstants";
 import {IDTracker} from "../id/IDTracker";
@@ -42,23 +38,14 @@ export class TankElement implements IElement {
     }
     public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
-        const hullSprite = tankSpriteParts.hullSprite;
         canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);
         canvas.appendChild(tankSpriteParts.bottomTrackSprite.sprite);
-        canvas.appendChild(hullSprite.sprite);
+        canvas.appendChild(tankSpriteParts.hullSprite.sprite);
         canvas.appendChild(tankSpriteParts.weaponSprite.sprite);
         canvas.appendChild(tankSpriteParts.turretSprite.sprite);
 
-
-        tankSpriteParts.topSpriteAccelerationEffect = new TopSpriteAccelerationEffect(canvas,
-            hullSprite.accelerationEffectIndentX, hullSprite.height);
-        tankSpriteParts.bottomSpriteAccelerationEffect = new BottomSpriteAccelerationEffect(canvas,
-            hullSprite.accelerationEffectIndentX, hullSprite.height);
-
         const entity = this._model.entity;
-
         entityStorage.insert(entity);
-
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.tankParts.turret.angle);
     }
 }

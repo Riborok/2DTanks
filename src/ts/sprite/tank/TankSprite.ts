@@ -1,17 +1,22 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../../geometry/Point";
-import {Sprite} from "../Sprite";
 import {TankTireTrack, TirePair} from "./TankTireTrack";
 import {SpriteManipulator} from "../SpriteManipulator";
 import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
+import {TankAcceleration} from "./TankAcceleration";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
     private _tankTireTrack: TankTireTrack;
+    private _tankAcceleration: TankAcceleration;
     public constructor(tankSpriteParts: TankSpriteParts) {
         this._tankSpriteParts = tankSpriteParts;
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
+    public spawnTankAcceleration(canvas: Element, indentX: number, tankHeight: number) {
+        this._tankAcceleration = new TankAcceleration(canvas, indentX, tankHeight);
+    }
+    public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
     public spawnTireTracks(canvas: Element, point: Point, hullAngle: number, vanishingListOfTirePairs: DoubleLinkedList<TirePair>){
         this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite.width,
             this._tankSpriteParts.topTrackSprite.height, vanishingListOfTirePairs);
@@ -57,11 +62,7 @@ export class TankSprite {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint);
 
-        let position = this._tankSpriteParts.topSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
-        TankSprite.updateSpritePart(this._tankSpriteParts.topSpriteAccelerationEffect, position, sin, cos, hullAngle);
-
-        position = this._tankSpriteParts.bottomSpriteAccelerationEffect.calcPosition(hullDefaultPoint, sin, cos);
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomSpriteAccelerationEffect, position, sin, cos, hullAngle);
+        this._tankAcceleration.setPosition(hullDefaultPoint, sin, cos, hullAngle);
 
         this.updateTireTrack(point, hullAngle, sin, cos);
     }
@@ -105,23 +106,19 @@ export class TankSprite {
         SpriteManipulator.setPosAndAngle(tankSpritePart, rotatedPoint, turretAngle);
 
         let position = this._tankSpriteParts.weaponSprite.calcPosition(turretDefPoint, turretSin, turretCos);
-        TankSprite.updateSpritePart(this._tankSpriteParts.weaponSprite, position, turretSin, turretCos, turretAngle);
+        SpriteManipulator.updateSpritePart(this._tankSpriteParts.weaponSprite, position, turretSin, turretCos, turretAngle);
     }
     private updateSprite(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number,
                          hullDefaultPoint: Point) {
         let position = this._tankSpriteParts.topTrackSprite.calcPosition(point);
-        TankSprite.updateSpritePart(this._tankSpriteParts.topTrackSprite, position, sin, cos, hullAngle);
+        SpriteManipulator.updateSpritePart(this._tankSpriteParts.topTrackSprite, position, sin, cos, hullAngle);
 
         position = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
-        TankSprite.updateSpritePart(this._tankSpriteParts.hullSprite, position, sin, cos, hullAngle);
+        SpriteManipulator.updateSpritePart(this._tankSpriteParts.hullSprite, position, sin, cos, hullAngle);
 
         position = this._tankSpriteParts.bottomTrackSprite.calcPosition(hullDefaultPoint, sin, cos);
-        TankSprite.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, position, sin, cos, hullAngle)
+        SpriteManipulator.updateSpritePart(this._tankSpriteParts.bottomTrackSprite, position, sin, cos, hullAngle)
 
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
-    }
-    private static updateSpritePart(tankSpritePart: Sprite, position: Point, sin: number, cos: number, angle: number) {
-        SpriteManipulator.rotateToDefaultSpritePoint(tankSpritePart, position, sin, cos);
-        SpriteManipulator.setPosAndAngle(tankSpritePart, position, angle);
     }
 }

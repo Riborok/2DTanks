@@ -4,11 +4,6 @@ import {Action, ITankMovementManager, MovementManager} from "./MovementManager";
 
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 export class TankMovementManager extends MovementManager implements ITankMovementManager{
-    public removeSpriteAccelerationEffect(tankElement: TankElement) {
-        const tankSpriteParts = tankElement.sprite.tankSpriteParts;
-        tankSpriteParts.bottomSpriteAccelerationEffect.removeAcceleration();
-        tankSpriteParts.topSpriteAccelerationEffect.removeAcceleration();
-    }
     public residualMovement(tankElement: TankElement) {
         const tankSpriteParts = tankElement.sprite.tankSpriteParts;
         if (tankElement.model.isIdle()) {
@@ -56,8 +51,8 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         const entity = tankElement.model.entity;
         this._entityStorage.remove(entity)
         action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff);
-        if (!this._collisionManager.hasCollision(entity))
-            this.removeSpriteAccelerationEffect(tankElement);
+        if (this._collisionManager.hasCollision(entity))
+            tankElement.sprite.removeAcceleration();
 
         updateSprites.call(tankElement.sprite, entity.points[0], entity.angle,
             tankElement.model.tankParts.turret.angle);
