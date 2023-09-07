@@ -33,7 +33,6 @@ export interface ITankMovementManager extends setCoefficients {
     turretClockwiseMovement(tankElement: TankElement): void;
     residualMovement(tankElement: TankElement): void;
     residualAngularMovement(tankElement: TankElement): void;
-    removeSpriteAccelerationEffect(tankElement: TankElement): void;
 }
 
 export interface IWallMovementManager extends setCoefficients {

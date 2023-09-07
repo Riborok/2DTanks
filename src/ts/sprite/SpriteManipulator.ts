@@ -47,11 +47,28 @@ export class SpriteManipulator{
             sin, cos
         );
     }
+    /**
+     * Updates the position and angle of a sprite, but first sets the point to the "default state".
+     * @param sprite The sprite to be updated.
+     * @param position The new position for the sprite.
+     * @param sin The sine value of the rotation angle.
+     * @param cos The cosine value of the rotation angle.
+     * @param angle The new angle for the sprite.
+     */
+    public static updateSpritePart(sprite: Sprite, position: Point, sin: number, cos: number, angle: number) {
+        SpriteManipulator.rotateToDefaultSpritePoint(sprite, position, sin, cos);
+        SpriteManipulator.setPosAndAngle(sprite, position, angle);
+    }
+    /**
+     * Sets the position and angle of a sprite.
+     * @param sprite The sprite to be updated.
+     * @param point The new position for the sprite.
+     * @param angle The new angle for the sprite.
+     */
     public static setPosAndAngle(sprite: Sprite, point: Point, angle: number) {
         sprite.setPosition(point);
         sprite.setAngle(angle);
     }
-
     /**
      * Rotates a point associated with a turret sprite part relative to a tank parts sprite's hull.
      * The function modifies the `point` parameter with the new rotated coordinates.
