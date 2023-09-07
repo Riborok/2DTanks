@@ -7,17 +7,19 @@ import {ILinkedList, LinkedList} from "../../additionally/ILinkedList";
 
 export interface ICollisionManager {
     hasCollision(entity: IEntity): boolean;
-    get wallsForProcessing(): Iterable<number>;
+    getWallsForProcessing(): Iterable<number>;
+    hasWallsForProcessing(): boolean;
 }
 
 export class CollisionManager implements ICollisionManager {
     private readonly _collisionDetection: ICollisionDetection;
     private _wallsForProcessing: ILinkedList<number> = new LinkedList<number>;
-    public get wallsForProcessing(): Iterable<number> {
+    public getWallsForProcessing(): Iterable<number> {
         const result = this._wallsForProcessing;
         this._wallsForProcessing = new LinkedList<number>;
         return result;
     }
+    public hasWallsForProcessing(): boolean { return !this._wallsForProcessing.isEmpty() }
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;
     }
