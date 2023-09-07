@@ -12,6 +12,7 @@ export abstract class TrackSprite extends Sprite implements ITankSpritePart {
     private static readonly MAX_STATE_CHANGE_THRESHOLD_MAXIMUM: number = 30;
     private readonly _srcState0: string;
     private readonly _srcState1: string;
+    private readonly _trackType: number;
     private _state: number;
     private _counter: number;
     private _currentThreshold: number;
@@ -28,6 +29,7 @@ export abstract class TrackSprite extends Sprite implements ITankSpritePart {
         }
     }
     public setResidualMovement() { this._isResidualMovement = true }
+    public get trackType () { return this._trackType }
     protected constructor(num: number, tankWidth: number, height: number, forwardData: MotionData, backwardData: MotionData) {
         super(tankWidth + TRACK_INDENT, height);
 
@@ -45,6 +47,7 @@ export abstract class TrackSprite extends Sprite implements ITankSpritePart {
                 TrackSprite.MAX_STATE_CHANGE_THRESHOLD_MAXIMUM)
         ];
 
+        this._trackType = num;
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
         this._sprite.style.zIndex = `3`;
