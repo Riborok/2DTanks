@@ -1,10 +1,10 @@
-import {Point} from "../../geometry/Point";
-import {TireTrackChainSprite} from "../effects/TireTrackChainSprite";
-import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
-import {SpriteManipulator} from "../SpriteManipulator";
-import {calcDistance, clampAngle} from "../../geometry/additionalFunc";
-import {TankSpriteParts} from "./TankSpriteParts";
-import {TopTrackSprite} from "./tank parts/TrackSprite";
+import {Point} from "../../../geometry/Point";
+import {TireTrackChainSprite} from "../../effects/TireTrackChainSprite";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../../additionally/data structures/IDoubleLinkedList";
+import {SpriteManipulator} from "../../SpriteManipulator";
+import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
+import {TankSpriteParts} from "../TankSpriteParts";
+import {TopTrackSprite} from "../tank parts/TrackSprite";
 
 export type TirePair = { topTire: TireTrackChainSprite, bottomTire: TireTrackChainSprite }
 
@@ -29,7 +29,7 @@ export class TankTireTrack {
         this._trackWidth = topTrackSprite.width;
         this._chainWidth = this.calcWidthOfChain();
         this._chainHeight = topTrackSprite.height;
-        this._chainType = topTrackSprite.trackType % 2;
+        this._chainType = topTrackSprite.num % 2;
     }
     private calcWidthOfChain(): number{
         return this._trackWidth / TankTireTrack.AMOUNT_OF_CHAINS;
