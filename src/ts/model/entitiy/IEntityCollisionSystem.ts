@@ -2,7 +2,7 @@ import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../../geometry/CollisionDetector";
 import {Point} from "../../geometry/Point";
 import {CollisionInfo} from "../../additionally/type";
-import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
 
 export interface IStorage<T> {
     insert(t: T): void;

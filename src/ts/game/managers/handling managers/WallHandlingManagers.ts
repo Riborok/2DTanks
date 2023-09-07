@@ -1,10 +1,10 @@
 import {HandlingManagers, IWallHandlingManagers} from "./HandlingManagers";
 import {WallElement} from "../../elements/WallElement";
 import {WallMovementManager} from "../movement managers/WallMovementManager";
-import {DoubleLinkedList} from "../../../additionally/DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../../additionally/data structures/IDoubleLinkedList";
 
 export class WallHandlingManagers extends HandlingManagers<WallElement, WallMovementManager> implements IWallHandlingManagers {
-    private _wallToProcess: DoubleLinkedList<WallElement> = new DoubleLinkedList<WallElement>;
+    private _wallToProcess: IDoubleLinkedList<WallElement> = new DoubleLinkedList<WallElement>;
     private addToProcess(): void {
         const collisionManager = this._movementManager.collisionManager;
         if (collisionManager.hasWallsForProcessing())

@@ -1,14 +1,14 @@
-import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
 import {TirePair} from "../../sprite/tank/TankTireTrack";
 
 export interface ITireTracksManager {
-    get vanishingListOfTirePairs(): DoubleLinkedList<TirePair>;
+    get vanishingListOfTirePairs(): IDoubleLinkedList<TirePair>;
     reduceOpacity(): void;
 }
 
 export class TireTracksManager {
-    private _vanishingListOfTirePairs : DoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>()
-    public get vanishingListOfTirePairs(): DoubleLinkedList<TirePair> { return this._vanishingListOfTirePairs }
+    private _vanishingListOfTirePairs : IDoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>()
+    public get vanishingListOfTirePairs(): IDoubleLinkedList<TirePair> { return this._vanishingListOfTirePairs }
     private removeTireTrackPair(tireTrackPair: TirePair){
         tireTrackPair.topTire.sprite.remove();
         tireTrackPair.bottomTire.sprite.remove();

@@ -2,7 +2,7 @@ import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../../geometry/Point";
 import {TankTireTrack, TirePair} from "./TankTireTrack";
 import {SpriteManipulator} from "../SpriteManipulator";
-import {DoubleLinkedList} from "../../additionally/DoubleLinkedList";
+import {IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
 import {TankAcceleration} from "./TankAcceleration";
 
 export class TankSprite {
@@ -17,7 +17,7 @@ export class TankSprite {
         this._tankAcceleration = new TankAcceleration(canvas, indentX, tankHeight);
     }
     public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
-    public spawnTireTracks(canvas: Element, point: Point, hullAngle: number, vanishingListOfTirePairs: DoubleLinkedList<TirePair>){
+    public spawnTireTracks(canvas: Element, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoubleLinkedList<TirePair>){
         this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
 
         const sin = Math.sin(hullAngle);

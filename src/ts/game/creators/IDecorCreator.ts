@@ -1,7 +1,7 @@
 import {BACKGROUND_SIZE} from "../../constants/gameConstants";
 import {BackgroundSprite} from "../../sprite/background/BackgroundSprite";
 import {Point} from "../../geometry/Point";
-import {ILinkedList} from "../../additionally/ILinkedList";
+import {ILinkedList} from "../../additionally/data structures/ILinkedList";
 
 export class DecorCreator {
     private constructor() { }

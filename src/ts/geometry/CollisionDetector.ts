@@ -3,7 +3,7 @@ import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {PointUtils} from "./PointUtils";
 import {CollisionResult} from "../additionally/type";
-import {DoubleLinkedList, IDoubleLinkedList} from "../additionally/DoubleLinkedList";
+import {DoubleLinkedList, IDoubleLinkedList} from "../additionally/data structures/IDoubleLinkedList";
 
 /**
  * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).

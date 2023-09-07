@@ -47,7 +47,7 @@ export class TankAcceleration {
     }
     public removeAcceleration() {
         if (this._state === 0 && this._counter === 0)
-            return
+            return;
 
         this._state = 0;
         this._counter = 0;

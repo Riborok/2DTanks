@@ -5,7 +5,7 @@ import {WallElement} from "../elements/WallElement";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
 import {WallModel} from "../../model/obstacle/WallModel";
 import {Point} from "../../geometry/Point";
-import {ILinkedList, LinkedList} from "../../additionally/ILinkedList";
+import {ILinkedList, LinkedList} from "../../additionally/data structures/ILinkedList";
 
 export class ObstacleCreator {
     private static readonly INDENT: number = 10;

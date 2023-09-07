@@ -13,7 +13,7 @@ import {WallMovementManager} from "./managers/movement managers/WallMovementMana
 import {ITankHandlingManagers, IWallHandlingManagers} from "./managers/handling managers/HandlingManagers";
 import {TankHandlingManagers} from "./managers/handling managers/TankHandlingManagers";
 import {WallHandlingManagers} from "./managers/handling managers/WallHandlingManagers";
-import {ILinkedList, LinkedList} from "../additionally/ILinkedList";
+import {ILinkedList, LinkedList} from "../additionally/data structures/ILinkedList";
 import {WallElement} from "./elements/WallElement";
 
 export interface IGameMaster {
