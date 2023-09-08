@@ -102,7 +102,7 @@ class QuadtreeNode {
         }
     }
     public getCollisions(entity: IEntity): IEntity[] {
-        const collisionsInfo = new Array<IEntity>;
+        const collisionsInfo = new Array<IEntity>();
 
         if (this.isSubdivide()) {
             for (const child of this._children)

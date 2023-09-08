@@ -5,7 +5,7 @@ import {Field} from "../../Field";
 import {WallElement} from "../../elements/WallElement";
 
 export abstract class HandlingManagers<T extends IElement, V extends MovementManager> {
-    protected _elements: Map<number, T> = new Map<number, T>;
+    protected _elements: Map<number, T> = new Map<number, T>();
     protected _movementManager: V;
     protected _field: Field;
     public constructor(movementManager: V, field: Field) {

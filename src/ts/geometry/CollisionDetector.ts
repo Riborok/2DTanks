@@ -81,7 +81,7 @@ export class CollisionDetector {
         return closestVertex;
     }
     private static getAxes(entity: IEntity): Axis[] {
-        const axes = new Array<Axis>;
+        const axes = new Array<Axis>();
         const lastIndex = entity.points.length - 1;
 
         for (let i = 0; i < lastIndex; i++)
