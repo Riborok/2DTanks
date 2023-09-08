@@ -21,7 +21,7 @@ export class TireTracksManager {
             node.bottomTire.reduceOpacity();
             node.bottomTire.setOpacity();
 
-            if (node.topTire.opacity <= 0) { counter++; }
+            if (node.topTire.isVanished()) { counter++; }
         }
         for (; counter > 0; counter--) {
             this.removeTireTrackPair(this._vanishingListOfTirePairs.tail.value);

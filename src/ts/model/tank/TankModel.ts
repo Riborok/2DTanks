@@ -141,9 +141,9 @@ export class TankModel extends Model {
         }
         else {
             this._isDrift = !isReverseMovement;
-            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, turn, velocityAngle);
-            if (this._isDrift)
+            if (!isReverseMovement)
                 this.determineDribbleSpeed(turn);
+            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, turn, velocityAngle);
         }
 
         if (!isReverseMovement) {
