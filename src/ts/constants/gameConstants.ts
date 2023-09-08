@@ -1,10 +1,10 @@
-export const EPSILON_RADIAN: number = 10 * Math.PI / 180;
+export const EPSILON_RADIAN: number = Math.PI / 180;
 export const BACKGROUND_SIZE: number = 115;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 export const SHAPE: string[] = ['Rect', 'Square'];
 export const WALL_WIDTH: number[] = [101, 50];
 export const WALL_HEIGHT: number[] = [50, 50];
-export const WALL_MASS: number[][] = [[8, 4], [10, 6], [12, 8]];
+export const WALL_MASS: number[][] = [[4, 2], [5.5, 2.5], [7, 3]];
 export const RESISTANCE_COEFFICIENT: number[] = [0.55, 0.7, 0.85];
 export const AIR_RESISTANCE_COEFFICIENT: number = 0.0003;
 export const TRACK_INDENT: number = 5;
