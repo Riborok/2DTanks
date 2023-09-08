@@ -4,7 +4,7 @@ import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {IDTracker} from "../id/IDTracker";
 
 class IdToProcessing {
-    private readonly _idForProcessing: number[] = new Array<number>;
+    private readonly _idForProcessing: number[] = new Array<number>();
     public hasWallsForProcessing(): boolean { return this._idForProcessing.length !== 0 }
     public clear() { this._idForProcessing.length = 0 }
     public push(id: number) { this._idForProcessing.push(id) }
@@ -18,7 +18,7 @@ export interface ICollisionManager {
 
 export class CollisionManager implements ICollisionManager {
     private readonly _collisionDetection: ICollisionDetection;
-    private _wallsForProcessing: IdToProcessing = new IdToProcessing;
+    private _wallsForProcessing: IdToProcessing = new IdToProcessing();
     public get wallsForProcessing(): IdToProcessing { return this._wallsForProcessing }
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;

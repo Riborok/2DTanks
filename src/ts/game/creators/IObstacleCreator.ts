@@ -12,7 +12,7 @@ export class ObstacleCreator {
     private static readonly RECT_NUM: number = 0;
     private constructor() { }
     public static createWallsAroundPerimeter(materialNum: number, width: number, height: number): Iterable<WallElement> {
-        const result = new Array<WallElement>;
+        const result = new Array<WallElement>();
         const xIndent = this.calcIndent(width);
         const yIndent = this.calcIndent(height - (WALL_HEIGHT[this.RECT_NUM] << 1));
         this.createHorWalls(materialNum, xIndent, yIndent, width, height, result)

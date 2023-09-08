@@ -24,7 +24,7 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private _isGameLoopActive: boolean = false;
-    private _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>;
+    private _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
 
     private readonly _field: Field;
     private readonly _tankHandlingManagers: ITankHandlingManagers;
@@ -72,7 +72,7 @@ export class GameMaster implements IGameMaster {
         this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, width, height));
 
         // Additional walls
-        const arr = new Array<WallElement>;
+        const arr = new Array<WallElement>();
         arr.push(ObstacleCreator.createWall(
             new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
         arr.push(ObstacleCreator.createWall(
