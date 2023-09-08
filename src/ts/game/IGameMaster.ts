@@ -13,7 +13,6 @@ import {WallMovementManager} from "./managers/movement managers/WallMovementMana
 import {ITankHandlingManagers, IWallHandlingManagers} from "./managers/handling managers/HandlingManagers";
 import {TankHandlingManagers} from "./managers/handling managers/TankHandlingManagers";
 import {WallHandlingManagers} from "./managers/handling managers/WallHandlingManagers";
-import {ILinkedList, LinkedList} from "../additionally/data structures/ILinkedList";
 import {WallElement} from "./elements/WallElement";
 
 export interface IGameMaster {
@@ -25,7 +24,7 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private _isGameLoopActive: boolean = false;
-    private _backgroundSprites: ILinkedList<BackgroundSprite> = new LinkedList<BackgroundSprite>;
+    private _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>;
 
     private readonly _field: Field;
     private readonly _tankHandlingManagers: ITankHandlingManagers;
@@ -73,12 +72,12 @@ export class GameMaster implements IGameMaster {
         this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, width, height));
 
         // Additional walls
-        const list = new LinkedList<WallElement>;
-        list.addToHead(ObstacleCreator.createWall(
+        const arr = new Array<WallElement>;
+        arr.push(ObstacleCreator.createWall(
             new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
-        list.addToHead(ObstacleCreator.createWall(
+        arr.push(ObstacleCreator.createWall(
             new Point(width >> 2, height >> 2), 1, 2, 1, true));
-        this._wallHandlingManagers.add(list);
+        this._wallHandlingManagers.add(arr);
     }
 
     public addTankElements(...tankElements: TankElement[]) {
