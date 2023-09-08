@@ -6,6 +6,7 @@ import {CollisionDetector} from "./CollisionDetector";
 export class CollisionResolver {
     private constructor() {}
     private static readonly coefficientOfRestitution: number = 0.6;
+    private static readonly CORRECTION_FACTOR: number = 1.5;
     public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity) {
         const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
         if (collisionResult === null)
@@ -30,8 +31,8 @@ export class CollisionResolver {
         receivingEntity.velocity.addVector(newImpulse);
     }
     private static separateEntities(impartingEntity: IEntity, overlap: number, collisionNormal: Vector) {
-        let correctionX = -collisionNormal.x * overlap;
-        let correctionY = -collisionNormal.y * overlap;
+        const correctionX = -collisionNormal.x * overlap * this.CORRECTION_FACTOR;
+        const correctionY = -collisionNormal.y * overlap * this.CORRECTION_FACTOR;
         for (const point of impartingEntity.points)
             point.addToCoordinates(correctionX, correctionY);
     }

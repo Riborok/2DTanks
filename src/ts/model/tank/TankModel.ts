@@ -130,20 +130,19 @@ export class TankModel extends Model {
         const speed = entity.velocity.length;
 
         const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
-        let turn = TankModel.calcTurn(angle, velocityAngle);
+        const turn = TankModel.calcTurn(angle, velocityAngle);
 
         this.calcBrakingStatus(turn);
 
-        if (this.isStraightMovement(turn)) {
+        if (TankModel.isStraightMovement(turn)) {
             this._isDrift = false;
             this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, speed, velocityAngle);
         }
         else {
-            this._isDrift = !this.isReverseMovement(turn);
+            this._isDrift = !TankModel.isReverseMovement(turn);
             if (this._isDrift) {
                 this.determineDribbleSpeed(turn);
-                if (this._isBraking) { turn = this.adjustTurnForBraking(turn); }
-                this.applyTurn(this.adjustTurnForRecovery(turn));
+                this.applyTurn(this.calcShortestTurn(turn));
             }
             this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, turn, velocityAngle);
         }
@@ -153,10 +152,16 @@ export class TankModel extends Model {
     private calcBrakingStatus(turn: number) {
         this._isBraking = (turn > Math.PI / 2) && (turn < Math.PI * 3/2);
     }
-    private isStraightMovement(turn: number): boolean {
+    private calcShortestTurn(turn: number): number {
+        if (this._isBraking)
+            turn = TankModel.adjustTurnForBraking(turn);
+        turn = TankModel.adjustTurnForRecovery(turn);
+        return turn;
+    }
+    private static isStraightMovement(turn: number): boolean {
         return turn <= ANGLE_EPSILON || 2 * Math.PI - turn <= ANGLE_EPSILON;
     }
-    private isReverseMovement(turn: number): boolean {
+    private static isReverseMovement(turn: number): boolean {
         return Math.abs(turn - Math.PI) <= ANGLE_EPSILON;
     }
     private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number,
@@ -175,10 +180,10 @@ export class TankModel extends Model {
             this.applyVelocityChange(acceleration, velocityAngle);
         }
     }
-    private adjustTurnForBraking(turn: number): number {
+    private static adjustTurnForBraking(turn: number): number {
         return clampAngle(turn - Math.PI / 2);
     }
-    private adjustTurnForRecovery(turn: number): number {
+    private static adjustTurnForRecovery(turn: number): number {
         const oppositeTurn = turn - 2 * Math.PI;
         return (turn > Math.abs(oppositeTurn)) ? oppositeTurn : turn;
     }
@@ -196,7 +201,7 @@ export class TankModel extends Model {
     }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         const turn = TankModel.calcTurn(this._entity.angle, this._entity.velocity.angle);
-        if (this._isDrift || (!this.isStraightMovement(turn) && !this.isReverseMovement(turn))) {
+        if (this._isDrift || (!TankModel.isStraightMovement(turn) && !TankModel.isReverseMovement(turn))) {
             this._isDrift = true;
             this.determineDribbleSpeed(turn);
         }
