@@ -3,7 +3,6 @@ import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {PointUtils} from "./PointUtils";
 import {CollisionResult} from "../additionally/type";
-import {DoubleLinkedList, IDoubleLinkedList} from "../additionally/data structures/IDoubleLinkedList";
 
 /**
  * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).
@@ -17,9 +16,26 @@ export class CollisionDetector {
      * @param entity2 The second entity to check for intersection.
      * @returns `true` if the two entities intersect, `false` otherwise.
      */
+    public static hasCollision(entity1: IEntity, entity2: IEntity): boolean {
+        const axes = [...CollisionDetector.getAxes(entity1), ...CollisionDetector.getAxes(entity2)];
+
+        for (const axis of axes) {
+            const projection1 = CollisionDetector.getProject(entity1, axis);
+            const projection2 = CollisionDetector.getProject(entity2, axis);
+
+            if (Math.min(projection1.max - projection2.min, projection2.max - projection1.min) <= 0)
+                return false;
+        }
+        return true;
+    }
+    /**
+     * Calculates the collision result between two entities using the Separating Axis Theorem (SAT).
+     * @param entity1 The first entity to calculate collision result for.
+     * @param entity2 The second entity to calculate collision result for.
+     * @returns A `CollisionResult` object if a collision occurred, or `null` if there's no collision.
+     */
     public static getCollisionResult(entity1: IEntity, entity2: IEntity): CollisionResult | null {
-        const axes = CollisionDetector.getAxes(entity1);
-        axes.merge(CollisionDetector.getAxes(entity2));
+        const axes = [...CollisionDetector.getAxes(entity1), ...CollisionDetector.getAxes(entity2)];
 
         let smallestOverlap = Number.MAX_VALUE;
         let collisionAxis: Axis;
@@ -64,13 +80,13 @@ export class CollisionDetector {
 
         return closestVertex;
     }
-    private static getAxes(entity: IEntity): IDoubleLinkedList<Axis> {
-        const axes = new DoubleLinkedList<Axis>;
+    private static getAxes(entity: IEntity): Axis[] {
+        const axes = new Array<Axis>;
         const lastIndex = entity.points.length - 1;
 
         for (let i = 0; i < lastIndex; i++)
-            axes.addToTail(Axis.create(entity.points[i], entity.points[i + 1]));
-        axes.addToTail(Axis.create(entity.points[lastIndex], entity.points[0]));
+            axes.push(Axis.create(entity.points[i], entity.points[i + 1]));
+        axes.push(Axis.create(entity.points[lastIndex], entity.points[0]));
 
         return axes;
     }

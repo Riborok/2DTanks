@@ -1,4 +1,4 @@
-export const EPSILON_RADIAN: number = Math.PI / 180;
+export const ANGLE_EPSILON: number = Math.PI / 180;
 export const BACKGROUND_SIZE: number = 115;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 export const SHAPE: string[] = ['Rect', 'Square'];

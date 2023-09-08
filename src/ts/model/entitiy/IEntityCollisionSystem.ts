@@ -1,8 +1,6 @@
 import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../../geometry/CollisionDetector";
 import {Point} from "../../geometry/Point";
-import {CollisionInfo} from "../../additionally/type";
-import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
 
 export interface IStorage<T> {
     insert(t: T): void;
@@ -11,7 +9,7 @@ export interface IStorage<T> {
 }
 
 export interface ICollisionDetection {
-    getCollisions(entity: IEntity): Iterable<CollisionInfo>;
+    getCollisions(entity: IEntity): Iterable<IEntity>;
 }
 
 export interface IEntityCollisionSystem extends IStorage<IEntity>, ICollisionDetection {
@@ -26,7 +24,7 @@ export class Quadtree implements IEntityCollisionSystem{
     public insert(entity: IEntity) {
         this._root.insert(entity);
     }
-    public getCollisions(entity: IEntity): Iterable<CollisionInfo> {
+    public getCollisions(entity: IEntity): Iterable<IEntity> {
         return this._root.getCollisions(entity);
     }
     public remove(entity: IEntity) {
@@ -103,20 +101,18 @@ class QuadtreeNode {
                 this._parent.mergeCheck();
         }
     }
-    public getCollisions(entity: IEntity): IDoubleLinkedList<CollisionInfo> {
-        const collisionsInfo = new DoubleLinkedList<CollisionInfo>;
+    public getCollisions(entity: IEntity): IEntity[] {
+        const collisionsInfo = new Array<IEntity>;
 
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
-                    collisionsInfo.merge(child.getCollisions(entity));
+                    collisionsInfo.push(...child.getCollisions(entity));
         }
         else {
-            for (const anotherEntity of this._entities) {
-                const collisionResult = CollisionDetector.getCollisionResult(entity, anotherEntity);
-                if (collisionResult)
-                    collisionsInfo.addToTail({ entity: anotherEntity, collisionResult: collisionResult });
-            }
+            for (const anotherEntity of this._entities)
+                if (CollisionDetector.hasCollision(entity, anotherEntity))
+                    collisionsInfo.push(anotherEntity);
         }
 
         return collisionsInfo;

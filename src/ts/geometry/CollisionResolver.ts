@@ -1,17 +1,21 @@
 import {IEntity} from "../model/entitiy/IEntity";
-import {CollisionInfo} from "../additionally/type";
 import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
+import {CollisionDetector} from "./CollisionDetector";
 
 export class CollisionResolver {
     private constructor() {}
     private static readonly coefficientOfRestitution: number = 0.6;
-    public static resolveCollision(impartingEntity: IEntity, collisionInfo: CollisionInfo) {
-        const collisionNormal = this.calcCollisionNormal(collisionInfo.collisionResult.collisionPoint,
+    public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity) {
+        const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
+        if (collisionResult === null)
+            return;
+
+        const collisionNormal = this.calcCollisionNormal(collisionResult.collisionPoint,
             impartingEntity.calcCenter());
 
-        this.separateEntities(impartingEntity, collisionInfo.collisionResult.overlap, collisionNormal);
-        this.updateVelocity(impartingEntity, collisionInfo.entity, collisionNormal);
+        this.separateEntities(impartingEntity, collisionResult.overlap, collisionNormal);
+        this.updateVelocity(impartingEntity, receivingEntity, collisionNormal);
     }
     private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionNormal: Vector) {
         const relativeVelocity = VectorUtils.subtract(impartingEntity.velocity, receivingEntity.velocity);

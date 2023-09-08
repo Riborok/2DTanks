@@ -1,4 +1,3 @@
-import {IEntity} from "../model/entitiy/IEntity";
 import {Point} from "../geometry/Point";
 
 export type MotionData = {
@@ -13,11 +12,6 @@ export type Control = {
     hullCounterClockwiseMask: number,
     turretClockwiseMask: number,
     turretCounterClockwiseMask: number,
-}
-
-export type CollisionInfo = {
-    entity: IEntity,
-    collisionResult: CollisionResult;
 }
 
 export type CollisionResult = {

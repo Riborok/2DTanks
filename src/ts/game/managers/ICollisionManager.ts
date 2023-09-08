@@ -2,7 +2,6 @@ import {IEntity} from "../../model/entitiy/IEntity";
 import {ICollisionDetection} from "../../model/entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {IDTracker} from "../id/IDTracker";
-import {CollisionInfo} from "../../additionally/type";
 import {ILinkedList, LinkedList} from "../../additionally/data structures/ILinkedList";
 
 export interface ICollisionManager {
@@ -24,26 +23,26 @@ export class CollisionManager implements ICollisionManager {
         this._collisionDetection = collisionDetection;
     }
     public hasCollision(entity: IEntity): boolean {
-        const collisionsInfo = this._collisionDetection.getCollisions(entity);
+        const receivingEntities = this._collisionDetection.getCollisions(entity);
         let hasCollision: boolean = false;
 
-        for (const collisionInfo of collisionsInfo) {
-            CollisionResolver.resolveCollision(entity, collisionInfo);
-            this.processCollision(entity, collisionInfo);
+        for (const receivingEntity of receivingEntities) {
+            CollisionResolver.resolveCollision(entity, receivingEntity);
+            this.processCollision(receivingEntity);
             hasCollision = true;
         }
 
         return hasCollision;
     }
-    private processCollision(entity: IEntity, collisionInfo: CollisionInfo) {
-        if (this.isWallCollision(collisionInfo))
-            this._wallsForProcessing.addToHead(collisionInfo.entity.id);
+    private processCollision(receivingEntity: IEntity) {
+        if (this.isWallCollision(receivingEntity))
+            this._wallsForProcessing.addToHead(receivingEntity.id);
     }
 
-    private isWallCollision(collisionInfo: CollisionInfo): boolean {
+    private isWallCollision(receivingEntity: IEntity): boolean {
         return (
-            collisionInfo.entity.id >= IDTracker.STARTING_WALL_ID &&
-            collisionInfo.entity.id <= IDTracker.ENDING_WALL_ID
+            receivingEntity.id >= IDTracker.STARTING_WALL_ID &&
+            receivingEntity.id <= IDTracker.ENDING_WALL_ID
         );
     }
 }
