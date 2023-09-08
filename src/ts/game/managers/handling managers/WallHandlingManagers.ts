@@ -6,10 +6,12 @@ import {DoubleLinkedList, IDoubleLinkedList} from "../../../additionally/data st
 export class WallHandlingManagers extends HandlingManagers<WallElement, WallMovementManager> implements IWallHandlingManagers {
     private _wallToProcess: IDoubleLinkedList<WallElement> = new DoubleLinkedList<WallElement>;
     private addToProcess(): void {
-        const collisionManager = this._movementManager.collisionManager;
-        if (collisionManager.hasWallsForProcessing())
-            for (const wallID of collisionManager.getWallsForProcessing())
+        const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;
+        if (wallsForProcessing.hasWallsForProcessing()) {
+            for (const wallID of wallsForProcessing.iterable)
                 this._wallToProcess.addToTail(this._elements.get(wallID));
+            wallsForProcessing.clear();
+        }
     }
     public handle(): void {
         this.addToProcess();
