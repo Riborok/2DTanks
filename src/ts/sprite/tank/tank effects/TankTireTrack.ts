@@ -145,13 +145,24 @@ export class TankTireTrack {
             -Math.PI, Math.PI);
         let highBorder = clampAngle(hullAngle + TankTireTrack.DIRECTION_ANGLE_DIFFERENCE,
             -Math.PI, Math.PI);
+        let isAngleFixed: boolean = false;
         if (lowBorder >= Math.PI / 2 && lowBorder <= Math.PI && highBorder >= -Math.PI && highBorder <= -Math.PI / 2){
+            isAngleFixed = true;
             if (movementAngle >= 0) { highBorder = clampAngle(highBorder, 0, 2 * Math.PI) }
             else { lowBorder = clampAngle(lowBorder, -2 * Math.PI, 0) }
         }
         if (movementAngle >= lowBorder && movementAngle <= highBorder ||
             movementAngle <= lowBorder && movementAngle >= highBorder) { return 1 }
         else {
+            if (isAngleFixed) {
+                if (lowBorder < 0) {
+                    lowBorder = clampAngle(lowBorder, 0, 2 * Math.PI);
+                    highBorder = clampAngle(highBorder, 0, 2 * Math.PI);
+                } else {
+                    lowBorder = clampAngle(lowBorder, -2 * Math.PI, 0);
+                    highBorder = clampAngle(highBorder, -2 * Math.PI, 0);
+                }
+            }
             const oppositeMovementAngle: number = clampAngle(movementAngle - Math.PI, -Math.PI, Math.PI);
             if (oppositeMovementAngle >= lowBorder && oppositeMovementAngle <= highBorder ||
                 oppositeMovementAngle <= lowBorder && oppositeMovementAngle >= highBorder) { return -1 }
