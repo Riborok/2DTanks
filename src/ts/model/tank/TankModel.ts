@@ -130,33 +130,31 @@ export class TankModel extends Model {
         const speed = entity.velocity.length;
 
         const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
-        let turn = clampAngle(angle - velocityAngle);
+        let turn = TankModel.calcTurn(angle, velocityAngle);
 
         this.calcBrakingStatus(turn);
 
-        const isReverseMovement = this.isReverseMovement(Math.abs(turn));
         if (this.isStraightMovement(Math.abs(turn))) {
             this._isDrift = false;
             this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, speed, velocityAngle);
         }
         else {
-            this._isDrift = !isReverseMovement;
-            if (!isReverseMovement)
+            this._isDrift = !this.isReverseMovement(Math.abs(turn));
+            if (this._isDrift) {
                 this.determineDribbleSpeed(turn);
+                if (this._isBraking) { turn = this.adjustTurnForBraking(turn); }
+                this.applyTurn(this.adjustTurnForRecovery(turn));
+            }
             this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, turn, velocityAngle);
         }
 
-        if (!isReverseMovement) {
-            if (this._isBraking) { turn = this.adjustTurnForBraking(turn); }
-            this.applyTurn(this.adjustTurnForRecovery(turn));
-        }
         EntityManipulator.movement(entity);
     }
     private calcBrakingStatus(turn: number) {
         this._isBraking = (turn > Math.PI / 2) && (turn < Math.PI * 3/2);
     }
     private isStraightMovement(deltaAngle: number): boolean {
-        return deltaAngle <= EPSILON_RADIAN;
+        return deltaAngle <= EPSILON_RADIAN || 2 * Math.PI - deltaAngle <= EPSILON_RADIAN;
     }
     private isReverseMovement(deltaAngle: number): boolean {
         return Math.abs(deltaAngle - Math.PI) <= EPSILON_RADIAN;
@@ -190,13 +188,15 @@ export class TankModel extends Model {
     }
     private determineDribbleSpeed(turn: number) {
         const scalar = remapValueToRange(Math.abs(Math.cos(turn)),
-            0, 1, 0.942, 1)
+            0, 1, 0.95, 1)
         this._entity.velocity.scale(scalar);
     }
+    private static calcTurn(angle: number, velocityAngle: number): number {
+        return clampAngle(angle - velocityAngle);
+    }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
-        const turn = clampAngle(this._entity.angle - this._entity.velocity.angle);
-        const deltaAngle = Math.abs(turn);
-        if (this._isDrift || (!this.isStraightMovement(deltaAngle) && !this.isReverseMovement(deltaAngle))) {
+        const turn = TankModel.calcTurn(this._entity.angle, this._entity.velocity.angle);
+        if (this._isDrift || (!this.isStraightMovement(Math.abs(turn)) && !this.isReverseMovement(Math.abs(turn)))) {
             this._isDrift = true;
             this.determineDribbleSpeed(turn);
         }

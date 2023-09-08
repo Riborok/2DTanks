@@ -5,12 +5,12 @@ import {VectorUtils} from "./VectorUtils";
 
 export class CollisionResolver {
     private constructor() {}
-    private static readonly coefficientOfRestitution: number = 0.55;
+    private static readonly coefficientOfRestitution: number = 0.6;
     public static resolveCollision(impartingEntity: IEntity, collisionInfo: CollisionInfo) {
         const collisionNormal = this.calcCollisionNormal(collisionInfo.collisionResult.collisionPoint,
             impartingEntity.calcCenter());
 
-        this.separateEntities(impartingEntity, collisionInfo, collisionNormal);
+        this.separateEntities(impartingEntity, collisionInfo.collisionResult.overlap, collisionNormal);
         this.updateVelocity(impartingEntity, collisionInfo.entity, collisionNormal);
     }
     private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionNormal: Vector) {
@@ -25,25 +25,12 @@ export class CollisionResolver {
         newImpulse = VectorUtils.scale(collisionNormal, impulseMagnitude / receivingEntity.mass);
         receivingEntity.velocity.addVector(newImpulse);
     }
-    private static separateEntities(impartingEntity: IEntity, collisionInfo: CollisionInfo, collisionNormal: Vector) {
-        const isReceivingEntityImmovable = this.isImmovable(collisionInfo.entity);
-        const totalMass = impartingEntity.mass + (isReceivingEntityImmovable ? 0 : collisionInfo.entity.mass);
-
-        let factor = (1 + impartingEntity.mass / totalMass);
-        let correctionX = -collisionNormal.x * collisionInfo.collisionResult.overlap * factor;
-        let correctionY = -collisionNormal.y * collisionInfo.collisionResult.overlap * factor;
+    private static separateEntities(impartingEntity: IEntity, overlap: number, collisionNormal: Vector) {
+        let correctionX = -collisionNormal.x * overlap;
+        let correctionY = -collisionNormal.y * overlap;
         for (const point of impartingEntity.points)
             point.addToCoordinates(correctionX, correctionY);
-
-        if (!isReceivingEntityImmovable) {
-            factor = (1 + collisionInfo.entity.mass / totalMass);
-            correctionX = collisionNormal.x * collisionInfo.collisionResult.overlap * factor;
-            correctionY = collisionNormal.y * collisionInfo.collisionResult.overlap * factor;
-            for (const point of collisionInfo.entity.points)
-                point.addToCoordinates(correctionX, correctionY);
-        }
     }
-    private static isImmovable(entity: IEntity): boolean { return entity.mass === Infinity }
     private static calcCollisionNormal(collisionPoint: Point, center: Point): Vector {
         const collisionNormal = VectorUtils.subtract(collisionPoint, center);
         collisionNormal.normalize();
