@@ -5,14 +5,19 @@ import {SpriteManipulator} from "../../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
 import {TankSpriteParts} from "../TankSpriteParts";
 import {TopTrackSprite} from "../tank parts/TrackSprite";
+import {TireTracksManager} from "../../../game/managers/TireTracksManager";
+import {TireTrackSprite} from "../../effects/TireTrackSprite";
+import {Sprite} from "../../Sprite";
 
-export type TirePair = { topTire: TireTrackChainSprite, bottomTire: TireTrackChainSprite }
+export type TirePair = { topTire: IVanishing, bottomTire: IVanishing }
 
 export class TankTireTrack {
     private readonly _listOfTirePairs : IDoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>();
     private readonly _vanishingListOfTirePairs: IDoubleLinkedList<TirePair>;
     private readonly _canvas: Element;
     private readonly _trackWidth: number;
+    private readonly _trackHeight: number;
+    private readonly _trackType: number;
     private readonly _chainWidth: number;
     private readonly _chainHeight: number;
     private readonly _chainType: number;
@@ -27,6 +32,8 @@ export class TankTireTrack {
         this._vanishingListOfTirePairs = vanishingListOfTirePairs;
         this._canvas = canvas;
         this._trackWidth = topTrackSprite.width;
+        this._trackHeight = topTrackSprite.height;
+        this._trackType = topTrackSprite.num;
         this._chainWidth = this.calcWidthOfChain();
         this._chainHeight = topTrackSprite.height;
         this._chainType = topTrackSprite.num % 2;
@@ -34,7 +41,7 @@ export class TankTireTrack {
     private calcWidthOfChain(): number{
         return this._trackWidth / TankTireTrack.AMOUNT_OF_CHAINS;
     }
-    public calcPositionOfFirstChain(point: Point, trackWidth: number, chainWidth: number,
+    public static calcPositionOfFirstChain(point: Point, trackWidth: number, chainWidth: number,
                                     sin: number, cos: number): Point{
         return new Point(
             point.x + trackWidth * cos - chainWidth * cos,
@@ -45,7 +52,23 @@ export class TankTireTrack {
         point.x = point.x - this._chainWidth * cos;
         point.y = point.y - this._chainWidth * sin;
     }
-    private createNewTireTrackPair(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number): TirePair {
+    private vanishFullTrack(){
+        for (const node of this._listOfTirePairs){
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
+            this._listOfTirePairs.removeFromHead();
+        }
+    }
+    private static setAndPosTireTrackPair(tireTrackPair: {topTire: Sprite, bottomTire: Sprite},topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
+        const rotatedTopPoint = topPoint.clone();
+        const rotatedBottomPoint = bottomPoint.clone();
+
+        SpriteManipulator.rotateToDefaultSpritePoint(tireTrackPair.topTire, rotatedTopPoint, sin, cos);
+        SpriteManipulator.rotateToDefaultSpritePoint(tireTrackPair.bottomTire, rotatedBottomPoint, sin, cos);
+
+        SpriteManipulator.setPosAndAngle(tireTrackPair.topTire, rotatedTopPoint, hullAngle);
+        SpriteManipulator.setPosAndAngle(tireTrackPair.bottomTire, rotatedBottomPoint, hullAngle);
+    }
+    private createTireTrackChainPair(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number): TirePair {
         const currTirePair = {
             topTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
             bottomTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
@@ -53,24 +76,31 @@ export class TankTireTrack {
         this._canvas.appendChild(currTirePair.topTire.sprite);
         this._canvas.appendChild(currTirePair.bottomTire.sprite);
 
-        const rotatedTopPoint = topPoint.clone();
-        const rotatedBottomPoint = bottomPoint.clone();
-
-        SpriteManipulator.rotateToDefaultSpritePoint(currTirePair.topTire, rotatedTopPoint, sin, cos);
-        SpriteManipulator.rotateToDefaultSpritePoint(currTirePair.bottomTire, rotatedBottomPoint, sin, cos);
-
-        SpriteManipulator.setPosAndAngle(currTirePair.topTire, rotatedTopPoint, hullAngle);
-        SpriteManipulator.setPosAndAngle(currTirePair.bottomTire, rotatedBottomPoint, hullAngle);
+        TankTireTrack.setAndPosTireTrackPair(currTirePair, topPoint, bottomPoint, hullAngle, sin, cos);
 
         return currTirePair;
     }
+    public createTireTrackPair(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number) {
+        this.vanishFullTrack();
+
+        const currTirePair = {
+            topTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
+            bottomTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
+        }
+        this._canvas.appendChild(currTirePair.topTire.sprite);
+        this._canvas.appendChild(currTirePair.bottomTire.sprite);
+
+        TankTireTrack.setAndPosTireTrackPair(currTirePair, topPoint, bottomPoint, hullAngle, sin, cos);
+
+        this._listOfTirePairs.addToHead(currTirePair);
+    }
     public calcFirstTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
         {topFirstChainPoint: Point, bottomFirstChainPoint: Point} {
-        const firstTopChainPoint = this.calcPositionOfFirstChain(point,
+        const firstTopChainPoint = TankTireTrack.calcPositionOfFirstChain(point,
             this._trackWidth, this.chainWidth, sin, cos);
         const hullDefaultPoint = tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         let firstBottomChainPoint = tankSpriteParts.bottomTrackSprite.calcPosition(hullDefaultPoint, sin, cos);
-        firstBottomChainPoint = this.calcPositionOfFirstChain(firstBottomChainPoint,
+        firstBottomChainPoint = TankTireTrack.calcPositionOfFirstChain(firstBottomChainPoint,
             this._trackWidth, this.chainWidth, sin, cos);
 
         return {topFirstChainPoint: firstTopChainPoint, bottomFirstChainPoint: firstBottomChainPoint};
@@ -84,20 +114,12 @@ export class TankTireTrack {
 
         return {topLastChainPoint: lastTopChainPoint, bottomLastChainPoint: lastBottomChainPoint};
     }
-    private vanishFullTrack(){
-        for (const node of this._listOfTirePairs){
-            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
-            this._listOfTirePairs.removeFromHead();
-        }
-    }
-    public makeFullTireTrack(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
+    public spawnFullTireTrack(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
         this._topFirstChainPoint = topPoint.clone();
         this._bottomFirstChainPoint = bottomPoint.clone();
 
-        this.vanishFullTrack();
-
         for (let i = 0; i < TankTireTrack.AMOUNT_OF_CHAINS; i++){
-            const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
+            const currTirePair = this.createTireTrackChainPair(topPoint, bottomPoint, hullAngle, sin, cos);
             this._listOfTirePairs.addToHead(currTirePair);
 
             if (i === TankTireTrack.AMOUNT_OF_CHAINS - 1){
@@ -170,13 +192,13 @@ export class TankTireTrack {
         }
     }
     public forwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
-        const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
+        const currTirePair = this.createTireTrackChainPair(topPoint, bottomPoint, hullAngle, sin, cos);
         this._listOfTirePairs.addToTail(currTirePair);
         this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
         this._listOfTirePairs.removeFromHead();
     }
     public backwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
-        const currTirePair = this.createNewTireTrackPair(topPoint, bottomPoint, hullAngle, sin, cos);
+        const currTirePair = this.createTireTrackChainPair(topPoint, bottomPoint, hullAngle, sin, cos);
         this._listOfTirePairs.addToHead(currTirePair);
         this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail.value);
         this._listOfTirePairs.removeFromTail();

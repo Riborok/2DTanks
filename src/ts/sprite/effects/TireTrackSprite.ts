@@ -1,10 +1,10 @@
 import {Sprite} from "../Sprite";
 
-export class TireTrackChainSprite extends Sprite implements IVanishing{
+export class TireTrackSprite extends Sprite implements IVanishing{
     private _opacity: number = 1;
     public constructor(width: number, height: number, type: number) {
         super(width, height);
-        this._sprite.src = `src/img/tanks/Effects/Tire Tracks/Tire_Track_Chain_${type}.png`;
+        this._sprite.src = `src/img/tanks/Effects/Tire Tracks/Tire_Track_${type}.png`;
         this._sprite.style.zIndex = `2`;
     }
     public isVanished(): boolean { return this._opacity <= 0 }
