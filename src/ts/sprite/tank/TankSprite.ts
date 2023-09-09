@@ -32,7 +32,7 @@ export class TankSprite {
             this._tankSpriteParts, point, sin, cos
         );
 
-        this._tankTireTrack.makeFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
+        this._tankTireTrack.spawnFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
     }
     private updateTireTrack(point: Point, hullAngle: number, sin: number, cos: number){
         const { topFirstChainPoint, bottomFirstChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
@@ -50,7 +50,7 @@ export class TankSprite {
                     this._tankTireTrack.forwardUpdate(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
                     break;
                 case 0:
-                    this._tankTireTrack.makeFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
+                    this._tankTireTrack.createTireTrackPair(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
                     break;
                 case -1:
                     this._tankTireTrack.backwardUpdate(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);

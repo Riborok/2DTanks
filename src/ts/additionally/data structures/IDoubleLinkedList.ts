@@ -25,6 +25,7 @@ class DoubleLinkedListNode<T> {
 export interface IDoubleLinkedList<T> extends Iterable<T> {
     get head(): DoubleLinkedListNode<T> | null;
     get tail(): DoubleLinkedListNode<T> | null;
+    get length(): number;
     remove(value: T): void;
     removeNode(node: DoubleLinkedListNode<T>): void;
     addToHead(value: T): void;
@@ -41,8 +42,10 @@ export interface IDoubleLinkedList<T> extends Iterable<T> {
 export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
     private _tail: DoubleLinkedListNode<T> | null = null;
     private _head: DoubleLinkedListNode<T> | null = null;
+    private _length: number = 0;
     public get head(): DoubleLinkedListNode<T> | null { return this._head }
     public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
+    public get length(): number { return this._length }
     *[Symbol.iterator](): Iterator<T> {
         let currentNode = this._head;
 
@@ -51,7 +54,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             currentNode = currentNode.next;
         }
     }
-    public isEmpty(): boolean { return this._head === null }
+    public isEmpty(): boolean { return this._length === 0 }
     public merge(otherList: IDoubleLinkedList<T>): void {
         if (otherList.isEmpty())
             return;
@@ -66,6 +69,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             this._tail = otherList.tail;
         }
 
+        this._length += otherList.length;
         otherList.clear();
     }
     public remove(value: T) {
@@ -77,6 +81,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             }
             currentNode = currentNode.next;
         }
+
+        this._length--;
     }
     public removeNode(node: DoubleLinkedListNode<T>) {
         if (node === this._tail)
@@ -85,6 +91,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         if (node === this._head)
             this._head = node.next;
 
+        this._length--;
         node.remove();
     }
     public addToHead(value: T) {
@@ -99,6 +106,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             this._head.prev = newNode;
             this._head = newNode;
         }
+
+        this._length++;
     }
     public addToTail(value: T) {
         const newNode = new DoubleLinkedListNode(value);
@@ -112,6 +121,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             this._tail.next = newNode;
             this._tail = newNode;
         }
+
+        this._length++;
     }
     public removeFromTail() {
         if (this._tail === this._head) {
@@ -121,6 +132,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             this._tail = this._tail.prev;
             this._tail.next = null;
         }
+
+        this._length--;
     }
     public removeFromHead() {
         if (this._tail === this._head) {
@@ -130,6 +143,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             this._head = this._head.next;
             this._head.prev = null;
         }
+
+        this._length--;
     }
     public moveToTail(value: T) {
         let currentNode = this._tail;
@@ -179,5 +194,6 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
     }
     public clear() {
         this._tail = this._head = null;
+        this._length = 0;
     }
 }
