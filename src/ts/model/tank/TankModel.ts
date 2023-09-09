@@ -132,7 +132,7 @@ export class TankModel extends Model {
         const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
         const turn = TankModel.calcTurn(angle, velocityAngle);
 
-        this.calcBrakingStatus(turn);
+        this.setBrakingStatus(turn);
 
         if (TankModel.isStraightMovement(turn)) {
             this._isDrift = false;
@@ -149,7 +149,7 @@ export class TankModel extends Model {
 
         EntityManipulator.movement(entity);
     }
-    private calcBrakingStatus(turn: number) {
+    private setBrakingStatus(turn: number) {
         this._isBraking = (turn > Math.PI / 2) && (turn < Math.PI * 3/2);
     }
     private calcShortestTurn(turn: number): number {

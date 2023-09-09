@@ -20,6 +20,8 @@ export interface IEntity extends IIdentifiable{
     get momentOfInertia(): number;
 }
 
+const scalingCoeff: number = 6;
+
 /**
  * An abstract base class representing a rectangular entity.
  * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entitiy.
@@ -35,7 +37,7 @@ export class RectangularEntity implements IEntity {
     public constructor(point: Point, width: number, height: number, angle: number, mass: number, id: number) {
         const sumOfSquares = width * width + height * height;
         this._radiusLength = (1 / 2) * Math.sqrt(sumOfSquares);
-        this._momentOfInertia = (1 / 12) * mass * sumOfSquares;
+        this._momentOfInertia = (1 / 12) * mass * sumOfSquares * scalingCoeff;
         this._mass = mass;
         this._id = id;
         this._points = [point.clone(),
