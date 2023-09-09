@@ -26,12 +26,15 @@ export class CollisionResolver {
         const radiusImparting = VectorUtils.subtract(collisionPoint, impartingEntity.calcCenter());
 
         const torqueReceiving = VectorUtils.crossProduct(radiusReceiving , collisionNormal) * impulseMagnitude;
+        const torqueImparting = VectorUtils.crossProduct(radiusImparting ,
+            this.calcEntityNormal(impartingEntity)) * impulseMagnitude;
 
-        radiusReceiving.normalize();
-        const torqueImparting = VectorUtils.crossProduct(radiusImparting , radiusReceiving) * impulseMagnitude;
-
-        impartingEntity.angularVelocity += torqueImparting  / impartingEntity.momentOfInertia;
         receivingEntity.angularVelocity += torqueReceiving / receivingEntity.momentOfInertia;
+        impartingEntity.angularVelocity += torqueImparting  / impartingEntity.momentOfInertia;
+    }
+    private static calcEntityNormal(entity: IEntity): Vector {
+        const angle = entity.angle;
+        return new Vector(Math.cos(angle), Math.sin(angle));
     }
     private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, impulseMagnitude: number,
                                   collisionNormal: Vector) {
