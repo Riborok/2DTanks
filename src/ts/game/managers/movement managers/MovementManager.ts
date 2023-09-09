@@ -37,4 +37,5 @@ export interface ITankMovementManager extends setCoefficients {
 
 export interface IWallMovementManager extends setCoefficients {
     hasAnyResidualMovement(wallElement: WallElement): boolean;
+    movement(wallElement: WallElement): void;
 }

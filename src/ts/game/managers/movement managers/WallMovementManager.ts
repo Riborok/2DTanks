@@ -2,19 +2,13 @@ import {Action, IWallMovementManager, MovementManager} from "./MovementManager";
 import {WallElement} from "../../elements/WallElement";
 
 export class WallMovementManager extends MovementManager implements IWallMovementManager {
-    private hasResidualAngularMovement(wallElement: WallElement): boolean {
-        if (!wallElement.model.isAngularMotionStopped()) {
+    private residualAngularMovement(wallElement: WallElement) {
+        if (!wallElement.model.isAngularMotionStopped())
             this.update(wallElement, wallElement.model.residualAngularMovement);
-            return true;
-        }
-        return false;
     }
-    private hasResidualMovement(wallElement: WallElement): boolean {
-        if (!wallElement.model.isIdle()) {
+    private residualMovement(wallElement: WallElement) {
+        if (!wallElement.model.isIdle())
             this.update(wallElement, wallElement.model.residualMovement);
-            return true;
-        }
-        return false;
     }
     private update(wallElement: WallElement, action: Action) {
         const entity = wallElement.model.entity;
@@ -26,10 +20,11 @@ export class WallMovementManager extends MovementManager implements IWallMovemen
 
         this._entityStorage.insert(entity);
     }
-
     public hasAnyResidualMovement(wallElement: WallElement): boolean {
-        const hasAngularMovement = this.hasResidualAngularMovement(wallElement);
-        const hasMovement = this.hasResidualMovement(wallElement);
-        return hasAngularMovement || hasMovement;
+        return !wallElement.model.isAngularMotionStopped() || !wallElement.model.isIdle();
+    }
+    public movement(wallElement: WallElement) {
+        this.residualAngularMovement(wallElement);
+        this.residualMovement(wallElement);
     }
 }

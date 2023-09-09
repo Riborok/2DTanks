@@ -37,6 +37,7 @@ export interface IDoubleLinkedList<T> extends Iterable<T> {
     clear(): void;
     isEmpty(): boolean;
     merge(otherList: IDoubleLinkedList<T>): void
+    applyAndRemove(action: (t: T) => void, condition: (t: T) => boolean): void;
 }
 
 export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
@@ -49,9 +50,22 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
     *[Symbol.iterator](): Iterator<T> {
         let currentNode = this._head;
 
-        while (currentNode !== null) {
+        for (let i = this._length; i > 0; i--) {
             yield currentNode.value;
             currentNode = currentNode.next;
+        }
+    }
+    public applyAndRemove(action: (t: T) => void, condition: (t: T) => boolean) {
+        let currNode = this._head;
+        while (currNode !== null) {
+            action(currNode.value);
+            if (condition(currNode.value))
+                currNode = currNode.next;
+            else {
+                const prevNode = currNode;
+                currNode = currNode.next;
+                this.removeNode(prevNode);
+            }
         }
     }
     public isEmpty(): boolean { return this._length === 0 }

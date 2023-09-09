@@ -14,6 +14,7 @@ import {ITankHandlingManagers, IWallHandlingManagers} from "./managers/handling 
 import {TankHandlingManagers} from "./managers/handling managers/TankHandlingManagers";
 import {WallHandlingManagers} from "./managers/handling managers/WallHandlingManagers";
 import {WallElement} from "./elements/WallElement";
+import {AnimationManager} from "./managers/AnimationManager";
 
 export interface IGameMaster {
     startGameLoop(): void;
@@ -29,6 +30,7 @@ export class GameMaster implements IGameMaster {
     private readonly _field: Field;
     private readonly _tankHandlingManagers: ITankHandlingManagers;
     private readonly _wallHandlingManagers: IWallHandlingManagers;
+    private readonly _animationManager: AnimationManager = new AnimationManager();
     private readonly _keyHandler: KeyHandler;
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
@@ -101,6 +103,7 @@ export class GameMaster implements IGameMaster {
 
         this._tankHandlingManagers.handle(this._keyHandler.keysMask);
         this._wallHandlingManagers.handle();
+        this._animationManager.handle();
 
         requestAnimationFrame(() => this.gameLoop());
     }

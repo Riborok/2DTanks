@@ -15,15 +15,8 @@ export class WallHandlingManagers extends HandlingManagers<WallElement, WallMove
     }
     public handle(): void {
         this.addToProcess();
-        let currNode = this._wallToProcess.head;
-        while (currNode !== null) {
-            if (this._movementManager.hasAnyResidualMovement(currNode.value))
-                currNode = currNode.next;
-            else {
-                const prevNode = currNode;
-                currNode = currNode.next;
-                this._wallToProcess.removeNode(prevNode);
-            }
-        }
+        if (!this._wallToProcess.isEmpty())
+            this._wallToProcess.applyAndRemove(this._movementManager.movement.bind(this._movementManager),
+                this._movementManager.hasAnyResidualMovement.bind(this._movementManager));
     }
 }
