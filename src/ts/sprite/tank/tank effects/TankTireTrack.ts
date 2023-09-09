@@ -194,13 +194,19 @@ export class TankTireTrack {
     public forwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
         const currTirePair = this.createTireTrackChainPair(topPoint, bottomPoint, hullAngle, sin, cos);
         this._listOfTirePairs.addToTail(currTirePair);
-        this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
-        this._listOfTirePairs.removeFromHead();
+
+        if (this._listOfTirePairs.length > TankTireTrack.AMOUNT_OF_CHAINS) {
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
+            this._listOfTirePairs.removeFromHead();
+        }
     }
     public backwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
         const currTirePair = this.createTireTrackChainPair(topPoint, bottomPoint, hullAngle, sin, cos);
         this._listOfTirePairs.addToHead(currTirePair);
-        this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail.value);
-        this._listOfTirePairs.removeFromTail();
+
+        if (this._listOfTirePairs.length > TankTireTrack.AMOUNT_OF_CHAINS) {
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail.value);
+            this._listOfTirePairs.removeFromTail();
+        }
     }
 }

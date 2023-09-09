@@ -81,8 +81,6 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             }
             currentNode = currentNode.next;
         }
-
-        this._length--;
     }
     public removeNode(node: DoubleLinkedListNode<T>) {
         if (node === this._tail)
@@ -131,9 +129,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         else {
             this._tail = this._tail.prev;
             this._tail.next = null;
+            this._length--;
         }
-
-        this._length--;
     }
     public removeFromHead() {
         if (this._tail === this._head) {
@@ -142,9 +139,8 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         else {
             this._head = this._head.next;
             this._head.prev = null;
+            this._length--;
         }
-
-        this._length--;
     }
     public moveToTail(value: T) {
         let currentNode = this._tail;
