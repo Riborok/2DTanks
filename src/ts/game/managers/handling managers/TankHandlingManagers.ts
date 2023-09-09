@@ -2,11 +2,14 @@ import {HandlingManagers, ITankHandlingManagers} from "./HandlingManagers";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
+import {AnimationManager} from "../AnimationManager";
 
 export class TankHandlingManagers extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManagers {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
+    private readonly _animationManager: AnimationManager = new AnimationManager();
     public handle(mask: number): void {
         this._tireTracksManager.reduceOpacity();
+        this._animationManager.handleAnimations();
 
         for (const tankElement of this._elements.values()) {
             const control = tankElement.control;
