@@ -124,7 +124,7 @@ export class TankModel extends Model {
         this.movement(this._tankParts.track.backwardData,this._entity.angle + Math.PI,
             resistanceCoeff, airResistanceCoeff);
     }
-    private static readonly velocityRecoveryCoefficient: number = 0.01;
+    private static readonly velocityRecoveryCoefficient: number = 0.025;
     private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
         const speed = entity.velocity.length;
