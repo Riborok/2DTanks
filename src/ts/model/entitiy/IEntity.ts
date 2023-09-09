@@ -20,7 +20,7 @@ export interface IEntity extends IIdentifiable{
     get momentOfInertia(): number;
 }
 
-const scalingCoeff: number = 6;
+const scalingCoeff: number = 5.5;
 
 /**
  * An abstract base class representing a rectangular entity.
