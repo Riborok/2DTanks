@@ -1,17 +1,17 @@
-import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
+import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TirePair} from "../../sprite/tank/tank effects/TankTireTrack";
 import {Sprite} from "../../sprite/Sprite";
 
 export interface ITireTracksManager {
-    get vanishingListOfTirePairs(): IDoubleLinkedList<TirePair>;
+    get vanishingListOfTirePairs(): IDoublyLinkedList<TirePair>;
     reduceOpacity(): void;
 }
 
 export class TireTracksManager {
-    private _vanishingListOfTirePairs : IDoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>()
+    private _vanishingListOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>()
     private static readonly MIN_REDUCING_OPACITY_NUMBER: number = 0.0001;
     private tanksAmount: number = 0;
-    public get vanishingListOfTirePairs(): IDoubleLinkedList<TirePair> {
+    public get vanishingListOfTirePairs(): IDoublyLinkedList<TirePair> {
         this.tanksAmount++;
         return this._vanishingListOfTirePairs
     }
@@ -32,7 +32,7 @@ export class TireTracksManager {
             if (node.topTire.isVanished()) { counter++; }
         }
         for (; counter > 0; counter--) {
-            this.removeTireTrackPair(this._vanishingListOfTirePairs.tail.value);
+            this.removeTireTrackPair(this._vanishingListOfTirePairs.tail);
             this._vanishingListOfTirePairs.removeFromTail();
         }
     }

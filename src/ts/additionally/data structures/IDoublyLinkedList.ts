@@ -1,12 +1,12 @@
-class DoubleLinkedListNode<T> {
+class DoublyLinkedListNode<T> {
     private readonly _value: T;
-    private _prev: DoubleLinkedListNode<T> | null = null;
-    private _next: DoubleLinkedListNode<T> | null = null;
+    private _prev: DoublyLinkedListNode<T> | null = null;
+    private _next: DoublyLinkedListNode<T> | null = null;
     public get value(): T { return this._value }
-    public get prev(): DoubleLinkedListNode<T> | null { return this._prev }
-    public get next(): DoubleLinkedListNode<T> | null { return this._next }
-    public set next(listNode: DoubleLinkedListNode<T> | null) { this._next = listNode }
-    public set prev(listNode: DoubleLinkedListNode<T> | null) { this._prev = listNode }
+    public get prev(): DoublyLinkedListNode<T> | null { return this._prev }
+    public get next(): DoublyLinkedListNode<T> | null { return this._next }
+    public set next(listNode: DoublyLinkedListNode<T> | null) { this._next = listNode }
+    public set prev(listNode: DoublyLinkedListNode<T> | null) { this._prev = listNode }
     public constructor(value: T) {
         this._value = value;
     }
@@ -22,12 +22,12 @@ class DoubleLinkedListNode<T> {
     }
 }
 
-export interface IDoubleLinkedList<T> extends Iterable<T> {
-    get head(): DoubleLinkedListNode<T> | null;
-    get tail(): DoubleLinkedListNode<T> | null;
+export interface IDoublyLinkedList<T> extends Iterable<T> {
+    get head(): T | null;
+    get tail(): T | null;
     get length(): number;
     remove(value: T): void;
-    removeNode(node: DoubleLinkedListNode<T>): void;
+    removeNode(node: DoublyLinkedListNode<T>): void;
     addToHead(value: T): void;
     addToTail(value: T): void;
     removeFromTail(): void;
@@ -36,16 +36,15 @@ export interface IDoubleLinkedList<T> extends Iterable<T> {
     moveToHead(value: T): void;
     clear(): void;
     isEmpty(): boolean;
-    merge(otherList: IDoubleLinkedList<T>): void
     applyAndRemove(action: (t: T) => void, condition: (t: T) => boolean): void;
 }
 
-export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
-    private _tail: DoubleLinkedListNode<T> | null = null;
-    private _head: DoubleLinkedListNode<T> | null = null;
+export class DoublyLinkedList<T> implements IDoublyLinkedList<T> {
+    private _tail: DoublyLinkedListNode<T> | null = null;
+    private _head: DoublyLinkedListNode<T> | null = null;
     private _length: number = 0;
-    public get head(): DoubleLinkedListNode<T> | null { return this._head }
-    public get tail(): DoubleLinkedListNode<T> | null { return this._tail }
+    public get head(): T | null { return this._head !== null ? this._head.value : null }
+    public get tail(): T | null { return this._tail !== null ? this._tail.value : null }
     public get length(): number { return this._length }
     *[Symbol.iterator](): Iterator<T> {
         let currentNode = this._head;
@@ -69,23 +68,6 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         }
     }
     public isEmpty(): boolean { return this._length === 0 }
-    public merge(otherList: IDoubleLinkedList<T>): void {
-        if (otherList.isEmpty())
-            return;
-
-        if (this.isEmpty()) {
-            this._head = otherList.head;
-            this._tail = otherList.tail;
-        }
-        else {
-            this._tail.next = otherList.head;
-            otherList.head.prev = this._tail;
-            this._tail = otherList.tail;
-        }
-
-        this._length += otherList.length;
-        otherList.clear();
-    }
     public remove(value: T) {
         let currentNode = this._head;
         while (currentNode !== null) {
@@ -96,7 +78,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
             currentNode = currentNode.next;
         }
     }
-    public removeNode(node: DoubleLinkedListNode<T>) {
+    public removeNode(node: DoublyLinkedListNode<T>) {
         if (node === this._tail)
             this._tail = node.prev;
 
@@ -107,7 +89,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         node.remove();
     }
     public addToHead(value: T) {
-        const newNode = new DoubleLinkedListNode(value);
+        const newNode = new DoublyLinkedListNode(value);
 
         if (this._head === null) {
             this._tail = newNode;
@@ -122,7 +104,7 @@ export class DoubleLinkedList<T> implements IDoubleLinkedList<T> {
         this._length++;
     }
     public addToTail(value: T) {
-        const newNode = new DoubleLinkedListNode(value);
+        const newNode = new DoublyLinkedListNode(value);
 
         if (this._tail === null) {
             this._tail = newNode;
