@@ -3,10 +3,20 @@ import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";
 
+/**
+ * Utility class for resolving collisions between entities.
+ */
 export class CollisionResolver {
     private constructor() {}
     private static readonly COEFFICIENT_OF_RESTITUTION: number = 0.6;
     private static readonly CORRECTION_FACTOR: number = 0.3;
+
+    /**
+     * Resolves a collision between two entities by calculating changes in velocity and angular velocity
+     * and separating overlapping entities.
+     * @param impartingEntity The entity that caused the collision.
+     * @param receivingEntity The entity that received the collision.
+     */
     public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity) {
         const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
         if (collisionResult === null)
