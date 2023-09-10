@@ -2,7 +2,7 @@ import {IEntity} from "../model/entitiy/IEntity";
 import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";
-import {calcTurn, isAngleInQuadrant3or4} from "./additionalFunc";
+import {calcTurn, clampAngle, isAngleInQuadrant3or4} from "./additionalFunc";
 
 /**
  * Utility class for resolving collisions between entities.
@@ -10,7 +10,7 @@ import {calcTurn, isAngleInQuadrant3or4} from "./additionalFunc";
 export class CollisionResolver {
     private constructor() {}
     private static readonly COEFFICIENT_OF_RESTITUTION: number = 0.6;
-    private static readonly CORRECTION_FACTOR: number = 0.3;
+    private static readonly CORRECTION_FACTOR: number = 0.55;
 
     /**
      * Resolves a collision between two entities by calculating changes in velocity and angular velocity
@@ -33,15 +33,27 @@ export class CollisionResolver {
     }
     private static updateAngularVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionPoint: Point,
                                          impulseMagnitude: number, collisionNormal: Vector) {
+        const impartingNormal = this.calcEntityNormal(impartingEntity);
+
         const radiusReceiving = VectorUtils.subtract(collisionPoint, receivingEntity.calcCenter());
         const radiusImparting = VectorUtils.subtract(collisionPoint, impartingEntity.calcCenter());
 
-        const torqueReceiving = VectorUtils.crossProduct(radiusReceiving , collisionNormal) * impulseMagnitude;
-        const torqueImparting = VectorUtils.crossProduct(radiusImparting ,
-            this.calcEntityNormal(impartingEntity)) * impulseMagnitude;
+        const torqueReceiving = VectorUtils.crossProduct(radiusReceiving, collisionNormal) * impulseMagnitude;
+        const torqueImparting = VectorUtils.crossProduct(radiusImparting, impartingNormal) * impulseMagnitude;
 
-        receivingEntity.angularVelocity += torqueReceiving / receivingEntity.momentOfInertia;
-        impartingEntity.angularVelocity += torqueImparting  / impartingEntity.momentOfInertia;
+        const receivingImpulse = torqueReceiving / receivingEntity.momentOfInertia;
+        const impartingImpulse = torqueImparting  / impartingEntity.momentOfInertia;
+
+        receivingEntity.angularVelocity += receivingImpulse;
+        impartingEntity.angularVelocity += this.shouldReverseReceiving(receivingEntity.angle, impartingNormal.angle)
+            ? -impartingImpulse
+            : impartingImpulse;
+    }
+    private static shouldReverseReceiving(receivingAngle: number, impartingNormalAngle: number): boolean {
+        const turn = clampAngle(receivingAngle - impartingNormalAngle, 0, Math.PI);
+        return (turn < Math.PI / 2 && turn > Math.PI / 4)
+            ||
+            (turn >= Math.PI / 2 && turn < Math.PI * 3 / 4);
     }
     private static calcEntityNormal(entity: IEntity): Vector {
         const angle = entity.angle;
@@ -52,11 +64,11 @@ export class CollisionResolver {
     }
     private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, impulseMagnitude: number,
                                   collisionNormal: Vector) {
-        let newImpulse = VectorUtils.scale(collisionNormal, -impulseMagnitude / impartingEntity.mass);
-        impartingEntity.velocity.addVector(newImpulse);
+        const impartingImpulse = VectorUtils.scale(collisionNormal, -impulseMagnitude / impartingEntity.mass);
+        const receivingImpulse = VectorUtils.scale(collisionNormal, impulseMagnitude / receivingEntity.mass);
 
-        newImpulse = VectorUtils.scale(collisionNormal, impulseMagnitude / receivingEntity.mass);
-        receivingEntity.velocity.addVector(newImpulse);
+        impartingEntity.velocity.addVector(impartingImpulse);
+        receivingEntity.velocity.addVector(receivingImpulse);
     }
     private static separateEntities(impartingEntity: IEntity, overlap: number, collisionNormal: Vector) {
         let correctionX = -collisionNormal.x * overlap;
