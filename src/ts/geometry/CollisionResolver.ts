@@ -2,6 +2,7 @@ import {IEntity} from "../model/entitiy/IEntity";
 import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";
+import {calcTurn, isAngleInQuadrant3or4} from "./additionalFunc";
 
 /**
  * Utility class for resolving collisions between entities.
@@ -27,8 +28,8 @@ export class CollisionResolver {
         const impulseMagnitude = this.calsImpulseMagnitude(impartingEntity, receivingEntity, collisionNormal);
 
         this.separateEntities(impartingEntity, collisionResult.overlap, collisionNormal);
-        this.updateVelocity(impartingEntity, receivingEntity, impulseMagnitude, collisionNormal);
         this.updateAngularVelocity(impartingEntity, receivingEntity, collisionResult.collisionPoint, impulseMagnitude, collisionNormal);
+        this.updateVelocity(impartingEntity, receivingEntity, impulseMagnitude, collisionNormal);
     }
     private static updateAngularVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionPoint: Point,
                                          impulseMagnitude: number, collisionNormal: Vector) {
@@ -44,7 +45,10 @@ export class CollisionResolver {
     }
     private static calcEntityNormal(entity: IEntity): Vector {
         const angle = entity.angle;
-        return new Vector(Math.cos(angle), Math.sin(angle));
+
+        return isAngleInQuadrant3or4(calcTurn(angle, entity.velocity.angle))
+            ? new Vector(-Math.cos(angle), -Math.sin(angle))
+            : new Vector(Math.cos(angle), Math.sin(angle));
     }
     private static updateVelocity(impartingEntity: IEntity, receivingEntity: IEntity, impulseMagnitude: number,
                                   collisionNormal: Vector) {

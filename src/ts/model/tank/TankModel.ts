@@ -8,7 +8,7 @@ import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
 import {MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
-import {clampAngle} from "../../geometry/additionalFunc";
+import {calcTurn, clampAngle, isAngleInQuadrant3or4} from "../../geometry/additionalFunc";
 import {remapValueToRange} from "../../additionally/additionalFunc";
 
 export class TankModel extends Model {
@@ -130,7 +130,7 @@ export class TankModel extends Model {
         const speed = entity.velocity.length;
 
         const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
-        const turn = TankModel.calcTurn(angle, velocityAngle);
+        const turn = calcTurn(angle, velocityAngle);
 
         this.setBrakingStatus(turn);
 
@@ -150,7 +150,7 @@ export class TankModel extends Model {
         EntityManipulator.movement(entity);
     }
     private setBrakingStatus(turn: number) {
-        this._isBraking = (turn > Math.PI / 2) && (turn < Math.PI * 3/2);
+        this._isBraking = isAngleInQuadrant3or4(turn);
     }
     private calcShortestTurn(turn: number): number {
         if (this._isBraking)
@@ -196,11 +196,8 @@ export class TankModel extends Model {
             0, 1, 0.95, 1)
         this._entity.velocity.scale(scalar);
     }
-    private static calcTurn(angle: number, velocityAngle: number): number {
-        return clampAngle(angle - velocityAngle);
-    }
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
-        const turn = TankModel.calcTurn(this._entity.angle, this._entity.velocity.angle);
+        const turn = calcTurn(this._entity.angle, this._entity.velocity.angle);
         if (this._isDrift || (!TankModel.isStraightMovement(turn) && !TankModel.isReverseMovement(turn))) {
             this._isDrift = true;
             this.determineDribbleSpeed(turn);
