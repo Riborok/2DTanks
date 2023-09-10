@@ -1,4 +1,4 @@
-import {DoubleLinkedList, IDoubleLinkedList} from "../../additionally/data structures/IDoubleLinkedList";
+import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {IAnimation} from "../../sprite/animation/IAnimation";
 
 interface IAnimationManager{
@@ -6,7 +6,7 @@ interface IAnimationManager{
     handle(): void;
 }
 export class AnimationManager implements IAnimationManager{
-    private readonly _animationList: IDoubleLinkedList<IAnimation> = new DoubleLinkedList<IAnimation>();
+    private readonly _animationList: IDoublyLinkedList<IAnimation> = new DoublyLinkedList<IAnimation>();
     public add(animation: IAnimation): void {
         this._animationList.addToTail(animation);
     }

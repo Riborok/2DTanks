@@ -1,4 +1,4 @@
-import {DoubleLinkedList, IDoubleLinkedList} from "./data structures/IDoubleLinkedList";
+import {DoublyLinkedList, IDoublyLinkedList} from "./data structures/IDoublyLinkedList";
 
 /**
  * A generic class for caching values based on keys.
@@ -9,7 +9,7 @@ class LRUCache<TKey, TValue> {
     private readonly _cache: Map<TKey, TValue> = new Map();
     private readonly _calcFunc: (key: TKey) => TValue;
     private readonly _maxCacheSize: number;
-    private readonly _lruList: IDoubleLinkedList<TKey> = new DoubleLinkedList<TKey>();
+    private readonly _lruList: IDoublyLinkedList<TKey> = new DoublyLinkedList<TKey>();
 
     /**
      * Creates a new instance of ValueCaching.
@@ -40,7 +40,7 @@ class LRUCache<TKey, TValue> {
         this._lruList.addToHead(key);
 
         if (this._cache.size > this._maxCacheSize) {
-            const lruKey = this._lruList.tail.value;
+            const lruKey = this._lruList.tail;
             this._cache.delete(lruKey);
             this._lruList.removeFromTail();
         }

@@ -1,6 +1,6 @@
 import {Point} from "../../../geometry/Point";
 import {TireTrackChainSprite} from "../../effects/TireTrackChainSprite";
-import {DoubleLinkedList, IDoubleLinkedList} from "../../../additionally/data structures/IDoubleLinkedList";
+import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
 import {SpriteManipulator} from "../../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
 import {TankSpriteParts} from "../TankSpriteParts";
@@ -12,8 +12,8 @@ import {Sprite} from "../../Sprite";
 export type TirePair = { topTire: IVanishing, bottomTire: IVanishing }
 
 export class TankTireTrack {
-    private readonly _listOfTirePairs : IDoubleLinkedList<TirePair> = new DoubleLinkedList<TirePair>();
-    private readonly _vanishingListOfTirePairs: IDoubleLinkedList<TirePair>;
+    private readonly _listOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>();
+    private readonly _vanishingListOfTirePairs: IDoublyLinkedList<TirePair>;
     private readonly _canvas: Element;
     private readonly _trackWidth: number;
     private readonly _trackHeight: number;
@@ -28,7 +28,7 @@ export class TankTireTrack {
     private static readonly DIRECTION_ANGLE_DIFFERENCE: number = 0.6;
     private static readonly AMOUNT_OF_CHAINS: number = 10;
     public get chainWidth () { return this._chainWidth }
-    public constructor(canvas: Element, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: IDoubleLinkedList<TirePair>) {
+    public constructor(canvas: Element, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>) {
         this._vanishingListOfTirePairs = vanishingListOfTirePairs;
         this._canvas = canvas;
         this._trackWidth = topTrackSprite.width;
@@ -54,7 +54,7 @@ export class TankTireTrack {
     }
     private vanishFullTrack(){
         for (const node of this._listOfTirePairs){
-            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head);
             this._listOfTirePairs.removeFromHead();
         }
     }
@@ -196,7 +196,7 @@ export class TankTireTrack {
         this._listOfTirePairs.addToTail(currTirePair);
 
         if (this._listOfTirePairs.length > TankTireTrack.AMOUNT_OF_CHAINS) {
-            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head.value);
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head);
             this._listOfTirePairs.removeFromHead();
         }
     }
@@ -205,7 +205,7 @@ export class TankTireTrack {
         this._listOfTirePairs.addToHead(currTirePair);
 
         if (this._listOfTirePairs.length > TankTireTrack.AMOUNT_OF_CHAINS) {
-            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail.value);
+            this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.tail);
             this._listOfTirePairs.removeFromTail();
         }
     }

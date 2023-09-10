@@ -5,8 +5,8 @@ import {CollisionDetector} from "./CollisionDetector";
 
 export class CollisionResolver {
     private constructor() {}
-    private static readonly coefficientOfRestitution: number = 0.6;
-    private static readonly CORRECTION_FACTOR: number = 3;
+    private static readonly COEFFICIENT_OF_RESTITUTION: number = 0.6;
+    private static readonly CORRECTION_FACTOR: number = 0.3;
     public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity) {
         const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
         if (collisionResult === null)
@@ -45,8 +45,12 @@ export class CollisionResolver {
         receivingEntity.velocity.addVector(newImpulse);
     }
     private static separateEntities(impartingEntity: IEntity, overlap: number, collisionNormal: Vector) {
-        const correctionX = -collisionNormal.x * overlap * this.CORRECTION_FACTOR;
-        const correctionY = -collisionNormal.y * overlap * this.CORRECTION_FACTOR;
+        let correctionX = -collisionNormal.x * overlap;
+        let correctionY = -collisionNormal.y * overlap;
+
+        correctionX += Math.sign(correctionX) === 1 ? this.CORRECTION_FACTOR : -this.CORRECTION_FACTOR;
+        correctionY += Math.sign(correctionY) === 1 ? this.CORRECTION_FACTOR : -this.CORRECTION_FACTOR;
+
         for (const point of impartingEntity.points)
             point.addToCoordinates(correctionX, correctionY);
     }
@@ -54,7 +58,7 @@ export class CollisionResolver {
         const relativeVelocity = VectorUtils.subtract(impartingEntity.velocity, receivingEntity.velocity);
 
         return  VectorUtils.dotProduct(relativeVelocity, collisionNormal) * 2 /
-            (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.coefficientOfRestitution;
+            (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.COEFFICIENT_OF_RESTITUTION;
     }
     private static calcCollisionNormal(collisionPoint: Point, center: Point): Vector {
         const collisionNormal = VectorUtils.subtract(collisionPoint, center);
