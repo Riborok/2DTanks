@@ -27,3 +27,22 @@ export function clampAngle(angle: number, minRange: number = 0, maxRange: number
 
     return angle;
 }
+
+/**
+ * Checks whether an angle is in the 3rd or 4th quadrant.
+ * @param angle - The input angle in radians.
+ * @returns `true` if the angle is in the 3rd or 4th quadrant, `false` otherwise.
+ */
+export function isAngleInQuadrant3or4(angle: number): boolean {
+    return (angle > Math.PI / 2) && (angle < Math.PI * 3 / 2);
+}
+
+/**
+ * Calculates the rotation from one angle to another.
+ * @param fromAngle - The starting angle in radians.
+ * @param toAngle - The target angle in radians.
+ * @returns The rotation from `fromAngle` to `toAngle` in radians.
+ */
+export function calcTurn(fromAngle: number, toAngle: number): number {
+    return clampAngle(fromAngle - toAngle);
+}
