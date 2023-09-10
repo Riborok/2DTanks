@@ -14,7 +14,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     constructor(point: Point, angle: number) {
         super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_${this._animationStage}.png`;
-        this._sprite.style.zIndex = `6`;
+        this._sprite.style.zIndex = `7`;
 
         this.setPosAndAngle(point, angle);
     }
