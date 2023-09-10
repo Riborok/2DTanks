@@ -18,6 +18,12 @@ export class PointRotator {
         point.x = targetPoint.x + deltaX * cos - deltaY * sin;
         point.y = targetPoint.y + deltaX * sin + deltaY * cos;
     }
+    /**
+     * Rotates a point by a given sine and cosine.
+     * @param point The point to rotate.
+     * @param sin The sine of the rotation angle.
+     * @param cos The cosine of the rotation angle.
+     */
     public static rotatePoint(point: Point, sin: number, cos: number) {
         const x = point.x, y = point.y;
         point.x = x * cos - y * sin;

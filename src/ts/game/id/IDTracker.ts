@@ -49,12 +49,12 @@ export class IDTracker {
 
     /**
      * Get the next available bullet ID and increment the counter.
-     * Throws an error if the maximum ID is reached.
+     * Resets to the starting ID if the maximum ID is reached.
      * @returns The unique ID for a bullet.
      */
     public static get bulletId(): number {
         if (IDTracker.BULLET_ID > IDTracker.ENDING_BULLET_ID)
-            throw new Error("Maximum bullet ID is reached");
+            IDTracker.BULLET_ID = IDTracker.STARTING_BULLET_ID;
 
         return IDTracker.BULLET_ID++;
     }
