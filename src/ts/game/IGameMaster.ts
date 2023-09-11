@@ -10,9 +10,9 @@ import {ObstacleCreator} from "./creators/IObstacleCreator";
 import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
 import {Point} from "../geometry/Point";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
-import {ITankHandlingManagers, IWallHandlingManagers} from "./managers/handling managers/HandlingManagers";
-import {TankHandlingManagers} from "./managers/handling managers/TankHandlingManagers";
-import {WallHandlingManagers} from "./managers/handling managers/WallHandlingManagers";
+import {ITankHandlingManager, IWallHandlingManager} from "./managers/handling managers/HandlingManagers";
+import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
+import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
 import {WallElement} from "./elements/WallElement";
 import {AnimationManager} from "./managers/AnimationManager";
 
@@ -28,8 +28,8 @@ export class GameMaster implements IGameMaster {
     private _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
 
     private readonly _field: Field;
-    private readonly _tankHandlingManagers: ITankHandlingManagers;
-    private readonly _wallHandlingManagers: IWallHandlingManagers;
+    private readonly _tankHandlingManagers: ITankHandlingManager;
+    private readonly _wallHandlingManagers: IWallHandlingManager;
     private readonly _animationManager: AnimationManager = new AnimationManager();
     private readonly _keyHandler: KeyHandler;
     public constructor(canvas: Element, width: number, height: number) {
@@ -39,11 +39,11 @@ export class GameMaster implements IGameMaster {
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
 
-        this._tankHandlingManagers = new TankHandlingManagers(
+        this._tankHandlingManagers = new TankHandlingManager(
             new TankMovementManager(entityCollisionSystem, collisionManager),
             this._field
         );
-        this._wallHandlingManagers = new WallHandlingManagers(
+        this._wallHandlingManagers = new WallHandlingManager(
             new WallMovementManager(entityCollisionSystem, collisionManager),
             this._field
         );

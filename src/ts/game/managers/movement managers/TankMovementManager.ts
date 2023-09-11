@@ -49,7 +49,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
     }
     private hullUpdate(tankElement: TankElement, action: Action, updateSprites: UpdateSprites) {
         const entity = tankElement.model.entity;
-        this._entityStorage.remove(entity)
+        this._entityStorage.remove(entity);
         action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff);
         if (this._collisionManager.hasCollision(entity))
             tankElement.sprite.removeAcceleration();

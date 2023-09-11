@@ -2,28 +2,21 @@ import {IEntity} from "../../model/entitiy/IEntity";
 import {ICollisionDetection} from "../../model/entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {IDTracker} from "../id/IDTracker";
-
-class IdToProcessing {
-    private readonly _idForProcessing: number[] = new Array<number>();
-    public hasWallsForProcessing(): boolean { return this._idForProcessing.length !== 0 }
-    public clear() { this._idForProcessing.length = 0 }
-    public push(id: number) { this._idForProcessing.push(id) }
-    public get iterable(): Iterable<number> { return this._idForProcessing }
-}
+import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
 
 export interface ICollisionManager {
-    hasCollision(entity: IEntity): boolean;
-    get wallsForProcessing(): IdToProcessing;
+    hasCollision(entity: IEntity): Iterable<IEntity> | null;
+    get wallsForProcessing(): IIdToProcessing;
 }
 
 export class CollisionManager implements ICollisionManager {
     private readonly _collisionDetection: ICollisionDetection;
-    private _wallsForProcessing: IdToProcessing = new IdToProcessing();
-    public get wallsForProcessing(): IdToProcessing { return this._wallsForProcessing }
+    private _wallsForProcessing: IIdToProcessing = new IdToProcessing();
+    public get wallsForProcessing(): IIdToProcessing { return this._wallsForProcessing }
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;
     }
-    public hasCollision(entity: IEntity): boolean {
+    public hasCollision(entity: IEntity): Iterable<IEntity> | null {
         const receivingEntities = this._collisionDetection.getCollisions(entity);
         let hasCollision: boolean = false;
 
@@ -33,17 +26,10 @@ export class CollisionManager implements ICollisionManager {
             hasCollision = true;
         }
 
-        return hasCollision;
+        return hasCollision ? receivingEntities : null;
     }
     private processCollision(receivingEntity: IEntity) {
-        if (this.isWallCollision(receivingEntity))
+        if (IDTracker.isWall(receivingEntity.id))
             this._wallsForProcessing.push(receivingEntity.id);
-    }
-
-    private isWallCollision(receivingEntity: IEntity): boolean {
-        return (
-            receivingEntity.id >= IDTracker.STARTING_WALL_ID &&
-            receivingEntity.id <= IDTracker.ENDING_WALL_ID
-        );
     }
 }

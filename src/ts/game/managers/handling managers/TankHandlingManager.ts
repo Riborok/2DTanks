@@ -1,9 +1,9 @@
-import {HandlingManagers, ITankHandlingManagers} from "./HandlingManagers";
+import {HandlingManagers, ITankHandlingManager} from "./HandlingManagers";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 
-export class TankHandlingManagers extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManagers {
+export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
     public handle(mask: number): void {
         this._tireTracksManager.reduceOpacity();

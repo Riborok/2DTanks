@@ -7,16 +7,46 @@ export class IDTracker {
     private constructor() { }
 
     // Range of IDs for tanks
-    public static readonly STARTING_TANK_ID: number = 0;
-    public static readonly ENDING_TANK_ID: number = IDTracker.STARTING_TANK_ID + 42_42_42_42_42_42_42;
+    private static readonly STARTING_TANK_ID: number = 0;
+    private static readonly ENDING_TANK_ID: number = IDTracker.STARTING_TANK_ID + 42_42_42_42_42_42_42;
+
+    /**
+     * Check if a given ID belongs to a tank entity.
+     * @param id The ID to check.
+     * @returns True if the ID belongs to a tank, false otherwise.
+     */
+    public static isTank(id: number): boolean {
+        return id >= IDTracker.STARTING_TANK_ID &&
+            id <= IDTracker.ENDING_TANK_ID;
+    }
 
     // Range of IDs for walls
-    public static readonly STARTING_WALL_ID: number = IDTracker.ENDING_TANK_ID + 1;
-    public static readonly ENDING_WALL_ID: number = IDTracker.STARTING_WALL_ID + 42_42_42_42_42_42_42;
+    private static readonly STARTING_WALL_ID: number = IDTracker.ENDING_TANK_ID + 1;
+    private static readonly ENDING_WALL_ID: number = IDTracker.STARTING_WALL_ID + 42_42_42_42_42_42_42;
+
+    /**
+     * Check if a given ID belongs to a wall entity.
+     * @param id The ID to check.
+     * @returns True if the ID belongs to a wall, false otherwise.
+     */
+    public static isWall(id: number): boolean {
+        return id >= IDTracker.STARTING_WALL_ID &&
+            id <= IDTracker.ENDING_WALL_ID;
+    }
 
     // Range of IDs for bullets
-    public static readonly STARTING_BULLET_ID: number = IDTracker.ENDING_WALL_ID + 1;
-    public static readonly ENDING_BULLET_ID: number = IDTracker.STARTING_BULLET_ID + 42_42_42_42_42_42_42;
+    private static readonly STARTING_BULLET_ID: number = IDTracker.ENDING_WALL_ID + 1;
+    private static readonly ENDING_BULLET_ID: number = IDTracker.STARTING_BULLET_ID + 42_42_42_42_42_42_42;
+
+    /**
+     * Check if a given ID belongs to a bullet entity.
+     * @param id The ID to check.
+     * @returns True if the ID belongs to a bullet, false otherwise.
+     */
+    public static isBullet(id: number): boolean {
+        return id >= IDTracker.STARTING_BULLET_ID &&
+            id <= IDTracker.ENDING_BULLET_ID;
+    }
 
     // Current IDs for each entity type
     private static TANK_ID: number = IDTracker.STARTING_TANK_ID;

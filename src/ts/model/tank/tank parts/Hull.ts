@@ -1,6 +1,8 @@
 import {Bullet} from "../../bullet/Bullet";
+import {IArmor} from "../../vitality/IArmor";
+import {IHealth} from "../../vitality/IHealth";
 
-export abstract class Hull {
+export abstract class Hull implements IArmor, IHealth {
     protected abstract _health: number;
     protected abstract _armor: number;
     protected abstract _armorStrength: number;

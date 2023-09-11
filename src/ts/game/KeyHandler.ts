@@ -22,15 +22,14 @@ import {
     VK_Q,
     VK_R,
     VK_RIGHT,
-    VK_S,
+    VK_S, VK_SLASH,
     VK_T,
     VK_U,
     VK_UP,
     VK_V,
     VK_W,
     VK_X,
-    VK_Y,
-    VK_Z
+    VK_Y
 } from "../constants/keyCodes";
 
 export class KeyHandler {
@@ -59,7 +58,8 @@ export class KeyHandler {
     public static readonly W_MASK: number = 1 << 22;
     public static readonly X_MASK: number = 1 << 23;
     public static readonly Y_MASK: number = 1 << 24;
-    public static readonly Z_MASK: number = 1 << 25;
+
+    public static readonly SLASH_MASK: number = 1 << 25;
 
     public static readonly PERIOD_MASK: number = 1 << 26;
     public static readonly COMMA_MASK: number = 1 << 27;
@@ -134,8 +134,8 @@ export class KeyHandler {
                 return KeyHandler.X_MASK;
             case VK_Y:
                 return KeyHandler.Y_MASK;
-            case VK_Z:
-                return KeyHandler.Z_MASK;
+            case VK_SLASH:
+                return KeyHandler.SLASH_MASK;
             case VK_PERIOD:
                 return KeyHandler.PERIOD_MASK;
             case VK_COMMA:

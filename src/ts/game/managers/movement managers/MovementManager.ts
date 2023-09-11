@@ -3,6 +3,8 @@ import {ICollisionManager} from "../ICollisionManager";
 import {WallElement} from "../../elements/WallElement";
 import {IEntity} from "../../../model/entitiy/IEntity";
 import {IStorage} from "../../../model/entitiy/IEntityCollisionSystem";
+import {BulletElement} from "../../elements/BulletElement";
+import {IIdToProcessing} from "../IdToProcessing";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
 
@@ -38,4 +40,10 @@ export interface ITankMovementManager extends setCoefficients {
 export interface IWallMovementManager extends setCoefficients {
     hasAnyResidualMovement(wallElement: WallElement): boolean;
     movement(wallElement: WallElement): void;
+}
+
+export interface IBulletManager extends setCoefficients {
+    hasResidualMovement(bulletElement: BulletElement): boolean;
+    movement(bulletElement: BulletElement): void;
+    get bulletAndModelIDs(): IIdToProcessing;
 }
