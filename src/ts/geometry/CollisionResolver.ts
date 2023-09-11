@@ -11,6 +11,8 @@ export class CollisionResolver {
     private constructor() {}
     private static readonly COEFFICIENT_OF_RESTITUTION: number = 0.6;
     private static readonly CORRECTION_FACTOR: number = 0.55;
+    private static readonly SMALL_ANGULAR_IMPULSE: number = 0.004;
+    private static readonly ORTHOGONAL_IMPULSE: number = 0.0001;
 
     /**
      * Resolves a collision between two entities by calculating changes in velocity and angular velocity
@@ -42,12 +44,17 @@ export class CollisionResolver {
         const torqueImparting = VectorUtils.crossProduct(radiusImparting, impartingNormal) * impulseMagnitude;
 
         const receivingImpulse = torqueReceiving / receivingEntity.momentOfInertia;
-        const impartingImpulse = torqueImparting  / impartingEntity.momentOfInertia;
+        let impartingImpulse = torqueImparting  / impartingEntity.momentOfInertia;
+        if (this.shouldReverseReceiving(receivingEntity.angle, impartingNormal.angle))
+            impartingImpulse = -impartingImpulse;
+
+        // CRUTCH
+        if (Math.abs(impartingImpulse + impartingEntity.angularVelocity) < this.SMALL_ANGULAR_IMPULSE
+                && Math.abs(impartingImpulse) > this.ORTHOGONAL_IMPULSE)
+            impartingImpulse = Math.sign(impartingImpulse) === 1 ? this.SMALL_ANGULAR_IMPULSE  : -this.SMALL_ANGULAR_IMPULSE;
 
         receivingEntity.angularVelocity += receivingImpulse;
-        impartingEntity.angularVelocity += this.shouldReverseReceiving(receivingEntity.angle, impartingNormal.angle)
-            ? -impartingImpulse
-            : impartingImpulse;
+        impartingEntity.angularVelocity += impartingImpulse;
     }
     private static shouldReverseReceiving(receivingAngle: number, impartingNormalAngle: number): boolean {
         const turn = clampAngle(receivingAngle - impartingNormalAngle, 0, Math.PI);
