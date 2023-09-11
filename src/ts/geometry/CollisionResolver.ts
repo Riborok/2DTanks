@@ -2,7 +2,7 @@ import {IEntity} from "../model/entitiy/IEntity";
 import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";
-import {calcTurn, clampAngle, isAngleInQuadrant3or4} from "./additionalFunc";
+import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "./additionalFunc";
 
 /**
  * Utility class for resolving collisions between entities.
@@ -58,7 +58,7 @@ export class CollisionResolver {
     private static calcEntityNormal(entity: IEntity): Vector {
         const angle = entity.angle;
 
-        return isAngleInQuadrant3or4(calcTurn(angle, entity.velocity.angle))
+        return isAngleInQuadrant2or3(calcTurn(angle, entity.velocity.angle))
             ? new Vector(-Math.cos(angle), -Math.sin(angle))
             : new Vector(Math.cos(angle), Math.sin(angle));
     }
