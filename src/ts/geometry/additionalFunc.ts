@@ -33,7 +33,7 @@ export function clampAngle(angle: number, minRange: number = 0, maxRange: number
  * @param angle - The input angle in radians.
  * @returns `true` if the angle is in the 3rd or 4th quadrant, `false` otherwise.
  */
-export function isAngleInQuadrant3or4(angle: number): boolean {
+export function isAngleInQuadrant2or3(angle: number): boolean {
     return (angle > Math.PI / 2) && (angle < Math.PI * 3 / 2);
 }
 

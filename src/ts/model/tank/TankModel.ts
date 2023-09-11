@@ -8,7 +8,7 @@ import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
 import {MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
-import {calcTurn, clampAngle, isAngleInQuadrant3or4} from "../../geometry/additionalFunc";
+import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
 import {remapValueToRange} from "../../additionally/additionalFunc";
 
 export class TankModel extends Model {
@@ -150,7 +150,7 @@ export class TankModel extends Model {
         EntityManipulator.movement(entity);
     }
     private setBrakingStatus(turn: number) {
-        this._isBraking = isAngleInQuadrant3or4(turn);
+        this._isBraking = isAngleInQuadrant2or3(turn);
     }
     private calcShortestTurn(turn: number): number {
         if (this._isBraking)
