@@ -124,7 +124,7 @@ export class TankModel extends Model {
         this.movement(this._tankParts.track.backwardData,this._entity.angle + Math.PI,
             resistanceCoeff, airResistanceCoeff);
     }
-    private static readonly velocityRecoveryCoefficient: number = 0.025;
+    private static readonly VELOCITY_RECOVERY_COEFF: number = 0.017;
     private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
         const speed = entity.velocity.length;
@@ -188,7 +188,7 @@ export class TankModel extends Model {
         return (turn > Math.abs(oppositeTurn)) ? oppositeTurn : turn;
     }
     private applyTurn(turn: number) {
-        turn *= TankModel.velocityRecoveryCoefficient;
+        turn *= TankModel.VELOCITY_RECOVERY_COEFF * this._entity.mass;
         PointRotator.rotatePoint(this._entity.velocity, Math.sin(turn), Math.cos(turn));
     }
     private determineDribbleSpeed(turn: number) {
