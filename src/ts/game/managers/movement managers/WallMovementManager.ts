@@ -12,7 +12,7 @@ export class WallMovementManager extends MovementManager implements IWallMovemen
     }
     private update(wallElement: WallElement, action: Action) {
         const entity = wallElement.model.entity;
-        this._entityStorage.remove(entity)
+        this._entityStorage.remove(entity);
         action.call(wallElement.model, this._resistanceCoeff, this._airResistanceCoeff);
         this._collisionManager.hasCollision(entity);
 

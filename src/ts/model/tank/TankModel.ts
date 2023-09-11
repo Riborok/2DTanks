@@ -10,8 +10,10 @@ import {MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
 import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
 import {remapValueToRange} from "../../additionally/additionalFunc";
+import {Bullet} from "../bullet/Bullet";
+import {IArmor} from "../vitality/IArmor";
 
-export class TankModel extends Model {
+export class TankModel extends Model implements IArmor {
     private readonly _tankParts: TankParts;
 
     private _lastTimeShot: number;
@@ -24,8 +26,12 @@ export class TankModel extends Model {
         this._tankParts = tankParts;
         this._lastTimeShot = Date.now();
     }
+    public takeDamage(bullet: Bullet) { this._tankParts.hull.takeDamage(bullet) }
     public get tankParts(): TankParts { return this._tankParts }
     public get isDrift(): boolean { return this._isDrift }
+    public get health(): number { return this._tankParts.hull.health }
+    public get armor() { return this._tankParts.hull.armor }
+    public get armorStrength() { return this._tankParts.hull.armorStrength }
     public shot(): BulletModel | null {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)

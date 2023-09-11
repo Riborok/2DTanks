@@ -12,6 +12,7 @@ export type Control = {
     hullCounterClockwiseMask: number,
     turretClockwiseMask: number,
     turretCounterClockwiseMask: number,
+    shoot: number
 }
 
 export type CollisionResult = {

@@ -16,8 +16,9 @@ const control1: Control = {
     backwardMask: KeyHandler.S_MASK,
     hullClockwiseMask: KeyHandler.D_MASK,
     hullCounterClockwiseMask: KeyHandler.A_MASK,
-    turretClockwiseMask: KeyHandler.E_MASK,
-    turretCounterClockwiseMask: KeyHandler.Q_MASK
+    turretClockwiseMask: KeyHandler.V_MASK,
+    turretCounterClockwiseMask: KeyHandler.C_MASK,
+    shoot: KeyHandler.B_MASK
 }
 const tank1 = new TankElement(new Point(300, 300), 0, 0,
     0, 0, 0, 0, control1);
@@ -28,7 +29,8 @@ const control2: Control = {
     hullClockwiseMask: KeyHandler.RIGHT_MASK,
     hullCounterClockwiseMask: KeyHandler.LEFT_MASK,
     turretClockwiseMask: KeyHandler.PERIOD_MASK,
-    turretCounterClockwiseMask: KeyHandler.COMMA_MASK
+    turretCounterClockwiseMask: KeyHandler.COMMA_MASK,
+    shoot: KeyHandler.SLASH_MASK
 };
 const tank2 = new TankElement(new Point(450, 450), 0, 1,
     0, 0, 0, 0, control2);
