@@ -1,4 +1,4 @@
-import {IEntity} from "../model/entitiy/IEntity";
+import {IEntity} from "../entitiy/IEntity";
 import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {PointUtils} from "./PointUtils";

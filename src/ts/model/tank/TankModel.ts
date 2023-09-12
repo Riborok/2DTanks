@@ -1,16 +1,17 @@
-import {TankParts} from "./TankParts";
-import {EntityManipulator} from "../entitiy/EntityManipulator";
+import {TankParts} from "../../components/tank parts/TankParts";
+import {EntityManipulator} from "../../entitiy/EntityManipulator";
 import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
-import {IEntity} from "../entitiy/IEntity";
+import {IEntity} from "../../entitiy/IEntity";
 import {Model} from "../Model";
 import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
-import {MotionData} from "../../additionally/type";
+import {IArmor, MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
 import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
 import {remapValueToRange} from "../../additionally/additionalFunc";
-import {IArmor} from "../vitality/IArmor";
+import {getTurretWidth} from "../../components/tank parts/ITurret";
+import {getBarrelLength} from "../../components/tank parts/IWeapon";
 
 export class TankModel extends Model implements IArmor {
     private readonly _tankParts: TankParts;
@@ -36,14 +37,12 @@ export class TankModel extends Model implements IArmor {
         if (this._armorStrength < 0) { this._armorStrength = 0; }
         this._health -= bullet.damage - this._tankParts.hull.armor * this._armorStrength;
     }
-    public turretClockwiseMovement() { this._turretAngle += this._tankParts.turret.angleSpeed }
-    public turretCounterclockwiseMovement() { this._turretAngle -= this._tankParts.turret.angleSpeed }
-    private incTurretAngle(deltaAngle: number) { this._turretAngle += deltaAngle }
     public get turretAngle(): number { return this._turretAngle }
     public get isDrift(): boolean { return this._isDrift }
     public get health(): number { return this._health }
     public get armor() { return this._tankParts.hull.armor }
     public get armorStrength() { return this._armorStrength }
+    public get bulletNum() { return this._bulletNum }
     public shot(): BulletModel | null {
         const dateNow = Date.now();
         if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
@@ -58,7 +57,8 @@ export class TankModel extends Model implements IArmor {
     }
     private calcBulletExit(): Point {
         const center = this._entity.calcCenter();
-        const muzzleLength = this._tankParts.turret.width / 2 + this._tankParts.weapon.barrelLength;
+        const tankParts = this._tankParts;
+        const muzzleLength = getTurretWidth(tankParts.turret) / 2 + getBarrelLength(tankParts.weapon);
         const x = center.x + muzzleLength * Math.cos(this._turretAngle);
         const y = center.y + muzzleLength * Math.sin(this._turretAngle);
         return new Point(x, y);
@@ -69,6 +69,9 @@ export class TankModel extends Model implements IArmor {
     public takeNewBullet(bulletNum: number) {
         this._bulletNum = bulletNum;
     }
+    public turretClockwiseMovement() { this._turretAngle += this._tankParts.turret.angleSpeed }
+    public turretCounterclockwiseMovement() { this._turretAngle -= this._tankParts.turret.angleSpeed }
+    private incTurretAngle(deltaAngle: number) { this._turretAngle += deltaAngle }
     public hullClockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number) {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;

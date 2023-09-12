@@ -1,6 +1,6 @@
-import {Point, Vector} from "../../geometry/Point";
+import {Point, Vector} from "../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
-import {IIdentifiable} from "../../game/id/IIdentifiable";
+import {IIdentifiable} from "../game/id/IIdentifiable";
 
 /**
  * Interface representing an entity with points.

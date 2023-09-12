@@ -1,5 +1,5 @@
 import {Model} from "../Model";
-import {IEntity} from "../entitiy/IEntity";
+import {IEntity} from "../../entitiy/IEntity";
 import {BulletModel} from "../bullet/BulletModel";
 
 export class WallModel extends Model {

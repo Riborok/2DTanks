@@ -1,6 +1,7 @@
 import {MotionData} from "../../additionally/type";
+import {IComponent} from "../IComponent";
 
-export interface IBullet {
+export interface IBullet extends IComponent{
     get motionData(): MotionData;
     get health(): number;
     get damage(): number;
@@ -15,4 +16,5 @@ export class LightBullet implements IBullet {
     public get armorPenetration(): number { return 5 }
     public get mass(): number { return 0.0000015 }
     public get health(): number { return 1 }
+    public get num(): number { return 0 }
 }

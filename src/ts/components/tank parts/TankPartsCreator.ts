@@ -1,7 +1,7 @@
-import {IHull, HullModel0} from "./tank parts/IHull";
-import {ITrack, TrackModel0} from "./tank parts/ITrack";
-import {ITurret, TurretModel0} from "./tank parts/ITurret";
-import {IWeapon, WeaponModel0} from "./tank parts/IWeapon";
+import {HullModel0, IHull} from "./IHull";
+import {ITrack, TrackModel0} from "./ITrack";
+import {ITurret, TurretModel0} from "./ITurret";
+import {IWeapon, WeaponModel0} from "./IWeapon";
 import {TankParts} from "./TankParts";
 
 export class TankPartsCreator {

@@ -1,4 +1,4 @@
-import {PointRotator} from "../../geometry/PointRotator";
+import {PointRotator} from "../geometry/PointRotator";
 import {IEntity} from "./IEntity";
 
 export class EntityManipulator {

@@ -1,8 +1,8 @@
 import {IIdentifiable} from "../id/IIdentifiable";
 import {Sprite} from "../../sprite/Sprite";
 import {TankSprite} from "../../sprite/tank/TankSprite";
-import {IEntity} from "../../model/entitiy/IEntity";
-import {IStorage} from "../../model/entitiy/IEntityCollisionSystem";
+import {IEntity} from "../../entitiy/IEntity";
+import {IStorage} from "../../entitiy/IEntityCollisionSystem";
 import {Model} from "../../model/Model";
 
 export interface IElement extends IIdentifiable {
