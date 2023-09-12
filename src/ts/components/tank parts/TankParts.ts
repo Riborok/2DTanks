@@ -1,7 +1,7 @@
-import {IHull} from "./tank parts/IHull";
-import {ITrack} from "./tank parts/ITrack";
-import {ITurret} from "./tank parts/ITurret";
-import {IWeapon} from "./tank parts/IWeapon";
+import {IHull} from "./IHull";
+import {ITrack} from "./ITrack";
+import {ITurret} from "./ITurret";
+import {IWeapon} from "./IWeapon";
 
 export class TankParts {
     private readonly _hull: IHull;

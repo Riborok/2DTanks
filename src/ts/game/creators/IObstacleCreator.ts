@@ -1,5 +1,5 @@
 import {WALL_HEIGHT, WALL_MASS, WALL_WIDTH} from "../../constants/gameConstants";
-import {RectangularEntity} from "../../model/entitiy/IEntity";
+import {RectangularEntity} from "../../entitiy/IEntity";
 import {IDTracker} from "../id/IDTracker";
 import {WallElement} from "../elements/WallElement";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";

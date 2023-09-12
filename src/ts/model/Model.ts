@@ -1,8 +1,8 @@
-import {IEntity} from "./entitiy/IEntity";
-import {EntityManipulator} from "./entitiy/EntityManipulator";
+import {IEntity} from "../entitiy/IEntity";
+import {EntityManipulator} from "../entitiy/EntityManipulator";
 import {GRAVITY_ACCELERATION} from "../constants/gameConstants";
-import {IHealth} from "./vitality/IHealth";
 import {BulletModel} from "./bullet/BulletModel";
+import {IHealth} from "../additionally/type";
 
 export abstract class Model implements IHealth{
     protected readonly _entity: IEntity;

@@ -1,15 +1,19 @@
-import {TURRET_WIDTH} from "../../../constants/gameConstants";
+import {TURRET_WIDTH} from "../../constants/gameConstants";
+import {IComponent} from "../IComponent";
 
-export interface ITurret {
+export interface ITurret extends IComponent{
     get bulletCapacity(): number;
     get mass(): number;
-    get width(): number;
     get angleSpeed(): number;
+}
+
+export function getTurretWidth(turret: ITurret): number {
+    return TURRET_WIDTH[turret.num];
 }
 
 export class TurretModel0 implements ITurret{
     public get angleSpeed(): number { return 0.0125 }
     public get mass(): number { return 0.35 }
-    public get width(): number { return TURRET_WIDTH[0] }
     public get bulletCapacity(): number { return 10 }
+    public get num(): number { return 0 }
 }

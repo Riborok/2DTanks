@@ -1,4 +1,4 @@
-import {HandlingManagers, IAddBulletModel, IBulletHandlingManager} from "./HandlingManagers";
+import {HandlingManagers, IBulletHandlingManager} from "./HandlingManagers";
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletMovementManager} from "../movement managers/BulletMovementManager";
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
@@ -8,7 +8,6 @@ import {Field} from "../../Field";
 import {IElement} from "../../elements/IElement";
 import {IDTracker} from "../../id/IDTracker";
 import {BulletModel} from "../../../model/bullet/BulletModel";
-import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
 
 export class BulletHandlingManager extends HandlingManagers<BulletElement, BulletMovementManager> implements IBulletHandlingManager {
     private readonly _bulletToProcess: IDoublyLinkedList<BulletElement> = new DoublyLinkedList<BulletElement>();

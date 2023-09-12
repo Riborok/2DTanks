@@ -2,7 +2,7 @@ import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/g
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Field} from "./Field";
-import {Quadtree} from "../model/entitiy/IEntityCollisionSystem";
+import {Quadtree} from "../entitiy/IEntityCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
 import {KeyHandler} from "./KeyHandler";

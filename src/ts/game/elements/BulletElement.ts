@@ -1,6 +1,6 @@
 import {IElement} from "./IElement";
-import {IStorage} from "../../model/entitiy/IEntityCollisionSystem";
-import {IEntity} from "../../model/entitiy/IEntity";
+import {IStorage} from "../../entitiy/IEntityCollisionSystem";
+import {IEntity} from "../../entitiy/IEntity";
 import {BulletSprite} from "../../sprite/bullet/BulletSprite";
 import {BulletModel} from "../../model/bullet/BulletModel";
 

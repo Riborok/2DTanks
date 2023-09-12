@@ -1,8 +1,8 @@
-import {IBullet} from "./IBullet";
-import {IEntity} from "../entitiy/IEntity";
+import {IBullet} from "../../components/bullet/IBullet";
+import {IEntity} from "../../entitiy/IEntity";
 import {Model} from "../Model";
 import {MotionData} from "../../additionally/type";
-import {IWeapon} from "../tank/tank parts/IWeapon";
+import {IWeapon} from "../../components/tank parts/IWeapon";
 
 export class BulletModel extends Model {
     private _health: number;
@@ -14,8 +14,10 @@ export class BulletModel extends Model {
         super(entity);
         this._health = bullet.health;
 
-        this._motionData.force = bullet.motionData.force * weapon.forceCoeff;
-        this._motionData.finishSpeed = bullet.motionData.finishSpeed * weapon.finishSpeedCoeff;
+        this._motionData = {
+            force: bullet.motionData.force * weapon.forceCoeff,
+            finishSpeed: bullet.motionData.finishSpeed * weapon.finishSpeedCoeff
+        };
         this._damage = bullet.damage * weapon.damageCoeff;
         this._armorPenetration = bullet.armorPenetration * weapon.armorPenetrationCoeff;
     }

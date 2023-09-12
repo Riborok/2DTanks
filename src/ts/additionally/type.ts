@@ -25,3 +25,12 @@ export type BulletCollisionData = {
     bulletElement: BulletElement;
     elementsIds: number[];
 }
+
+export interface IArmor {
+    get armorStrength(): number;
+    get armor(): number;
+}
+
+export interface IHealth {
+    get health(): number;
+}

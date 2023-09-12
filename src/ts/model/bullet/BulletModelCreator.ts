@@ -1,10 +1,10 @@
-import {IBullet, LightBullet} from "./IBullet";
+import {IBullet, LightBullet} from "../../components/bullet/IBullet";
 import {BulletModel} from "./BulletModel";
-import {RectangularEntity} from "../entitiy/IEntity";
+import {RectangularEntity} from "../../entitiy/IEntity";
 import {BULLET_HEIGHT, BULLET_WIDTH} from "../../constants/gameConstants";
 import {IDTracker} from "../../game/id/IDTracker";
 import {Point} from "../../geometry/Point";
-import {IWeapon} from "../tank/tank parts/IWeapon";
+import {IWeapon} from "../../components/tank parts/IWeapon";
 
 export class BulletModelCreator {
     private constructor() { }

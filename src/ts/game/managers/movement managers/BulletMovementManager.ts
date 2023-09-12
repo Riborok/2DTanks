@@ -1,6 +1,6 @@
 import {IBulletManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
-import {IEntity} from "../../../model/entitiy/IEntity";
+import {IEntity} from "../../../entitiy/IEntity";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData} from "../../../additionally/type";
 
