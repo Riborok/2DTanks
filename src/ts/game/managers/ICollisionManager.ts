@@ -6,13 +6,13 @@ import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
 
 export interface ICollisionManager {
     hasCollision(entity: IEntity): Iterable<IEntity> | null;
-    get wallsForProcessing(): IIdToProcessing;
+    get wallsForProcessing(): IIdToProcessing<number>;
 }
 
 export class CollisionManager implements ICollisionManager {
     private readonly _collisionDetection: ICollisionDetection;
-    private _wallsForProcessing: IIdToProcessing = new IdToProcessing();
-    public get wallsForProcessing(): IIdToProcessing { return this._wallsForProcessing }
+    private _wallsForProcessing: IIdToProcessing<number> = new IdToProcessing();
+    public get wallsForProcessing(): IIdToProcessing<number> { return this._wallsForProcessing }
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;
     }

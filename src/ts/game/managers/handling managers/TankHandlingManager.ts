@@ -1,10 +1,18 @@
-import {HandlingManagers, ITankHandlingManager} from "./HandlingManagers";
+import {HandlingManagers, IAddBulletModel, ITankHandlingManager} from "./HandlingManagers";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
+import {Field} from "../../Field";
+import {BulletModel} from "../../../model/bullet/BulletModel";
 
 export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
+    private readonly _addBulletElement: IAddBulletModel;
+    public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
+                       addBulletElement: IAddBulletModel) {
+        super(bulletManager, field, elements);
+        this._addBulletElement = addBulletElement;
+    }
     public handle(mask: number): void {
         this._tireTracksManager.reduceOpacity();
 
@@ -45,6 +53,13 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             }
             else
                 this._movementManager.residualAngularMovement(tankElement);
+
+            action = (mask & control.shoot) !== 0;
+            if (action) {
+                const bulletModel: BulletModel | null = tankElement.model.shot();
+                if (bulletModel)
+                    this._addBulletElement.addBulletModel(bulletModel);
+            }
         }
     }
     public add(elements: Iterable<TankElement>) {

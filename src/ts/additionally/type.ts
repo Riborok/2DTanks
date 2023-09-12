@@ -1,4 +1,5 @@
 import {Point} from "../geometry/Point";
+import {BulletElement} from "../game/elements/BulletElement";
 
 export type MotionData = {
     finishSpeed: number;
@@ -18,4 +19,9 @@ export type Control = {
 export type CollisionResult = {
     collisionPoint: Point;
     overlap: number;
+}
+
+export type BulletCollisionData = {
+    bulletElement: BulletElement;
+    elementsIds: number[];
 }

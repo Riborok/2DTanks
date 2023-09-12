@@ -4,7 +4,7 @@ import {WallMovementManager} from "../movement managers/WallMovementManager";
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
 
 export class WallHandlingManager extends HandlingManagers<WallElement, WallMovementManager> implements IWallHandlingManager {
-    private _wallToProcess: IDoublyLinkedList<WallElement> = new DoublyLinkedList<WallElement>();
+    private readonly _wallToProcess: IDoublyLinkedList<WallElement> = new DoublyLinkedList<WallElement>();
     private addToProcess(): void {
         const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;
         if (wallsForProcessing.hasForProcessing()) {

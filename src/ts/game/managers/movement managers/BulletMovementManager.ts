@@ -2,10 +2,11 @@ import {IBulletManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IEntity} from "../../../model/entitiy/IEntity";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
+import {BulletCollisionData} from "../../../additionally/type";
 
-export class BulletManager extends MovementManager implements IBulletManager {
-    private readonly _bulletAndModelIDs: IIdToProcessing = new IdToProcessing();
-    public get bulletAndModelIDs(): IIdToProcessing { return this._bulletAndModelIDs }
+export class BulletMovementManager extends MovementManager implements IBulletManager {
+    private readonly _bulletAndModelIDs: IIdToProcessing<BulletCollisionData> = new IdToProcessing();
+    public get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData> { return this._bulletAndModelIDs }
     public hasResidualMovement(bulletElement: BulletElement): boolean {
         return !bulletElement.model.isIdle();
     }
@@ -19,9 +20,10 @@ export class BulletManager extends MovementManager implements IBulletManager {
         bulletElement.model.residualMovement(this._resistanceCoeff, this._airResistanceCoeff);
         const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
         if (collisions) {
-            this._bulletAndModelIDs.push(bulletElement.id);
+            const collisionsIds = new Array<number>();
             for (const collision of collisions)
-                this._bulletAndModelIDs.push(collision.id);
+                collisionsIds.push(collision.id);
+            this._bulletAndModelIDs.push({ bulletElement: bulletElement, elementsIds: collisionsIds });
         }
 
         bulletElement.sprite.updateAfterAction(entity.points[0], entity.angle);
