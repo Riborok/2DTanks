@@ -54,8 +54,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         if (this._collisionManager.hasCollision(entity))
             tankElement.sprite.removeAcceleration();
 
-        updateSprites.call(tankElement.sprite, entity.points[0], entity.angle,
-            tankElement.model.tankParts.turret.angle);
+        updateSprites.call(tankElement.sprite, entity.points[0], entity.angle, tankElement.model.turretAngle);
 
         this._entityStorage.insert(entity);
     }
@@ -67,7 +66,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
 
         tankElement.sprite.rotateTurretUpdate(
             tankElement.sprite.tankSpriteParts.hullSprite.calcPosition(model.entity.points[0], hullSin, hullCos),
-            model.tankParts.turret.angle, hullSin, hullCos
+            model.turretAngle, hullSin, hullCos
         );
     }
 }
