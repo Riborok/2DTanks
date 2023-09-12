@@ -1,8 +1,8 @@
 import {IEntity} from "./entitiy/IEntity";
 import {EntityManipulator} from "./entitiy/EntityManipulator";
 import {GRAVITY_ACCELERATION} from "../constants/gameConstants";
-import {Bullet} from "./bullet/Bullet";
 import {IHealth} from "./vitality/IHealth";
+import {BulletModel} from "./bullet/BulletModel";
 
 export abstract class Model implements IHealth{
     protected readonly _entity: IEntity;
@@ -49,6 +49,6 @@ export abstract class Model implements IHealth{
         if (initialSignY !== Math.sign(entity.velocity.y))
             entity.velocity.y = 0;
     }
-    public abstract takeDamage(bullet: Bullet): void;
+    public abstract takeDamage(bullet: BulletModel): void;
     public abstract get health(): number;
 }

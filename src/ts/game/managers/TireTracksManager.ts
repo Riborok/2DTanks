@@ -1,6 +1,5 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TirePair} from "../../sprite/tank/tank effects/TankTireTrack";
-import {Sprite} from "../../sprite/Sprite";
 
 export interface ITireTracksManager {
     get vanishingListOfTirePairs(): IDoublyLinkedList<TirePair>;

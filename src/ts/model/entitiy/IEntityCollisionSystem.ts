@@ -43,7 +43,7 @@ class QuadtreeNode {
     private _children: QuadtreeNode[] | null = null;
 
     private readonly _parent: QuadtreeNode | null;
-    private readonly _boundary: { xStart: number, yStart: number, xLast: number, yLast: number };
+    private readonly _boundary: { xStart: number, yStart: number, xLast: number, yLast: number }
     public constructor(boundary: { xStart: number, yStart: number, xLast: number, yLast: number },
                        parent: QuadtreeNode | null) {
         this._boundary = boundary;

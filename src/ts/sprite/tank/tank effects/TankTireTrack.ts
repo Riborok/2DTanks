@@ -5,7 +5,6 @@ import {SpriteManipulator} from "../../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
 import {TankSpriteParts} from "../TankSpriteParts";
 import {TopTrackSprite} from "../tank parts/TrackSprite";
-import {TireTracksManager} from "../../../game/managers/TireTracksManager";
 import {TireTrackSprite} from "../../effects/TireTrackSprite";
 import {Sprite} from "../../Sprite";
 

@@ -25,7 +25,7 @@ export class TankElement implements IElement {
                        control: Control) {
         this._control = control;
 
-        const tankParts = TankPartsCreator.create(angle, hullNum, trackNum, turretNum, weaponNum);
+        const tankParts = TankPartsCreator.create(hullNum, trackNum, turretNum, weaponNum);
         const rectangularEntity = new RectangularEntity(point,
             HULL_WIDTH[hullNum] + TRACK_INDENT, HULL_HEIGHT[hullNum] + (TRACK_INDENT << 1), angle,
             tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, IDTracker.tankId);
@@ -46,6 +46,6 @@ export class TankElement implements IElement {
 
         const entity = this._model.entity;
         entityStorage.insert(entity);
-        this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.tankParts.turret.angle);
+        this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
 }
