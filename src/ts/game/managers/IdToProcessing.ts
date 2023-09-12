@@ -1,14 +1,14 @@
-export interface IIdToProcessing {
+export interface IIdToProcessing<T> {
     hasForProcessing(): boolean;
     clear(): void;
-    push(id: number): void;
-    get iterable(): Iterable<number>;
+    push(t: T): void;
+    get iterable(): Iterable<T>;
 }
 
-export class IdToProcessing implements IIdToProcessing{
-    private readonly _idForProcessing: number[] = new Array<number>();
+export class IdToProcessing<T> implements IIdToProcessing<T>{
+    private readonly _idForProcessing: T[] = new Array<T>();
     public hasForProcessing(): boolean { return this._idForProcessing.length !== 0 }
     public clear() { this._idForProcessing.length = 0 }
-    public push(id: number) { this._idForProcessing.push(id) }
-    public get iterable(): Iterable<number> { return this._idForProcessing }
+    public push(t: T) { this._idForProcessing.push(t) }
+    public get iterable(): Iterable<T> { return this._idForProcessing }
 }
