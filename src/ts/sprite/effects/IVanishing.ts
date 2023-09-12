@@ -1,6 +1,6 @@
-interface IVanishing{
+interface IVanishing {
     isVanished(): boolean;
     reduceOpacity(reduceNumber: number): void;
     setOpacity(): void;
-    removeSprite(): void;
+    remove(): void;
 }

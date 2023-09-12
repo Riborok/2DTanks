@@ -58,7 +58,7 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             if (action) {
                 const bulletModel: BulletModel | null = tankElement.model.shot();
                 if (bulletModel)
-                    this._addBulletElement.addBulletModel(bulletModel);
+                    this._addBulletElement.addBulletModel(bulletModel, tankElement.model.bulletNum);
             }
         }
     }

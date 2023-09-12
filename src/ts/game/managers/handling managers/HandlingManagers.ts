@@ -43,5 +43,5 @@ export interface IBulletHandlingManager extends getMovementManager, IAddBulletMo
     add(bulletElements: Iterable<BulletElement>): void;
 }
 export interface IAddBulletModel {
-    addBulletModel(bulletModel: BulletModel): void;
+    addBulletModel(bulletModel: BulletModel, num: number): void;
 }

@@ -8,6 +8,7 @@ import {Field} from "../../Field";
 import {IElement} from "../../elements/IElement";
 import {IDTracker} from "../../id/IDTracker";
 import {BulletModel} from "../../../model/bullet/BulletModel";
+import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
 
 export class BulletHandlingManager extends HandlingManagers<BulletElement, BulletMovementManager> implements IBulletHandlingManager {
     private readonly _bulletToProcess: IDoublyLinkedList<BulletElement> = new DoublyLinkedList<BulletElement>();
@@ -30,11 +31,11 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
             this.handleBulletCollisions();
     }
 
-    public addBulletModel(bulletModel: BulletModel) {
+    public addBulletModel(bulletModel: BulletModel, num: number) {
         if (!this._elements.has(bulletModel.entity.id)) {
-            //const bulletElements = new BulletElement(bulletModel, new BulletSprite());
-            // this._elements.set(bulletElements.id, bulletElements);
-            // bulletElements.spawn(this._field.canvas, this._movementManager.entityStorage);
+            const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
+            this._elements.set(bulletElements.id, bulletElements);
+            bulletElements.spawn(this._field.canvas, this._movementManager.entityStorage);
         }
     }
     private handleBulletCollisions() {

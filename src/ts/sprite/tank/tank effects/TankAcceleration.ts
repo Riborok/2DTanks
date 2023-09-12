@@ -58,8 +58,8 @@ export class TankAcceleration {
         topSpriteAccelerationEffect.setSrc(this._state);
         bottomSpriteAccelerationEffect.setSrc(this._state);
 
-        topSpriteAccelerationEffect.sprite.remove();
-        bottomSpriteAccelerationEffect.sprite.remove();
+        topSpriteAccelerationEffect.remove();
+        bottomSpriteAccelerationEffect.remove();
     }
     private calcPosition(point: Point, sin: number, cos: number, indentY: number): Point {
         return new Point(

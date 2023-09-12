@@ -34,7 +34,4 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
             }
         }
     }
-    public remove(){
-        this._sprite.remove();
-    }
 }

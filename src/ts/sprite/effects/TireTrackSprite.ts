@@ -10,5 +10,4 @@ export class TireTrackSprite extends Sprite implements IVanishing{
     public isVanished(): boolean { return this._opacity <= 0 }
     public reduceOpacity(reduceNumber: number){ this._opacity -= reduceNumber }
     public setOpacity(){ this._sprite.style.opacity = `${this._opacity}` }
-    public removeSprite() { this._sprite.remove() }
 }
