@@ -39,7 +39,7 @@ class QuadtreeNode {
     private static readonly CAPACITY: number = 8;
     private static readonly HALF_CAPACITY: number = QuadtreeNode.CAPACITY >> 1;
 
-    private _entities: Set<IEntity> | null = new Set<IEntity>();
+    private _entities: Map<number, IEntity> | null = new Map();
     private _children: QuadtreeNode[] | null = null;
 
     private readonly _parent: QuadtreeNode | null;
@@ -69,7 +69,7 @@ class QuadtreeNode {
         this.redistribute();
     }
     private redistribute() {
-        for (const entity of this._entities)
+        for (const entity of this._entities.values())
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
                     child.insert(entity);
@@ -83,7 +83,7 @@ class QuadtreeNode {
                     child.insert(entity);
         }
         else {
-            this._entities.add(entity);
+            this._entities.set(entity.id, entity);
             if (this._entities.size > QuadtreeNode.CAPACITY)
                 this.subdivide();
         }
@@ -96,7 +96,7 @@ class QuadtreeNode {
             this.mergeCheck();
         }
         else {
-            this._entities.delete(entity);
+            this._entities.delete(entity.id);
             if (this._parent !== null)
                 this._parent.mergeCheck();
         }
@@ -110,7 +110,7 @@ class QuadtreeNode {
                     collisionsInfo.push(...child.getCollisions(entity));
         }
         else {
-            for (const anotherEntity of this._entities)
+            for (const anotherEntity of this._entities.values())
                 if (CollisionDetector.hasCollision(entity, anotherEntity))
                     collisionsInfo.push(anotherEntity);
         }
@@ -137,12 +137,12 @@ class QuadtreeNode {
             this.mergeWithChildren();
     }
     private mergeWithChildren() {
-        this._entities = new Set<IEntity>();
+        this._entities = new Map<number, IEntity>();
         for (const child of this._children) {
             if (child.isSubdivide())
                 child.mergeWithChildren();
-            for (const entity of child._entities)
-                this._entities.add(entity);
+            for (const entity of child._entities.values())
+                this._entities.set(entity.id, entity);
         }
 
         this._children = null;

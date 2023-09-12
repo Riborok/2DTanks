@@ -20,6 +20,9 @@ export abstract class Sprite {
     public setAngle(angle: number) {
         this._sprite.style.transform = `rotate(${angle}rad)`;
     }
+    public remove(){
+        this._sprite.remove();
+    }
 }
 
 export interface ISpritePart {

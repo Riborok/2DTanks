@@ -15,8 +15,8 @@ export class TireTracksManager {
         return this._vanishingListOfTirePairs
     }
     private removeTireTrackPair(tireTrackPair: TirePair){
-        tireTrackPair.topTire.removeSprite();
-        tireTrackPair.bottomTire.removeSprite();
+        tireTrackPair.topTire.remove();
+        tireTrackPair.bottomTire.remove();
     }
     public reduceOpacity(): void {
         let counter = 0;
