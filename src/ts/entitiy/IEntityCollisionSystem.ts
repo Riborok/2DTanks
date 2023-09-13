@@ -45,15 +45,13 @@ class QuadtreeNode {
     // The private variable _totalEntities represents the total amount of entities within a node.
     // However,this count may not be equivalent to the amount of entities in the node
     // if it's divided. Due to the possibility of entities being stored in multiple quadrants,
-    // this count may be higher than the actual number of distinct entities.
+    // this count may be higher than the actual amount of entities.
     private _totalEntities: number = 0;
     private _entities: Map<number, IEntity> | null = new Map();
     private _children: QuadtreeNode[] | null = null;
 
     private readonly _boundary: Boundary;
-    public constructor(boundary: Boundary) {
-        this._boundary = boundary;
-    }
+    public constructor(boundary: Boundary) { this._boundary = boundary }
     private isSubdivide(): boolean { return this._entities === null }
     private subdivide() {
         const xStart = this._boundary.xStart;
@@ -77,45 +75,44 @@ class QuadtreeNode {
         this._totalEntities = 0;
         for (const child of this._children) {
             for (const entity of this._entities.values())
-                if (child.isContainsEntity(entity))
-                    child.insert(entity);
+                child.insert(entity);
             this._totalEntities += child._totalEntities;
         }
 
         this._entities = null;
     }
     public insert(entity: IEntity) {
-        if (this.isSubdivide()) {
-            this._totalEntities = 0;
-            for (const child of this._children) {
-                if (child.isContainsEntity(entity))
+        if (this.isContainsEntity(entity)) {
+            if (this.isSubdivide()) {
+                this._totalEntities = 0;
+                for (const child of this._children) {
                     child.insert(entity);
-
-                this._totalEntities += child._totalEntities;
+                    this._totalEntities += child._totalEntities;
+                }
             }
-        }
-        else {
-            this._totalEntities++;
-            this._entities.set(entity.id, entity);
-            if (this._entities.size > QuadtreeNode.CAPACITY)
-                this.subdivide();
+            else {
+                this._totalEntities++;
+                this._entities.set(entity.id, entity);
+                if (this._entities.size > QuadtreeNode.CAPACITY)
+                    this.subdivide();
+            }
         }
     }
     public remove(entity: IEntity) {
-        if (this.isSubdivide()) {
-            this._totalEntities = 0;
-            for (const child of this._children) {
-                if (child.isContainsEntity(entity))
+        if (this.isContainsEntity(entity)) {
+            if (this.isSubdivide()) {
+                this._totalEntities = 0;
+                for (const child of this._children) {
                     child.remove(entity);
-
-                this._totalEntities += child._totalEntities;
+                    this._totalEntities += child._totalEntities;
+                }
+                if (this._totalEntities <= QuadtreeNode.HALF_CAPACITY)
+                    this.mergeWithChildren();
             }
-            if (this._totalEntities <= QuadtreeNode.HALF_CAPACITY)
-                this.mergeWithChildren();
-        }
-        else {
-            this._totalEntities--;
-            this._entities.delete(entity.id);
+            else {
+                this._totalEntities--;
+                this._entities.delete(entity.id);
+            }
         }
     }
     public getCollisions(entity: IEntity): IEntity[] {
