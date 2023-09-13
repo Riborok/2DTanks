@@ -4,14 +4,17 @@ import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 import {Field} from "../../Field";
 import {BulletModel} from "../../../model/bullet/BulletModel";
+import {IAnimationManager} from "../AnimationManager";
 
 export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
     private readonly _addBulletElement: IAddBulletModel;
+    private readonly _animationManager: IAnimationManager;
     public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
-                       addBulletElement: IAddBulletModel) {
+                       addBulletElement: IAddBulletModel, animationManager: IAnimationManager) {
         super(bulletManager, field, elements);
         this._addBulletElement = addBulletElement;
+        this._animationManager = animationManager;
     }
     public handle(mask: number): void {
         this._tireTracksManager.reduceOpacity();
@@ -70,6 +73,8 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             const entity = element.model.entity;
             sprite.spawnTireTracks(this._field.canvas, entity.points[0], entity.angle,
                 this._tireTracksManager.vanishingListOfTirePairs);
+
+            sprite.spawnDriftSmoke(this._field.canvas, this._animationManager);
 
             const hullSprite = sprite.tankSpriteParts.hullSprite;
             sprite.spawnTankAcceleration(this._field.canvas, hullSprite.accelerationEffectIndentX, hullSprite.height);

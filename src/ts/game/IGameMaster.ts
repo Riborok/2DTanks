@@ -57,7 +57,7 @@ export class GameMaster implements IGameMaster {
         );
         this._tankHandlingManagers = new TankHandlingManager(
             new TankMovementManager(entityCollisionSystem, collisionManager),
-            this._field, tankElements, this._bulletHandlingManager
+            this._field, tankElements, this._bulletHandlingManager, this._animationManager
         );
         this._wallHandlingManagers = new WallHandlingManager(
             new WallMovementManager(entityCollisionSystem, collisionManager),

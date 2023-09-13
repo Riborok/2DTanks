@@ -1,7 +1,7 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {IAnimation} from "../../sprite/animation/IAnimation";
 
-interface IAnimationManager{
+export interface IAnimationManager{
     add(animation: IAnimation): void;
     handle(): void;
 }

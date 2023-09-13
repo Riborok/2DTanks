@@ -1,16 +1,19 @@
 import {TankSpriteParts} from "./TankSpriteParts";
 import {Point} from "../../geometry/Point";
-import {TankTireTrack, TirePair} from "./tank effects/TankTireTrack";
+import {directionMovement, TankTireTrack, TirePair} from "./tank effects/TankTireTrack";
 import {SpriteManipulator} from "../SpriteManipulator";
 import {IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TankAcceleration} from "./tank effects/TankAcceleration";
 import {TankTrackEffect} from "./tank effects/TankTrackEffect";
 import {MotionData} from "../../additionally/type";
+import {rotDirection, TankDrift} from "./tank effects/TankDrift";
+import {IAnimationManager} from "../../game/managers/AnimationManager";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
     private _tankTireTrack: TankTireTrack;
     private _tankAcceleration: TankAcceleration;
+    private _tankDrift: TankDrift;
     private readonly _tankTrackEffect: TankTrackEffect;
     public constructor(tankSpriteParts: TankSpriteParts, forwardData: MotionData, backwardData: MotionData) {
         this._tankSpriteParts = tankSpriteParts;
@@ -34,6 +37,10 @@ export class TankSprite {
 
         this._tankTireTrack.spawnFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
     }
+    public spawnDriftSmoke(canvas: Element, animationManager: IAnimationManager){
+        this._tankDrift = new TankDrift(canvas, animationManager,
+            this._tankSpriteParts.topTrackSprite.width, this._tankSpriteParts.topTrackSprite.height)
+    }
     private updateTireTrack(point: Point, hullAngle: number, sin: number, cos: number){
         const { topFirstChainPoint, bottomFirstChainPoint } = this._tankTireTrack.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos);
@@ -46,13 +53,24 @@ export class TankSprite {
             this._tankTireTrack.updateAllChainPoints(topFirstChainPoint, bottomFirstChainPoint, topLastChainPoint, bottomLastChainPoint);
             const direction = this._tankTireTrack.detectMovementDirection(prevPoint, currPoint, hullAngle);
             switch (direction){
-                case 1:
+                case directionMovement.dirForward:
                     this._tankTireTrack.forwardUpdate(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
                     break;
-                case 0:
+                case directionMovement.dirRotate:
                     this._tankTireTrack.createTireTrackPair(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
+
+                    const rotateDirection: number = this._tankDrift.detectRotateDirection(hullAngle);
+                    switch (rotateDirection){
+                        case rotDirection.rotLeft:
+                            this._tankDrift.spawnTopSmoke(topLastChainPoint, hullAngle, sin, cos);
+                            break;
+                        case rotDirection.rotRight:
+                            this._tankDrift.spawnBottomSmoke(bottomLastChainPoint, hullAngle, sin, cos);
+                            break;
+                    }
+
                     break;
-                case -1:
+                case directionMovement.dirBackward:
                     this._tankTireTrack.backwardUpdate(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
                     break;
             }
