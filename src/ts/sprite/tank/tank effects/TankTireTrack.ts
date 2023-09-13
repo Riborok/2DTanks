@@ -10,6 +10,12 @@ import {Sprite} from "../../Sprite";
 
 export type TirePair = { topTire: IVanishing, bottomTire: IVanishing }
 
+export enum directionMovement {
+    dirForward = 1,
+    dirRotate = 0,
+    dirBackward
+}
+
 export class TankTireTrack {
     private readonly _listOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>();
     private readonly _vanishingListOfTirePairs: IDoublyLinkedList<TirePair>;
@@ -173,7 +179,7 @@ export class TankTireTrack {
             else { lowBorder = clampAngle(lowBorder, -2 * Math.PI, 0) }
         }
         if (movementAngle >= lowBorder && movementAngle <= highBorder ||
-            movementAngle <= lowBorder && movementAngle >= highBorder) { return 1 }
+            movementAngle <= lowBorder && movementAngle >= highBorder) { return directionMovement.dirForward }
         else {
             if (isAngleFixed) {
                 if (lowBorder < 0) {
@@ -186,8 +192,8 @@ export class TankTireTrack {
             }
             const oppositeMovementAngle: number = clampAngle(movementAngle - Math.PI, -Math.PI, Math.PI);
             if (oppositeMovementAngle >= lowBorder && oppositeMovementAngle <= highBorder ||
-                oppositeMovementAngle <= lowBorder && oppositeMovementAngle >= highBorder) { return -1 }
-            else { return 0 }
+                oppositeMovementAngle <= lowBorder && oppositeMovementAngle >= highBorder) { return directionMovement.dirBackward }
+            else { return directionMovement.dirRotate }
         }
     }
     public forwardUpdate(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){

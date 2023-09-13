@@ -6,6 +6,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
     private _isEnded: boolean = false;
     private _timer: number = TankExplosionAnimation.TIMER_TIME;
+    private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_';
     private static readonly TIMER_TIME: number = 5;
     private static readonly MAX_STAGE: number = 8;
     private static readonly WIDTH: number = 120;
@@ -13,7 +14,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     get isEnded(): boolean { return this._isEnded }
     constructor(point: Point, angle: number) {
         super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT);
-        this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_${this._animationStage}.png`;
+        this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
         this._sprite.style.zIndex = `7`;
 
         this.setPosAndAngle(point, angle);
@@ -28,7 +29,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
 
             this._animationStage++;
             if (this._animationStage <= TankExplosionAnimation.MAX_STAGE) {
-                this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_${this._animationStage}.png`;
+                this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
             } else {
                 this._isEnded = true;
             }

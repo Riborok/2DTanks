@@ -17,8 +17,8 @@ export abstract class Sprite {
         this._sprite.style.left = `${point.x}px`;
         this._sprite.style.top = `${point.y}px`;
     }
-    public setAngle(angle: number) {
-        this._sprite.style.transform = `rotate(${angle}rad)`;
+    public setAngle(angle: number, scaleX: number = 1, scaleY: number = 1) {
+        this._sprite.style.transform = `rotate(${angle}rad) scaleX(${scaleX}) scaleY(${scaleY})`;
     }
     public remove(){
         this._sprite.remove();
