@@ -16,10 +16,13 @@ export interface IEntityCollisionSystem extends IStorage<IEntity>, ICollisionDet
 
 }
 
+type Boundary = { xStart: number, yStart: number, xLast: number, yLast: number }
 export class Quadtree implements IEntityCollisionSystem{
     private _root: QuadtreeNode;
+    private readonly _boundary: Boundary;
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
-        this._root = new QuadtreeNode({ xStart, yStart, xLast, yLast }, null);
+        this._boundary = { xStart, yStart, xLast, yLast };
+        this._root = new QuadtreeNode(this._boundary, null);
     }
     public insert(entity: IEntity) {
         this._root.insert(entity);
@@ -31,7 +34,7 @@ export class Quadtree implements IEntityCollisionSystem{
         this._root.remove(entity);
     }
     public clear() {
-        this._root = null;
+        this._root = new QuadtreeNode(this._boundary, null);
     }
 }
 
@@ -39,13 +42,17 @@ class QuadtreeNode {
     private static readonly CAPACITY: number = 8;
     private static readonly HALF_CAPACITY: number = QuadtreeNode.CAPACITY >> 1;
 
+    // The private variable _totalEntities represents the total amount of entities within a node.
+    // However, it's important to note that this count may not be equivalent to the amount of entities in the node
+    // if it's divided. Due to the possibility of entities being stored in multiple quadrants,
+    // this count may be higher than the actual number of distinct entities.
+    private _totalEntities: number = 0;
     private _entities: Map<number, IEntity> | null = new Map();
     private _children: QuadtreeNode[] | null = null;
 
     private readonly _parent: QuadtreeNode | null;
-    private readonly _boundary: { xStart: number, yStart: number, xLast: number, yLast: number }
-    public constructor(boundary: { xStart: number, yStart: number, xLast: number, yLast: number },
-                       parent: QuadtreeNode | null) {
+    private readonly _boundary: Boundary;
+    public constructor(boundary: Boundary, parent: QuadtreeNode | null) {
         this._boundary = boundary;
         this._parent = parent;
     }
@@ -77,6 +84,7 @@ class QuadtreeNode {
         this._entities = null;
     }
     public insert(entity: IEntity) {
+        this._totalEntities++;
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
@@ -89,6 +97,7 @@ class QuadtreeNode {
         }
     }
     public remove(entity: IEntity) {
+        this._totalEntities--;
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsEntity(entity))
@@ -129,11 +138,7 @@ class QuadtreeNode {
             point.y > this._boundary.yStart && point.y < this._boundary.yLast;
     }
     private mergeCheck() {
-        let totalChildCount = 0;
-        for (const child of this._children)
-            totalChildCount += child.getEntitiesCount();
-
-        if (totalChildCount <= QuadtreeNode.HALF_CAPACITY)
+        if (this._totalEntities <= QuadtreeNode.HALF_CAPACITY)
             this.mergeWithChildren();
     }
     private mergeWithChildren() {
@@ -146,15 +151,5 @@ class QuadtreeNode {
         }
 
         this._children = null;
-    }
-    private getEntitiesCount(): number {
-        if (this.isSubdivide()) {
-            let count = 0;
-            for (const child of this._children)
-                count += child.getEntitiesCount();
-            return count;
-        }
-        else
-            return this._entities.size;
     }
 }
