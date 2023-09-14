@@ -1,4 +1,4 @@
-import {HandlingManagers, IAddBulletModel, ITankHandlingManager} from "./HandlingManagers";
+import {HandlingManagers, IAddModel, ITankHandlingManager} from "./HandlingManagers";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
@@ -8,10 +8,10 @@ import {IAnimationManager} from "../AnimationManager";
 
 export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
-    private readonly _addBulletElement: IAddBulletModel;
+    private readonly _addBulletElement: IAddModel<BulletModel>;
     private readonly _animationManager: IAnimationManager;
     public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
-                       addBulletElement: IAddBulletModel, animationManager: IAnimationManager) {
+                       addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager) {
         super(bulletManager, field, elements);
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;

@@ -19,7 +19,7 @@ import {TankHandlingManager} from "./managers/handling managers/TankHandlingMana
 import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
 import {WallElement} from "./elements/WallElement";
 import {AnimationManager} from "./managers/AnimationManager";
-import {BulletHandlingManager} from "./managers/handling managers/BulletHandlingManager";
+import {BulletHandlingManager, BulletModelAdder} from "./managers/handling managers/BulletHandlingManager";
 import {BulletElement} from "./elements/BulletElement";
 import {BulletMovementManager} from "./managers/movement managers/BulletMovementManager";
 
@@ -51,17 +51,23 @@ export class GameMaster implements IGameMaster {
         const wallElements = new Map<number, WallElement>;
         const bulletElements = new Map<number, BulletElement>;
 
-        this._bulletHandlingManager = new BulletHandlingManager(
-            new BulletMovementManager(entityCollisionSystem, collisionManager),
-            this._field, bulletElements, tankElements, wallElements
-        );
         this._tankHandlingManagers = new TankHandlingManager(
             new TankMovementManager(entityCollisionSystem, collisionManager),
-            this._field, tankElements, this._bulletHandlingManager, this._animationManager
+            this._field,
+            tankElements,
+            new BulletModelAdder(bulletElements, this._field, entityCollisionSystem),
+            this._animationManager
         );
         this._wallHandlingManagers = new WallHandlingManager(
             new WallMovementManager(entityCollisionSystem, collisionManager),
-            this._field, wallElements
+            this._field,
+            wallElements
+        );
+        this._bulletHandlingManager = new BulletHandlingManager(
+            new BulletMovementManager(entityCollisionSystem, collisionManager),
+            this._field, bulletElements,
+            this._tankHandlingManagers,
+            this._wallHandlingManagers
         );
     }
 
@@ -124,6 +130,7 @@ export class GameMaster implements IGameMaster {
         const currentTime = performance.now();
         const deltaTime = currentTime - this._lastFrameTime;
 
+        this._bulletHandlingManager.handle(deltaTime);
         this._tankHandlingManagers.handle(this._keyHandler.keysMask, deltaTime);
         this._wallHandlingManagers.handle(deltaTime);
         this._animationManager.handle(deltaTime);

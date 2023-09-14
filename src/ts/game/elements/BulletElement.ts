@@ -27,4 +27,8 @@ export class BulletElement implements IElement {
 
         entityStorage.insert(this._model.entity);
     }
+    public vanish(entityStorage: IStorage<IEntity>) {
+        this._sprite.remove();
+        entityStorage.remove(this._model.entity);
+    }
 }

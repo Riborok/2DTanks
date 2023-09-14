@@ -48,4 +48,14 @@ export class TankElement implements IElement {
         entityStorage.insert(entity);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
+    public vanish(entityStorage: IStorage<IEntity>) {
+        const tankSpriteParts = this._sprite.tankSpriteParts;
+        tankSpriteParts.topTrackSprite.remove();
+        tankSpriteParts.bottomTrackSprite.remove();
+        tankSpriteParts.hullSprite.remove();
+        tankSpriteParts.weaponSprite.remove();
+        tankSpriteParts.turretSprite.remove();
+
+        entityStorage.remove(this._model.entity);
+    }
 }

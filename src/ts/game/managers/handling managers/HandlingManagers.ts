@@ -5,11 +5,13 @@ import {Field} from "../../Field";
 import {WallElement} from "../../elements/WallElement";
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletModel} from "../../../model/bullet/BulletModel";
+import {Model} from "../../../model/Model";
 
 export abstract class HandlingManagers<T extends IElement, V extends MovementManager> {
     protected readonly _elements: Map<number, T>;
     protected readonly _movementManager: V;
     protected readonly _field: Field;
+    public get elements(): Map<number, T> { return this._elements }
     public constructor(movementManager: V, field: Field, elements: Map<number, T>) {
         this._movementManager = movementManager;
         this._field = field;
@@ -24,24 +26,33 @@ export abstract class HandlingManagers<T extends IElement, V extends MovementMan
             }
         }
     }
+    public delete(element: T) {
+        this._elements.delete(element.id);
+        element.vanish(this._movementManager.entityStorage);
+    }
 }
 
-interface getMovementManager {
+export interface IAddModel<T extends Model> {
+    addBulletModel(t: T, num: number): void;
+}
+interface IGetMovementManager {
     get movementManager(): MovementManager;
 }
-
-export interface ITankHandlingManager extends getMovementManager {
+export interface IElementHandling<T extends IElement> {
+    delete(t: T): void;
+    add(ts: Iterable<T>): void;
+    get elements(): Map<number, T>;
+}
+interface IElementHandler {
+    handle(deltaTime: number): void;
+}
+interface IPlayerControl {
     handle(mask: number, deltaTime: number): void;
-    add(tankElements: Iterable<TankElement>): void;
 }
-export interface IWallHandlingManager extends getMovementManager {
-    handle(deltaTime: number): void;
-    add(wallElements: Iterable<WallElement>): void;
+
+export interface ITankHandlingManager extends IGetMovementManager, IElementHandling<TankElement>, IPlayerControl {
 }
-export interface IBulletHandlingManager extends getMovementManager, IAddBulletModel {
-    handle(deltaTime: number): void;
-    add(bulletElements: Iterable<BulletElement>): void;
+export interface IWallHandlingManager extends IGetMovementManager, IElementHandling<WallElement>, IElementHandler {
 }
-export interface IAddBulletModel {
-    addBulletModel(bulletModel: BulletModel, num: number): void;
+export interface IBulletHandlingManager extends IGetMovementManager, IElementHandling<BulletElement>, IElementHandler {
 }
