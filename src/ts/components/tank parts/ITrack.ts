@@ -8,8 +8,8 @@ export interface ITrack extends IComponent{
 }
 
 export class TrackModel0 implements ITrack{
-    private readonly _angularData: MotionData = { finishSpeed: 0.0175, force: 0.8 }
-    private readonly _forwardData: MotionData = { finishSpeed: 3, force: 0.012 }
+    private readonly _angularData: MotionData = { finishSpeed: 0.0175, force: 0.03 }
+    private readonly _forwardData: MotionData = { finishSpeed: 3, force: 0.03 }
     private readonly _backwardData: MotionData = { finishSpeed: 2, force: 0.025 }
     public get angularData(): MotionData { return this._angularData }
     public get forwardData(): MotionData { return this._forwardData }
