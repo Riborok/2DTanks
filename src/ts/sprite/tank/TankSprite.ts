@@ -58,22 +58,24 @@ export class TankSprite {
                     break;
                 case directionMovement.dirRotate:
                     this._tankTireTrack.createTireTrackPair(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
-
-                    const rotateDirection: number = this._tankDrift.detectRotateDirection(hullAngle);
-                    switch (rotateDirection){
-                        case rotDirection.rotLeft:
-                            this._tankDrift.spawnTopSmoke(topLastChainPoint, hullAngle, sin, cos);
-                            break;
-                        case rotDirection.rotRight:
-                            this._tankDrift.spawnBottomSmoke(bottomLastChainPoint, hullAngle, sin, cos);
-                            break;
-                    }
-
                     break;
                 case directionMovement.dirBackward:
                     this._tankTireTrack.backwardUpdate(topLastChainPoint, bottomLastChainPoint, hullAngle, sin, cos);
                     break;
             }
+        }
+    }
+    private updateDriftSmoke(topTrackPoint: Point, hullAngle: number, sin: number, cos: number){
+        let bottomTrackPoint: Point = this._tankSpriteParts.hullSprite.calcPosition(topTrackPoint, sin, cos);
+        bottomTrackPoint = this._tankSpriteParts.bottomTrackSprite.calcPosition(bottomTrackPoint, sin, cos);
+        const rotateDirection: number = this._tankDrift.detectRotateDirection(hullAngle);
+        switch (rotateDirection){
+            case rotDirection.rotLeft:
+                this._tankDrift.spawnTopSmoke(topTrackPoint, hullAngle, sin, cos);
+                break;
+            case rotDirection.rotRight:
+                this._tankDrift.spawnBottomSmoke(bottomTrackPoint, hullAngle, sin, cos);
+                break;
         }
     }
     public updateForwardAction(point: Point, hullAngle: number, turretAngle: number) {
@@ -86,6 +88,7 @@ export class TankSprite {
         this._tankAcceleration.setPosition(hullDefaultPoint, sin, cos, hullAngle);
 
         this.updateTireTrack(point, hullAngle, sin, cos);
+        this.updateDriftSmoke(point, hullAngle, sin, cos);
     }
     public updateBackwardAction(point: Point, hullAngle: number, turretAngle: number) {
         this._tankTrackEffect.isForwardMovement = false;
@@ -96,11 +99,13 @@ export class TankSprite {
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
 
         this.updateTireTrack(point, hullAngle, sin, cos);
+        this.updateDriftSmoke(point, hullAngle, sin, cos);
     }
     public preUpdateAction(point: Point, hullAngle: number, turretAngle: number){
         const sin: number = Math.sin(hullAngle);
         const cos: number = Math.cos(hullAngle);
         this.updateTireTrack(point, hullAngle, sin, cos);
+        this.updateDriftSmoke(point, hullAngle, sin, cos);
 
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
     }
