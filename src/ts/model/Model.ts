@@ -12,17 +12,17 @@ export abstract class Model implements IHealth{
     public get entity(): IEntity { return this._entity }
     public isIdle(): boolean { return  this._entity.velocity.length === 0 }
     public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
-    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
-        const acceleration = this.calcAcceleration(0, resistanceCoeff, airResistanceCoeff, entity.velocity.length);
+        const acceleration = this.calcAcceleration(0, resistanceCoeff, airResistanceCoeff, deltaTime,
+            this._entity.velocity.length);
         const angle = entity.velocity.angle;
         this.applyVelocityChange(acceleration, angle);
         EntityManipulator.movement(entity);
     }
-    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
-        const acceleration = this.calcAcceleration(0, resistanceCoeff, airResistanceCoeff,
-            entity.angularVelocity) / entity.radiusLength;
+        const acceleration = this.calcAngularAcceleration(0, resistanceCoeff, airResistanceCoeff, deltaTime);
         const angularVelocity = entity.angularVelocity;
         if (angularVelocity > 0)
             entity.angularVelocity += angularVelocity + acceleration < 0 ? -angularVelocity : acceleration;
@@ -31,11 +31,22 @@ export abstract class Model implements IHealth{
 
         EntityManipulator.angularMovement(entity);
     }
-    protected calcAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number, speed: number): number {
+    protected calcAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
+                               speed: number): number {
         const frictionForce = resistanceCoeff * this._entity.mass * GRAVITY_ACCELERATION;
         const airResistanceForce = airResistanceCoeff * speed * speed;
 
-        return (thrust - frictionForce - airResistanceForce) / this._entity.mass;
+        return (thrust - frictionForce - airResistanceForce) / this._entity.mass * deltaTime;
+    }
+    protected calcAngularAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number,
+                                      deltaTime: number): number {
+        const entity = this._entity;
+        const angularSpeed = entity.angularVelocity;
+
+        const angularFrictionForce = resistanceCoeff * entity.mass * GRAVITY_ACCELERATION * entity.radiusLength;
+        const angularAirResistanceForce = airResistanceCoeff * angularSpeed * angularSpeed * entity.radiusLength;
+
+        return (thrust - angularFrictionForce - angularAirResistanceForce) / entity.momentOfInertia * deltaTime;
     }
     protected applyVelocityChange(acceleration: number, angle: number) {
         const entity = this._entity;

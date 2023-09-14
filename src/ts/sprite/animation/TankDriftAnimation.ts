@@ -20,7 +20,7 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
         this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
         this._sprite.style.zIndex = `6`;
     }
-    public changeStage(): void {
+    public changeStage(deltaTime: number): void {
         if (--this._timer <= 0){
             this._timer = TankDriftAnimation.TIMER_TIME;
 

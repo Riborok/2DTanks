@@ -7,7 +7,7 @@ import {BulletElement} from "../../elements/BulletElement";
 import {IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData} from "../../../additionally/type";
 
-export type Action = (resistanceCoeff: number, airResistanceCoeff: number) => void;
+export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
 
 export abstract class MovementManager {
     protected readonly _entityStorage: IStorage<IEntity>;
@@ -15,7 +15,7 @@ export abstract class MovementManager {
     protected _resistanceCoeff: number = 0;
     protected _airResistanceCoeff: number = 0;
     public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
-    public set airResistanceCoeff(airResistanceCoefficient: number) { this._airResistanceCoeff = airResistanceCoefficient }
+    public set airResistanceCoeff(airResistanceCoeff: number) { this._airResistanceCoeff = airResistanceCoeff }
     public constructor(entityStorage: IStorage<IEntity>, collisionManager: ICollisionManager) {
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
@@ -28,23 +28,23 @@ interface setCoefficients {
     set airResistanceCoeff(airResistanceCoefficient: number);
 }
 export interface ITankMovementManager extends setCoefficients {
-    hullCounterclockwiseMovement(tankElement: TankElement): void;
-    hullClockwiseMovement(tankElement: TankElement): void;
-    forwardMovement(tankElement: TankElement): void;
-    backwardMovement(tankElement: TankElement): void;
-    turretCounterclockwiseMovement(tankElement: TankElement): void;
-    turretClockwiseMovement(tankElement: TankElement): void;
-    residualMovement(tankElement: TankElement): void;
-    residualAngularMovement(tankElement: TankElement): void;
+    hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    hullClockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    forwardMovement(tankElement: TankElement, deltaTime: number): void;
+    backwardMovement(tankElement: TankElement, deltaTime: number): void;
+    turretCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    turretClockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    residualMovement(tankElement: TankElement, deltaTime: number): void;
+    residualAngularMovement(tankElement: TankElement, deltaTime: number): void;
 }
 
 export interface IWallMovementManager extends setCoefficients {
     hasAnyResidualMovement(wallElement: WallElement): boolean;
-    movement(wallElement: WallElement): void;
+    movement(wallElement: WallElement, deltaTime: number): void;
 }
 
 export interface IBulletManager extends setCoefficients {
     hasResidualMovement(bulletElement: BulletElement): boolean;
-    movement(bulletElement: BulletElement): void;
+    movement(bulletElement: BulletElement, deltaTime: number): void;
     get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData>;
 }

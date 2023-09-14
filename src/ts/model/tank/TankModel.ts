@@ -69,27 +69,27 @@ export class TankModel extends Model implements IArmor {
     public takeNewBullet(bulletNum: number) {
         this._bulletNum = bulletNum;
     }
-    public turretClockwiseMovement() { this._turretAngle += this._tankParts.turret.angleSpeed }
-    public turretCounterclockwiseMovement() { this._turretAngle -= this._tankParts.turret.angleSpeed }
+    public turretClockwiseMovement(deltaTime: number) { this._turretAngle += this._tankParts.turret.angleSpeed * deltaTime }
+    public turretCounterclockwiseMovement(deltaTime: number) { this._turretAngle -= this._tankParts.turret.angleSpeed * deltaTime }
     private incTurretAngle(deltaAngle: number) { this._turretAngle += deltaAngle }
-    public hullClockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public hullClockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity += this.calcAcceleration(angularData.force, resistanceCoeff,
-                airResistanceCoeff, entity.angularVelocity) / entity.radiusLength;
+            entity.angularVelocity += this.calcAngularAcceleration(angularData.force, resistanceCoeff,
+                airResistanceCoeff, deltaTime);
 
         this.updateAngularVelocity();
 
         EntityManipulator.angularMovement(entity);
         this.incTurretAngle(entity.angularVelocity);
     }
-    public hullCounterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public hullCounterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (-entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity -= this.calcAcceleration(angularData.force, resistanceCoeff,
-                airResistanceCoeff, entity.angularVelocity) / entity.radiusLength;
+            entity.angularVelocity -= this.calcAngularAcceleration(angularData.force, resistanceCoeff,
+                airResistanceCoeff, deltaTime);
 
         this.updateAngularVelocity();
 
@@ -130,16 +130,16 @@ export class TankModel extends Model implements IArmor {
         entity.angularVelocity *= massFactor * speedFactor;
         velocity.scale(massFactor);
     }
-    public forwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public forwardMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         this.movement(this._tankParts.track.forwardData, this._entity.angle,
-            resistanceCoeff, airResistanceCoeff);
+            resistanceCoeff, airResistanceCoeff, deltaTime);
     }
-    public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public backwardMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         this.movement(this._tankParts.track.backwardData,this._entity.angle + Math.PI,
-            resistanceCoeff, airResistanceCoeff);
+            resistanceCoeff, airResistanceCoeff, deltaTime);
     }
     private static readonly VELOCITY_RECOVERY_COEFF: number = 0.017;
-    private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number) {
+    private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const speed = entity.velocity.length;
 
@@ -150,7 +150,7 @@ export class TankModel extends Model implements IArmor {
 
         if (TankModel.isStraightMovement(turn)) {
             this._isDrift = false;
-            this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, speed, velocityAngle);
+            this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, velocityAngle);
         }
         else {
             this._isDrift = !TankModel.isReverseMovement(turn);
@@ -158,7 +158,7 @@ export class TankModel extends Model implements IArmor {
                 this.determineDribbleSpeed(turn);
                 this.applyTurn(this.calcShortestTurn(turn));
             }
-            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, speed, turn, velocityAngle);
+            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, turn, velocityAngle);
         }
 
         EntityManipulator.movement(entity);
@@ -178,19 +178,19 @@ export class TankModel extends Model implements IArmor {
     private static isReverseMovement(turn: number): boolean {
         return Math.abs(turn - Math.PI) <= ANGLE_EPSILON;
     }
-    private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number,
+    private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
                                    speed: number, velocityAngle: number) {
         if (speed < data.finishSpeed) {
-            const acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, speed);
+            const acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, deltaTime, speed);
             this._entity.velocity.addToCoordinates(acceleration * Math.cos(velocityAngle),
                 acceleration * Math.sin(velocityAngle));
         }
     }
-    private handleDriftMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number,
+    private handleDriftMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
                                 speed: number, turn: number, velocityAngle: number) {
         if (this._isBraking || speed < data.finishSpeed) {
             const acceleration = this.calcAcceleration(data.force * Math.cos(turn),
-                resistanceCoeff, airResistanceCoeff, speed);
+                resistanceCoeff, airResistanceCoeff, deltaTime, speed);
             this.applyVelocityChange(acceleration, velocityAngle);
         }
     }
@@ -210,7 +210,7 @@ export class TankModel extends Model implements IArmor {
             0, 1, 0.95, 1)
         this._entity.velocity.scale(scalar);
     }
-    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const turn = calcTurn(this._entity.angle, this._entity.velocity.angle);
         if (this._isDrift || (!TankModel.isStraightMovement(turn) && !TankModel.isReverseMovement(turn))) {
             this._isDrift = true;
@@ -218,11 +218,11 @@ export class TankModel extends Model implements IArmor {
         }
 
         this._isBraking = false;
-        super.residualMovement(resistanceCoeff, airResistanceCoeff);
+        super.residualMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
     }
-    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number) {
+    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         this.updateAngularVelocity();
-        super.residualAngularMovement(resistanceCoeff, airResistanceCoeff);
+        super.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
         this.incTurretAngle(this._entity.angularVelocity);
     }
 }

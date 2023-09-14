@@ -4,7 +4,7 @@ import {Action, ITankMovementManager, MovementManager} from "./MovementManager";
 
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 export class TankMovementManager extends MovementManager implements ITankMovementManager{
-    public residualMovement(tankElement: TankElement) {
+    public residualMovement(tankElement: TankElement, deltaTime: number) {
         const sprite = tankElement.sprite;
         if (tankElement.model.isIdle()) {
             sprite.tankTrackEffect.stopped();
@@ -15,42 +15,44 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
             sprite.tankTrackEffect.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
-                tankElement.sprite.preUpdateAction
+                tankElement.sprite.preUpdateAction,
+                deltaTime
             );
         }
     }
-    public residualAngularMovement(tankElement: TankElement) {
+    public residualAngularMovement(tankElement: TankElement, deltaTime: number) {
         if (!tankElement.model.isAngularMotionStopped()) {
             this.hullUpdate(tankElement,
                 tankElement.model.residualAngularMovement,
-                tankElement.sprite.preUpdateAction
+                tankElement.sprite.preUpdateAction,
+                deltaTime
             );
         }
     }
-    public turretCounterclockwiseMovement(tankElement: TankElement) {
-        tankElement.model.turretCounterclockwiseMovement();
+    public turretCounterclockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        tankElement.model.turretCounterclockwiseMovement(deltaTime);
         TankMovementManager.turretUpdate(tankElement);
     }
-    public turretClockwiseMovement(tankElement: TankElement) {
-        tankElement.model.turretClockwiseMovement();
+    public turretClockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        tankElement.model.turretClockwiseMovement(deltaTime);
         TankMovementManager.turretUpdate(tankElement);
     }
-    public hullCounterclockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.preUpdateAction);
+    public hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.preUpdateAction, deltaTime);
     }
-    public hullClockwiseMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.preUpdateAction);
+    public hullClockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.preUpdateAction, deltaTime);
     }
-    public forwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction);
+    public forwardMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction, deltaTime);
     }
-    public backwardMovement(tankElement: TankElement) {
-        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.sprite.updateBackwardAction);
+    public backwardMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.sprite.updateBackwardAction, deltaTime);
     }
-    private hullUpdate(tankElement: TankElement, action: Action, updateSprites: UpdateSprites) {
+    private hullUpdate(tankElement: TankElement, action: Action, updateSprites: UpdateSprites, deltaTime: number) {
         const entity = tankElement.model.entity;
         this._entityStorage.remove(entity);
-        action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff);
+        action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
         if (this._collisionManager.hasCollision(entity))
             tankElement.sprite.removeAcceleration();
 

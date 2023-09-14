@@ -23,10 +23,11 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
         this._wallElements = wallElements;
     }
 
-    public handle(): void {
-        if (!this._bulletToProcess.isEmpty())
+    public handle(deltaTime: number): void {
+        if (!this._bulletToProcess.isEmpty()) {
             this._bulletToProcess.applyAndRemove(this._movementManager.movement.bind(this._movementManager),
-                this._movementManager.hasResidualMovement.bind(this._movementManager));
+                this._movementManager.hasResidualMovement.bind(this._movementManager), deltaTime);
+        }
         if (this._movementManager.bulletAndModelIDs.hasForProcessing())
             this.handleBulletCollisions();
     }

@@ -10,14 +10,14 @@ export class BulletMovementManager extends MovementManager implements IBulletMan
     public hasResidualMovement(bulletElement: BulletElement): boolean {
         return !bulletElement.model.isIdle();
     }
-    public movement(bulletElement: BulletElement) {
+    public movement(bulletElement: BulletElement, deltaTime: number) {
         if (!bulletElement.model.isIdle())
-            this.update(bulletElement);
+            this.update(bulletElement, deltaTime);
     }
-    private update(bulletElement: BulletElement) {
+    private update(bulletElement: BulletElement, deltaTime: number) {
         const entity = bulletElement.model.entity;
         this._entityStorage.remove(entity);
-        bulletElement.model.residualMovement(this._resistanceCoeff, this._airResistanceCoeff);
+        bulletElement.model.residualMovement(this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
         const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
         if (collisions) {
             const collisionsIds = new Array<number>();
