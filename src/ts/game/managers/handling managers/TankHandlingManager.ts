@@ -16,7 +16,7 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;
     }
-    public handle(mask: number): void {
+    public handle(mask: number, deltaTime: number): void {
         this._tireTracksManager.reduceOpacity();
 
         for (const tankElement of this._elements.values()) {
@@ -26,36 +26,36 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             let oppositeAction = (mask & control.turretCounterClockwiseMask) !== 0;
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
-                    this._movementManager.turretClockwiseMovement(tankElement);
+                    this._movementManager.turretClockwiseMovement(tankElement, deltaTime);
                 else if (oppositeAction)
-                    this._movementManager.turretCounterclockwiseMovement(tankElement);
+                    this._movementManager.turretCounterclockwiseMovement(tankElement, deltaTime);
             }
 
             action = (mask & control.forwardMask) !== 0;
             oppositeAction = (mask & control.backwardMask) !== 0;
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
-                    this._movementManager.forwardMovement(tankElement);
+                    this._movementManager.forwardMovement(tankElement, deltaTime);
                 else if (oppositeAction) {
                     tankElement.sprite.removeAcceleration();
-                    this._movementManager.backwardMovement(tankElement);
+                    this._movementManager.backwardMovement(tankElement, deltaTime);
                 }
             }
             else {
                 tankElement.sprite.removeAcceleration();
-                this._movementManager.residualMovement(tankElement);
+                this._movementManager.residualMovement(tankElement, deltaTime);
             }
 
             action = (mask & control.hullClockwiseMask) !== 0;
             oppositeAction = (mask & control.hullCounterClockwiseMask) !== 0;
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
-                    this._movementManager.hullClockwiseMovement(tankElement);
+                    this._movementManager.hullClockwiseMovement(tankElement, deltaTime);
                 else if (oppositeAction)
-                    this._movementManager.hullCounterclockwiseMovement(tankElement);
+                    this._movementManager.hullCounterclockwiseMovement(tankElement, deltaTime);
             }
             else
-                this._movementManager.residualAngularMovement(tankElement);
+                this._movementManager.residualAngularMovement(tankElement, deltaTime);
 
             action = (mask & control.shoot) !== 0;
             if (action) {

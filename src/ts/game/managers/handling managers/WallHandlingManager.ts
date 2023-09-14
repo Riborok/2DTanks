@@ -13,10 +13,11 @@ export class WallHandlingManager extends HandlingManagers<WallElement, WallMovem
             wallsForProcessing.clear();
         }
     }
-    public handle(): void {
+    public handle(deltaTime: number): void {
         this.addToProcess();
-        if (!this._wallToProcess.isEmpty())
+        if (!this._wallToProcess.isEmpty()) {
             this._wallToProcess.applyAndRemove(this._movementManager.movement.bind(this._movementManager),
-                this._movementManager.hasAnyResidualMovement.bind(this._movementManager));
+                this._movementManager.hasAnyResidualMovement.bind(this._movementManager), deltaTime);
+        }
     }
 }

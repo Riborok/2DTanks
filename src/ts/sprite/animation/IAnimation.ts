@@ -1,4 +1,4 @@
 export interface IAnimation{
     get isEnded(): boolean;
-    changeStage(): void;
+    changeStage(deltaTime: number): void;
 }

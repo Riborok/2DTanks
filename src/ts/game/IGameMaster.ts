@@ -116,13 +116,19 @@ export class GameMaster implements IGameMaster {
     public stopGameLoop() {
         this._isGameLoopActive = false;
     }
+    private _lastFrameTime: number = 0;
     private gameLoop() {
         if (!this._isGameLoopActive)
             return;
 
-        this._tankHandlingManagers.handle(this._keyHandler.keysMask);
-        this._wallHandlingManagers.handle();
-        this._animationManager.handle();
+        const currentTime = performance.now();
+        const deltaTime = currentTime - this._lastFrameTime;
+
+        this._tankHandlingManagers.handle(this._keyHandler.keysMask, deltaTime);
+        this._wallHandlingManagers.handle(deltaTime);
+        this._animationManager.handle(deltaTime);
+
+        this._lastFrameTime = currentTime;
 
         requestAnimationFrame(() => this.gameLoop());
     }

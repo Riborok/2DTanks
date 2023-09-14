@@ -23,7 +23,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
         this.setPosition(point);
         this.setAngle(angle);
     }
-    public changeStage(): void {
+    public changeStage(deltaTime: number): void {
         if (--this._timer <= 0){
             this._timer = TankExplosionAnimation.TIMER_TIME;
 

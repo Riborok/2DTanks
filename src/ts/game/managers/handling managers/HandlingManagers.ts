@@ -31,15 +31,15 @@ interface getMovementManager {
 }
 
 export interface ITankHandlingManager extends getMovementManager {
-    handle(mask: number): void;
+    handle(mask: number, deltaTime: number): void;
     add(tankElements: Iterable<TankElement>): void;
 }
 export interface IWallHandlingManager extends getMovementManager {
-    handle(): void;
+    handle(deltaTime: number): void;
     add(wallElements: Iterable<WallElement>): void;
 }
 export interface IBulletHandlingManager extends getMovementManager, IAddBulletModel {
-    handle(): void;
+    handle(deltaTime: number): void;
     add(bulletElements: Iterable<BulletElement>): void;
 }
 export interface IAddBulletModel {
