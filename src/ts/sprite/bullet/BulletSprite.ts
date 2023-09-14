@@ -6,7 +6,7 @@ import {SpriteManipulator} from "../SpriteManipulator";
 export class BulletSprite extends Sprite {
     public constructor(num: number) {
         super(BULLET_WIDTH[num], BULLET_HEIGHT[num]);
-        this._sprite.src = `src/img/tanks/Bullet_${num}.png`;
+        this._sprite.src = `src/img/tanks/Bullets/Bullet_${num}.png`;
         this._sprite.style.zIndex = `4`;
     }
     public updateAfterAction(point: Point, angle: number) {

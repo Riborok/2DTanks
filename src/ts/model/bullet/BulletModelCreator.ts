@@ -10,9 +10,16 @@ export class BulletModelCreator {
     private constructor() { }
     public static create(num: number, point: Point, angle: number, weapon: IWeapon): BulletModel {
         const bullet = BulletModelCreator.createBullet(num);
+        const entity = new RectangularEntity(point, BULLET_WIDTH[num], BULLET_HEIGHT[num],
+            angle, bullet.mass, IDTracker.bulletId);
+
+        const speed = bullet.startingSpeed * weapon.startingSpeedCoeff;
+        entity.velocity.x = speed * Math.cos(angle);
+        entity.velocity.y = speed * Math.sin(angle);
+
         return new BulletModel(
             bullet,
-            new RectangularEntity(point, BULLET_WIDTH[num], BULLET_HEIGHT[num], angle, bullet.mass, IDTracker.bulletId),
+            entity,
             weapon
         );
     }

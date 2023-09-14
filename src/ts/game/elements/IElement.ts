@@ -9,4 +9,5 @@ export interface IElement extends IIdentifiable {
     get model(): Model;
     get sprite(): Sprite | TankSprite;
     spawn(canvas: Element, entityStorage: IStorage<IEntity>): void;
+    vanish(entityStorage: IStorage<IEntity>): void;
 }

@@ -16,20 +16,17 @@ import {getBarrelLength} from "../../components/tank parts/IWeapon";
 export class TankModel extends Model implements IArmor {
     private readonly _tankParts: TankParts;
 
-    private _lastTimeShot: number;
-    private _bulletQuantity: number = 0;
+    private _lastTimeShot: number = Date.now();
+    private _bulletQuantity: number = 50;
     private _bulletNum: number = 0;
     private _isBraking: boolean = false;
     private _isDrift: boolean = false;
-    private _health: number;
     private _armorStrength: number;
     private _turretAngle: number;
     public constructor(tankParts: TankParts, entity: IEntity) {
-        super(entity);
+        super(entity, tankParts.hull.health);
         this._tankParts = tankParts;
         this._turretAngle = entity.angle;
-        this._lastTimeShot = Date.now();
-        this._health = tankParts.hull.health;
         this._armorStrength = tankParts.hull.armorStrength;
     }
     public takeDamage(bullet: BulletModel) {
@@ -38,8 +35,6 @@ export class TankModel extends Model implements IArmor {
         this._health -= bullet.damage - this._tankParts.hull.armor * this._armorStrength;
     }
     public get turretAngle(): number { return this._turretAngle }
-    public get isDrift(): boolean { return this._isDrift }
-    public get health(): number { return this._health }
     public get armor() { return this._tankParts.hull.armor }
     public get armorStrength() { return this._armorStrength }
     public get bulletNum() { return this._bulletNum }

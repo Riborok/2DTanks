@@ -27,6 +27,8 @@ const scalingCoeff: number = 3.75;
  * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entitiy.
  */
 export class RectangularEntity implements IEntity {
+    private static readonly scalingCoeff = (1 / 12) * scalingCoeff;
+
     private readonly _points: Point[];
     private readonly _mass: number;
     private readonly _id: number;
@@ -37,7 +39,7 @@ export class RectangularEntity implements IEntity {
     public constructor(point: Point, width: number, height: number, angle: number, mass: number, id: number) {
         const sumOfSquares = width * width + height * height;
         this._radiusLength = (1 / 2) * Math.sqrt(sumOfSquares);
-        this._momentOfInertia = (1 / 12) * mass * sumOfSquares * scalingCoeff;
+        this._momentOfInertia = RectangularEntity.scalingCoeff * mass * sumOfSquares;
         this._mass = mass;
         this._id = id;
         this._points = [point.clone(),
