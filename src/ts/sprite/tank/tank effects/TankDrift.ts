@@ -7,7 +7,8 @@ import {SpriteManipulator} from "../../SpriteManipulator";
 export enum rotDirection{
     rotLeft = -1,
     rotStraight = 0,
-    rotRight = 1
+    rotRight = 1,
+    rotNoRotate = 2
 }
 
 export class TankDrift{
@@ -18,12 +19,12 @@ export class TankDrift{
     private readonly _trackHeight: number;
     private _currAnimation: TopTankDriftAnimation | BottomTankDriftAnimation;
     private _delayedAngle: number = 0;
-    private static readonly SPAWN_NEW_SMOKE_STAGE: number = 0;
+    private static readonly UPDATE_SMOKE_DELTA_ANGLE: number = 0.113446;
     constructor(canvas: Element, animationManager: IAnimationManager, trackWidth: number, trackHeight: number) {
         this._canvas = canvas;
         this._animationManager = animationManager;
-        this._width = trackWidth * 3 / 4;
-        this._height = trackWidth / 2;
+        this._width = trackWidth / 4;
+        this._height = trackWidth / 5;
         this._trackHeight = trackHeight;
     }
     public detectRotateDirection(angle: number): number{
@@ -36,10 +37,16 @@ export class TankDrift{
             }
         }
         const deltaAngle: number = angle - this._delayedAngle;
-        this._delayedAngle = clampAngle(angle, -Math.PI, Math.PI);
-        if (deltaAngle < 0) { return rotDirection.rotLeft }
-        else if (deltaAngle === 0) { return  rotDirection.rotStraight }
-        else if (deltaAngle > 0) { return  rotDirection.rotRight }
+        if (deltaAngle < 0 && Math.abs(deltaAngle) > TankDrift.UPDATE_SMOKE_DELTA_ANGLE) {
+            this._delayedAngle = clampAngle(angle, -Math.PI, Math.PI);
+            return rotDirection.rotLeft
+        }
+        else if (deltaAngle > 0 && Math.abs(deltaAngle) > TankDrift.UPDATE_SMOKE_DELTA_ANGLE) {
+            this._delayedAngle = clampAngle(angle, -Math.PI, Math.PI);
+            return  rotDirection.rotRight
+        }
+        else { return  rotDirection.rotNoRotate }
+
     }
     private setPosAndAngle(point: Point, angle: number){
         const newSin: number = Math.sin(angle);

@@ -5,9 +5,9 @@ import {IAnimation} from "./IAnimation";
 export class TankExplosionAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
     private _isEnded: boolean = false;
-    private _timer: number = TankExplosionAnimation.TIMER_TIME;
+    private _timer: number = TankExplosionAnimation.UPDATE_TIMER_TIME;
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_';
-    private static readonly TIMER_TIME: number = 5;
+    private static readonly UPDATE_TIMER_TIME: number = 5;
     private static readonly MAX_STAGE: number = 8;
     private static readonly WIDTH: number = 120;
     private static readonly HEIGHT: number = 120;
@@ -24,8 +24,9 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
         this.setAngle(angle);
     }
     public changeStage(deltaTime: number): void {
-        if (--this._timer <= 0){
-            this._timer = TankExplosionAnimation.TIMER_TIME;
+        this._timer += deltaTime;
+        if (this._timer >= TankExplosionAnimation.UPDATE_TIMER_TIME){
+            this._timer -= TankExplosionAnimation.UPDATE_TIMER_TIME;
 
             this._animationStage++;
             if (this._animationStage <= TankExplosionAnimation.MAX_STAGE) {

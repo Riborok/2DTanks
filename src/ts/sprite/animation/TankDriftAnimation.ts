@@ -5,24 +5,24 @@ import {IAnimation} from "./IAnimation";
 abstract class TankDriftAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
     private _isEnded: boolean = false;
-    private _timer: number = TankDriftAnimation.TIMER_TIME;
+    private _timer: number = TankDriftAnimation.UPDATE_TIMER_TIME;
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke_';
-    private static readonly TIMER_TIME: number = 5;
+    private static readonly UPDATE_TIMER_TIME: number = 60;
     private static readonly MAX_STAGE: number = 9;
     public get isEnded(): boolean {
         if (this._isEnded)
             this.remove();
         return this._isEnded
     }
-    public get animationStage(): number { return this._animationStage }
     public constructor(width: number, height: number) {
         super(width, height);
         this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
         this._sprite.style.zIndex = `6`;
     }
     public changeStage(deltaTime: number): void {
-        if (--this._timer <= 0){
-            this._timer = TankDriftAnimation.TIMER_TIME;
+        this._timer += deltaTime;
+        if (this._timer >= TankDriftAnimation.UPDATE_TIMER_TIME){
+            this._timer -= TankDriftAnimation.UPDATE_TIMER_TIME;
 
             this._animationStage++;
             if (this._animationStage <= TankDriftAnimation.MAX_STAGE) {
