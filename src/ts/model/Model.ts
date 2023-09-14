@@ -31,22 +31,19 @@ export abstract class Model implements IHealth{
 
         EntityManipulator.angularMovement(entity);
     }
+    private static readonly FRAME_RATE: number = 17;
     protected calcAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
                                speed: number): number {
         const frictionForce = resistanceCoeff * this._entity.mass * GRAVITY_ACCELERATION;
         const airResistanceForce = airResistanceCoeff * speed * speed;
 
-        return (thrust - frictionForce - airResistanceForce) / this._entity.mass * deltaTime;
+        return ((thrust - frictionForce - airResistanceForce) / this._entity.mass) * (deltaTime / Model.FRAME_RATE);
     }
     protected calcAngularAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number,
                                       deltaTime: number): number {
         const entity = this._entity;
-        const angularSpeed = entity.angularVelocity;
-
-        const angularFrictionForce = resistanceCoeff * entity.mass * GRAVITY_ACCELERATION * entity.radiusLength;
-        const angularAirResistanceForce = airResistanceCoeff * angularSpeed * angularSpeed * entity.radiusLength;
-
-        return (thrust - angularFrictionForce - angularAirResistanceForce) / entity.momentOfInertia * deltaTime;
+        return this.calcAcceleration(thrust, resistanceCoeff, airResistanceCoeff, deltaTime,
+            entity.angularVelocity) / entity.radiusLength;
     }
     protected applyVelocityChange(acceleration: number, angle: number) {
         const entity = this._entity;

@@ -12,7 +12,7 @@ export function getTurretWidth(turret: ITurret): number {
 }
 
 export class TurretModel0 implements ITurret{
-    public get angleSpeed(): number { return 0.0125 }
+    public get angleSpeed(): number { return 0.0006 }
     public get mass(): number { return 0.35 }
     public get bulletCapacity(): number { return 10 }
     public get num(): number { return 0 }

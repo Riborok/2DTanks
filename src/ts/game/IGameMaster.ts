@@ -116,7 +116,7 @@ export class GameMaster implements IGameMaster {
     public stopGameLoop() {
         this._isGameLoopActive = false;
     }
-    private _lastFrameTime: number = 0;
+    private _lastFrameTime: number = performance.now();
     private gameLoop() {
         if (!this._isGameLoopActive)
             return;
