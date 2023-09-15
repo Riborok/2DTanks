@@ -25,7 +25,7 @@ const scalingCoeff: number = 3.75;
 
 /**
  * An abstract base class representing a rectangular entity.
- * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entitiy.
+ * This class implements the IEntity interface and provides methods for manipulating and working with rectangular entity.
  */
 export class RectangularEntity implements IEntity {
     private static readonly scalingCoeff = (1 / 12) * scalingCoeff;
