@@ -3,7 +3,7 @@ import {EntityManipulator} from "../../entitiy/EntityManipulator";
 import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../../entitiy/IEntity";
-import {Model} from "../Model";
+import {LandModel} from "../Model";
 import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
 import {IArmor, MotionData} from "../../additionally/type";
@@ -12,8 +12,9 @@ import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additi
 import {remapValueToRange} from "../../additionally/additionalFunc";
 import {getTurretWidth} from "../../components/tank parts/ITurret";
 import {getBarrelLength} from "../../components/tank parts/IWeapon";
+import {LandForcesCalculator} from "../ForcesCalculator";
 
-export class TankModel extends Model implements IArmor {
+export class TankModel extends LandModel implements IArmor {
     private readonly _tankParts: TankParts;
 
     private _lastTimeShot: number = Date.now();
@@ -71,8 +72,9 @@ export class TankModel extends Model implements IArmor {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity += this.calcAngularAcceleration(angularData.force, resistanceCoeff,
-                airResistanceCoeff, deltaTime);
+            entity.angularVelocity += LandForcesCalculator.calcAngularAcceleration(
+                angularData.force, resistanceCoeff, airResistanceCoeff, deltaTime,
+                entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
 
         this.updateAngularVelocity();
 
@@ -83,8 +85,9 @@ export class TankModel extends Model implements IArmor {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (-entity.angularVelocity < angularData.finishSpeed)
-            entity.angularVelocity -= this.calcAngularAcceleration(angularData.force, resistanceCoeff,
-                airResistanceCoeff, deltaTime);
+            entity.angularVelocity -= LandForcesCalculator.calcAngularAcceleration(
+                angularData.force, resistanceCoeff, airResistanceCoeff, deltaTime,
+                entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
 
         this.updateAngularVelocity();
 
@@ -176,7 +179,10 @@ export class TankModel extends Model implements IArmor {
     private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
                                    speed: number, velocityAngle: number) {
         if (speed < data.finishSpeed) {
-            const acceleration = this.calcAcceleration(data.force, resistanceCoeff, airResistanceCoeff, deltaTime, speed);
+            const acceleration = LandForcesCalculator.calcAcceleration(
+                data.force, resistanceCoeff, airResistanceCoeff, deltaTime,
+                speed, this._entity.mass, this._entity.lengthwiseArea);
+
             this._entity.velocity.addToCoordinates(acceleration * Math.cos(velocityAngle),
                 acceleration * Math.sin(velocityAngle));
         }
@@ -184,8 +190,10 @@ export class TankModel extends Model implements IArmor {
     private handleDriftMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
                                 speed: number, turn: number, velocityAngle: number) {
         if (this._isBraking || speed < data.finishSpeed) {
-            const acceleration = this.calcAcceleration(data.force * Math.cos(turn),
-                resistanceCoeff, airResistanceCoeff, deltaTime, speed);
+            const acceleration = LandForcesCalculator.calcAcceleration(
+                data.force * Math.cos(turn), resistanceCoeff, airResistanceCoeff, deltaTime,
+                speed, this._entity.mass, this._entity.lengthwiseArea);
+
             this.applyVelocityChange(acceleration, velocityAngle);
         }
     }

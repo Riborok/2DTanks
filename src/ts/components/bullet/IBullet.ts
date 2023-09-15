@@ -9,7 +9,7 @@ export interface IBullet extends IComponent{
 }
 
 export class LightBullet implements IBullet {
-    public get startingSpeed(): number { return 50 }
+    public get startingSpeed(): number { return 55 }
     public get damage(): number { return 15 }
     public get armorPenetration(): number { return 5 }
     public get mass(): number { return 0.008 }
