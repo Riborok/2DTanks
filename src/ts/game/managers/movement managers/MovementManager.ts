@@ -8,6 +8,7 @@ import {IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData} from "../../../additionally/type";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
+export type Movement = (entity: IEntity) => void;
 
 export abstract class MovementManager {
     protected readonly _entityStorage: IStorage<IEntity>;

@@ -1,5 +1,4 @@
 import {IEntity} from "../entitiy/IEntity";
-import {EntityManipulator} from "../entitiy/EntityManipulator";
 import {BulletModel} from "./bullet/BulletModel";
 import {IHealth} from "../additionally/type";
 import {AirForcesCalculator, LandForcesCalculator} from "./ForcesCalculator";
@@ -47,7 +46,6 @@ export abstract class LandModel extends Model{
             0, resistanceCoeff, airResistanceCoeff, deltaTime,
             entity.velocity.length, entity.mass, entity.lengthwiseArea);
         this.applyVelocityChange(acceleration, entity.velocity.angle);
-        EntityManipulator.movement(entity);
     }
     public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
@@ -55,8 +53,6 @@ export abstract class LandModel extends Model{
             0, resistanceCoeff, airResistanceCoeff, deltaTime,
             entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
         this.applyAngularVelocityChange(acceleration);
-
-        EntityManipulator.angularMovement(entity);
     }
 }
 
@@ -67,7 +63,6 @@ export abstract class AirModel extends Model{
             0, airResistanceCoeff, deltaTime,
             entity.velocity.length, entity.mass, entity.lengthwiseArea);
         this.applyVelocityChange(acceleration, entity.velocity.angle);
-        EntityManipulator.movement(entity);
     }
     public residualAngularMovement(airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
@@ -75,7 +70,5 @@ export abstract class AirModel extends Model{
             0, airResistanceCoeff, deltaTime,
             entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
         this.applyAngularVelocityChange(acceleration);
-
-        EntityManipulator.angularMovement(entity);
     }
 }

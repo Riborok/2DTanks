@@ -1,6 +1,7 @@
 import {TankElement} from "../../elements/TankElement";
 import {Point} from "../../../geometry/Point";
-import {Action, ITankMovementManager, MovementManager} from "./MovementManager";
+import {Action, ITankMovementManager, Movement, MovementManager} from "./MovementManager";
+import {EntityManipulator} from "../../../entitiy/EntityManipulator";
 
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 export class TankMovementManager extends MovementManager implements ITankMovementManager{
@@ -8,13 +9,12 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         const sprite = tankElement.sprite;
         if (tankElement.model.isIdle()) {
             sprite.tankTrackEffect.stopped();
-            sprite.tankTrackEffect.stopped();
         }
         else {
             sprite.tankTrackEffect.setResidualMovement();
-            sprite.tankTrackEffect.setResidualMovement();
             this.hullUpdate(tankElement,
                 tankElement.model.residualMovement,
+                EntityManipulator.movement,
                 tankElement.sprite.preUpdateAction,
                 deltaTime
             );
@@ -24,6 +24,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         if (!tankElement.model.isAngularMotionStopped()) {
             this.hullUpdate(tankElement,
                 tankElement.model.residualAngularMovement,
+                EntityManipulator.angularMovement,
                 tankElement.sprite.preUpdateAction,
                 deltaTime
             );
@@ -38,21 +39,27 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         TankMovementManager.turretUpdate(tankElement);
     }
     public hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, tankElement.sprite.preUpdateAction, deltaTime);
+        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, EntityManipulator.angularMovement,
+            tankElement.sprite.preUpdateAction, deltaTime);
     }
     public hullClockwiseMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, tankElement.sprite.preUpdateAction, deltaTime);
+        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, EntityManipulator.angularMovement,
+            tankElement.sprite.preUpdateAction, deltaTime);
     }
     public forwardMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.forwardMovement, tankElement.sprite.updateForwardAction, deltaTime);
+        this.hullUpdate(tankElement, tankElement.model.forwardMovement, EntityManipulator.movement,
+            tankElement.sprite.updateForwardAction, deltaTime);
     }
     public backwardMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.backwardMovement, tankElement.sprite.updateBackwardAction, deltaTime);
+        this.hullUpdate(tankElement, tankElement.model.backwardMovement, EntityManipulator.movement,
+            tankElement.sprite.updateBackwardAction, deltaTime);
     }
-    private hullUpdate(tankElement: TankElement, action: Action, updateSprites: UpdateSprites, deltaTime: number) {
+    private hullUpdate(tankElement: TankElement, action: Action, movement: Movement,
+                       updateSprites: UpdateSprites, deltaTime: number) {
         const entity = tankElement.model.entity;
         this._entityStorage.remove(entity);
         action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
+        movement(entity);
         if (this._collisionManager.hasCollision(entity))
             tankElement.sprite.removeAcceleration();
 
