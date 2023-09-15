@@ -1,8 +1,8 @@
 import {IEntity} from "../entitiy/IEntity";
 import {EntityManipulator} from "../entitiy/EntityManipulator";
-import {GRAVITY_ACCELERATION} from "../constants/gameConstants";
 import {BulletModel} from "./bullet/BulletModel";
 import {IHealth} from "../additionally/type";
+import {AirForcesCalculator, LandForcesCalculator} from "./ForcesCalculator";
 
 export abstract class Model implements IHealth{
     protected readonly _entity: IEntity;
@@ -16,41 +16,6 @@ export abstract class Model implements IHealth{
     public get entity(): IEntity { return this._entity }
     public isIdle(): boolean { return  this._entity.velocity.length === 0 }
     public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
-    // Physics left the chat :)
-    // But for the game it is OK :)
-    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
-        const entity = this._entity;
-        const acceleration = this.calcAcceleration(0, resistanceCoeff, airResistanceCoeff, deltaTime,
-            entity.velocity.length);
-        this.applyVelocityChange(acceleration, entity.velocity.angle);
-        EntityManipulator.movement(entity);
-    }
-    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
-        const entity = this._entity;
-        const acceleration = this.calcAngularAcceleration(0, resistanceCoeff, airResistanceCoeff, deltaTime);
-        const angularVelocity = entity.angularVelocity;
-        if (angularVelocity > 0)
-            entity.angularVelocity += angularVelocity + acceleration < 0 ? -angularVelocity : acceleration;
-        else
-            entity.angularVelocity -= angularVelocity + acceleration > 0 ? -angularVelocity : acceleration;
-
-        EntityManipulator.angularMovement(entity);
-    }
-    private static readonly FRAME_RATE: number = 17;
-    protected calcAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
-                               speed: number): number {
-        const entity = this._entity;
-        const frictionForce = resistanceCoeff * entity.mass * GRAVITY_ACCELERATION;
-        const airResistanceForce = airResistanceCoeff * speed * speed * entity.radiusLength * entity.radiusLength;
-
-        return ((thrust - frictionForce - airResistanceForce) / entity.mass) * (deltaTime / Model.FRAME_RATE);
-    }
-    protected calcAngularAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number,
-                                      deltaTime: number): number {
-        const entity = this._entity;
-        return this.calcAcceleration(thrust, resistanceCoeff, airResistanceCoeff, deltaTime,
-            entity.angularVelocity) / entity.radiusLength;
-    }
     protected applyVelocityChange(acceleration: number, angle: number) {
         const entity = this._entity;
         const initialSignX = Math.sign(entity.velocity.x);
@@ -63,5 +28,54 @@ export abstract class Model implements IHealth{
         if (initialSignY !== Math.sign(entity.velocity.y))
             entity.velocity.y = 0;
     }
+    protected applyAngularVelocityChange(acceleration: number) {
+        const entity = this._entity;
+
+        const angularVelocity = entity.angularVelocity;
+        if (angularVelocity > 0)
+            entity.angularVelocity += angularVelocity + acceleration < 0 ? -angularVelocity : acceleration;
+        else
+            entity.angularVelocity -= angularVelocity + acceleration > 0 ? -angularVelocity : acceleration;
+    }
     public takeDamage(bullet: BulletModel) { this._health -= bullet.damage }
+}
+
+export abstract class LandModel extends Model{
+    public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
+        const entity = this._entity;
+        const acceleration = LandForcesCalculator.calcAcceleration(
+            0, resistanceCoeff, airResistanceCoeff, deltaTime,
+            entity.velocity.length, entity.mass, entity.lengthwiseArea);
+        this.applyVelocityChange(acceleration, entity.velocity.angle);
+        EntityManipulator.movement(entity);
+    }
+    public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
+        const entity = this._entity;
+        const acceleration = LandForcesCalculator.calcAngularAcceleration(
+            0, resistanceCoeff, airResistanceCoeff, deltaTime,
+            entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
+        this.applyAngularVelocityChange(acceleration);
+
+        EntityManipulator.angularMovement(entity);
+    }
+}
+
+export abstract class AirModel extends Model{
+    public residualMovement(airResistanceCoeff: number, deltaTime: number) {
+        const entity = this._entity;
+        const acceleration = AirForcesCalculator.calcAcceleration(
+            0, airResistanceCoeff, deltaTime,
+            entity.velocity.length, entity.mass, entity.lengthwiseArea);
+        this.applyVelocityChange(acceleration, entity.velocity.angle);
+        EntityManipulator.movement(entity);
+    }
+    public residualAngularMovement(airResistanceCoeff: number, deltaTime: number) {
+        const entity = this._entity;
+        const acceleration = AirForcesCalculator.calcAngularAcceleration(
+            0, airResistanceCoeff, deltaTime,
+            entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
+        this.applyAngularVelocityChange(acceleration);
+
+        EntityManipulator.angularMovement(entity);
+    }
 }

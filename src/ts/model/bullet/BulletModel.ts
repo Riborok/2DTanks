@@ -1,9 +1,9 @@
 import {IBullet} from "../../components/bullet/IBullet";
 import {IEntity} from "../../entitiy/IEntity";
-import {Model} from "../Model";
+import {AirModel} from "../Model";
 import {IWeapon} from "../../components/tank parts/IWeapon";
 
-export class BulletModel extends Model {
+export class BulletModel extends AirModel {
     private readonly _damage: number;
     private readonly _armorPenetration: number;
     public constructor(bullet: IBullet, entity: IEntity, weapon: IWeapon) {

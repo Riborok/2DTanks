@@ -18,6 +18,7 @@ export interface IEntity extends IIdentifiable{
     calcCenter(): Point;
     get radiusLength(): number;
     get momentOfInertia(): number;
+    get lengthwiseArea(): number;
 }
 
 const scalingCoeff: number = 3.75;
@@ -34,14 +35,19 @@ export class RectangularEntity implements IEntity {
     private readonly _id: number;
     private _angularVelocity: number = 0;
     private readonly _velocity: Vector = new Vector(0, 0);
+
     private readonly _radiusLength: number;
     private readonly _momentOfInertia: number;
+    private readonly _width: number;
+    private readonly _height: number;
     public constructor(point: Point, width: number, height: number, angle: number, mass: number, id: number) {
         const sumOfSquares = width * width + height * height;
         this._radiusLength = (1 / 2) * Math.sqrt(sumOfSquares);
         this._momentOfInertia = RectangularEntity.scalingCoeff * mass * sumOfSquares;
         this._mass = mass;
         this._id = id;
+        this._width = width;
+        this._height = height;
         this._points = [point.clone(),
             new Point(point.x + width, point.y),
             new Point(point.x + width, point.y + height),
@@ -60,5 +66,9 @@ export class RectangularEntity implements IEntity {
     public get momentOfInertia(): number { return this._momentOfInertia }
     public calcCenter(): Point {
         return new Point((this._points[0].x + this._points[2].x) / 2, (this._points[0].y + this._points[2].y) / 2);
+    }
+    public get lengthwiseArea(): number {
+        const deltaAngle = this.angle - this._velocity.angle;
+        return this._height * Math.abs(Math.cos(deltaAngle)) + this._width * Math.abs(Math.sin(deltaAngle));
     }
 }

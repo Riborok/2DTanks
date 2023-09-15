@@ -17,7 +17,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMan
     private update(bulletElement: BulletElement, deltaTime: number) {
         const entity = bulletElement.model.entity;
         this._entityStorage.remove(entity);
-        bulletElement.model.residualMovement(this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
+        bulletElement.model.residualMovement(this._airResistanceCoeff, deltaTime);
         const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
         if (collisions) {
             const collisionsIds = new Array<number>();
