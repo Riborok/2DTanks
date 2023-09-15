@@ -4,7 +4,6 @@ import {TankElement} from "../../elements/TankElement";
 import {Field} from "../../Field";
 import {WallElement} from "../../elements/WallElement";
 import {BulletElement} from "../../elements/BulletElement";
-import {BulletModel} from "../../../model/bullet/BulletModel";
 import {Model} from "../../../model/Model";
 
 export abstract class HandlingManagers<T extends IElement, V extends MovementManager> {

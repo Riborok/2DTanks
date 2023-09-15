@@ -1,5 +1,6 @@
 import {
-    HandlingManagers, IAddModel,
+    HandlingManagers,
+    IAddModel,
     IBulletHandlingManager,
     IElementHandling,
     ITankHandlingManager,

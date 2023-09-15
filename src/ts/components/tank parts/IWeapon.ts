@@ -1,4 +1,4 @@
-import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../../constants/gameConstants";
+import {WEAPON_WIDTH} from "../../constants/gameConstants";
 import {IComponent} from "../IComponent";
 
 export interface IWeapon extends IComponent{
