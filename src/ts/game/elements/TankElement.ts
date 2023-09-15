@@ -50,6 +50,7 @@ export class TankElement implements IElement {
     }
     public vanish(entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
+        this._sprite.tankTireTrack.vanishFullTrack();
         tankSpriteParts.topTrackSprite.remove();
         tankSpriteParts.bottomTrackSprite.remove();
         tankSpriteParts.hullSprite.remove();

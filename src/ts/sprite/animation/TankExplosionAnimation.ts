@@ -7,17 +7,25 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     private _isEnded: boolean = false;
     private _timer: number = TankExplosionAnimation.UPDATE_TIMER_TIME;
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_';
-    private static readonly UPDATE_TIMER_TIME: number = 5;
+    private static readonly UPDATE_TIMER_TIME: number = 60;
     private static readonly MAX_STAGE: number = 8;
     private static readonly WIDTH: number = 120;
     private static readonly HEIGHT: number = 120;
-    get isEnded(): boolean { return this._isEnded }
+    get isEnded(): boolean {
+        if (this._isEnded)
+            this.remove();
+        return this._isEnded;
+    }
     constructor(point: Point, angle: number) {
         super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT);
         this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
         this._sprite.style.zIndex = `7`;
 
-        this.setPosAndAngle(point, angle);
+        const newPoint = new Point(
+            point.x - TankExplosionAnimation.WIDTH / 2,
+            point.y - TankExplosionAnimation.HEIGHT / 2
+        )
+        this.setPosAndAngle(newPoint, angle);
     }
     private setPosAndAngle(point: Point, angle: number){
         this.setPosition(point);
