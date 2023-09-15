@@ -57,7 +57,7 @@ export class TankTireTrack {
         point.x = point.x - this._chainWidth * cos;
         point.y = point.y - this._chainWidth * sin;
     }
-    private vanishFullTrack(){
+    public vanishFullTrack(){
         for (const node of this._listOfTirePairs){
             this._vanishingListOfTirePairs.addToHead(this._listOfTirePairs.head);
             this._listOfTirePairs.removeFromHead();

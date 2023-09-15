@@ -21,6 +21,7 @@ export class TankSprite {
     }
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
+    public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
     public spawnTankAcceleration(canvas: Element, indentX: number, tankHeight: number) {
         this._tankAcceleration = new TankAcceleration(canvas, indentX, tankHeight);
     }

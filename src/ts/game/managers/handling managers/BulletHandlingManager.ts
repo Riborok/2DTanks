@@ -15,16 +15,21 @@ import {BulletModel} from "../../../model/bullet/BulletModel";
 import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
 import {IStorage} from "../../../entitiy/IEntityCollisionSystem";
 import {IEntity} from "../../../entitiy/IEntity";
+import {AnimationManager} from "../AnimationManager";
+import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
 
 export class BulletHandlingManager extends HandlingManagers<BulletElement, BulletMovementManager> implements IBulletHandlingManager {
     private readonly _tankHandlingManager: ITankHandlingManager;
     private readonly _wallHandlingManager: IWallHandlingManager;
+    private readonly _animationManager: AnimationManager;
 
     public constructor(bulletManager: BulletMovementManager, field: Field, elements: Map<number, BulletElement>,
-                       tankHandlingManager: ITankHandlingManager, wallHandlingManager: IWallHandlingManager) {
+                       tankHandlingManager: ITankHandlingManager, wallHandlingManager: IWallHandlingManager,
+                       animationManager: AnimationManager) {
         super(bulletManager, field, elements);
         this._tankHandlingManager = tankHandlingManager;
         this._wallHandlingManager = wallHandlingManager;
+        this._animationManager = animationManager;
     }
 
     public handle(deltaTime: number): void {
@@ -50,8 +55,11 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
                 const elementHandling = this.getElementHandling(id);
                 const element = elementHandling.elements.get(id);
                 element.model.takeDamage(bulletAndModelID.bulletElement.model);
-                if (element.model.isDead())
+                if (element.model.isDead()){
+                    AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager, this._field.canvas)
+
                     elementHandling.delete(element);
+                }
             }
             this.delete(bulletAndModelID.bulletElement);
         }

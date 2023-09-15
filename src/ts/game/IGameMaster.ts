@@ -67,7 +67,8 @@ export class GameMaster implements IGameMaster {
             new BulletMovementManager(entityCollisionSystem, collisionManager),
             this._field, bulletElements,
             this._tankHandlingManagers,
-            this._wallHandlingManagers
+            this._wallHandlingManagers,
+            this._animationManager
         );
     }
 
