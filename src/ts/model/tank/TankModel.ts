@@ -1,5 +1,4 @@
 import {TankParts} from "../../components/tank parts/TankParts";
-import {EntityManipulator} from "../../entitiy/EntityManipulator";
 import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../../entitiy/IEntity";
@@ -78,7 +77,6 @@ export class TankModel extends LandModel implements IArmor {
 
         this.updateAngularVelocity();
 
-        EntityManipulator.angularMovement(entity);
         this.incTurretAngle(entity.angularVelocity);
     }
     public hullCounterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
@@ -91,7 +89,6 @@ export class TankModel extends LandModel implements IArmor {
 
         this.updateAngularVelocity();
 
-        EntityManipulator.angularMovement(entity);
         this.incTurretAngle(entity.angularVelocity);
     }
     private updateAngularVelocity() {
@@ -158,8 +155,6 @@ export class TankModel extends LandModel implements IArmor {
             }
             this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, turn, velocityAngle);
         }
-
-        EntityManipulator.movement(entity);
     }
     private setBrakingStatus(turn: number) {
         this._isBraking = isAngleInQuadrant2or3(turn);

@@ -3,6 +3,7 @@ import {BulletElement} from "../../elements/BulletElement";
 import {IEntity} from "../../../entitiy/IEntity";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData} from "../../../additionally/type";
+import {EntityManipulator} from "../../../entitiy/EntityManipulator";
 
 export class BulletMovementManager extends MovementManager implements IBulletManager {
     private readonly _bulletAndModelIDs: IIdToProcessing<BulletCollisionData> = new IdToProcessing();
@@ -18,6 +19,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMan
         const entity = bulletElement.model.entity;
         this._entityStorage.remove(entity);
         bulletElement.model.residualMovement(this._airResistanceCoeff, deltaTime);
+        EntityManipulator.movement(entity);
         const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
         if (collisions) {
             const collisionsIds = new Array<number>();
