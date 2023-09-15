@@ -53,12 +53,14 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
         for (const bulletAndModelID of this._movementManager.bulletAndModelIDs.iterable) {
             for (const id of bulletAndModelID.elementsIds) {
                 const elementHandling = this.getElementHandling(id);
-                const element = elementHandling.elements.get(id);
-                element.model.takeDamage(bulletAndModelID.bulletElement.model);
-                if (element.model.isDead()){
-                    AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager, this._field.canvas)
+                const element: IElement | null = elementHandling.get(id);
+                if (element) {
+                    element.model.takeDamage(bulletAndModelID.bulletElement.model);
+                    if (element.model.isDead()) {
+                        AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager, this._field.canvas)
 
-                    elementHandling.delete(element);
+                        elementHandling.delete(element);
+                    }
                 }
             }
             this.delete(bulletAndModelID.bulletElement);

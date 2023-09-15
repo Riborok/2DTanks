@@ -23,9 +23,8 @@ export class BulletMovementManager extends MovementManager implements IBulletMan
         // Move the rectangular entity's front part based on its current velocity
         RectangularEntityManipulator.movementFront(entity);
 
-        // Check for collisions. Since the bullet's acceleration may be larger than its size,
-        // we move it in two steps to ensure accurate collision detection between its initial
-        // and final positions.
+        // Check for collisions. Since the bullet's acceleration may be larger than its size, move it
+        // in two steps to ensure accurate collision detection between its initial and final positions
         const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
 
         // Move the rectangular entity's back part to its final position

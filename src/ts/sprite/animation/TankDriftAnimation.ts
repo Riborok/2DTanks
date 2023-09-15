@@ -5,7 +5,7 @@ import {IAnimation} from "./IAnimation";
 abstract class TankDriftAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
     private _isEnded: boolean = false;
-    private _timer: number = TankDriftAnimation.UPDATE_TIMER_TIME;
+    private _timer: number = 0;
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke_';
     private static readonly UPDATE_TIMER_TIME: number = 60;
     private static readonly MAX_STAGE: number = 9;

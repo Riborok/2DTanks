@@ -10,7 +10,12 @@ export abstract class HandlingManagers<T extends IElement, V extends MovementMan
     protected readonly _elements: Map<number, T>;
     protected readonly _movementManager: V;
     protected readonly _field: Field;
-    public get elements(): Map<number, T> { return this._elements }
+    public get(id: number): T | null {
+        if (this._elements.has(id))
+            return this._elements.get(id);
+
+        return null;
+    }
     public constructor(movementManager: V, field: Field, elements: Map<number, T>) {
         this._movementManager = movementManager;
         this._field = field;
@@ -26,8 +31,10 @@ export abstract class HandlingManagers<T extends IElement, V extends MovementMan
         }
     }
     public delete(element: T) {
-        this._elements.delete(element.id);
-        element.vanish(this._movementManager.entityStorage);
+        if (this._elements.has(element.id)) {
+            this._elements.delete(element.id);
+            element.vanish(this._movementManager.entityStorage);
+        }
     }
 }
 
@@ -40,7 +47,7 @@ interface IGetMovementManager {
 export interface IElementHandling<T extends IElement> {
     delete(t: T): void;
     add(ts: Iterable<T>): void;
-    get elements(): Map<number, T>;
+    get(id: number): T | null;
 }
 interface IElementHandler {
     handle(deltaTime: number): void;
