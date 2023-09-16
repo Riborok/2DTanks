@@ -1,7 +1,5 @@
 import {IDTracker} from "../../game/id/IDTracker";
-import {Point} from "../../geometry/Point";
 import {IAnimationManager} from "../../game/managers/AnimationManager";
-import {IElement} from "../../game/elements/IElement";
 import {IEntity} from "../../entitiy/IEntity";
 import {TankExplosionAnimation} from "./TankExplosionAnimation";
 import {getRandomInt} from "../../additionally/additionalFunc";
