@@ -1,6 +1,7 @@
 import {Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
 import {IAnimation} from "./IAnimation";
+import {SpriteManipulator} from "../SpriteManipulator";
 
 export class TankShootAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
@@ -23,6 +24,7 @@ export class TankShootAnimation extends Sprite implements IAnimation{
             point.x + height / 2 * Math.sin(angle),
             point.y - height / 2 * Math.cos(angle)
         )
+        SpriteManipulator.rotateToDefaultSpritePoint(this, newPoint, Math.sin(angle), Math.cos(angle));
         this.setPosAndAngle(newPoint, angle);
     }
     private setPosAndAngle(point: Point, angle: number){
