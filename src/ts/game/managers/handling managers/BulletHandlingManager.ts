@@ -92,9 +92,10 @@ export class BulletModelAdder implements IAddModel<BulletModel> {
     public addBulletModel(bulletModel: BulletModel, num: number) {
         if (!this._elements.has(bulletModel.entity.id)) {
             const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
-            this._bulletMovementManager.checkForSpawn(bulletElements);
-            this._elements.set(bulletElements.id, bulletElements);
-            bulletElements.spawn(this._field.canvas, this._bulletMovementManager.entityStorage);
+            if (this._bulletMovementManager.checkForSpawn(bulletElements)) {
+                this._elements.set(bulletElements.id, bulletElements);
+                bulletElements.spawn(this._field.canvas, this._bulletMovementManager.entityStorage);
+            }
         }
     }
 }

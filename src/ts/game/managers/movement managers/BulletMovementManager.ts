@@ -35,13 +35,16 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
 
         this._entityStorage.insert(entity);
     }
-    public checkForSpawn(bulletElement: BulletElement) {
+    public checkForSpawn(bulletElement: BulletElement): boolean {
         const entity = bulletElement.model.entity;
-        const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
 
-        if (collisionPacks)
-            this._bulletAndModelIDs.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
+        const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
+        if (collisionPacks) {
+            this._bulletAndModelIDs.push({bulletElement: bulletElement, collisionPacks: collisionPacks});
+            return false;
+        }
 
         bulletElement.sprite.updateAfterAction(entity.points[0], entity.angle);
+        return true;
     }
 }
