@@ -46,3 +46,16 @@ export function isAngleInQuadrant2or3(angle: number): boolean {
 export function calcTurn(fromAngle: number, toAngle: number): number {
     return clampAngle(fromAngle - toAngle);
 }
+
+/**
+ * Calculates the middle of the segment between two points.
+ * @param point1 - The first point of the segment.
+ * @param point2 - The second point of the segment.
+ * @returns The middle point of the segment.
+ */
+export function calcMidBetweenTwoPoint(point1: Point, point2: Point): Point{
+    return new Point(
+    (point1.x + point2.x) / 2,
+    (point1.y + point2.y) / 2
+    );
+}

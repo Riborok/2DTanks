@@ -5,6 +5,9 @@ import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 import {Field} from "../../Field";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../AnimationManager";
+import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
+import {Point} from "../../../geometry/Point";
+import {calcMidBetweenTwoPoint, calcDistance} from "../../../geometry/additionalFunc";
 
 export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
@@ -60,10 +63,22 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             action = (mask & control.shoot) !== 0;
             if (action) {
                 const bulletModel: BulletModel | null = tankElement.model.shot();
-                if (bulletModel)
+                if (bulletModel) {
+                    this.playShootAnimation(
+                        calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
+                        bulletModel.entity.angle,
+                        calcDistance(bulletModel.entity.points[0], bulletModel.entity.points[1]) * 10,
+                        calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 10
+                    )
                     this._addBulletElement.addBulletModel(bulletModel, tankElement.model.bulletNum);
+                }
             }
         }
+    }
+    private playShootAnimation(point: Point, angle: number, width: number, height: number){
+        const shootAnimation = new TankShootAnimation(point, angle, width, height);
+        this._animationManager.add(shootAnimation);
+        this._field.canvas.appendChild(shootAnimation.sprite);
     }
     public add(elements: Iterable<TankElement>) {
         super.add(elements);
