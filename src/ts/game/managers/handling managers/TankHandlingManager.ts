@@ -7,7 +7,7 @@ import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../AnimationManager";
 import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
 import {Point} from "../../../geometry/Point";
-import {calcMidBetweenTwoPoint, calcDistance} from "../../../geometry/additionalFunc";
+import {calcDistance, calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
 
 export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
@@ -67,8 +67,8 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
                     this.playShootAnimation(
                         calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
                         bulletModel.entity.angle,
-                        calcDistance(bulletModel.entity.points[0], bulletModel.entity.points[1]) * 10,
-                        calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 10
+                        calcDistance(bulletModel.entity.points[0], bulletModel.entity.points[1]) * 4,
+                        calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 4
                     );
                     this._addBulletElement.addBulletModel(bulletModel, tankElement.model.bulletNum);
                 }

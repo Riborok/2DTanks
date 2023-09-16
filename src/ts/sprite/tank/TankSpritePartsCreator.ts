@@ -23,7 +23,7 @@ export class TankSpritePartsCreator {
             new TurretSprite(color, turretNum,
                 TURRET_INDENT_X[hullNum], (HULL_HEIGHT[hullNum] >> 1) - (TURRET_HEIGHT[turretNum] >> 1)),
             new WeaponSprite(weaponNum,
-                TURRET_WIDTH[turretNum], (TURRET_HEIGHT[turretNum] >> 1) - (WEAPON_HEIGHT[weaponNum] >> 1))
+                TURRET_WIDTH[turretNum] * 9 / 10, (TURRET_HEIGHT[turretNum] >> 1) - (WEAPON_HEIGHT[weaponNum] >> 1))
         );
     }
 }
