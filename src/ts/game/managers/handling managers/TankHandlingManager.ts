@@ -69,7 +69,7 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
                         bulletModel.entity.angle,
                         calcDistance(bulletModel.entity.points[0], bulletModel.entity.points[1]) * 10,
                         calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 10
-                    )
+                    );
                     this._addBulletElement.addBulletModel(bulletModel, tankElement.model.bulletNum);
                 }
             }

@@ -24,11 +24,16 @@ export abstract class MovementManager {
     public get entityStorage(): IStorage<IEntity> { return this._entityStorage }
     public get collisionManager(): ICollisionManager { return this._collisionManager }
 }
-interface setCoefficients {
+interface ISetCoefficients {
     set resistanceCoeff(resistanceCoeff: number);
     set airResistanceCoeff(airResistanceCoefficient: number);
 }
-export interface ITankMovementManager extends setCoefficients {
+interface IEntityControl {
+    get entityStorage(): IStorage<IEntity>;
+    get collisionManager(): ICollisionManager;
+}
+
+export interface ITankMovementManager extends ISetCoefficients, IEntityControl {
     hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
     hullClockwiseMovement(tankElement: TankElement, deltaTime: number): void;
     forwardMovement(tankElement: TankElement, deltaTime: number): void;
@@ -39,13 +44,14 @@ export interface ITankMovementManager extends setCoefficients {
     residualAngularMovement(tankElement: TankElement, deltaTime: number): void;
 }
 
-export interface IWallMovementManager extends setCoefficients {
+export interface IWallMovementManager extends ISetCoefficients, IEntityControl {
     hasAnyResidualMovement(wallElement: WallElement): boolean;
     movement(wallElement: WallElement, deltaTime: number): void;
 }
 
-export interface IBulletManager extends setCoefficients {
+export interface IBulletMovementManager extends ISetCoefficients, IEntityControl {
     hasResidualMovement(bulletElement: BulletElement): boolean;
     movement(bulletElement: BulletElement, deltaTime: number): void;
     get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData>;
+    checkForSpawn(bulletElement: BulletElement): void;
 }

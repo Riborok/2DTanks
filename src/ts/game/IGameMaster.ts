@@ -41,8 +41,9 @@ export class GameMaster implements IGameMaster {
     private readonly _animationManager: AnimationManager = new AnimationManager();
     private readonly _keyHandler: KeyHandler;
     public constructor(canvas: Element, width: number, height: number) {
-        this._field = new Field(canvas, width, height);
         this._keyHandler = new KeyHandler();
+
+        this._field = new Field(canvas, width, height);
 
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
@@ -51,20 +52,26 @@ export class GameMaster implements IGameMaster {
         const wallElements = new Map<number, WallElement>;
         const bulletElements = new Map<number, BulletElement>;
 
+        const tankMovementManager = new TankMovementManager(entityCollisionSystem, collisionManager);
+        const wallMovementManager = new WallMovementManager(entityCollisionSystem, collisionManager);
+        const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, collisionManager);
+
+        const bulletAdder = new BulletModelAdder(bulletElements, this._field, bulletMovementManager);
+
         this._tankHandlingManagers = new TankHandlingManager(
-            new TankMovementManager(entityCollisionSystem, collisionManager),
+            tankMovementManager,
             this._field,
             tankElements,
-            new BulletModelAdder(bulletElements, this._field, entityCollisionSystem),
+            bulletAdder,
             this._animationManager
         );
         this._wallHandlingManagers = new WallHandlingManager(
-            new WallMovementManager(entityCollisionSystem, collisionManager),
+            wallMovementManager,
             this._field,
             wallElements
         );
         this._bulletHandlingManager = new BulletHandlingManager(
-            new BulletMovementManager(entityCollisionSystem, collisionManager),
+            bulletMovementManager,
             this._field, bulletElements,
             this._tankHandlingManagers,
             this._wallHandlingManagers,
