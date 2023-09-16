@@ -53,5 +53,5 @@ export interface IBulletMovementManager extends ISetCoefficients, IEntityControl
     hasResidualMovement(bulletElement: BulletElement): boolean;
     movement(bulletElement: BulletElement, deltaTime: number): void;
     get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData>;
-    checkForSpawn(bulletElement: BulletElement): void;
+    checkForSpawn(bulletElement: BulletElement): boolean;
 }
