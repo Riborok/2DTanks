@@ -51,7 +51,8 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
     }
     private handleBulletCollisions() {
         for (const bulletAndModelID of this._movementManager.bulletAndModelIDs.iterable) {
-            for (const id of bulletAndModelID.elementsIds) {
+            for (const collisionPack of bulletAndModelID.collisionPacks) {
+                const id = collisionPack.id;
                 const elementHandling = this.getElementHandling(id);
                 const element: IElement | null = elementHandling.get(id);
                 if (element) {
