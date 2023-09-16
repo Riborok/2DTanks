@@ -21,9 +21,14 @@ export type CollisionResult = {
     overlap: number;
 }
 
+export type CollisionPack = {
+    collisionPoint: Point,
+    id: number
+}
+
 export type BulletCollisionData = {
     bulletElement: BulletElement;
-    elementsIds: number[];
+    collisionPacks: Iterable<CollisionPack>;
 }
 
 export interface IArmor {

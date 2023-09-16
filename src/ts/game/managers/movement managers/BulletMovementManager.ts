@@ -2,7 +2,7 @@ import {IBulletManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IEntity} from "../../../entitiy/IEntity";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
-import {BulletCollisionData} from "../../../additionally/type";
+import {BulletCollisionData, CollisionPack} from "../../../additionally/type";
 import {RectangularEntityManipulator} from "../../../entitiy/RectangularEntityManipulator";
 
 export class BulletMovementManager extends MovementManager implements IBulletManager {
@@ -25,16 +25,12 @@ export class BulletMovementManager extends MovementManager implements IBulletMan
 
         // Check for collisions. Since the bullet's acceleration may be larger than its size, move it
         // in two steps to ensure accurate collision detection between its initial and final positions
-        const collisions: Iterable<IEntity> | null = this._collisionManager.hasCollision(entity);
+        const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
 
         // Move the rectangular entity's back part to its final position
         RectangularEntityManipulator.movementBack(entity);
-        if (collisions) {
-            const collisionsIds = new Array<number>();
-            for (const collision of collisions)
-                collisionsIds.push(collision.id);
-            this._bulletAndModelIDs.push({ bulletElement: bulletElement, elementsIds: collisionsIds });
-        }
+        if (collisionPacks)
+            this._bulletAndModelIDs.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
 
         bulletElement.sprite.updateAfterAction(entity.points[0], entity.angle);
 

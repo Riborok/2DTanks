@@ -3,9 +3,10 @@ import {ICollisionDetection} from "../../entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {IDTracker} from "../id/IDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
+import {CollisionPack} from "../../additionally/type";
 
 export interface ICollisionManager {
-    hasCollision(entity: IEntity): Iterable<IEntity> | null;
+    hasCollision(entity: IEntity): Iterable<CollisionPack> | null;
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
@@ -16,17 +17,19 @@ export class CollisionManager implements ICollisionManager {
     public constructor(collisionDetection: ICollisionDetection) {
         this._collisionDetection = collisionDetection;
     }
-    public hasCollision(entity: IEntity): Iterable<IEntity> | null {
+    public hasCollision(entity: IEntity): Iterable<CollisionPack> | null {
         const receivingEntities = this._collisionDetection.getCollisions(entity);
-        let hasCollision: boolean = false;
+        const collisionPacks = new Array<CollisionPack>();
 
         for (const receivingEntity of receivingEntities) {
-            CollisionResolver.resolveCollision(entity, receivingEntity);
-            this.processCollision(receivingEntity);
-            hasCollision = true;
+            const collisionPoint = CollisionResolver.resolveCollision(entity, receivingEntity);
+            if (collisionPoint) {
+                collisionPacks.push({collisionPoint: collisionPoint, id: receivingEntity.id});
+                this.processCollision(receivingEntity);
+            }
         }
 
-        return hasCollision ? receivingEntities : null;
+        return collisionPacks.length !== 0 ? collisionPacks : null;
     }
     private processCollision(receivingEntity: IEntity) {
         if (IDTracker.isWall(receivingEntity.id))

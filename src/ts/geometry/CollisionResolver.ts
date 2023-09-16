@@ -20,10 +20,10 @@ export class CollisionResolver {
      * @param impartingEntity The entity that caused the collision.
      * @param receivingEntity The entity that received the collision.
      */
-    public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity) {
+    public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity): Point | null{
         const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
         if (collisionResult === null)
-            return;
+            return null;
 
         const collisionNormal = this.calcCollisionNormal(collisionResult.collisionPoint,
             impartingEntity.calcCenter());
@@ -32,6 +32,8 @@ export class CollisionResolver {
         this.separateEntities(impartingEntity, collisionResult.overlap, collisionNormal);
         this.updateAngularVelocity(impartingEntity, receivingEntity, collisionResult.collisionPoint, impulseMagnitude, collisionNormal);
         this.updateVelocity(impartingEntity, receivingEntity, impulseMagnitude, collisionNormal);
+
+        return collisionResult.collisionPoint;
     }
     private static updateAngularVelocity(impartingEntity: IEntity, receivingEntity: IEntity, collisionPoint: Point,
                                          impulseMagnitude: number, collisionNormal: Vector) {
