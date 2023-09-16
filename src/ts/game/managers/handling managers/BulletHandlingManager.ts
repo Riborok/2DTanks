@@ -13,10 +13,9 @@ import {IElement} from "../../elements/IElement";
 import {IDTracker} from "../../id/IDTracker";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
-import {IStorage} from "../../../entitiy/IEntityCollisionSystem";
-import {IEntity} from "../../../entitiy/IEntity";
 import {AnimationManager} from "../AnimationManager";
 import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
+import {IBulletMovementManager} from "../movement managers/MovementManager";
 
 export class BulletHandlingManager extends HandlingManagers<BulletElement, BulletMovementManager> implements IBulletHandlingManager {
     private readonly _tankHandlingManager: ITankHandlingManager;
@@ -84,17 +83,18 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
 export class BulletModelAdder implements IAddModel<BulletModel> {
     private readonly _elements: Map<number, BulletElement>;
     private readonly _field: Field;
-    private readonly _storage: IStorage<IEntity>;
-    public constructor(elements: Map<number, BulletElement>, field: Field, storage: IStorage<IEntity>) {
+    private readonly _bulletMovementManager: IBulletMovementManager;
+    public constructor(elements: Map<number, BulletElement>, field: Field, bulletMovementManager: IBulletMovementManager) {
         this._elements = elements;
         this._field = field;
-        this._storage = storage;
+        this._bulletMovementManager = bulletMovementManager;
     }
     public addBulletModel(bulletModel: BulletModel, num: number) {
         if (!this._elements.has(bulletModel.entity.id)) {
             const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
+            this._bulletMovementManager.checkForSpawn(bulletElements);
             this._elements.set(bulletElements.id, bulletElements);
-            bulletElements.spawn(this._field.canvas, this._storage);
+            bulletElements.spawn(this._field.canvas, this._bulletMovementManager.entityStorage);
         }
     }
 }
