@@ -11,12 +11,12 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     private static readonly MAX_STAGE: number = 8;
     private static readonly WIDTH: number = 120;
     private static readonly HEIGHT: number = 120;
-    get isEnded(): boolean {
+    public get isEnded(): boolean {
         if (this._isEnded)
             this.remove();
         return this._isEnded;
     }
-    constructor(point: Point, angle: number) {
+    public constructor(point: Point, angle: number) {
         super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT);
         this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
         this._sprite.style.zIndex = `7`;
@@ -24,7 +24,7 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
         const newPoint = new Point(
             point.x - TankExplosionAnimation.WIDTH / 2,
             point.y - TankExplosionAnimation.HEIGHT / 2
-        )
+        );
         this.setPosAndAngle(newPoint, angle);
     }
     private setPosAndAngle(point: Point, angle: number){

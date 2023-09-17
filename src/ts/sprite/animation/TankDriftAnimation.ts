@@ -12,7 +12,7 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
     public get isEnded(): boolean {
         if (this._isEnded)
             this.remove();
-        return this._isEnded
+        return this._isEnded;
     }
     public constructor(width: number, height: number) {
         super(width, height);
@@ -45,12 +45,12 @@ export class TopTankDriftAnimation extends TankDriftAnimation{
         return new Point(
             point.x + this.width * sin + this.height * cos,
             point.y - this.width * cos + this.height * sin,
-        )
+        );
     }
 }
 export class BottomTankDriftAnimation extends TankDriftAnimation{
     private readonly _trackHeight: number
-    constructor(width: number, height: number, trackHeight: number) {
+    public constructor(width: number, height: number, trackHeight: number) {
         super(width, height);
         this._trackHeight = trackHeight;
     }
@@ -62,6 +62,6 @@ export class BottomTankDriftAnimation extends TankDriftAnimation{
         return new Point(
             point.x - this._trackHeight * sin + this.height * cos,
             point.y + this._trackHeight * cos + this.height * sin
-        )
+        );
     }
 }
