@@ -1,6 +1,7 @@
 import {Point, Vector} from "../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
 import {IIdentifiable} from "../game/id/IIdentifiable";
+import {calcMidBetweenTwoPoint} from "../geometry/additionalFunc";
 
 /**
  * Interface representing an entity with points.
@@ -64,9 +65,7 @@ export class RectangularEntity implements IEntity {
     public get id(): number { return this._id }
     public get radiusLength(): number { return this._radiusLength }
     public get momentOfInertia(): number { return this._momentOfInertia }
-    public calcCenter(): Point {
-        return new Point((this._points[0].x + this._points[2].x) / 2, (this._points[0].y + this._points[2].y) / 2);
-    }
+    public calcCenter(): Point { return calcMidBetweenTwoPoint(this._points[0], this._points[2]) }
     public get lengthwiseArea(): number {
         const deltaAngle = this.angle - this._velocity.angle;
         return this._height * Math.abs(Math.cos(deltaAngle)) + this._width * Math.abs(Math.sin(deltaAngle));
