@@ -4,10 +4,13 @@ import {Point} from "../../geometry/Point";
 import {SpriteManipulator} from "../SpriteManipulator";
 
 export class BulletSprite extends Sprite {
+    private readonly _num: number;
+    public get num(): number { return this._num };
     public constructor(num: number) {
         super(BULLET_WIDTH[num], BULLET_HEIGHT[num]);
         this._sprite.src = `src/img/tanks/Bullets/Bullet_${num}.png`;
         this._sprite.style.zIndex = `4`;
+        this._num = num;
     }
     public updateAfterAction(point: Point, angle: number) {
         point = point.clone();
