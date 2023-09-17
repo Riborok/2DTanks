@@ -64,19 +64,21 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             if (action) {
                 const bulletModel: BulletModel | null = tankElement.model.shot();
                 if (bulletModel) {
+                    const num = tankElement.model.bulletNum;
                     this.playShootAnimation(
                         calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
                         bulletModel.entity.angle,
                         calcDistance(bulletModel.entity.points[0], bulletModel.entity.points[1]) * 4,
-                        calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 4
+                        calcDistance(bulletModel.entity.points[1], bulletModel.entity.points[2]) * 4,
+                        num
                     );
-                    this._addBulletElement.addBulletModel(bulletModel, tankElement.model.bulletNum);
+                    this._addBulletElement.addBulletModel(bulletModel, num);
                 }
             }
         }
     }
-    private playShootAnimation(point: Point, angle: number, width: number, height: number){
-        const shootAnimation = new TankShootAnimation(point, angle, width, height);
+    private playShootAnimation(point: Point, angle: number, width: number, height: number, num: number){
+        const shootAnimation = new TankShootAnimation(point, angle, width, height, num);
         this._animationManager.add(shootAnimation);
         this._field.canvas.appendChild(shootAnimation.sprite);
     }

@@ -7,23 +7,25 @@ export class TankShootAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
     private _isEnded: boolean = false;
     private _timer: number = 0;
-    private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Shot_0_';
-    private static readonly UPDATE_TIMER_TIME: number = 55;
+    private readonly _num: number;
+    private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Shot_';
+    private static readonly UPDATE_TIMER_TIME: number = 45;
     private static readonly MAX_STAGE: number = 3;
-    get isEnded(): boolean {
+    public get isEnded(): boolean {
         if (this._isEnded)
             this.remove();
         return this._isEnded;
     }
-    constructor(point: Point, angle: number, width: number, height: number) {
+    public constructor(point: Point, angle: number, width: number, height: number, num: number) {
         super(width, height);
-        this._sprite.src = `${TankShootAnimation.DEFAULT_PATH}${this._animationStage}.png`;
+        this._num = num === 0 ? 0 : 1;
+        this._sprite.src = `${TankShootAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
         this._sprite.style.zIndex = `7`;
 
         const newPoint = new Point(
             point.x + height / 2 * Math.sin(angle),
             point.y - height / 2 * Math.cos(angle)
-        )
+        );
         SpriteManipulator.rotateToDefaultSpritePoint(this, newPoint, Math.sin(angle), Math.cos(angle));
         this.setPosAndAngle(newPoint, angle);
     }
@@ -38,7 +40,7 @@ export class TankShootAnimation extends Sprite implements IAnimation{
 
             this._animationStage++;
             if (this._animationStage <= TankShootAnimation.MAX_STAGE) {
-                this._sprite.src = `${TankShootAnimation.DEFAULT_PATH}${this._animationStage}.png`;
+                this._sprite.src = `${TankShootAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
             } else {
                 this._isEnded = true;
             }
