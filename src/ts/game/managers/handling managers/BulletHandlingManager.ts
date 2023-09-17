@@ -1,33 +1,23 @@
-import {
-    HandlingManagers,
-    IAddModel,
-    IBulletHandlingManager,
-    IElementHandling,
-    ITankHandlingManager,
-    IWallHandlingManager
-} from "./HandlingManagers";
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletMovementManager} from "../movement managers/BulletMovementManager";
 import {Field} from "../../Field";
 import {IElement} from "../../elements/IElement";
-import {IDTracker} from "../../id/IDTracker";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
-import {AnimationManager} from "../AnimationManager";
+import {IAnimationManager} from "../AnimationManager";
 import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
-import {IBulletMovementManager} from "../movement managers/MovementManager";
+import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
+import {IDTracker} from "../../id/IDTracker";
 
-export class BulletHandlingManager extends HandlingManagers<BulletElement, BulletMovementManager> implements IBulletHandlingManager {
-    private readonly _tankHandlingManager: ITankHandlingManager;
-    private readonly _wallHandlingManager: IWallHandlingManager;
-    private readonly _animationManager: AnimationManager;
+export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
+    private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
+    private readonly _animationManager: IAnimationManager;
 
     public constructor(bulletManager: BulletMovementManager, field: Field, elements: Map<number, BulletElement>,
-                       tankHandlingManager: ITankHandlingManager, wallHandlingManager: IWallHandlingManager,
-                       animationManager: AnimationManager) {
-        super(bulletManager, field, elements);
-        this._tankHandlingManager = tankHandlingManager;
-        this._wallHandlingManager = wallHandlingManager;
+                       handlingManagers: Iterable<IElementManager<IElement>>,
+                       animationManager: IAnimationManager) {
+        super(bulletManager, field, elements, IDTracker.isBullet);
+        this._handlingManagers = handlingManagers;
         this._animationManager = animationManager;
     }
 
@@ -68,23 +58,18 @@ export class BulletHandlingManager extends HandlingManagers<BulletElement, Bulle
 
         this._movementManager.bulletAndModelIDs.clear();
     }
-    private getElementHandling(id: number): IElementHandling<IElement> {
-        if (IDTracker.isWall(id))
-            return this._wallHandlingManager;
-
-        if (IDTracker.isTank(id))
-            return this._tankHandlingManager;
-
-        if (IDTracker.isBullet(id))
-            return this;
+    private getElementHandling(id: number): IElementManager<IElement> {
+        for (const handlingManager of this._handlingManagers)
+            if (handlingManager.isResponsibleFor(id))
+                return handlingManager;
     }
 }
 
 export class BulletModelAdder implements IAddModel<BulletModel> {
     private readonly _elements: Map<number, BulletElement>;
     private readonly _field: Field;
-    private readonly _bulletMovementManager: IBulletMovementManager;
-    public constructor(elements: Map<number, BulletElement>, field: Field, bulletMovementManager: IBulletMovementManager) {
+    private readonly _bulletMovementManager: BulletMovementManager;
+    public constructor(elements: Map<number, BulletElement>, field: Field, bulletMovementManager: BulletMovementManager) {
         this._elements = elements;
         this._field = field;
         this._bulletMovementManager = bulletMovementManager;

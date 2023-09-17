@@ -10,7 +10,16 @@ import {BulletCollisionData} from "../../../additionally/type";
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
 export type Movement = (entity: IEntity) => void;
 
-export abstract class MovementManager {
+interface ISetCoefficients {
+    set resistanceCoeff(resistanceCoeff: number);
+    set airResistanceCoeff(airResistanceCoefficient: number);
+}
+interface IEntityControl {
+    get entityStorage(): IStorage<IEntity>;
+    get collisionManager(): ICollisionManager;
+}
+
+export abstract class MovementManager implements ISetCoefficients, IEntityControl {
     protected readonly _entityStorage: IStorage<IEntity>;
     protected readonly _collisionManager: ICollisionManager;
     protected _resistanceCoeff: number = 0;
@@ -24,16 +33,8 @@ export abstract class MovementManager {
     public get entityStorage(): IStorage<IEntity> { return this._entityStorage }
     public get collisionManager(): ICollisionManager { return this._collisionManager }
 }
-interface ISetCoefficients {
-    set resistanceCoeff(resistanceCoeff: number);
-    set airResistanceCoeff(airResistanceCoefficient: number);
-}
-interface IEntityControl {
-    get entityStorage(): IStorage<IEntity>;
-    get collisionManager(): ICollisionManager;
-}
 
-export interface ITankMovementManager extends ISetCoefficients, IEntityControl {
+export interface ITankMovementManager {
     hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
     hullClockwiseMovement(tankElement: TankElement, deltaTime: number): void;
     forwardMovement(tankElement: TankElement, deltaTime: number): void;
@@ -44,12 +45,12 @@ export interface ITankMovementManager extends ISetCoefficients, IEntityControl {
     residualAngularMovement(tankElement: TankElement, deltaTime: number): void;
 }
 
-export interface IWallMovementManager extends ISetCoefficients, IEntityControl {
+export interface IWallMovementManager {
     hasAnyResidualMovement(wallElement: WallElement): boolean;
     movement(wallElement: WallElement, deltaTime: number): void;
 }
 
-export interface IBulletMovementManager extends ISetCoefficients, IEntityControl {
+export interface IBulletMovementManager {
     hasResidualMovement(bulletElement: BulletElement): boolean;
     movement(bulletElement: BulletElement, deltaTime: number): void;
     get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData>;

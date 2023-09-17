@@ -1,4 +1,4 @@
-import {HandlingManagers, IAddModel, ITankHandlingManager} from "./HandlingManagers";
+import {HandlingManager, IAddModel} from "./HandlingManager";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
@@ -7,27 +7,31 @@ import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../AnimationManager";
 import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
 import {Point} from "../../../geometry/Point";
-import {calcDistance, calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
+import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
+import {IKeyHandler} from "../../IKeyHandler";
+import {IDTracker} from "../../id/IDTracker";
 import {BULLET_HEIGHT, BULLET_WIDTH} from "../../../constants/gameConstants";
 
-export class TankHandlingManager extends HandlingManagers<TankElement, TankMovementManager> implements ITankHandlingManager {
+export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
     private readonly _addBulletElement: IAddModel<BulletModel>;
     private readonly _animationManager: IAnimationManager;
+    private readonly _KeyHandler: IKeyHandler;
     public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
-                       addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager) {
-        super(bulletManager, field, elements);
+                       addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
+        super(bulletManager, field, elements, IDTracker.isTank);
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;
+        this._KeyHandler = keyHandler;
     }
-    public handle(mask: number, deltaTime: number): void {
+    public handle(deltaTime: number): void {
         this._tireTracksManager.reduceOpacity();
 
         for (const tankElement of this._elements.values()) {
             const control = tankElement.control;
 
-            let action = (mask & control.turretClockwiseMask) !== 0;
-            let oppositeAction = (mask & control.turretCounterClockwiseMask) !== 0;
+            let action = this._KeyHandler.isKeyDown(control.turretClockwiseKey);
+            let oppositeAction = this._KeyHandler.isKeyDown(control.turretCounterClockwiseKey);
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
                     this._movementManager.turretClockwiseMovement(tankElement, deltaTime);
@@ -35,8 +39,8 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
                     this._movementManager.turretCounterclockwiseMovement(tankElement, deltaTime);
             }
 
-            action = (mask & control.forwardMask) !== 0;
-            oppositeAction = (mask & control.backwardMask) !== 0;
+            action = this._KeyHandler.isKeyDown(control.forwardKey);
+            oppositeAction = this._KeyHandler.isKeyDown(control.backwardKey);
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
                     this._movementManager.forwardMovement(tankElement, deltaTime);
@@ -50,8 +54,8 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
                 this._movementManager.residualMovement(tankElement, deltaTime);
             }
 
-            action = (mask & control.hullClockwiseMask) !== 0;
-            oppositeAction = (mask & control.hullCounterClockwiseMask) !== 0;
+            action = this._KeyHandler.isKeyDown(control.hullClockwiseKey);
+            oppositeAction = this._KeyHandler.isKeyDown(control.hullCounterClockwiseKey);
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
                     this._movementManager.hullClockwiseMovement(tankElement, deltaTime);
@@ -61,7 +65,7 @@ export class TankHandlingManager extends HandlingManagers<TankElement, TankMovem
             else
                 this._movementManager.residualAngularMovement(tankElement, deltaTime);
 
-            action = (mask & control.shoot) !== 0;
+            action = this._KeyHandler.isKeyDown(control.shootKey);
             if (action) {
                 const bulletModel: BulletModel | null = tankElement.model.shot();
                 if (bulletModel) {

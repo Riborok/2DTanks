@@ -7,13 +7,13 @@ export type MotionData = {
 }
 
 export type Control = {
-    forwardMask: number,
-    backwardMask: number,
-    hullClockwiseMask: number,
-    hullCounterClockwiseMask: number,
-    turretClockwiseMask: number,
-    turretCounterClockwiseMask: number,
-    shoot: number
+    forwardKey: number,
+    backwardKey: number,
+    hullClockwiseKey: number,
+    hullCounterClockwiseKey: number,
+    turretClockwiseKey: number,
+    turretCounterClockwiseKey: number,
+    shootKey: number
 }
 
 export type CollisionResult = {
