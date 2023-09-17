@@ -8,6 +8,9 @@ import {IAnimationManager} from "../AnimationManager";
 import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
 import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
 import {IDTracker} from "../../id/IDTracker";
+import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, BULLET_HEIGHT, BULLET_WIDTH} from "../../../constants/gameConstants";
+import {Point} from "../../../geometry/Point";
+import {BulletImpactAnimation} from "../../../sprite/animation/BulletImpactAnimation";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
@@ -41,6 +44,15 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     private handleBulletCollisions() {
         for (const bulletAndModelID of this._movementManager.bulletAndModelIDs.iterable) {
             for (const collisionPack of bulletAndModelID.collisionPacks) {
+                const num: number = bulletAndModelID.bulletElement.sprite.num;
+                this.playImpactAnimation(
+                    collisionPack.collisionPoint,
+                    bulletAndModelID.bulletElement.model.entity.angle + Math.PI,
+                    BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
+                    BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
+                    num
+                )
+
                 const id = collisionPack.id;
                 const elementHandling = this.getElementHandling(id);
                 const element: IElement | null = elementHandling.get(id);
@@ -62,6 +74,11 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
         for (const handlingManager of this._handlingManagers)
             if (handlingManager.isResponsibleFor(id))
                 return handlingManager;
+    }
+    private playImpactAnimation(point: Point, angle: number, width: number, height: number, num: number){
+        const impactAnimation = new BulletImpactAnimation(point, angle, width, height, num);
+        this._animationManager.add(impactAnimation);
+        this._field.canvas.appendChild(impactAnimation.sprite);
     }
 }
 

@@ -10,7 +10,7 @@ import {Point} from "../../../geometry/Point";
 import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
 import {IKeyHandler} from "../../IKeyHandler";
 import {IDTracker} from "../../id/IDTracker";
-import {BULLET_HEIGHT, BULLET_WIDTH} from "../../../constants/gameConstants";
+import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, BULLET_HEIGHT, BULLET_WIDTH} from "../../../constants/gameConstants";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
@@ -73,8 +73,8 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
                     this.playShootAnimation(
                         calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
                         bulletModel.entity.angle,
-                        BULLET_WIDTH[num] * 4,
-                        BULLET_HEIGHT[num] * 4,
+                        BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
+                        BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
                         num
                     );
                     this._addBulletElement.addBulletModel(bulletModel, num);

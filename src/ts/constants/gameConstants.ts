@@ -17,5 +17,6 @@ export const WEAPON_WIDTH: number[] = [47, 49, 40, 43, 50, 36, 43, 36];
 export const WEAPON_HEIGHT: number[] = [14, 10, 14, 7, 11, 16, 14, 14];
 export const BULLET_WIDTH: number[] = [12, 16, 23, 24, 19];
 export const BULLET_HEIGHT: number[] = [5, 8, 10, 6, 8];
+export const BULLET_ANIMATION_SIZE_INCREASE_COEFF: number = 5;
 export const ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
 export const GRAVITY_ACCELERATION: number = 0.01;
