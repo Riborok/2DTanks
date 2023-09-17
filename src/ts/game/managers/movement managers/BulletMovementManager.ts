@@ -19,19 +19,21 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
         this._entityStorage.remove(entity);
         bulletElement.model.residualMovement(this._airResistanceCoeff, deltaTime);
 
-        // Store the current velocity vector of the entity to ensure that
-        // if it changes, is uses the original velocity vector
-        const velocity = entity.velocity.clone();
+        // Store the current velocity vector components (dx and dy) of the entity
+        // to ensure that even if the velocity vector changes after a collision,
+        // it can still move the back part without altering the original displacement values
+        const dx = entity.velocity.x;
+        const dy = entity.velocity.y;
 
-        // Move the rectangular entity's front part based on its current velocity
-        RectangularEntityManipulator.movementFront(entity, velocity);
+        // Move the rectangular entity's front part
+        RectangularEntityManipulator.movementFront(entity, dx, dy);
 
         // Check for collisions. Since the bullet's acceleration may be larger than its size, move it
         // in two steps to ensure accurate collision detection between its initial and final positions
         const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
 
         // Move the rectangular entity's back part to its final position
-        RectangularEntityManipulator.movementBack(entity, velocity);
+        RectangularEntityManipulator.movementBack(entity, dx, dy);
         if (collisionPacks)
             this._bulletAndModelIDs.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
 
