@@ -5,44 +5,43 @@ import {Field} from "./Field";
 import {Quadtree} from "../entitiy/IEntityCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
-import {KeyHandler} from "./KeyHandler";
+import {IKeyHandler, KeyHandler} from "./IKeyHandler";
 import {ObstacleCreator} from "./creators/IObstacleCreator";
 import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
 import {Point} from "../geometry/Point";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
-import {
-    IBulletHandlingManager,
-    ITankHandlingManager,
-    IWallHandlingManager
-} from "./managers/handling managers/HandlingManagers";
 import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
 import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
 import {WallElement} from "./elements/WallElement";
-import {AnimationManager} from "./managers/AnimationManager";
+import {AnimationManager, IAnimationManager} from "./managers/AnimationManager";
 import {BulletHandlingManager, BulletModelAdder} from "./managers/handling managers/BulletHandlingManager";
 import {BulletElement} from "./elements/BulletElement";
 import {BulletMovementManager} from "./managers/movement managers/BulletMovementManager";
+import {HandlingManager} from "./managers/handling managers/HandlingManager";
+import {IElement} from "./elements/IElement";
+import {MovementManager} from "./managers/movement managers/MovementManager";
+import {GameLoop, IGameLoop} from "./IGameLoop";
 
 export interface IGameMaster {
-    startGameLoop(): void;
-    stopGameLoop(): void;
+    get gameLoop(): IGameLoop;
     createField(backgroundMaterial: number, wallMaterial: number): void;
     addTankElements(...tankElements: TankElement[]): void;
 }
 
 export class GameMaster implements IGameMaster {
-    private _isGameLoopActive: boolean = false;
-    private _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
-
+    private readonly _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
     private readonly _field: Field;
-    private readonly _tankHandlingManagers: ITankHandlingManager;
-    private readonly _wallHandlingManagers: IWallHandlingManager;
-    private readonly _bulletHandlingManager: IBulletHandlingManager;
-    private readonly _animationManager: AnimationManager = new AnimationManager();
-    private readonly _keyHandler: KeyHandler;
-    public constructor(canvas: Element, width: number, height: number) {
-        this._keyHandler = new KeyHandler();
+    private readonly _gameLoop: IGameLoop;
 
+    private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
+    private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
+    private readonly _bulletHandlingManager: HandlingManager<BulletElement, BulletMovementManager>;
+
+    private readonly _handlingManagers: HandlingManager<IElement, MovementManager>[] = new Array<HandlingManager<IElement, MovementManager>>;
+    private readonly _animationManager: IAnimationManager = new AnimationManager();
+
+    private readonly _keyHandler: IKeyHandler = new KeyHandler();
+    public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
 
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
@@ -63,7 +62,8 @@ export class GameMaster implements IGameMaster {
             this._field,
             tankElements,
             bulletAdder,
-            this._animationManager
+            this._animationManager,
+            this._keyHandler
         );
         this._wallHandlingManagers = new WallHandlingManager(
             wallMovementManager,
@@ -73,12 +73,14 @@ export class GameMaster implements IGameMaster {
         this._bulletHandlingManager = new BulletHandlingManager(
             bulletMovementManager,
             this._field, bulletElements,
-            this._tankHandlingManagers,
-            this._wallHandlingManagers,
+            this._handlingManagers,
             this._animationManager
         );
-    }
+        this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
+        this._gameLoop = new GameLoop([...this._handlingManagers, this._animationManager]);
+    }
+    public get gameLoop(): IGameLoop { return this._gameLoop }
     public createField(backgroundMaterial: number, wallMaterial: number) {
         this.setCoefficients(backgroundMaterial);
 
@@ -86,14 +88,10 @@ export class GameMaster implements IGameMaster {
         this.createWalls(wallMaterial);
     }
     private setCoefficients(backgroundMaterial: number) {
-        this._tankHandlingManagers.movementManager.resistanceCoeff = RESISTANCE_COEFFICIENT[backgroundMaterial];
-        this._tankHandlingManagers.movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
-
-        this._wallHandlingManagers.movementManager.resistanceCoeff = RESISTANCE_COEFFICIENT[backgroundMaterial];
-        this._wallHandlingManagers.movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
-
-        this._bulletHandlingManager.movementManager.resistanceCoeff = RESISTANCE_COEFFICIENT[backgroundMaterial];
-        this._bulletHandlingManager.movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
+        for (const handlingManager of this._handlingManagers) {
+            handlingManager.movementManager.resistanceCoeff = RESISTANCE_COEFFICIENT[backgroundMaterial];
+            handlingManager.movementManager.airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
+        }
     }
     private createBackgroundSprites(material: number) {
         DecorCreator.fullFillBackground(material, this._field.width, this._field.height, this._backgroundSprites);
@@ -114,37 +112,7 @@ export class GameMaster implements IGameMaster {
             new Point(width >> 2, height >> 2), 1, 2, 1, true));
         this._wallHandlingManagers.add(arr);
     }
-
     public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
-    }
-
-    // Game loop
-    public startGameLoop() {
-        if (!this._isGameLoopActive) {
-            this._isGameLoopActive = true;
-            this._keyHandler.clearMask();
-            requestAnimationFrame(() => this.gameLoop());
-        }
-    }
-    public stopGameLoop() {
-        this._isGameLoopActive = false;
-    }
-    private _lastFrameTime: number = performance.now();
-    private gameLoop() {
-        if (!this._isGameLoopActive)
-            return;
-
-        const currentTime = performance.now();
-        const deltaTime = currentTime - this._lastFrameTime;
-
-        this._bulletHandlingManager.handle(deltaTime);
-        this._tankHandlingManagers.handle(this._keyHandler.keysMask, deltaTime);
-        this._wallHandlingManagers.handle(deltaTime);
-        this._animationManager.handle(deltaTime);
-
-        this._lastFrameTime = currentTime;
-
-        requestAnimationFrame(() => this.gameLoop());
     }
 }

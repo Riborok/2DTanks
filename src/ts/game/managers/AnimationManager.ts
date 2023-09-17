@@ -1,9 +1,9 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {IAnimation} from "../../sprite/animation/IAnimation";
+import {IExecutioner} from "./handling managers/HandlingManager";
 
-export interface IAnimationManager{
+export interface IAnimationManager extends IExecutioner{
     add(animation: IAnimation): void;
-    handle(deltaTime: number): void;
 }
 export class AnimationManager implements IAnimationManager{
     private readonly _animationList: IDoublyLinkedList<IAnimation> = new DoublyLinkedList<IAnimation>();

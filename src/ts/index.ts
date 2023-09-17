@@ -1,8 +1,23 @@
 import {GameMaster, IGameMaster} from "./game/IGameMaster";
 import {TankElement} from "./game/elements/TankElement";
-import {KeyHandler} from "./game/KeyHandler";
 import {Control} from "./additionally/type";
 import {Point} from "./geometry/Point";
+import {
+    VK_A,
+    VK_B,
+    VK_C,
+    VK_COMMA,
+    VK_D,
+    VK_DOWN,
+    VK_LEFT,
+    VK_PERIOD,
+    VK_RIGHT,
+    VK_S,
+    VK_SLASH,
+    VK_UP,
+    VK_V,
+    VK_W
+} from "./constants/keyCodes";
 
 window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
 
@@ -12,28 +27,28 @@ const gameMaster : IGameMaster = new GameMaster(canvas, window.screen.width, win
 gameMaster.createField(1,2);
 
 const control1: Control = {
-    forwardMask: KeyHandler.W_MASK,
-    backwardMask: KeyHandler.S_MASK,
-    hullClockwiseMask: KeyHandler.D_MASK,
-    hullCounterClockwiseMask: KeyHandler.A_MASK,
-    turretClockwiseMask: KeyHandler.V_MASK,
-    turretCounterClockwiseMask: KeyHandler.C_MASK,
-    shoot: KeyHandler.B_MASK
+    forwardKey: VK_W,
+    backwardKey: VK_S,
+    hullClockwiseKey: VK_D,
+    hullCounterClockwiseKey: VK_A,
+    turretClockwiseKey: VK_V,
+    turretCounterClockwiseKey: VK_C,
+    shootKey: VK_B
 }
 const tank1 = new TankElement(new Point(300, 300), 0, 0,
     0, 0, 0, 0, control1);
 
 const control2: Control = {
-    forwardMask: KeyHandler.UP_MASK,
-    backwardMask: KeyHandler.DOWN_MASK,
-    hullClockwiseMask: KeyHandler.RIGHT_MASK,
-    hullCounterClockwiseMask: KeyHandler.LEFT_MASK,
-    turretClockwiseMask: KeyHandler.PERIOD_MASK,
-    turretCounterClockwiseMask: KeyHandler.COMMA_MASK,
-    shoot: KeyHandler.SLASH_MASK
+    forwardKey: VK_UP,
+    backwardKey: VK_DOWN,
+    hullClockwiseKey: VK_RIGHT,
+    hullCounterClockwiseKey: VK_LEFT,
+    turretClockwiseKey: VK_PERIOD,
+    turretCounterClockwiseKey: VK_COMMA,
+    shootKey: VK_SLASH
 };
 const tank2 = new TankElement(new Point(450, 450), 0, 1,
     0, 0, 0, 0, control2);
 
 gameMaster.addTankElements(tank1, tank2);
-gameMaster.startGameLoop();
+gameMaster.gameLoop.start();
