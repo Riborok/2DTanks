@@ -1,8 +1,8 @@
 import {IEntity} from "../entitiy/IEntity";
 import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
-import {PointUtils} from "./PointUtils";
 import {CollisionResult} from "../additionally/type";
+import {calcMidBetweenTwoPoint} from "./additionalFunc";
 
 /**
  * Utility class for detecting collisions between entities using the Separating Axis Theorem (SAT).
@@ -17,16 +17,21 @@ export class CollisionDetector {
      * @returns `true` if the two entities intersect, `false` otherwise.
      */
     public static hasCollision(entity1: IEntity, entity2: IEntity): boolean {
-        const axes = [...CollisionDetector.getAxes(entity1), ...CollisionDetector.getAxes(entity2)];
+        const axes1 = CollisionDetector.getAxes(entity1);
+        const axes2 = CollisionDetector.getAxes(entity2);
 
-        for (const axis of axes) {
-            const projection1 = CollisionDetector.getProject(entity1, axis);
-            const projection2 = CollisionDetector.getProject(entity2, axis);
+        function areProjectionsOverlapping(axes: Axis[]): boolean {
+            for (const axis of axes) {
+                const projection1 = CollisionDetector.getProjection(entity1, axis);
+                const projection2 = CollisionDetector.getProjection(entity2, axis);
 
-            if (Math.min(projection1.max - projection2.min, projection2.max - projection1.min) <= 0)
-                return false;
+                if (Math.min(projection1.max - projection2.min, projection2.max - projection1.min) <= 0)
+                    return false;
+            }
+            return true;
         }
-        return true;
+
+        return areProjectionsOverlapping(axes1) && areProjectionsOverlapping(axes2);
     }
     /**
      * Calculates the collision result between two entities using the Separating Axis Theorem (SAT).
@@ -35,50 +40,81 @@ export class CollisionDetector {
      * @returns A `CollisionResult` object if a collision occurred, or `null` if there's no collision.
      */
     public static getCollisionResult(entity1: IEntity, entity2: IEntity): CollisionResult | null {
-        const axes = [...CollisionDetector.getAxes(entity1), ...CollisionDetector.getAxes(entity2)];
+        const axes1 = CollisionDetector.getAxes(entity1);
+        const axes2 = CollisionDetector.getAxes(entity2);
 
         let smallestOverlap = Number.MAX_VALUE;
         let collisionAxis: Axis;
+        let isEntity1Axis: boolean;
 
-        for (const axis of axes) {
-            const projection1 = CollisionDetector.getProject(entity1, axis);
-            const projection2 = CollisionDetector.getProject(entity2, axis);
+        function isSmallestOverlapAxisFound(axes: Axis[]): boolean {
+            const isAxes1 = axes === axes1;
+            for (const axis of axes) {
+                const projection1 = CollisionDetector.getProjection(entity1, axis);
+                const projection2 = CollisionDetector.getProjection(entity2, axis);
 
-            const overlap = Math.min(projection1.max - projection2.min, projection2.max - projection1.min);
+                const overlap = Math.min(projection1.max - projection2.min, projection2.max - projection1.min);
 
-            if (overlap <= 0)
-                return null;
+                if (overlap <= 0)
+                    return false;
 
-            if (overlap < smallestOverlap) {
-                smallestOverlap = overlap;
-                collisionAxis = axis;
+                if (overlap < smallestOverlap) {
+                    smallestOverlap = overlap;
+                    collisionAxis = axis;
+                    isEntity1Axis = isAxes1;
+                }
             }
+            return true;
         }
+        if (!isSmallestOverlapAxisFound(axes1) || !isSmallestOverlapAxisFound(axes2))
+            return null;
 
-        return {collisionPoint: CollisionDetector.findClosestVertex(entity1, entity2, collisionAxis),
+        return {collisionPoint: CollisionDetector.findClosestVertex(entity1, entity2, collisionAxis, isEntity1Axis),
             overlap: smallestOverlap};
     }
     private static readonly EPSILON: number = 1;
-    private static findClosestVertex(entity1: IEntity, entity2: IEntity, axis: Axis): Point {
-        let minDistance = Number.MAX_VALUE;
-        let closestVertex = new Point(0, 0);
+    private static findClosestVertex(entity1: IEntity, entity2: IEntity, axis: Axis, isEntity1Axis: boolean): Point {
+        let projection: Projection;
+        let extendedProjection: ExtendedProjection;
+        if (isEntity1Axis) {
+            projection = this.getProjection(entity1, axis);
+            extendedProjection = this.getExtendedProjection(entity2, axis);
+        }
+        else {
+            projection = this.getProjection(entity2, axis);
+            extendedProjection = this.getExtendedProjection(entity1, axis);
+        }
 
-        function updateClosestVertex(supportVertex: Point, vertices: Point[]) {
-            for (const vertex of vertices) {
-                const projectionLength = Math.abs(VectorUtils.dotProduct(PointUtils.subtract(vertex, supportVertex), axis));
-                if (Math.abs(projectionLength - minDistance) < CollisionDetector.EPSILON)
-                    closestVertex = new Point((closestVertex.x + vertex.x) / 2, (closestVertex.y + vertex.y) / 2);
-                else if (projectionLength < minDistance) {
-                    minDistance = projectionLength;
-                    closestVertex = vertex;
-                }
+        if (extendedProjection.max - projection.min < projection.max - extendedProjection.min)
+            return extendedProjection.maxPoint;
+        else
+            return extendedProjection.minPoint;
+    }
+    private static getExtendedProjection(entity: IEntity, axis: Axis): ExtendedProjection {
+        let min = VectorUtils.dotProduct(axis, entity.points[0]);
+        let max = min;
+        let minPoint = entity.points[0];
+        let maxPoint = entity.points[0];
+
+        for (let i = 1; i < entity.points.length; i++) {
+            const dotProduct = VectorUtils.dotProduct(axis, entity.points[i]);
+
+            if (Math.abs(dotProduct - min) < this.EPSILON)
+                minPoint = calcMidBetweenTwoPoint(minPoint, entity.points[i]);
+            else if (Math.abs(dotProduct - max) < this.EPSILON)
+                maxPoint = calcMidBetweenTwoPoint(maxPoint, entity.points[i]);
+
+            else if (dotProduct < min) {
+                min = dotProduct;
+                minPoint = entity.points[i];
+            }
+            else if (dotProduct > max) {
+                max = dotProduct;
+                maxPoint = entity.points[i];
             }
         }
 
-        updateClosestVertex(entity1.calcCenter(), entity2.points);
-        updateClosestVertex(entity2.calcCenter(), entity1.points);
-
-        return closestVertex;
+        return { min, max, minPoint, maxPoint };
     }
     private static getAxes(entity: IEntity): Axis[] {
         const axes = new Array<Axis>();
@@ -90,7 +126,7 @@ export class CollisionDetector {
 
         return axes;
     }
-    private static getProject(entity: IEntity, axis: Vector): Projection {
+    private static getProjection(entity: IEntity, axis: Vector): Projection {
         let min = VectorUtils.dotProduct(axis, entity.points[0]);
         let max = min;
 
@@ -108,4 +144,10 @@ export class CollisionDetector {
 type Projection = {
     min: number;
     max: number;
+}
+type ExtendedProjection = {
+    min: number;
+    max: number;
+    minPoint: Point;
+    maxPoint: Point;
 }
