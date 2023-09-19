@@ -15,9 +15,8 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
         return this._isEnded;
     }
     public constructor(width: number, height: number) {
-        super(width, height);
+        super(width, height, `6`);
         this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
-        this._sprite.style.zIndex = `6`;
     }
     public changeStage(deltaTime: number): void {
         this._timer += deltaTime;
@@ -39,7 +38,7 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
 export class TopTankDriftAnimation extends TankDriftAnimation{
     public setPosAndAngle(point: Point, angle: number){
         this.setPosition(point);
-        this.setAngle(angle, -1, 1);
+        this.setAngleWithScaling(angle, -1, 1);
     }
     public calcPosition(point: Point, sin: number, cos: number): Point{
         return new Point(

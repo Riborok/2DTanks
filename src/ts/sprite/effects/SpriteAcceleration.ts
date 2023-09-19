@@ -26,8 +26,7 @@ export class SpriteAcceleration extends Sprite {
     ];
     public static readonly SIZE: number = 85;
     public constructor() {
-        super(SpriteAcceleration.SIZE, SpriteAcceleration.SIZE);
-        this._sprite.style.zIndex = `5`;
+        super(SpriteAcceleration.SIZE, SpriteAcceleration.SIZE, `5`);
         this._sprite.src = SpriteAcceleration.SRC[0];
     }
     public setSrc(state: number) {
