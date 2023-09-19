@@ -85,10 +85,9 @@ export class CollisionDetector {
             extendedProjection = this.getExtendedProjection(entity1, axis);
         }
 
-        if (extendedProjection.max - projection.min < projection.max - extendedProjection.min)
-            return extendedProjection.maxPoint;
-        else
-            return extendedProjection.minPoint;
+        return (extendedProjection.max - projection.min < projection.max - extendedProjection.min)
+            ? extendedProjection.maxPoint
+            : extendedProjection.minPoint;
     }
     private static getExtendedProjection(entity: IEntity, axis: Axis): ExtendedProjection {
         let min = VectorUtils.dotProduct(axis, entity.points[0]);

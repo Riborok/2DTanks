@@ -1,17 +1,16 @@
-import {IExecutioner} from "./managers/handling managers/HandlingManager";
+import {IRender, Render} from "./IRender";
 
 export interface IGameLoop {
     stop(): void;
     start(): void;
+    get render(): IRender;
 }
 
 export class GameLoop implements IGameLoop {
     private _isGameLoopActive: boolean = false;
     private _lastFrameTime: number = performance.now();
-    private readonly _executioners: Iterable<IExecutioner>;
-    public constructor(executioners: Iterable<IExecutioner>) {
-        this._executioners = executioners;
-    }
+    private readonly _render: IRender = new Render();
+    public get render(): IRender { return this._render }
     public start() {
         if (!this._isGameLoopActive) {
             this._isGameLoopActive = true;
@@ -26,10 +25,8 @@ export class GameLoop implements IGameLoop {
             return;
 
         const currentTime = performance.now();
-        const deltaTime = currentTime - this._lastFrameTime;
 
-        for (const executioner of this._executioners)
-            executioner.handle(deltaTime);
+        this._render.renderAll(currentTime - this._lastFrameTime);
 
         this._lastFrameTime = currentTime;
 

@@ -30,8 +30,8 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private readonly _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
+    private readonly _gameLoop: IGameLoop = new GameLoop();
     private readonly _field: Field;
-    private readonly _gameLoop: IGameLoop;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
     private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
@@ -78,7 +78,7 @@ export class GameMaster implements IGameMaster {
         );
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
-        this._gameLoop = new GameLoop([...this._handlingManagers, this._animationManager]);
+        this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
     }
     public get gameLoop(): IGameLoop { return this._gameLoop }
     public createField(backgroundMaterial: number, wallMaterial: number) {
