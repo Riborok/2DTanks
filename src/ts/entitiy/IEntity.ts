@@ -20,6 +20,7 @@ export interface IEntity extends IIdentifiable{
     get radiusLength(): number;
     get momentOfInertia(): number;
     get lengthwiseArea(): number;
+    get movementLength(): number;
 }
 
 const scalingCoeff: number = 3.75;
@@ -69,5 +70,9 @@ export class RectangularEntity implements IEntity {
     public get lengthwiseArea(): number {
         const deltaAngle = this.angle - this._velocity.angle;
         return this._height * Math.abs(Math.cos(deltaAngle)) + this._width * Math.abs(Math.sin(deltaAngle));
+    }
+    public get movementLength(): number {
+        const deltaAngle = this.angle - this._velocity.angle;
+        return this._width * Math.abs(Math.cos(deltaAngle)) + this._height * Math.abs(Math.sin(deltaAngle));
     }
 }

@@ -38,16 +38,16 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 this.delete(elementToDelete);
         }
 
-        if (this._movementManager.bulletAndModelIDs.hasForProcessing())
+        if (this._movementManager.bulletCollisionDates.hasForProcessing())
             this.handleBulletCollisions();
     }
     private handleBulletCollisions() {
-        for (const bulletAndModelID of this._movementManager.bulletAndModelIDs.iterable) {
-            for (const collisionPack of bulletAndModelID.collisionPacks) {
-                const num: number = bulletAndModelID.bulletElement.sprite.num;
+        for (const bulletCollisionData of this._movementManager.bulletCollisionDates.iterable) {
+            for (const collisionPack of bulletCollisionData.collisionPacks) {
+                const num: number = bulletCollisionData.bulletElement.sprite.num;
                 this.playImpactAnimation(
                     collisionPack.collisionPoint,
-                    bulletAndModelID.bulletElement.model.entity.angle + Math.PI,
+                    bulletCollisionData.bulletElement.model.entity.angle + Math.PI,
                     BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
                     BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
                     num
@@ -57,7 +57,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 const elementHandling = this.getElementHandling(id);
                 const element: IElement | null = elementHandling.get(id);
                 if (element) {
-                    element.model.takeDamage(bulletAndModelID.bulletElement.model);
+                    element.model.takeDamage(bulletCollisionData.bulletElement.model);
                     if (element.model.isDead()) {
                         AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager, this._field.canvas)
 
@@ -65,10 +65,10 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                     }
                 }
             }
-            this.delete(bulletAndModelID.bulletElement);
+            this.delete(bulletCollisionData.bulletElement);
         }
 
-        this._movementManager.bulletAndModelIDs.clear();
+        this._movementManager.bulletCollisionDates.clear();
     }
     private getElementHandling(id: number): IElementManager<IElement> {
         for (const handlingManager of this._handlingManagers)

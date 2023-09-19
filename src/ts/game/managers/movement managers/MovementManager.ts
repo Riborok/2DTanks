@@ -53,6 +53,6 @@ export interface IWallMovementManager {
 export interface IBulletMovementManager {
     hasResidualMovement(bulletElement: BulletElement): boolean;
     movement(bulletElement: BulletElement, deltaTime: number): void;
-    get bulletAndModelIDs(): IIdToProcessing<BulletCollisionData>;
+    get bulletCollisionDates(): IIdToProcessing<BulletCollisionData>;
     checkForSpawn(bulletElement: BulletElement): boolean;
 }

@@ -1,5 +1,6 @@
 import {PointRotator} from "../geometry/PointRotator";
 import {IEntity} from "./IEntity";
+import {Vector} from "../geometry/Point";
 
 /**
  * Class provides utility methods for manipulating entities.
@@ -36,5 +37,14 @@ export class EntityManipulator {
         for (const point of entity.points)
             PointRotator.rotatePointAroundTarget(point, center, sin, cos);
         PointRotator.rotatePoint(entity.velocity, sin, cos);
+    }
+    /**
+     * Move an entity by a specified vector.
+     * @param entity The entity to move.
+     * @param vector The vector representing the movement.
+     */
+    public static moveEntity(entity: IEntity, vector: Vector) {
+        for (const point of entity.points)
+            point.addToCoordinates(vector.x, vector.y);
     }
 }
