@@ -37,8 +37,10 @@ export class Vector extends Point{
      */
     public normalize() {
         const length = this.length;
-        this._x /= length;
-        this._y /= length;
+        if (length !== 0) {
+            this._x /= length;
+            this._y /= length;
+        }
     }
     public get angle(): number { return Math.atan2(this.y, this.x) }
     public clone(): Vector { return new Vector(this.x, this.y) }
@@ -49,6 +51,14 @@ export class Vector extends Point{
     public addVector(vector: Vector) {
         this._x += vector._x;
         this._y += vector._y;
+    }
+    /**
+     * Subtracts another vector from this vector.
+     * @param vector The vector to subtract from this vector.
+     */
+    public subtractVector(vector: Vector) {
+        this._x -= vector._x;
+        this._y -= vector._y;
     }
     /**
      * Scales (multiplies) the vector by a scalar value.

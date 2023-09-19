@@ -50,4 +50,31 @@ export class VectorUtils {
     public static scale(vector: Point, scalar: number): Vector {
         return new Vector(vector.x * scalar, vector.y * scalar);
     }
+    /**
+     * Creates a vector based on an angle (in radians) and a length.
+     * @param angle The angle in radians.
+     * @param length The length of the vector.
+     * @returns A new vector with the specified angle and length.
+     */
+    public static createFromAngleAndLength(angle: number, length: number): Vector {
+        return new Vector(length * Math.cos(angle), length * Math.sin(angle));
+    }
+    /**
+     * Calculates the scale factor by which one co-directional vector is larger than another.
+     * @param vector1 The first co-directional vector.
+     * @param vector2 The second co-directional vector.
+     * @returns The scale factor representing how much larger the first vector is than the second vector.
+     */
+    public static calcCoDirectionalScaleFactor(vector1: Vector, vector2: Vector): number {
+        return vector1.x / vector2.x;
+    }
+    /**
+     * Calculates the scale factor by which one vector is larger than another in magnitude.
+     * @param vector1 The first vector.
+     * @param vector2 The second vector.
+     * @returns The scale factor representing how much larger the first vector is than the second vector.
+     */
+    public static calcScaleFactor(vector1: Vector, vector2: Vector): number {
+        return vector1.length / vector2.length;
+    }
 }
