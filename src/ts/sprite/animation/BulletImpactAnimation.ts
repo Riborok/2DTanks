@@ -9,7 +9,7 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
     private _timer: number = 0;
     private readonly _num: number;
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_';
-    private static readonly UPDATE_TIMER_TIME: number = 60;
+    private static readonly UPDATE_TIMER_TIME: number = 70;
     private static readonly MAX_STAGE: number = 3;
     public get isEnded(): boolean {
         if (this._isEnded)
