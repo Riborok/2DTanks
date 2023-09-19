@@ -6,9 +6,8 @@ export class TurretSprite extends Sprite implements ISpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(color: number, num: number, indentX: number, indentY: number) {
-        super(TURRET_WIDTH[num], TURRET_HEIGHT[num]);
+        super(TURRET_WIDTH[num], TURRET_HEIGHT[num], `6`);
         this._sprite.src = `src/img/tanks/Turrets/Turret_${num}/Turret_${color}.png`;
-        this._sprite.style.zIndex = `6`;
         this._indentX = indentX;
         this._indentY = indentY;
     }

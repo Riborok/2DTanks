@@ -6,10 +6,9 @@ export class HullSprite extends Sprite implements ISpritePart {
     private readonly _accelerationEffectIndentX: number;
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
-        super(HULL_WIDTH[num], HULL_HEIGHT[num]);
+        super(HULL_WIDTH[num], HULL_HEIGHT[num], `5`);
         this._accelerationEffectIndentX = ACCELERATION_EFFECT_INDENT_X[num];
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
-        this._sprite.style.zIndex = `5`;
     }
     /**
      * Calculates the initial position of the hull sprite based on a reference point,

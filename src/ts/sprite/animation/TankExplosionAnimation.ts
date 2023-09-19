@@ -17,9 +17,8 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
         return this._isEnded;
     }
     public constructor(point: Point, angle: number) {
-        super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT);
+        super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT, `7`);
         this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
-        this._sprite.style.zIndex = `7`;
 
         const newPoint = new Point(
             point.x - TankExplosionAnimation.WIDTH / 2,

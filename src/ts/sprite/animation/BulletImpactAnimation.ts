@@ -17,10 +17,9 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
         return this._isEnded;
     }
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
-        super(width, height);
+        super(width, height, `7`);
         this._num = num === 0 ? 0 : 1;
         this._sprite.src = `${BulletImpactAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
-        this._sprite.style.zIndex = `7`;
 
         const newPoint = new Point(
             point.x + height / 2 * Math.sin(angle),
