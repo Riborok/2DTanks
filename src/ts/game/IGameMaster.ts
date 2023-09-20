@@ -1,4 +1,4 @@
-import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
+import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT, SizeConstants} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Field} from "./Field";
@@ -43,6 +43,8 @@ export class GameMaster implements IGameMaster {
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
     public constructor(canvas: Element, width: number, height: number) {
         this._field = new Field(canvas, width, height);
+
+        SizeConstants.calcResolutionResizeCoeff(width, height);
 
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);

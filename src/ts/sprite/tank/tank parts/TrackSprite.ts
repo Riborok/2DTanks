@@ -1,5 +1,5 @@
 import {Point} from "../../../geometry/Point";
-import {TRACK_INDENT} from "../../../constants/gameConstants";
+import {SizeConstants} from "../../../constants/gameConstants";
 import {ISpritePart, Sprite} from "../../Sprite";
 
 export abstract class TrackSprite extends Sprite implements ISpritePart {
@@ -11,7 +11,7 @@ export abstract class TrackSprite extends Sprite implements ISpritePart {
     protected static calcHeight(width: number) { return TrackSprite.PROPORTION_WIDTH_HEIGHT * width; }
     public get num() { return this._num }
     protected constructor(num: number, tankWidth: number, height: number) {
-        super(tankWidth + TRACK_INDENT, height, `4`);
+        super(tankWidth + SizeConstants.TRACK_INDENT, height, `4`);
 
         this._num = num;
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
@@ -40,7 +40,7 @@ export class BottomTrackSprite extends TrackSprite  {
     public constructor(num: number, tankWidth: number, tankHeight: number) {
         const height = TrackSprite.calcHeight(tankWidth);
         super(num, tankWidth, height);
-        this._deltaHeight = tankHeight + TRACK_INDENT - height;
+        this._deltaHeight = tankHeight + SizeConstants.TRACK_INDENT - height;
     }
     /**
      * Calculates the initial position of the bottom track sprite based on a reference point,

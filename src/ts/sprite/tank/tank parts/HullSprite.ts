@@ -1,12 +1,12 @@
 import {ISpritePart, Sprite} from "../../Sprite";
-import {ACCELERATION_EFFECT_INDENT_X, HULL_HEIGHT, HULL_WIDTH, TRACK_INDENT} from "../../../constants/gameConstants";
+import {ACCELERATION_EFFECT_INDENT_X, SizeConstants} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 
 export class HullSprite extends Sprite implements ISpritePart {
     private readonly _accelerationEffectIndentX: number;
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
-        super(HULL_WIDTH[num], HULL_HEIGHT[num], `5`);
+        super(SizeConstants.HULL_WIDTH[num], SizeConstants.HULL_HEIGHT[num], `5`);
         this._accelerationEffectIndentX = ACCELERATION_EFFECT_INDENT_X[num];
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
     }
@@ -20,8 +20,8 @@ export class HullSprite extends Sprite implements ISpritePart {
      */
     public calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(
-            point.x - TRACK_INDENT * sin,
-            point.y + TRACK_INDENT * cos
+            point.x - SizeConstants.TRACK_INDENT * sin,
+            point.y + SizeConstants.TRACK_INDENT * cos
         );
     }
 }

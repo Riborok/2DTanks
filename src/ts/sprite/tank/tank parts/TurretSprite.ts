@@ -1,12 +1,12 @@
 import {ISpritePart, Sprite} from "../../Sprite";
 import {Point} from "../../../geometry/Point";
-import {TURRET_HEIGHT, TURRET_WIDTH} from "../../../constants/gameConstants";
+import {SizeConstants} from "../../../constants/gameConstants";
 
 export class TurretSprite extends Sprite implements ISpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(color: number, num: number, indentX: number, indentY: number) {
-        super(TURRET_WIDTH[num], TURRET_HEIGHT[num], `6`);
+        super(SizeConstants.TURRET_WIDTH[num], SizeConstants.TURRET_HEIGHT[num], `6`);
         this._sprite.src = `src/img/tanks/Turrets/Turret_${num}/Turret_${color}.png`;
         this._indentX = indentX;
         this._indentY = indentY;

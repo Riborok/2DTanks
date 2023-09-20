@@ -1,6 +1,7 @@
 import {Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
 import {IAnimation} from "./IAnimation";
+import {SizeConstants} from "../../constants/gameConstants";
 
 export class TankExplosionAnimation extends Sprite implements IAnimation{
     private _animationStage: number = 0;
@@ -9,20 +10,18 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion_';
     private static readonly UPDATE_TIMER_TIME: number = 90;
     private static readonly MAX_STAGE: number = 8;
-    private static readonly WIDTH: number = 120;
-    private static readonly HEIGHT: number = 120;
     public get isEnded(): boolean {
         if (this._isEnded)
             this.remove();
         return this._isEnded;
     }
     public constructor(point: Point, angle: number) {
-        super(TankExplosionAnimation.WIDTH, TankExplosionAnimation.HEIGHT, `7`);
+        super(SizeConstants.EXPLOSION_SIZE, SizeConstants.EXPLOSION_SIZE, `7`);
         this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
 
         const newPoint = new Point(
-            point.x - TankExplosionAnimation.WIDTH / 2,
-            point.y - TankExplosionAnimation.HEIGHT / 2
+            point.x - SizeConstants.EXPLOSION_SIZE / 2,
+            point.y - SizeConstants.EXPLOSION_SIZE / 2
         );
         this.setPosAndAngle(newPoint, angle);
     }

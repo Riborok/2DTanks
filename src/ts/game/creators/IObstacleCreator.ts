@@ -1,4 +1,4 @@
-import {WALL_HEIGHT, WALL_MASS, WALL_WIDTH} from "../../constants/gameConstants";
+import {SizeConstants, WALL_MASS} from "../../constants/gameConstants";
 import {RectangularEntity} from "../../entitiy/IEntity";
 import {IDTracker} from "../id/IDTracker";
 import {WallElement} from "../elements/WallElement";
@@ -14,39 +14,41 @@ export class ObstacleCreator {
     public static createWallsAroundPerimeter(materialNum: number, width: number, height: number): Iterable<WallElement> {
         const result = new Array<WallElement>();
         const xIndent = this.calcIndent(width);
-        const yIndent = this.calcIndent(height - (WALL_HEIGHT[this.RECT_NUM] << 1));
+        const yIndent = this.calcIndent(height - (SizeConstants.WALL_HEIGHT[this.RECT_NUM] << 1));
         this.createHorWalls(materialNum, xIndent, yIndent, width, height, result)
         this.createVertWalls(materialNum, xIndent, yIndent, width, height, result);
         return result;
     }
     private static calcIndent(totalLength: number): number {
         const currLength = totalLength - (this.INDENT << 1);
-        const indent = currLength - WALL_WIDTH[this.RECT_NUM] * Math.floor(currLength / WALL_WIDTH[this.RECT_NUM]);
+        const indent = currLength - SizeConstants.WALL_WIDTH[this.RECT_NUM] *
+            Math.floor(currLength / SizeConstants.WALL_WIDTH[this.RECT_NUM]);
         return (indent >> 1) + this.INDENT;
     }
     private static createHorWalls(materialNum: number, xIndent: number, yIndent: number,
                                       width: number, height: number, arr: Array<WallElement>) {
-        for (let x = xIndent; x <= width - xIndent - WALL_WIDTH[this.RECT_NUM]; x += WALL_WIDTH[this.RECT_NUM]) {
+        for (let x = xIndent; x <= width - xIndent - SizeConstants.WALL_WIDTH[this.RECT_NUM]; x +=
+            SizeConstants.WALL_WIDTH[this.RECT_NUM]) {
             arr.push(this.createWall(new Point(x, yIndent), 0, materialNum, this.RECT_NUM));
-            arr.push(this.createWall(new Point(x, height - WALL_HEIGHT[this.RECT_NUM] - yIndent),
+            arr.push(this.createWall(new Point(x, height - SizeConstants.WALL_HEIGHT[this.RECT_NUM] - yIndent),
                 0, materialNum, this.RECT_NUM));
         }
     }
     private static createVertWalls(materialNum: number, xIndent: number, yIndent: number,
                                        width: number, height: number, arr: Array<WallElement>) {
-        for (let y = yIndent + WALL_HEIGHT[this.RECT_NUM] + (WALL_HEIGHT[this.RECT_NUM] >> 1);
-                y <= height - yIndent - WALL_WIDTH[this.RECT_NUM]; y += WALL_WIDTH[this.RECT_NUM]) {
-            arr.push(this.createWall(new Point(xIndent - (WALL_HEIGHT[this.RECT_NUM] >> 1), y),
+        for (let y = yIndent + SizeConstants.WALL_HEIGHT[this.RECT_NUM] + (SizeConstants.WALL_HEIGHT[this.RECT_NUM] >> 1);
+                y <= height - yIndent - SizeConstants.WALL_WIDTH[this.RECT_NUM]; y += SizeConstants.WALL_WIDTH[this.RECT_NUM]) {
+            arr.push(this.createWall(new Point(xIndent - (SizeConstants.WALL_HEIGHT[this.RECT_NUM] >> 1), y),
                 this.RAD_90, materialNum, this.RECT_NUM));
-            arr.push(this.createWall(new Point(width - xIndent - WALL_WIDTH[this.RECT_NUM] +
-                (WALL_HEIGHT[this.RECT_NUM] >> 1), y), this.RAD_90, materialNum, this.RECT_NUM));
+            arr.push(this.createWall(new Point(width - xIndent - SizeConstants.WALL_WIDTH[this.RECT_NUM] +
+                (SizeConstants.WALL_HEIGHT[this.RECT_NUM] >> 1), y), this.RAD_90, materialNum, this.RECT_NUM));
         }
     }
     public static createWall(point: Point, angle: number, materialNum: number,
                              shapeNum: number, hasMass: boolean = false) : WallElement {
         const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : Infinity;
         const model = new WallModel(new RectangularEntity(point,
-            WALL_WIDTH[shapeNum], WALL_HEIGHT[shapeNum], angle, mass, IDTracker.wallId));
+            SizeConstants.WALL_WIDTH[shapeNum], SizeConstants.WALL_HEIGHT[shapeNum], angle, mass, IDTracker.wallId));
 
         const sprite = new WallSprite(materialNum, shapeNum);
         sprite.setPosition(point);

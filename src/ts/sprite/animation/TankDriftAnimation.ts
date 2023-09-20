@@ -31,9 +31,6 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
             }
         }
     }
-    public remove(){
-        this._sprite.remove();
-    }
 }
 export class TopTankDriftAnimation extends TankDriftAnimation{
     public setPosAndAngle(point: Point, angle: number){
