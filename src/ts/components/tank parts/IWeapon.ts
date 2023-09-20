@@ -1,4 +1,4 @@
-import {SizeConstants} from "../../constants/gameConstants";
+import {ResolutionManager} from "../../constants/gameConstants";
 import {IComponent} from "../IComponent";
 
 export interface IWeapon extends IComponent{
@@ -12,7 +12,7 @@ export interface IWeapon extends IComponent{
 }
 
 export function getBarrelLength(weapon: IWeapon): number {
-    return SizeConstants.WEAPON_WIDTH[weapon.num];
+    return ResolutionManager.WEAPON_WIDTH[weapon.num];
 }
 
 export class WeaponModel0 implements IWeapon {

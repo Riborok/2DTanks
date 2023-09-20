@@ -1,4 +1,4 @@
-export class SizeConstants{
+export class ResolutionManager {
     private static resizeWidthCoeff: number = 1;
     private static resizeHeightCoeff: number = 1;
     private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
@@ -20,58 +20,58 @@ export class SizeConstants{
     public static EXPLOSION_SIZE: number = 120;
     public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
     public static setResolutionResizeCoeff(){
-        SizeConstants.resizeWidthCoeff = window.screen.width / SizeConstants.DEVELOPING_SCREEN_WIDTH;
-        SizeConstants.resizeHeightCoeff = window.screen.height / SizeConstants.DEVELOPING_SCREEN_HEIGHT;
+        ResolutionManager.resizeWidthCoeff = window.screen.width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
+        ResolutionManager.resizeHeightCoeff = window.screen.height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
 
-        SizeConstants.resizeConstants();
+        ResolutionManager.resizeConstants();
     }
-    private static resizeWidthForCurrentResolution(width: number): number{
-        return (width * SizeConstants.resizeWidthCoeff);
+    public static resizeX(x: number): number{
+        return (x * ResolutionManager.resizeWidthCoeff);
     }
-    private static resizeHeightForCurrentResolution(height: number): number{
-        return (height * SizeConstants.resizeHeightCoeff);
+    public static resizeY(y: number): number{
+        return (y * ResolutionManager.resizeHeightCoeff);
     }
     private static resizeConstants(){
-        SizeConstants.BACKGROUND_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.BACKGROUND_SIZE));
-        for (let i = 0; i < SizeConstants.WALL_WIDTH.length; i++) {
-            SizeConstants.WALL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.WALL_WIDTH[i]));
+        ResolutionManager.BACKGROUND_SIZE = Math.round(ResolutionManager.resizeX(ResolutionManager.BACKGROUND_SIZE));
+        for (let i = 0; i < ResolutionManager.WALL_WIDTH.length; i++) {
+            ResolutionManager.WALL_WIDTH[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.WALL_WIDTH[i]));
         }
-        for (let i = 0; i < SizeConstants.WALL_HEIGHT.length; i++) {
-            SizeConstants.WALL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.WALL_HEIGHT[i]));
+        for (let i = 0; i < ResolutionManager.WALL_HEIGHT.length; i++) {
+            ResolutionManager.WALL_HEIGHT[i] = Math.round(ResolutionManager.resizeY(ResolutionManager.WALL_HEIGHT[i]));
         }
-        SizeConstants.TRACK_INDENT = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.TRACK_INDENT));
-        for (let i = 0; i < SizeConstants.HULL_WIDTH.length; i++) {
-            SizeConstants.HULL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.HULL_WIDTH[i]));
+        ResolutionManager.TRACK_INDENT = Math.round(ResolutionManager.resizeY(ResolutionManager.TRACK_INDENT));
+        for (let i = 0; i < ResolutionManager.HULL_WIDTH.length; i++) {
+            ResolutionManager.HULL_WIDTH[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.HULL_WIDTH[i]));
         }
-        for (let i = 0; i < SizeConstants.HULL_HEIGHT.length; i++) {
-            SizeConstants.HULL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.HULL_HEIGHT[i]));
+        for (let i = 0; i < ResolutionManager.HULL_HEIGHT.length; i++) {
+            ResolutionManager.HULL_HEIGHT[i] = Math.round(ResolutionManager.resizeY(ResolutionManager.HULL_HEIGHT[i]));
         }
-        for (let i = 0; i < SizeConstants.TURRET_INDENT_X.length; i++) {
-            SizeConstants.TURRET_INDENT_X[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.TURRET_INDENT_X[i]));
+        for (let i = 0; i < ResolutionManager.TURRET_INDENT_X.length; i++) {
+            ResolutionManager.TURRET_INDENT_X[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.TURRET_INDENT_X[i]));
         }
-        for (let i = 0; i < SizeConstants.TURRET_WIDTH.length; i++) {
-            SizeConstants.TURRET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.TURRET_WIDTH[i]));
+        for (let i = 0; i < ResolutionManager.TURRET_WIDTH.length; i++) {
+            ResolutionManager.TURRET_WIDTH[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.TURRET_WIDTH[i]));
         }
-        for (let i = 0; i < SizeConstants.TURRET_HEIGHT.length; i++) {
-            SizeConstants.TURRET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.TURRET_HEIGHT[i]));
+        for (let i = 0; i < ResolutionManager.TURRET_HEIGHT.length; i++) {
+            ResolutionManager.TURRET_HEIGHT[i] = Math.round(ResolutionManager.resizeY(ResolutionManager.TURRET_HEIGHT[i]));
         }
-        for (let i = 0; i < SizeConstants.WEAPON_WIDTH.length; i++) {
-            SizeConstants.WEAPON_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.WEAPON_WIDTH[i]));
+        for (let i = 0; i < ResolutionManager.WEAPON_WIDTH.length; i++) {
+            ResolutionManager.WEAPON_WIDTH[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.WEAPON_WIDTH[i]));
         }
-        for (let i = 0; i < SizeConstants.WEAPON_HEIGHT.length; i++) {
-            SizeConstants.WEAPON_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.WEAPON_HEIGHT[i]));
+        for (let i = 0; i < ResolutionManager.WEAPON_HEIGHT.length; i++) {
+            ResolutionManager.WEAPON_HEIGHT[i] = Math.round(ResolutionManager.resizeY(ResolutionManager.WEAPON_HEIGHT[i]));
         }
-        for (let i = 0; i < SizeConstants.BULLET_WIDTH.length; i++) {
-            SizeConstants.BULLET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.BULLET_WIDTH[i]));
+        for (let i = 0; i < ResolutionManager.BULLET_WIDTH.length; i++) {
+            ResolutionManager.BULLET_WIDTH[i] = Math.round(ResolutionManager.resizeX(ResolutionManager.BULLET_WIDTH[i]));
         }
-        for (let i = 0; i < SizeConstants.BULLET_HEIGHT.length; i++) {
-            SizeConstants.BULLET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.BULLET_HEIGHT[i]));
+        for (let i = 0; i < ResolutionManager.BULLET_HEIGHT.length; i++) {
+            ResolutionManager.BULLET_HEIGHT[i] = Math.round(ResolutionManager.resizeY(ResolutionManager.BULLET_HEIGHT[i]));
         }
-        SizeConstants.ACCELERATION_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.ACCELERATION_SIZE));
-        SizeConstants.EXPLOSION_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.EXPLOSION_SIZE));
-        for (let i = 0; i < SizeConstants.ACCELERATION_EFFECT_INDENT_X.length; i++) {
-            SizeConstants.ACCELERATION_EFFECT_INDENT_X[i] =
-                SizeConstants.resizeWidthForCurrentResolution(SizeConstants.ACCELERATION_EFFECT_INDENT_X[i]);
+        ResolutionManager.ACCELERATION_SIZE = Math.round(ResolutionManager.resizeX(ResolutionManager.ACCELERATION_SIZE));
+        ResolutionManager.EXPLOSION_SIZE = Math.round(ResolutionManager.resizeX(ResolutionManager.EXPLOSION_SIZE));
+        for (let i = 0; i < ResolutionManager.ACCELERATION_EFFECT_INDENT_X.length; i++) {
+            ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i] =
+                ResolutionManager.resizeX(ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i]);
         }
     }
 }

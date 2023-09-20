@@ -3,7 +3,7 @@ import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../components/tank parts/TankPartsCreator";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {IEntity, RectangularEntity} from "../../entitiy/IEntity";
-import {SizeConstants} from "../../constants/gameConstants";
+import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {Control} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
@@ -27,8 +27,8 @@ export class TankElement implements IElement {
 
         const tankParts = TankPartsCreator.create(hullNum, trackNum, turretNum, weaponNum);
         const rectangularEntity = new RectangularEntity(point,
-            SizeConstants.HULL_WIDTH[hullNum] + SizeConstants.TRACK_INDENT,
-            SizeConstants.HULL_HEIGHT[hullNum] + (SizeConstants.TRACK_INDENT << 1), angle,
+            ResolutionManager.HULL_WIDTH[hullNum] + ResolutionManager.TRACK_INDENT,
+            ResolutionManager.HULL_HEIGHT[hullNum] + (ResolutionManager.TRACK_INDENT << 1), angle,
             tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, ModelIDTracker.tankId);
         this._model = new TankModel(tankParts, rectangularEntity);
         this._id = rectangularEntity.id;
