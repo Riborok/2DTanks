@@ -1,4 +1,4 @@
-import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT, SizeConstants} from "../constants/gameConstants";
+import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Field} from "./Field";

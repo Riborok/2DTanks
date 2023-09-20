@@ -1,4 +1,4 @@
-import {SizeConstants} from "../../constants/gameConstants";
+import {ResolutionManager} from "../../constants/gameConstants";
 import {IComponent} from "../IComponent";
 
 export interface ITurret extends IComponent{
@@ -8,7 +8,7 @@ export interface ITurret extends IComponent{
 }
 
 export function getTurretWidth(turret: ITurret): number {
-    return SizeConstants.TURRET_WIDTH[turret.num];
+    return ResolutionManager.TURRET_WIDTH[turret.num];
 }
 
 export class TurretModel0 implements ITurret{

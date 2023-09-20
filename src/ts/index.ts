@@ -18,12 +18,12 @@ import {
     VK_V,
     VK_W
 } from "./constants/keyCodes";
-import {SizeConstants} from "./constants/gameConstants";
+import {ResolutionManager} from "./constants/gameConstants";
 
 window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
 
 const canvas = document.querySelector('#canvas');
-SizeConstants.setResolutionResizeCoeff();
+ResolutionManager.setResolutionResizeCoeff();
 
 const gameMaster : IGameMaster = new GameMaster(canvas, window.screen.width, window.screen.height);
 gameMaster.createField(1,2);
