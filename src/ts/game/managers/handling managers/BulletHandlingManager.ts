@@ -7,7 +7,7 @@ import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
 import {IAnimationManager} from "../AnimationManager";
 import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
 import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
-import {IDTracker} from "../../id/IDTracker";
+import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, SizeConstants} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 import {BulletImpactAnimation} from "../../../sprite/animation/BulletImpactAnimation";
@@ -19,7 +19,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     public constructor(bulletManager: BulletMovementManager, field: Field, elements: Map<number, BulletElement>,
                        handlingManagers: Iterable<IElementManager<IElement>>,
                        animationManager: IAnimationManager) {
-        super(bulletManager, field, elements, IDTracker.isBullet);
+        super(bulletManager, field, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._animationManager = animationManager;
     }

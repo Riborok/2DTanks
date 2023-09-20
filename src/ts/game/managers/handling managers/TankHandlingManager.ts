@@ -9,7 +9,7 @@ import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
 import {Point} from "../../../geometry/Point";
 import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
 import {IKeyHandler} from "../../IKeyHandler";
-import {IDTracker} from "../../id/IDTracker";
+import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, SizeConstants} from "../../../constants/gameConstants";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
@@ -19,7 +19,7 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
     private readonly _KeyHandler: IKeyHandler;
     public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
                        addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
-        super(bulletManager, field, elements, IDTracker.isTank);
+        super(bulletManager, field, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;
         this._KeyHandler = keyHandler;

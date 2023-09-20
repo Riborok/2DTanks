@@ -1,7 +1,7 @@
 import {IEntity} from "../../entitiy/IEntity";
 import {ICollisionDetection} from "../../entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
-import {IDTracker} from "../id/IDTracker";
+import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
 import {CollisionPack} from "../../additionally/type";
 
@@ -32,7 +32,7 @@ export class CollisionManager implements ICollisionManager {
         return collisionPacks.length !== 0 ? collisionPacks : null;
     }
     private processCollision(receivingEntity: IEntity) {
-        if (IDTracker.isWall(receivingEntity.id))
+        if (ModelIDTracker.isWall(receivingEntity.id))
             this._wallsForProcessing.push(receivingEntity.id);
     }
 }
