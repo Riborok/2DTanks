@@ -8,7 +8,7 @@ import {IAnimationManager} from "../AnimationManager";
 import {AnimationMaker} from "../../../sprite/animation/AnimationMaker";
 import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
 import {IDTracker} from "../../id/IDTracker";
-import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, BULLET_HEIGHT, BULLET_WIDTH} from "../../../constants/gameConstants";
+import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, SizeConstants} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 import {BulletImpactAnimation} from "../../../sprite/animation/BulletImpactAnimation";
 
@@ -48,8 +48,8 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 this.playImpactAnimation(
                     collisionPack.collisionPoint,
                     bulletCollisionData.bulletElement.model.entity.angle + Math.PI,
-                    BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
-                    BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
+                    SizeConstants.BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
+                    SizeConstants.BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
                     num
                 )
 

@@ -1,4 +1,5 @@
 import {Sprite} from "../Sprite";
+import {SizeConstants} from "../../constants/gameConstants";
 
 export class SpriteAcceleration extends Sprite {
     private static readonly DEFAULT_SRC : string = 'src/img/tanks/Effects/Movement/Movement_';
@@ -24,9 +25,8 @@ export class SpriteAcceleration extends Sprite {
         `${this.DEFAULT_SRC}18.png`,
         `${this.DEFAULT_SRC}19.png`
     ];
-    public static readonly SIZE: number = 85;
     public constructor() {
-        super(SpriteAcceleration.SIZE, SpriteAcceleration.SIZE, `5`);
+        super(SizeConstants.ACCELERATION_SIZE, SizeConstants.ACCELERATION_SIZE, `5`);
         this._sprite.src = SpriteAcceleration.SRC[0];
     }
     public setSrc(state: number) {

@@ -1,7 +1,7 @@
 import {IBullet, LightBullet} from "../../components/bullet/IBullet";
 import {BulletModel} from "./BulletModel";
 import {RectangularEntity} from "../../entitiy/IEntity";
-import {BULLET_HEIGHT, BULLET_WIDTH} from "../../constants/gameConstants";
+import {SizeConstants} from "../../constants/gameConstants";
 import {IDTracker} from "../../game/id/IDTracker";
 import {Point} from "../../geometry/Point";
 import {IWeapon} from "../../components/tank parts/IWeapon";
@@ -14,8 +14,8 @@ export class BulletModelCreator {
 
         const newPoint = BulletModelCreator.calcDefaultEntityPoint(num, point, angle);
 
-        const entity = new RectangularEntity(newPoint, BULLET_WIDTH[num], BULLET_HEIGHT[num],
-            angle, bullet.mass, IDTracker.bulletId);
+        const entity = new RectangularEntity(newPoint, SizeConstants.BULLET_WIDTH[num],
+            SizeConstants.BULLET_HEIGHT[num], angle, bullet.mass, IDTracker.bulletId);
 
         const speed = bullet.startingSpeed * weapon.startingSpeedCoeff;
         entity.velocity.x = speed * Math.cos(angle);
@@ -29,14 +29,14 @@ export class BulletModelCreator {
     }
     private static calcDefaultEntityPoint(num: number, point: Point, angle: number): Point{
         const newPoint: Point = new Point(
-            point.x + BULLET_HEIGHT[num] / 2 * Math.sin(angle),
-            point.y - BULLET_HEIGHT[num] / 2 * Math.cos(angle)
+            point.x + SizeConstants.BULLET_HEIGHT[num] / 2 * Math.sin(angle),
+            point.y - SizeConstants.BULLET_HEIGHT[num] / 2 * Math.cos(angle)
         );
 
         const sin = Math.sin(angle);
         const cos = Math.cos(angle);
-        const center = new Point(newPoint.x + BULLET_WIDTH[num] / 2 * cos - BULLET_HEIGHT[num] / 2 * sin,
-            newPoint.y + BULLET_HEIGHT[num] / 2 * cos + BULLET_WIDTH[num] / 2 * sin);
+        const center = new Point(newPoint.x + SizeConstants.BULLET_WIDTH[num] / 2 * cos - SizeConstants.BULLET_HEIGHT[num] / 2 * sin,
+            newPoint.y + SizeConstants.BULLET_HEIGHT[num] / 2 * cos + SizeConstants.BULLET_WIDTH[num] / 2 * sin);
         PointRotator.rotatePointAroundTarget(newPoint, center, -sin, cos);
 
         return newPoint;

@@ -1,6 +1,7 @@
 import {Point} from "../../../geometry/Point";
 import {SpriteManipulator} from "../../SpriteManipulator";
 import {SpriteAcceleration} from "../../effects/SpriteAcceleration";
+import {SizeConstants} from "../../../constants/gameConstants";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;
@@ -64,9 +65,9 @@ export class TankAcceleration {
     private calcPosition(point: Point, sin: number, cos: number, indentY: number): Point {
         return new Point(
             point.x + this._indentX * cos - indentY * sin -
-            SpriteAcceleration.SIZE / 2 * cos + SpriteAcceleration.SIZE / 1.517 * sin,
+            SizeConstants.ACCELERATION_SIZE / 2 * cos + SizeConstants.ACCELERATION_SIZE / 1.517 * sin,
             point.y + indentY * cos + this._indentX * sin -
-            SpriteAcceleration.SIZE / 1.517 * cos - SpriteAcceleration.SIZE / 2 * sin
+            SizeConstants.ACCELERATION_SIZE / 1.517 * cos - SizeConstants.ACCELERATION_SIZE / 2 * sin
         );
     }
 }

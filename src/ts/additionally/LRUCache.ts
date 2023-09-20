@@ -1,4 +1,5 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "./data structures/IDoublyLinkedList";
+import {roundNumber} from "./additionalFunc";
 
 /**
  * A generic class for caching values based on keys.
@@ -72,7 +73,7 @@ class TrigCache {
      * @returns The cached sine value or a newly calculated sine value.
      */
     public static sin(angle: number): number {
-        const normalizedAngle = this.roundNumber(this.normalizeAngle(angle), 10000);
+        const normalizedAngle = roundNumber(this.normalizeAngle(angle), 10000);
 
         if (normalizedAngle <= this.HALF_PI)
             return this.SIN_CACHE.getValue(normalizedAngle);
@@ -91,7 +92,7 @@ class TrigCache {
      * @returns The cached cosine value or a newly calculated cosine value.
      */
     public static cos(angle: number): number {
-        const normalizedAngle = this.roundNumber(this.normalizeAngle(angle), 10000);
+        const normalizedAngle = roundNumber(this.normalizeAngle(angle), 10000);
 
         if (normalizedAngle <= this.HALF_PI)
             return this.COS_CACHE.getValue(normalizedAngle);
@@ -119,12 +120,8 @@ class TrigCache {
             else
                 return 0;
         }
-        const result = this.ATAN_CACHE.getValue(this.roundNumber(y / x, 100));
+        const result = this.ATAN_CACHE.getValue(roundNumber(y / x, 100));
         return (x < 0) ? this.PI + result : result;
-    }
-
-    private static roundNumber(number: number, rounding: number): number {
-        return Math.round(number * rounding) / rounding;
     }
     private static normalizeAngle(angle: number): number {
         return angle >= 0 ? angle % this.TWO_PI : (angle % this.TWO_PI) + this.TWO_PI;

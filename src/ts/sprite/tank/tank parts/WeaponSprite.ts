@@ -1,12 +1,12 @@
 import {ISpritePart, Sprite} from "../../Sprite";
 import {Point} from "../../../geometry/Point";
-import {WEAPON_HEIGHT, WEAPON_WIDTH} from "../../../constants/gameConstants";
+import {SizeConstants} from "../../../constants/gameConstants";
 
 export class WeaponSprite extends Sprite implements ISpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(num: number, indentX: number, indentY: number) {
-        super(WEAPON_WIDTH[num], WEAPON_HEIGHT[num], `6`);
+        super(SizeConstants.WEAPON_WIDTH[num], SizeConstants.WEAPON_HEIGHT[num], `6`);
         this._sprite.src = `src/img/tanks/Weapons/Weapon_${num}.png`;
         this._indentX = indentX;
         this._indentY = indentY;

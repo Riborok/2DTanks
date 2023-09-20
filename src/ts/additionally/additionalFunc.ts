@@ -46,3 +46,6 @@ export function remapValueToRange(value: number, currentRangeMin: number, curren
                            targetRangeMax: number): number {
     return (value - currentRangeMin) / (currentRangeMax - currentRangeMin) * (targetRangeMax - targetRangeMin) + targetRangeMin;
 }
+export function roundNumber(number: number, rounding: number): number {
+    return Math.round(number * rounding) / rounding;
+}
