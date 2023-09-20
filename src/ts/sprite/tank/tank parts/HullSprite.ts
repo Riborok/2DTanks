@@ -1,5 +1,5 @@
 import {ISpritePart, Sprite} from "../../Sprite";
-import {ACCELERATION_EFFECT_INDENT_X, SizeConstants} from "../../../constants/gameConstants";
+import {SizeConstants} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 
 export class HullSprite extends Sprite implements ISpritePart {
@@ -7,7 +7,7 @@ export class HullSprite extends Sprite implements ISpritePart {
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
         super(SizeConstants.HULL_WIDTH[num], SizeConstants.HULL_HEIGHT[num], `5`);
-        this._accelerationEffectIndentX = ACCELERATION_EFFECT_INDENT_X[num];
+        this._accelerationEffectIndentX = SizeConstants.ACCELERATION_EFFECT_INDENT_X[num];
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
     }
     /**

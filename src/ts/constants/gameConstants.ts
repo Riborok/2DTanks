@@ -18,56 +18,61 @@ export class SizeConstants{
     public static BULLET_HEIGHT: number[] = [5, 8, 10, 6, 8];
     public static ACCELERATION_SIZE: number = 85;
     public static EXPLOSION_SIZE: number = 120;
+    public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
     public static setResolutionResizeCoeff(){
-        this.resizeWidthCoeff = window.screen.width / this.DEVELOPING_SCREEN_WIDTH;
-        this.resizeHeightCoeff = window.screen.height / this.DEVELOPING_SCREEN_HEIGHT;
+        SizeConstants.resizeWidthCoeff = window.screen.width / SizeConstants.DEVELOPING_SCREEN_WIDTH;
+        SizeConstants.resizeHeightCoeff = window.screen.height / SizeConstants.DEVELOPING_SCREEN_HEIGHT;
 
         SizeConstants.resizeConstants();
     }
     private static resizeWidthForCurrentResolution(width: number): number{
-        return (width * this.resizeWidthCoeff);
+        return (width * SizeConstants.resizeWidthCoeff);
     }
     private static resizeHeightForCurrentResolution(height: number): number{
-        return (height * this.resizeHeightCoeff);
+        return (height * SizeConstants.resizeHeightCoeff);
     }
     private static resizeConstants(){
-        SizeConstants.BACKGROUND_SIZE = Math.round(this.resizeWidthForCurrentResolution(SizeConstants.BACKGROUND_SIZE));
-        for (let i = 0; i < this.WALL_WIDTH.length; i++) {
-            this.WALL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.WALL_WIDTH[i]));
+        SizeConstants.BACKGROUND_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.BACKGROUND_SIZE));
+        for (let i = 0; i < SizeConstants.WALL_WIDTH.length; i++) {
+            SizeConstants.WALL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.WALL_WIDTH[i]));
         }
-        for (let i = 0; i < this.WALL_HEIGHT.length; i++) {
-            this.WALL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(this.WALL_HEIGHT[i]));
+        for (let i = 0; i < SizeConstants.WALL_HEIGHT.length; i++) {
+            SizeConstants.WALL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.WALL_HEIGHT[i]));
         }
         SizeConstants.TRACK_INDENT = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.TRACK_INDENT));
-        for (let i = 0; i < this.HULL_WIDTH.length; i++) {
-            this.HULL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.HULL_WIDTH[i]));
+        for (let i = 0; i < SizeConstants.HULL_WIDTH.length; i++) {
+            SizeConstants.HULL_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.HULL_WIDTH[i]));
         }
-        for (let i = 0; i < this.HULL_HEIGHT.length; i++) {
-            this.HULL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(this.HULL_HEIGHT[i]));
+        for (let i = 0; i < SizeConstants.HULL_HEIGHT.length; i++) {
+            SizeConstants.HULL_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.HULL_HEIGHT[i]));
         }
-        for (let i = 0; i < this.TURRET_INDENT_X.length; i++) {
-            this.TURRET_INDENT_X[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.TURRET_INDENT_X[i]));
+        for (let i = 0; i < SizeConstants.TURRET_INDENT_X.length; i++) {
+            SizeConstants.TURRET_INDENT_X[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.TURRET_INDENT_X[i]));
         }
-        for (let i = 0; i < this.TURRET_WIDTH.length; i++) {
-            this.TURRET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.TURRET_WIDTH[i]));
+        for (let i = 0; i < SizeConstants.TURRET_WIDTH.length; i++) {
+            SizeConstants.TURRET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.TURRET_WIDTH[i]));
         }
-        for (let i = 0; i < this.TURRET_HEIGHT.length; i++) {
-            this.TURRET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(this.TURRET_HEIGHT[i]));
+        for (let i = 0; i < SizeConstants.TURRET_HEIGHT.length; i++) {
+            SizeConstants.TURRET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.TURRET_HEIGHT[i]));
         }
-        for (let i = 0; i < this.WEAPON_WIDTH.length; i++) {
-            this.WEAPON_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.WEAPON_WIDTH[i]));
+        for (let i = 0; i < SizeConstants.WEAPON_WIDTH.length; i++) {
+            SizeConstants.WEAPON_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.WEAPON_WIDTH[i]));
         }
-        for (let i = 0; i < this.WEAPON_HEIGHT.length; i++) {
-            this.WEAPON_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(this.WEAPON_HEIGHT[i]));
+        for (let i = 0; i < SizeConstants.WEAPON_HEIGHT.length; i++) {
+            SizeConstants.WEAPON_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.WEAPON_HEIGHT[i]));
         }
-        for (let i = 0; i < this.BULLET_WIDTH.length; i++) {
-            this.BULLET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(this.BULLET_WIDTH[i]));
+        for (let i = 0; i < SizeConstants.BULLET_WIDTH.length; i++) {
+            SizeConstants.BULLET_WIDTH[i] = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.BULLET_WIDTH[i]));
         }
-        for (let i = 0; i < this.BULLET_HEIGHT.length; i++) {
-            this.BULLET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(this.BULLET_HEIGHT[i]));
+        for (let i = 0; i < SizeConstants.BULLET_HEIGHT.length; i++) {
+            SizeConstants.BULLET_HEIGHT[i] = Math.round(SizeConstants.resizeHeightForCurrentResolution(SizeConstants.BULLET_HEIGHT[i]));
         }
         SizeConstants.ACCELERATION_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.ACCELERATION_SIZE));
         SizeConstants.EXPLOSION_SIZE = Math.round(SizeConstants.resizeWidthForCurrentResolution(SizeConstants.EXPLOSION_SIZE));
+        for (let i = 0; i < SizeConstants.ACCELERATION_EFFECT_INDENT_X.length; i++) {
+            SizeConstants.ACCELERATION_EFFECT_INDENT_X[i] =
+                SizeConstants.resizeWidthForCurrentResolution(SizeConstants.ACCELERATION_EFFECT_INDENT_X[i]);
+        }
     }
 }
 export const ANGLE_EPSILON: number = Math.PI / 180;
@@ -77,5 +82,4 @@ export const WALL_MASS: number[][] = [[4, 2], [5.5, 2.5], [7, 3]];
 export const RESISTANCE_COEFFICIENT: number[] = [0.55, 0.7, 0.85];
 export const AIR_RESISTANCE_COEFFICIENT: number = 0.0000015;
 export const BULLET_ANIMATION_SIZE_INCREASE_COEFF: number = 5;
-export const ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
 export const GRAVITY_ACCELERATION: number = 0.01;
