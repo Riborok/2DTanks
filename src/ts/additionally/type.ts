@@ -1,6 +1,11 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
 
+export type Size = {
+    width: number,
+    height: number
+}
+
 export type MotionData = {
     finishSpeed: number;
     force: number;

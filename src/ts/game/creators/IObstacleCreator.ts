@@ -1,6 +1,6 @@
 import {SizeConstants, WALL_MASS} from "../../constants/gameConstants";
 import {RectangularEntity} from "../../entitiy/IEntity";
-import {IDTracker} from "../id/IDTracker";
+import {ModelIDTracker} from "../id/ModelIDTracker";
 import {WallElement} from "../elements/WallElement";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
 import {WallModel} from "../../model/obstacle/WallModel";
@@ -48,7 +48,7 @@ export class ObstacleCreator {
                              shapeNum: number, hasMass: boolean = false) : WallElement {
         const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : Infinity;
         const model = new WallModel(new RectangularEntity(point,
-            SizeConstants.WALL_WIDTH[shapeNum], SizeConstants.WALL_HEIGHT[shapeNum], angle, mass, IDTracker.wallId));
+            SizeConstants.WALL_WIDTH[shapeNum], SizeConstants.WALL_HEIGHT[shapeNum], angle, mass, ModelIDTracker.wallId));
 
         const sprite = new WallSprite(materialNum, shapeNum);
         sprite.setPosition(point);

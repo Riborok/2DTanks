@@ -3,12 +3,12 @@ import {WallElement} from "../../elements/WallElement";
 import {WallMovementManager} from "../movement managers/WallMovementManager";
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
 import {Field} from "../../Field";
-import {IDTracker} from "../../id/IDTracker";
+import {ModelIDTracker} from "../../id/ModelIDTracker";
 
 export class WallHandlingManager extends HandlingManager<WallElement, WallMovementManager> {
     private readonly _wallToProcess: IDoublyLinkedList<WallElement> = new DoublyLinkedList<WallElement>();
     public constructor(wallMovementManager: WallMovementManager, field: Field, elements: Map<number, WallElement>) {
-        super(wallMovementManager, field, elements, IDTracker.isWall);
+        super(wallMovementManager, field, elements, ModelIDTracker.isWall);
     }
     private addToProcess(): void {
         const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;

@@ -1,8 +1,6 @@
-import {roundNumber} from "../additionally/additionalFunc";
-
 export class SizeConstants{
-    private static resizeWidthCoeff: number;
-    private static resizeHeightCoeff: number;
+    private static resizeWidthCoeff: number = 1;
+    private static resizeHeightCoeff: number = 1;
     private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
     private static readonly DEVELOPING_SCREEN_HEIGHT: number = 1080;
     public static BACKGROUND_SIZE: number = 115;
@@ -20,9 +18,9 @@ export class SizeConstants{
     public static BULLET_HEIGHT: number[] = [5, 8, 10, 6, 8];
     public static ACCELERATION_SIZE: number = 85;
     public static EXPLOSION_SIZE: number = 120;
-    public static calcResolutionResizeCoeff(screenWidth: number, screenHeight: number){
-        this.resizeWidthCoeff = screenWidth / this.DEVELOPING_SCREEN_WIDTH;
-        this.resizeHeightCoeff = screenHeight / this.DEVELOPING_SCREEN_HEIGHT;
+    public static setResolutionResizeCoeff(){
+        this.resizeWidthCoeff = window.screen.width / this.DEVELOPING_SCREEN_WIDTH;
+        this.resizeHeightCoeff = window.screen.height / this.DEVELOPING_SCREEN_HEIGHT;
 
         SizeConstants.resizeConstants();
     }

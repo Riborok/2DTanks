@@ -21,6 +21,7 @@ import {HandlingManager} from "./managers/handling managers/HandlingManager";
 import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./IGameLoop";
+import {Size} from "../additionally/type";
 
 export interface IGameMaster {
     get gameLoop(): IGameLoop;
@@ -32,6 +33,7 @@ export class GameMaster implements IGameMaster {
     private readonly _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
     private readonly _gameLoop: IGameLoop = new GameLoop();
     private readonly _field: Field;
+    private readonly _size: Size;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
     private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
@@ -42,9 +44,8 @@ export class GameMaster implements IGameMaster {
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
     public constructor(canvas: Element, width: number, height: number) {
-        this._field = new Field(canvas, width, height);
-
-        SizeConstants.calcResolutionResizeCoeff(width, height);
+        this._field = new Field(canvas);
+        this._size = { width, height };
 
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
@@ -96,14 +97,13 @@ export class GameMaster implements IGameMaster {
         }
     }
     private createBackgroundSprites(material: number) {
-        DecorCreator.fullFillBackground(material, this._field.width, this._field.height, this._backgroundSprites);
+        DecorCreator.fullFillBackground(material, this._size, this._backgroundSprites);
 
         for (const backgroundSprite of this._backgroundSprites)
             this._field.canvas.appendChild(backgroundSprite.sprite);
     }
     private createWalls(material: number) {
-        const width = this._field.width;
-        const height = this._field.height;
+        const { width, height } = this._size;
         this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, width, height));
 
         // Additional walls

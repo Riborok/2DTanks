@@ -2,7 +2,7 @@ import {IBullet, LightBullet} from "../../components/bullet/IBullet";
 import {BulletModel} from "./BulletModel";
 import {RectangularEntity} from "../../entitiy/IEntity";
 import {SizeConstants} from "../../constants/gameConstants";
-import {IDTracker} from "../../game/id/IDTracker";
+import {ModelIDTracker} from "../../game/id/ModelIDTracker";
 import {Point} from "../../geometry/Point";
 import {IWeapon} from "../../components/tank parts/IWeapon";
 import {PointRotator} from "../../geometry/PointRotator";
@@ -15,7 +15,7 @@ export class BulletModelCreator {
         const newPoint = BulletModelCreator.calcDefaultEntityPoint(num, point, angle);
 
         const entity = new RectangularEntity(newPoint, SizeConstants.BULLET_WIDTH[num],
-            SizeConstants.BULLET_HEIGHT[num], angle, bullet.mass, IDTracker.bulletId);
+            SizeConstants.BULLET_HEIGHT[num], angle, bullet.mass, ModelIDTracker.bulletId);
 
         const speed = bullet.startingSpeed * weapon.startingSpeedCoeff;
         entity.velocity.x = speed * Math.cos(angle);
