@@ -6,10 +6,10 @@ import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
 import {TankSpriteParts} from "../TankSpriteParts";
 import {TopTrackSprite} from "../tank parts/TrackSprite";
 import {TireTrackSprite} from "../../effects/TireTrackSprite";
-import {ISprite, Sprite} from "../../Sprite";
+import {ISprite, IVanish, Sprite} from "../../Sprite";
 import {IStorage} from "../../../additionally/type";
 
-export type TirePair = { topTire: ISprite, bottomTire: ISprite }
+export type TirePair = { topTire: IVanish, bottomTire: IVanish }
 
 export enum directionMovement {
     dirForward = 1,

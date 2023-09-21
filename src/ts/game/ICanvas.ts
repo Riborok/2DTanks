@@ -1,4 +1,4 @@
-import {ISprite} from "../sprite/Sprite";
+import {isImplementsIScalable, isImplementsIVanish, ISprite} from "../sprite/Sprite";
 import {SpriteIDTracker} from "./id/SpriteIDTracker";
 import {IStorage, Size} from "../additionally/type";
 import {IIdentifiable} from "./id/IIdentifiable";
@@ -8,10 +8,10 @@ export interface IDrawable {
 }
 
 export interface IStorageWithIdRemoval<T extends IIdentifiable> extends IStorage<T> {
-    removeById(identifiable: IIdentifiable): void;
+    removeById(identifiable: T): void;
 }
 
-export interface ICanvas extends IDrawable, IStorageWithIdRemoval<ISprite>{
+export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>{
 }
 
 export class Canvas implements ICanvas {
@@ -63,13 +63,14 @@ export class Canvas implements ICanvas {
         const halfWidth = sprite.width / 2;
         const halfHeight = sprite.height / 2;
 
-        if (sprite.opacity !== 1)
+        if (isImplementsIVanish(sprite))
             this._bufferCtx.globalAlpha = sprite.opacity;
-        if (sprite.scaleX !== 1 || sprite.scaleY !== 1)
-            this._bufferCtx.scale(sprite.scaleX, sprite.scaleY);
 
         this._bufferCtx.translate(sprite.point.x + halfWidth, sprite.point.y + halfHeight);
         this._bufferCtx.rotate(sprite.angle);
+
+        if (isImplementsIScalable(sprite))
+            this._bufferCtx.scale(sprite.scaleX, sprite.scaleY);
 
         this._bufferCtx.drawImage(sprite.sprite, -halfWidth, -halfHeight, sprite.width, sprite.height);
 

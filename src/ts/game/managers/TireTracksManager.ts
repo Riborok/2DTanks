@@ -2,6 +2,8 @@ import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data struc
 import {TirePair} from "../../sprite/tank/tank effects/TankTireTrack";
 import {IStorage} from "../../additionally/type";
 import {ISprite} from "../../sprite/Sprite";
+import {IStorageWithIdRemoval} from "../ICanvas";
+import {IIdentifiable} from "../id/IIdentifiable";
 
 export interface ITireTracksManager {
     get vanishingListOfTirePairs(): IDoublyLinkedList<TirePair>;
@@ -12,8 +14,8 @@ export class TireTracksManager implements ITireTracksManager {
     private _vanishingListOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>()
     private static readonly MIN_REDUCING_OPACITY_NUMBER: number = 0.0001;
     private tanksAmount: number = 0;
-    private _storage: IStorage<ISprite>;
-    public constructor(storage: IStorage<ISprite>) { this._storage = storage }
+    private _storage: IStorageWithIdRemoval<IIdentifiable>;
+    public constructor(storage: IStorageWithIdRemoval<IIdentifiable>) { this._storage = storage }
     public get vanishingListOfTirePairs(): IDoublyLinkedList<TirePair> {
         this.tanksAmount++;
         return this._vanishingListOfTirePairs

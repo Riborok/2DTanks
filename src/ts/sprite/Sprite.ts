@@ -9,14 +9,35 @@ export interface ISprite extends IIdentifiable {
 
     get point(): Point;
     get angle(): number;
-    get scaleX(): number;
-    get scaleY(): number;
-    get opacity(): number;
 
     set point(value: Point);
     set angle(value: number);
-    set opacity(value: number);
 }
+
+export interface IVanish extends IIdentifiable {
+    set opacity(value: number);
+    get opacity(): number;
+}
+export function isImplementsIVanish(obj: any): obj is IVanish {
+    return (
+        'opacity' in obj &&
+        typeof obj.opacity === 'number'
+    );
+}
+
+export interface IScalable {
+    get scaleX(): number;
+    get scaleY(): number;
+}
+export function isImplementsIScalable(obj: any): obj is IScalable {
+    return (
+        'scaleX' in obj &&
+        'scaleY' in obj &&
+        typeof obj.scaleX === 'number' &&
+        typeof obj.scaleY === 'number'
+    );
+}
+
 
 export abstract class Sprite implements ISprite {
     protected _sprite: HTMLImageElement;
@@ -24,9 +45,6 @@ export abstract class Sprite implements ISprite {
 
     protected _point: Point;
     protected _angle: number;
-    protected _scaleX: number = 1;
-    protected _scaleY: number = 1;
-    protected _opacity: number = 1;
     protected constructor(width: number, height: number, zIndex: number) {
         this._sprite = new Image(width, height);
         this._sprite.classList.add('sprite');
@@ -39,13 +57,9 @@ export abstract class Sprite implements ISprite {
 
     public get point(): Point { return this._point }
     public get angle(): number { return this._angle }
-    public get scaleX(): number { return this._scaleX }
-    public get scaleY(): number { return this._scaleY }
-    public get opacity(): number { return this._opacity }
 
     public set point(value: Point) { this._point = value }
     public set angle(value: number) { this._angle = value }
-    public set opacity(value: number) { this._opacity = value }
 }
 
 export interface ISpritePart {

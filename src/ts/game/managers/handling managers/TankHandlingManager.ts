@@ -9,18 +9,20 @@ import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/Sprite";
 import {ITankAnimator, TankAnimator} from "../animation managers/Animators";
+import {IStorageWithIdRemoval} from "../../ICanvas";
+import {IIdentifiable} from "../../id/IIdentifiable";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager;
     private readonly _addBulletElement: IAddModel<BulletModel>;
     private readonly _tankAnimator: ITankAnimator;
     private readonly _KeyHandler: IKeyHandler;
-    public constructor(bulletManager: TankMovementManager, storage: IStorage<ISprite>, elements: Map<number, TankElement>,
+    public constructor(bulletManager: TankMovementManager, storage: IStorageWithIdRemoval<IIdentifiable>, elements: Map<number, TankElement>,
                        addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
         super(bulletManager, storage, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
-        this._tankAnimator = new TankAnimator(animationManager);
         this._KeyHandler = keyHandler;
+        this._tankAnimator = new TankAnimator(animationManager);
         this._tireTracksManager = new TireTracksManager(storage);
     }
     public handle(deltaTime: number): void {
