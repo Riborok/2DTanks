@@ -1,8 +1,9 @@
 import {Point} from "../../../geometry/Point";
 import {SpriteManipulator} from "../../SpriteManipulator";
 import {SpriteAcceleration} from "../../effects/SpriteAcceleration";
-import {ResolutionManager} from "../../../constants/gameConstants";
-import {Canvas} from "../../../game/Canvas";
+import {ResolutionManager} from "../../../constants/gameConstants"
+import {IStorage} from "../../../additionally/type";
+import {ISprite} from "../../Sprite";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;
@@ -14,11 +15,11 @@ export class TankAcceleration {
 
     private _counter: number = 0;
     private _state: number = 0;
-    private readonly _canvas: Canvas;
+    private readonly _storage: IStorage<ISprite>;
     private readonly _indentX: number;
     private readonly _tankHeight: number;
-    public constructor(canvas: Canvas, indentX: number, tankHeight: number) {
-        this._canvas = canvas;
+    public constructor(storage: IStorage<ISprite>, indentX: number, tankHeight: number) {
+        this._storage = storage;
         this._indentX = indentX;
         this._tankHeight = tankHeight;
     }
@@ -36,8 +37,8 @@ export class TankAcceleration {
     }
     public setPosition(hullDefaultPoint: Point, sin: number, cos: number, hullAngle: number) {
         if (this._state === 0 && this._counter === 0) {
-            this._canvas.insert(this._topSpriteAccelerationEffect);
-            this._canvas.insert(this._bottomSpriteAccelerationEffect);
+            this._storage.insert(this._topSpriteAccelerationEffect);
+            this._storage.insert(this._bottomSpriteAccelerationEffect);
         }
         this.changeState();
 
@@ -60,8 +61,8 @@ export class TankAcceleration {
         topSpriteAccelerationEffect.setSrc(this._state);
         bottomSpriteAccelerationEffect.setSrc(this._state);
 
-        this._canvas.remove(this._topSpriteAccelerationEffect);
-        this._canvas.remove(this._bottomSpriteAccelerationEffect);
+        this._storage.remove(this._topSpriteAccelerationEffect);
+        this._storage.remove(this._bottomSpriteAccelerationEffect);
     }
     private calcPosition(point: Point, sin: number, cos: number, indentY: number): Point {
         return new Point(

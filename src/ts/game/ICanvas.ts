@@ -1,14 +1,25 @@
 import {ISprite} from "../sprite/Sprite";
 import {SpriteIDTracker} from "./id/SpriteIDTracker";
+import {IStorage, Size} from "../additionally/type";
 import {IIdentifiable} from "./id/IIdentifiable";
-import {Size} from "../additionally/type";
 
-export class Canvas {
+export interface IDrawable {
+    drawAll(): void;
+}
+
+export interface IStorageWithIdRemoval<T extends IIdentifiable> extends IStorage<T> {
+    removeById(identifiable: IIdentifiable): void;
+}
+
+export interface ICanvas extends IDrawable, IStorageWithIdRemoval<ISprite>{
+}
+
+export class Canvas implements ICanvas {
     private readonly _ctx: CanvasRenderingContext2D;
     private readonly _size: Size;
-    private readonly _sprites: Map<number, ISprite>[] = [];
     private readonly _bufferCanvas: HTMLCanvasElement;
     private readonly _bufferCtx: CanvasRenderingContext2D;
+    private _sprites: Map<number, ISprite>[] = [];
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
 
@@ -26,7 +37,10 @@ export class Canvas {
 
         this._sprites[zIndex].set(sprite.id, sprite);
     }
-    public remove(identifiable: IIdentifiable) {
+    public remove(sprite: ISprite) {
+        this.removeById(sprite);
+    }
+    public removeById(identifiable: IIdentifiable) {
         const zIndex = SpriteIDTracker.extractZIndex(identifiable.id);
 
         this._sprites[zIndex].delete(identifiable.id);
@@ -39,6 +53,9 @@ export class Canvas {
                 this.draw(sprite);
 
         this._ctx.drawImage(this._bufferCanvas, 0, 0);
+    }
+    public clear() {
+        this._sprites = [];
     }
     private draw(sprite: ISprite) {
         this._bufferCtx.save();

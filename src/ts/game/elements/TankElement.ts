@@ -5,11 +5,10 @@ import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {IEntity, RectangularEntity} from "../../entitiy/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
-import {Control} from "../../additionally/type";
+import {Control, IStorage} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
-import {IStorage} from "../../entitiy/IEntityCollisionSystem";
-import {Canvas} from "../Canvas";
+import {ISprite} from "../../sprite/Sprite";
 
 export class TankElement implements IElement {
     private readonly _model: TankModel;
@@ -38,27 +37,27 @@ export class TankElement implements IElement {
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum),
             track.forwardData, track.backwardData);
     }
-    public spawn(canvas: Canvas, entityStorage: IStorage<IEntity>) {
+    public spawn(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
-        canvas.insert(tankSpriteParts.topTrackSprite);
-        canvas.insert(tankSpriteParts.bottomTrackSprite);
-        canvas.insert(tankSpriteParts.hullSprite);
-        canvas.insert(tankSpriteParts.weaponSprite);
-        canvas.insert(tankSpriteParts.turretSprite);
+        spriteStorage.insert(tankSpriteParts.topTrackSprite);
+        spriteStorage.insert(tankSpriteParts.bottomTrackSprite);
+        spriteStorage.insert(tankSpriteParts.hullSprite);
+        spriteStorage.insert(tankSpriteParts.weaponSprite);
+        spriteStorage.insert(tankSpriteParts.turretSprite);
 
         const entity = this._model.entity;
         entityStorage.insert(entity);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
-    public vanish(canvas: Canvas, entityStorage: IStorage<IEntity>) {
+    public vanish(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
         this._sprite.tankTireTrack.vanishFullTrack();
 
-        canvas.remove(tankSpriteParts.topTrackSprite);
-        canvas.remove(tankSpriteParts.bottomTrackSprite);
-        canvas.remove(tankSpriteParts.hullSprite);
-        canvas.remove(tankSpriteParts.weaponSprite);
-        canvas.remove(tankSpriteParts.turretSprite);
+        spriteStorage.remove(tankSpriteParts.topTrackSprite);
+        spriteStorage.remove(tankSpriteParts.bottomTrackSprite);
+        spriteStorage.remove(tankSpriteParts.hullSprite);
+        spriteStorage.remove(tankSpriteParts.weaponSprite);
+        spriteStorage.remove(tankSpriteParts.turretSprite);
 
         entityStorage.remove(this._model.entity);
     }

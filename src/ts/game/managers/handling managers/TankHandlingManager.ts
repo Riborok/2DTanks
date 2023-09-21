@@ -2,7 +2,6 @@ import {HandlingManager, IAddModel} from "./HandlingManager";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
-import {Canvas} from "../../Canvas";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../AnimationManager";
 import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
@@ -11,19 +10,21 @@ import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
 import {IKeyHandler} from "../../IKeyHandler";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, ResolutionManager} from "../../../constants/gameConstants";
+import {IStorage} from "../../../additionally/type";
+import {ISprite} from "../../../sprite/Sprite";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager;
     private readonly _addBulletElement: IAddModel<BulletModel>;
     private readonly _animationManager: IAnimationManager;
     private readonly _KeyHandler: IKeyHandler;
-    public constructor(bulletManager: TankMovementManager, canvas: Canvas, elements: Map<number, TankElement>,
+    public constructor(bulletManager: TankMovementManager, storage: IStorage<ISprite>, elements: Map<number, TankElement>,
                        addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
-        super(bulletManager, canvas, elements, ModelIDTracker.isTank);
+        super(bulletManager, storage, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;
         this._KeyHandler = keyHandler;
-        this._tireTracksManager = new TireTracksManager(canvas);
+        this._tireTracksManager = new TireTracksManager(storage);
     }
     public handle(deltaTime: number): void {
         this._tireTracksManager.reduceOpacity();
@@ -93,13 +94,13 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
             const sprite = element.sprite;
 
             const entity = element.model.entity;
-            sprite.spawnTireTracks(this._canvas, entity.points[0], entity.angle,
+            sprite.spawnTireTracks(this._storage, entity.points[0], entity.angle,
                 this._tireTracksManager.vanishingListOfTirePairs);
 
             sprite.spawnDriftSmoke(this._animationManager);
 
             const hullSprite = sprite.tankSpriteParts.hullSprite;
-            sprite.spawnTankAcceleration(this._canvas, hullSprite.accelerationEffectIndentX, hullSprite.height);
+            sprite.spawnTankAcceleration(this._storage, hullSprite.accelerationEffectIndentX, hullSprite.height);
         }
     }
 }

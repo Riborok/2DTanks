@@ -2,10 +2,9 @@ import {TankElement} from "../../elements/TankElement";
 import {ICollisionManager} from "../ICollisionManager";
 import {WallElement} from "../../elements/WallElement";
 import {IEntity} from "../../../entitiy/IEntity";
-import {IStorage} from "../../../entitiy/IEntityCollisionSystem";
 import {BulletElement} from "../../elements/BulletElement";
 import {IIdToProcessing} from "../IdToProcessing";
-import {BulletCollisionData} from "../../../additionally/type";
+import {BulletCollisionData, IStorage} from "../../../additionally/type";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
 export type Movement = (entity: IEntity) => void;

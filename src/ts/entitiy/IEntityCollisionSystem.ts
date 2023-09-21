@@ -1,12 +1,7 @@
 import {IEntity} from "./IEntity";
 import {CollisionDetector} from "../geometry/CollisionDetector";
 import {Point} from "../geometry/Point";
-
-export interface IStorage<T> {
-    insert(t: T): void;
-    remove(t: T): void;
-    clear(): void;
-}
+import {IStorage} from "../additionally/type";
 
 export interface ICollisionDetection {
     getCollisions(entity: IEntity): Iterable<IEntity>;

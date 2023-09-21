@@ -1,6 +1,12 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
 
+export interface IStorage<T> {
+    insert(t: T): void;
+    remove(t: T): void;
+    clear(): void;
+}
+
 export type Size = {
     width: number,
     height: number

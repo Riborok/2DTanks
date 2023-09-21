@@ -5,10 +5,10 @@ import {SpriteManipulator} from "../SpriteManipulator";
 import {IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TankAcceleration} from "./tank effects/TankAcceleration";
 import {TankTrackEffect} from "./tank effects/TankTrackEffect";
-import {MotionData} from "../../additionally/type";
+import {IStorage, MotionData} from "../../additionally/type";
 import {rotDirection, TankDrift} from "./tank effects/TankDrift";
 import {IAnimationManager} from "../../game/managers/AnimationManager";
-import {Canvas} from "../../game/Canvas";
+import {ISprite} from "../Sprite";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -23,12 +23,12 @@ export class TankSprite {
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
     public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
-    public spawnTankAcceleration(canvas: Canvas, indentX: number, tankHeight: number) {
-        this._tankAcceleration = new TankAcceleration(canvas, indentX, tankHeight);
+    public spawnTankAcceleration(storage: IStorage<ISprite>, indentX: number, tankHeight: number) {
+        this._tankAcceleration = new TankAcceleration(storage, indentX, tankHeight);
     }
     public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
-    public spawnTireTracks(canvas: Canvas, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>){
-        this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
+    public spawnTireTracks(storage: IStorage<ISprite>, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>){
+        this._tankTireTrack = new TankTireTrack(storage, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
 
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
