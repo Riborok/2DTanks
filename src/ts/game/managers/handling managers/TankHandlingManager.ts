@@ -3,26 +3,23 @@ import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 import {BulletModel} from "../../../model/bullet/BulletModel";
-import {IAnimationManager} from "../AnimationManager";
-import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
-import {Point} from "../../../geometry/Point";
-import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
+import {IAnimationManager} from "../animation managers/AnimationManager";
 import {IKeyHandler} from "../../IKeyHandler";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, ResolutionManager} from "../../../constants/gameConstants";
 import {IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/Sprite";
+import {ITankAnimator, TankAnimator} from "../animation managers/Animators";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager;
     private readonly _addBulletElement: IAddModel<BulletModel>;
-    private readonly _animationManager: IAnimationManager;
+    private readonly _tankAnimator: ITankAnimator;
     private readonly _KeyHandler: IKeyHandler;
     public constructor(bulletManager: TankMovementManager, storage: IStorage<ISprite>, elements: Map<number, TankElement>,
                        addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
         super(bulletManager, storage, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
-        this._animationManager = animationManager;
+        this._tankAnimator = new TankAnimator(animationManager);
         this._KeyHandler = keyHandler;
         this._tireTracksManager = new TireTracksManager(storage);
     }
@@ -72,21 +69,11 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
                 const bulletModel: BulletModel | null = tankElement.model.shot();
                 if (bulletModel) {
                     const num = tankElement.model.bulletNum;
-                    this.playShootAnimation(
-                        calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
-                        bulletModel.entity.angle,
-                        ResolutionManager.BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
-                        ResolutionManager.BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
-                        num
-                    );
+                    this._tankAnimator.createShootAnimation(bulletModel, num);
                     this._addBulletElement.addBulletModel(bulletModel, num);
                 }
             }
         }
-    }
-    private playShootAnimation(point: Point, angle: number, width: number, height: number, num: number){
-        const shootAnimation = new TankShootAnimation(point, angle, width, height, num);
-        this._animationManager.add(shootAnimation);
     }
     public add(elements: Iterable<TankElement>) {
         super.add(elements);
@@ -97,7 +84,7 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
             sprite.spawnTireTracks(this._storage, entity.points[0], entity.angle,
                 this._tireTracksManager.vanishingListOfTirePairs);
 
-            sprite.spawnDriftSmoke(this._animationManager);
+            sprite.spawnDriftSmoke(this._tankAnimator.animationManager);
 
             const hullSprite = sprite.tankSpriteParts.hullSprite;
             sprite.spawnTankAcceleration(this._storage, hullSprite.accelerationEffectIndentX, hullSprite.height);

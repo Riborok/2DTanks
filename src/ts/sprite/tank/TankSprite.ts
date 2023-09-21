@@ -7,7 +7,7 @@ import {TankAcceleration} from "./tank effects/TankAcceleration";
 import {TankTrackEffect} from "./tank effects/TankTrackEffect";
 import {IStorage, MotionData} from "../../additionally/type";
 import {rotDirection, TankDrift} from "./tank effects/TankDrift";
-import {IAnimationManager} from "../../game/managers/AnimationManager";
+import {IAnimationManager} from "../../game/managers/animation managers/AnimationManager";
 import {ISprite} from "../Sprite";
 
 export class TankSprite {

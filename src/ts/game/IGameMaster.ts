@@ -12,7 +12,7 @@ import {WallMovementManager} from "./managers/movement managers/WallMovementMana
 import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
 import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
 import {WallElement} from "./elements/WallElement";
-import {AnimationManager, IAnimationManager} from "./managers/AnimationManager";
+import {AnimationManager, IAnimationManager} from "./managers/animation managers/AnimationManager";
 import {BulletHandlingManager, BulletModelAdder} from "./managers/handling managers/BulletHandlingManager";
 import {BulletElement} from "./elements/BulletElement";
 import {BulletMovementManager} from "./managers/movement managers/BulletMovementManager";
