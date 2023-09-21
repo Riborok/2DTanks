@@ -3,7 +3,6 @@ import {clampAngle} from "../../../geometry/additionalFunc";
 import {BottomTankDriftAnimation, TopTankDriftAnimation} from "../../animation/TankDriftAnimation";
 import {IAnimationManager} from "../../../game/managers/AnimationManager";
 import {SpriteManipulator} from "../../SpriteManipulator";
-import {Canvas} from "../../../game/Canvas";
 
 export enum rotDirection{
     rotLeft = -1,

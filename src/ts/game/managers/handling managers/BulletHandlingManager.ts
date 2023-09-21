@@ -1,6 +1,5 @@
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletMovementManager} from "../movement managers/BulletMovementManager";
-import {Canvas} from "../../Canvas";
 import {IElement} from "../../elements/IElement";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
@@ -11,15 +10,17 @@ import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, ResolutionManager} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 import {BulletImpactAnimation} from "../../../sprite/animation/BulletImpactAnimation";
+import {IStorage} from "../../../additionally/type";
+import {ISprite} from "../../../sprite/Sprite";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
     private readonly _animationManager: IAnimationManager;
 
-    public constructor(bulletManager: BulletMovementManager, canvas: Canvas, elements: Map<number, BulletElement>,
+    public constructor(bulletManager: BulletMovementManager, storage: IStorage<ISprite>, elements: Map<number, BulletElement>,
                        handlingManagers: Iterable<IElementManager<IElement>>,
                        animationManager: IAnimationManager) {
-        super(bulletManager, canvas, elements, ModelIDTracker.isBullet);
+        super(bulletManager, storage, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._animationManager = animationManager;
     }
@@ -83,11 +84,11 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
 
 export class BulletModelAdder implements IAddModel<BulletModel> {
     private readonly _elements: Map<number, BulletElement>;
-    private readonly _canvas: Canvas;
+    private readonly _storage: IStorage<ISprite>;
     private readonly _bulletMovementManager: BulletMovementManager;
-    public constructor(elements: Map<number, BulletElement>, canvas: Canvas, bulletMovementManager: BulletMovementManager) {
+    public constructor(elements: Map<number, BulletElement>, storage: IStorage<ISprite>, bulletMovementManager: BulletMovementManager) {
         this._elements = elements;
-        this._canvas = canvas;
+        this._storage = storage;
         this._bulletMovementManager = bulletMovementManager;
     }
     public addBulletModel(bulletModel: BulletModel, num: number) {
@@ -95,7 +96,7 @@ export class BulletModelAdder implements IAddModel<BulletModel> {
             const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
             if (this._bulletMovementManager.checkForSpawn(bulletElements)) {
                 this._elements.set(bulletElements.id, bulletElements);
-                bulletElements.spawn(this._canvas, this._bulletMovementManager.entityStorage);
+                bulletElements.spawn(this._storage, this._bulletMovementManager.entityStorage);
             }
         }
     }

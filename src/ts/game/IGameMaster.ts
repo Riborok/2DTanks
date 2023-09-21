@@ -1,13 +1,12 @@
 import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
-import {Canvas} from "./Canvas";
+import {Canvas, ICanvas} from "./ICanvas";
 import {Quadtree} from "../entitiy/IEntityCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
 import {IKeyHandler, KeyHandler} from "./IKeyHandler";
 import {ObstacleCreator} from "./creators/IObstacleCreator";
-import {BackgroundSprite} from "../sprite/background/BackgroundSprite";
 import {Point} from "../geometry/Point";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
 import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
@@ -31,7 +30,7 @@ export interface IGameMaster {
 
 export class GameMaster implements IGameMaster {
     private readonly _gameLoop: IGameLoop;
-    private readonly _canvas: Canvas;
+    private readonly _canvas: ICanvas;
     private readonly _size: Size;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;

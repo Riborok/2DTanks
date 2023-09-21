@@ -7,7 +7,7 @@ import {TankSpriteParts} from "../TankSpriteParts";
 import {TopTrackSprite} from "../tank parts/TrackSprite";
 import {TireTrackSprite} from "../../effects/TireTrackSprite";
 import {ISprite, Sprite} from "../../Sprite";
-import {Canvas} from "../../../game/Canvas";
+import {IStorage} from "../../../additionally/type";
 
 export type TirePair = { topTire: ISprite, bottomTire: ISprite }
 
@@ -20,7 +20,7 @@ export enum directionMovement {
 export class TankTireTrack {
     private readonly _listOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>();
     private readonly _vanishingListOfTirePairs: IDoublyLinkedList<TirePair>;
-    private readonly _canvas: Canvas;
+    private readonly _storage: IStorage<ISprite>;
     private readonly _trackWidth: number;
     private readonly _trackHeight: number;
     private readonly _trackType: number;
@@ -34,9 +34,9 @@ export class TankTireTrack {
     private static readonly DIRECTION_ANGLE_DIFFERENCE: number = 0.6;
     private static readonly AMOUNT_OF_CHAINS: number = 10;
     public get chainWidth () { return this._chainWidth }
-    public constructor(canvas: Canvas, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>) {
+    public constructor(storage: IStorage<ISprite>, topTrackSprite: TopTrackSprite, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>) {
         this._vanishingListOfTirePairs = vanishingListOfTirePairs;
-        this._canvas = canvas;
+        this._storage = storage;
         this._trackWidth = topTrackSprite.width;
         this._trackHeight = topTrackSprite.height;
         this._trackType = topTrackSprite.num;
@@ -79,8 +79,8 @@ export class TankTireTrack {
             topTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
             bottomTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
         }
-        this._canvas.insert(currTirePair.topTire);
-        this._canvas.insert(currTirePair.bottomTire);
+        this._storage.insert(currTirePair.topTire);
+        this._storage.insert(currTirePair.bottomTire);
 
         TankTireTrack.setAndPosTireTrackPair(currTirePair, topPoint, bottomPoint, hullAngle, sin, cos);
 
@@ -93,8 +93,8 @@ export class TankTireTrack {
             topTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
             bottomTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
         }
-        this._canvas.insert(currTirePair.topTire);
-        this._canvas.insert(currTirePair.bottomTire);
+        this._storage.insert(currTirePair.topTire);
+        this._storage.insert(currTirePair.bottomTire);
 
         TankTireTrack.setAndPosTireTrackPair(currTirePair, topPoint, bottomPoint, hullAngle, sin, cos);
 
