@@ -63,11 +63,13 @@ export class Canvas implements ICanvas {
         const halfWidth = sprite.width / 2;
         const halfHeight = sprite.height / 2;
 
-        this._bufferCtx.globalAlpha = sprite.opacity;
+        if (sprite.opacity !== 1)
+            this._bufferCtx.globalAlpha = sprite.opacity;
+        if (sprite.scaleX !== 1 || sprite.scaleY !== 1)
+            this._bufferCtx.scale(sprite.scaleX, sprite.scaleY);
 
         this._bufferCtx.translate(sprite.point.x + halfWidth, sprite.point.y + halfHeight);
         this._bufferCtx.rotate(sprite.angle);
-        this._bufferCtx.scale(sprite.scaleX, sprite.scaleY);
 
         this._bufferCtx.drawImage(sprite.sprite, -halfWidth, -halfHeight, sprite.width, sprite.height);
 
