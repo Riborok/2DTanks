@@ -5,7 +5,7 @@ import {SpriteManipulator} from "../SpriteManipulator";
 
 export class WallSprite extends Sprite {
     public constructor(materialNum: number, shapeNum: number) {
-        super(ResolutionManager.WALL_WIDTH[shapeNum], ResolutionManager.WALL_HEIGHT[shapeNum], `4`);
+        super(ResolutionManager.WALL_WIDTH[shapeNum], ResolutionManager.WALL_HEIGHT[shapeNum], 3);
         this._sprite.src = `src/img/blocks/${MATERIAL[materialNum]}_${SHAPE[shapeNum]}.png`;
     }
     public updateAfterAction(point: Point, angle: number) {

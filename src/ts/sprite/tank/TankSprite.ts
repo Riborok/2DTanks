@@ -8,6 +8,7 @@ import {TankTrackEffect} from "./tank effects/TankTrackEffect";
 import {MotionData} from "../../additionally/type";
 import {rotDirection, TankDrift} from "./tank effects/TankDrift";
 import {IAnimationManager} from "../../game/managers/AnimationManager";
+import {Canvas} from "../../game/Canvas";
 
 export class TankSprite {
     private readonly _tankSpriteParts: TankSpriteParts;
@@ -22,11 +23,11 @@ export class TankSprite {
     public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
     public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
-    public spawnTankAcceleration(canvas: Element, indentX: number, tankHeight: number) {
+    public spawnTankAcceleration(canvas: Canvas, indentX: number, tankHeight: number) {
         this._tankAcceleration = new TankAcceleration(canvas, indentX, tankHeight);
     }
     public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
-    public spawnTireTracks(canvas: Element, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>){
+    public spawnTireTracks(canvas: Canvas, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>){
         this._tankTireTrack = new TankTireTrack(canvas, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
 
         const sin = Math.sin(hullAngle);
@@ -38,8 +39,8 @@ export class TankSprite {
 
         this._tankTireTrack.spawnFullTireTrack(topFirstChainPoint, bottomFirstChainPoint, hullAngle, sin, cos);
     }
-    public spawnDriftSmoke(canvas: Element, animationManager: IAnimationManager){
-        this._tankDrift = new TankDrift(canvas, animationManager,
+    public spawnDriftSmoke(animationManager: IAnimationManager){
+        this._tankDrift = new TankDrift(animationManager,
             this._tankSpriteParts.topTrackSprite.width, this._tankSpriteParts.topTrackSprite.height)
     }
     private updateTireTrack(point: Point, hullAngle: number, sin: number, cos: number){

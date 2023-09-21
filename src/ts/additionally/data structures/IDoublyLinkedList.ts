@@ -36,7 +36,7 @@ export interface IDoublyLinkedList<T> extends Iterable<T> {
     moveToHead(value: T): void;
     clear(): void;
     isEmpty(): boolean;
-    applyAndRemove(action: (t: T, deltaTime: number) => void, condition: (t: T) => boolean, deltaTime: number): void;
+    applyAndRemove(action: (t: T, deltaTime: number) => void, removalCondition: (t: T) => boolean, deltaTime: number): void;
 }
 
 export class DoublyLinkedList<T> implements IDoublyLinkedList<T> {
@@ -54,17 +54,17 @@ export class DoublyLinkedList<T> implements IDoublyLinkedList<T> {
             currentNode = currentNode.next;
         }
     }
-    public applyAndRemove(action: (t: T, deltaTime: number) => void, condition: (t: T) => boolean, deltaTime: number) {
+    public applyAndRemove(action: (t: T, deltaTime: number) => void, removalCondition: (t: T) => boolean, deltaTime: number) {
         let currNode = this._head;
         while (currNode !== null) {
             action(currNode.value, deltaTime);
-            if (condition(currNode.value))
-                currNode = currNode.next;
-            else {
+            if (removalCondition(currNode.value)) {
                 const prevNode = currNode;
                 currNode = currNode.next;
                 this.removeNode(prevNode);
             }
+            else
+                currNode = currNode.next;
         }
     }
     public isEmpty(): boolean { return this._length === 0 }

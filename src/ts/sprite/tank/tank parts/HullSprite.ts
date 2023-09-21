@@ -6,7 +6,7 @@ export class HullSprite extends Sprite implements ISpritePart {
     private readonly _accelerationEffectIndentX: number;
     public get accelerationEffectIndentX() { return this._accelerationEffectIndentX }
     public constructor(color: number, num: number) {
-        super(ResolutionManager.HULL_WIDTH[num], ResolutionManager.HULL_HEIGHT[num], `5`);
+        super(ResolutionManager.HULL_WIDTH[num], ResolutionManager.HULL_HEIGHT[num], 4);
         this._accelerationEffectIndentX = ResolutionManager.ACCELERATION_EFFECT_INDENT_X[num];
         this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
     }

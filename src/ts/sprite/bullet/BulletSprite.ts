@@ -7,7 +7,7 @@ export class BulletSprite extends Sprite {
     private readonly _num: number;
     public get num(): number { return this._num };
     public constructor(num: number) {
-        super(ResolutionManager.BULLET_WIDTH[num], ResolutionManager.BULLET_HEIGHT[num], `4`);
+        super(ResolutionManager.BULLET_WIDTH[num], ResolutionManager.BULLET_HEIGHT[num], 3);
         this._sprite.src = `src/img/tanks/Bullets/Bullet_${num}.png`;
         this._num = num;
     }

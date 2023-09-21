@@ -3,6 +3,7 @@ import {IStorage} from "../../entitiy/IEntityCollisionSystem";
 import {IEntity} from "../../entitiy/IEntity";
 import {BulletSprite} from "../../sprite/bullet/BulletSprite";
 import {BulletModel} from "../../model/bullet/BulletModel";
+import {Canvas} from "../Canvas";
 
 export class BulletElement implements IElement {
     private readonly _model: BulletModel;
@@ -22,13 +23,12 @@ export class BulletElement implements IElement {
     public get sprite(): BulletSprite {
         return this._sprite;
     }
-    public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
-        canvas.appendChild(this._sprite.sprite);
-
+    public spawn(canvas: Canvas, entityStorage: IStorage<IEntity>) {
+        canvas.insert(this._sprite);
         entityStorage.insert(this._model.entity);
     }
-    public vanish(entityStorage: IStorage<IEntity>) {
-        this._sprite.remove();
+    public vanish(canvas: Canvas, entityStorage: IStorage<IEntity>) {
+        canvas.remove(this._sprite);
         entityStorage.remove(this._model.entity);
     }
 }

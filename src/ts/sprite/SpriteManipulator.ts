@@ -66,8 +66,8 @@ export class SpriteManipulator{
      * @param angle The new angle for the sprite.
      */
     public static setPosAndAngle(sprite: Sprite, point: Point, angle: number) {
-        sprite.setPosition(point);
-        sprite.setAngle(angle);
+        sprite.point = point;
+        sprite.angle = angle;
     }
     /**
      * Rotates a point associated with a turret sprite part relative to a tank parts sprite's hull.

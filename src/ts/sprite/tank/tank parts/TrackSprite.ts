@@ -11,7 +11,7 @@ export abstract class TrackSprite extends Sprite implements ISpritePart {
     protected static calcHeight(width: number) { return TrackSprite.PROPORTION_WIDTH_HEIGHT * width; }
     public get num() { return this._num }
     protected constructor(num: number, tankWidth: number, height: number) {
-        super(tankWidth + ResolutionManager.TRACK_INDENT, height, `4`);
+        super(tankWidth + ResolutionManager.TRACK_INDENT, height, 3);
 
         this._num = num;
         this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;

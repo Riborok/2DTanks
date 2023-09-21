@@ -22,8 +22,8 @@ export class WallMovementManager extends MovementManager implements IWallMovemen
 
         this._entityStorage.insert(entity);
     }
-    public hasAnyResidualMovement(wallElement: WallElement): boolean {
-        return !wallElement.model.isAngularMotionStopped() || !wallElement.model.isIdle();
+    public isCompleteMotion(wallElement: WallElement): boolean {
+        return wallElement.model.isAngularMotionStopped() && wallElement.model.isIdle();
     }
     public movement(wallElement: WallElement, deltaTime: number) {
         this.residualAngularMovement(wallElement, deltaTime);
