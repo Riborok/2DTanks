@@ -1,4 +1,4 @@
-import {Sprite} from "../Sprite";
+import {IScalable, Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
 import {IAnimation} from "./IAnimation";
 
@@ -30,11 +30,12 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
         }
     }
 }
-export class TopTankDriftAnimation extends TankDriftAnimation {
+export class TopTankDriftAnimation extends TankDriftAnimation implements IScalable {
     public constructor(width: number, height: number) {
         super(width, height);
-        this._scaleX = -1;
     }
+    public get scaleX(): number { return -1 }
+    public get scaleY(): number { return 1 }
     public calcPosition(point: Point, sin: number, cos: number): Point{
         return new Point(
             point.x + this.width * sin + this.height * cos,

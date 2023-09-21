@@ -3,14 +3,15 @@ import {IAnimation, IAnimationSprite} from "../../../sprite/animation/IAnimation
 import {IExecutioner} from "../handling managers/HandlingManager";
 import {IStorageWithIdRemoval} from "../../ICanvas";
 import {ISprite} from "../../../sprite/Sprite";
+import {IIdentifiable} from "../../id/IIdentifiable";
 
 export interface IAnimationManager extends IExecutioner {
     add(animation: IAnimation): void;
 }
 export class AnimationManager implements IAnimationManager{
     private readonly _animationList: IDoublyLinkedList<IAnimation> = new DoublyLinkedList<IAnimation>();
-    private readonly _storage: IStorageWithIdRemoval<ISprite>;
-    public constructor(storage: IStorageWithIdRemoval<ISprite>) {
+    private readonly _storage: IStorageWithIdRemoval<IIdentifiable>;
+    public constructor(storage: IStorageWithIdRemoval<IIdentifiable>) {
         this._storage = storage;
     }
     public add(animationSprite: IAnimationSprite): void {
