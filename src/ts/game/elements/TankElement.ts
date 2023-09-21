@@ -9,6 +9,7 @@ import {Control} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
 import {IStorage} from "../../entitiy/IEntityCollisionSystem";
+import {Canvas} from "../Canvas";
 
 export class TankElement implements IElement {
     private readonly _model: TankModel;
@@ -37,26 +38,27 @@ export class TankElement implements IElement {
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum),
             track.forwardData, track.backwardData);
     }
-    public spawn(canvas: Element, entityStorage: IStorage<IEntity>) {
+    public spawn(canvas: Canvas, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
-        canvas.appendChild(tankSpriteParts.topTrackSprite.sprite);
-        canvas.appendChild(tankSpriteParts.bottomTrackSprite.sprite);
-        canvas.appendChild(tankSpriteParts.hullSprite.sprite);
-        canvas.appendChild(tankSpriteParts.weaponSprite.sprite);
-        canvas.appendChild(tankSpriteParts.turretSprite.sprite);
+        canvas.insert(tankSpriteParts.topTrackSprite);
+        canvas.insert(tankSpriteParts.bottomTrackSprite);
+        canvas.insert(tankSpriteParts.hullSprite);
+        canvas.insert(tankSpriteParts.weaponSprite);
+        canvas.insert(tankSpriteParts.turretSprite);
 
         const entity = this._model.entity;
         entityStorage.insert(entity);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
-    public vanish(entityStorage: IStorage<IEntity>) {
+    public vanish(canvas: Canvas, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
         this._sprite.tankTireTrack.vanishFullTrack();
-        tankSpriteParts.topTrackSprite.remove();
-        tankSpriteParts.bottomTrackSprite.remove();
-        tankSpriteParts.hullSprite.remove();
-        tankSpriteParts.weaponSprite.remove();
-        tankSpriteParts.turretSprite.remove();
+
+        canvas.remove(tankSpriteParts.topTrackSprite);
+        canvas.remove(tankSpriteParts.bottomTrackSprite);
+        canvas.remove(tankSpriteParts.hullSprite);
+        canvas.remove(tankSpriteParts.weaponSprite);
+        canvas.remove(tankSpriteParts.turretSprite);
 
         entityStorage.remove(this._model.entity);
     }

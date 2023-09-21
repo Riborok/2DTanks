@@ -22,10 +22,12 @@ import {ResolutionManager} from "./constants/gameConstants";
 
 window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
 
-const canvas = document.querySelector('#canvas');
-ResolutionManager.setResolutionResizeCoeff();
-
-const gameMaster : IGameMaster = new GameMaster(canvas, window.screen.width, window.screen.height);
+const htmlCanvasElement: HTMLCanvasElement = document.querySelector('#canvas');
+htmlCanvasElement.width = window.screen.width;
+htmlCanvasElement.height = window.screen.height;
+ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
+const gameMaster : IGameMaster = new GameMaster(htmlCanvasElement.getContext('2d'),
+    htmlCanvasElement.width, htmlCanvasElement.height);
 gameMaster.createField(1,2);
 
 const control1: Control = {

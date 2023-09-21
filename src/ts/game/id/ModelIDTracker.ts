@@ -42,13 +42,14 @@ export class ModelIDTracker {
 
     // Current IDs for each entity type
     private static ID: number = 0;
+    private static readonly MAX_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / ModelIDTracker.TYPE_DIVIDER) - 1;
     private static checkForMaxValue() {
-        if (ModelIDTracker.ID >= Number.MAX_SAFE_INTEGER)
+        if (ModelIDTracker.ID >= ModelIDTracker.MAX_VALUE)
             throw new Error("Maximum ID is reached.");
     }
     private static getNextId(entityType: number): number {
-        this.checkForMaxValue();
-        return ++this.ID * this.TYPE_DIVIDER + entityType;
+        ModelIDTracker.checkForMaxValue();
+        return ++ModelIDTracker.ID * ModelIDTracker.TYPE_DIVIDER + entityType;
     }
 
     /**

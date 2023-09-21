@@ -5,10 +5,11 @@
     width: 100%;
     height: 100%;
     background-color: green;
-    overflow: hidden;
+    transform: translateZ(0);
 }
 
 .sprite {
     position: absolute;
     pointer-events: none;
+    will-change: transform, opacity;
 }

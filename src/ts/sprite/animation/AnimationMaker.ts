@@ -5,7 +5,7 @@ import {TankExplosionAnimation} from "./TankExplosionAnimation";
 import {getRandomInt} from "../../additionally/additionalFunc";
 
 export class AnimationMaker{
-    public static playDeathAnimation(entity: IEntity, animationManager: IAnimationManager, canvas: Element){
+    public static playDeathAnimation(entity: IEntity, animationManager: IAnimationManager){
         if (ModelIDTracker.isWall(entity.id)){
 
         }
@@ -16,7 +16,6 @@ export class AnimationMaker{
                 getRandomInt(-Math.PI, Math.PI)
             );
             animationManager.add(deathAnimation);
-            canvas.appendChild(deathAnimation.sprite);
         }
 
         if (ModelIDTracker.isBullet(entity.id)){

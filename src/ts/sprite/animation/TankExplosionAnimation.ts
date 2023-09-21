@@ -11,23 +11,17 @@ export class TankExplosionAnimation extends Sprite implements IAnimation{
     private static readonly UPDATE_TIMER_TIME: number = 90;
     private static readonly MAX_STAGE: number = 8;
     public get isEnded(): boolean {
-        if (this._isEnded)
-            this.remove();
         return this._isEnded;
     }
     public constructor(point: Point, angle: number) {
-        super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, `7`);
+        super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, 6);
         this._sprite.src = `${TankExplosionAnimation.DEFAULT_PATH}${this._animationStage}.png`;
 
-        const newPoint = new Point(
+        this._point = new Point(
             point.x - ResolutionManager.EXPLOSION_SIZE / 2,
             point.y - ResolutionManager.EXPLOSION_SIZE / 2
         );
-        this.setPosAndAngle(newPoint, angle);
-    }
-    private setPosAndAngle(point: Point, angle: number){
-        this.setPosition(point);
-        this.setAngle(angle);
+        this._angle = angle;
     }
     public changeStage(deltaTime: number): void {
         this._timer += deltaTime;

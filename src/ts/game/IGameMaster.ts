@@ -1,7 +1,7 @@
 import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
-import {Field} from "./Field";
+import {Canvas} from "./Canvas";
 import {Quadtree} from "../entitiy/IEntityCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
@@ -30,9 +30,8 @@ export interface IGameMaster {
 }
 
 export class GameMaster implements IGameMaster {
-    private readonly _backgroundSprites: BackgroundSprite[] = new Array<BackgroundSprite>();
-    private readonly _gameLoop: IGameLoop = new GameLoop();
-    private readonly _field: Field;
+    private readonly _gameLoop: IGameLoop;
+    private readonly _canvas: Canvas;
     private readonly _size: Size;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
@@ -40,12 +39,14 @@ export class GameMaster implements IGameMaster {
     private readonly _bulletHandlingManager: HandlingManager<BulletElement, BulletMovementManager>;
 
     private readonly _handlingManagers: HandlingManager<IElement, MovementManager>[] = new Array<HandlingManager<IElement, MovementManager>>;
-    private readonly _animationManager: IAnimationManager = new AnimationManager();
+    private readonly _animationManager: IAnimationManager;
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
-    public constructor(canvas: Element, width: number, height: number) {
-        this._field = new Field(canvas);
+    public constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
         this._size = { width, height };
+        this._canvas = new Canvas(ctx, this._size);
+        this._gameLoop = new GameLoop(this._canvas);
+        this._animationManager = new AnimationManager(this._canvas);
 
         const entityCollisionSystem = new Quadtree(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
@@ -58,11 +59,11 @@ export class GameMaster implements IGameMaster {
         const wallMovementManager = new WallMovementManager(entityCollisionSystem, collisionManager);
         const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, collisionManager);
 
-        const bulletAdder = new BulletModelAdder(bulletElements, this._field, bulletMovementManager);
+        const bulletAdder = new BulletModelAdder(bulletElements, this._canvas, bulletMovementManager);
 
         this._tankHandlingManagers = new TankHandlingManager(
             tankMovementManager,
-            this._field,
+            this._canvas,
             tankElements,
             bulletAdder,
             this._animationManager,
@@ -70,12 +71,12 @@ export class GameMaster implements IGameMaster {
         );
         this._wallHandlingManagers = new WallHandlingManager(
             wallMovementManager,
-            this._field,
+            this._canvas,
             wallElements
         );
         this._bulletHandlingManager = new BulletHandlingManager(
             bulletMovementManager,
-            this._field, bulletElements,
+            this._canvas, bulletElements,
             this._handlingManagers,
             this._animationManager
         );
@@ -97,21 +98,17 @@ export class GameMaster implements IGameMaster {
         }
     }
     private createBackgroundSprites(material: number) {
-        DecorCreator.fullFillBackground(material, this._size, this._backgroundSprites);
-
-        for (const backgroundSprite of this._backgroundSprites)
-            this._field.canvas.appendChild(backgroundSprite.sprite);
+        DecorCreator.fullFillBackground(material, this._size, this._canvas);
     }
     private createWalls(material: number) {
-        const { width, height } = this._size;
-        this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, width, height));
+        this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, this._size));
 
         // Additional walls
         const arr = new Array<WallElement>();
         arr.push(ObstacleCreator.createWall(
-            new Point(width >> 1, height >> 1), 0.79, 2, 0, true));
+            new Point(this._size.width >> 1, this._size.height >> 1), 0.79, 2, 0, true));
         arr.push(ObstacleCreator.createWall(
-            new Point(width >> 2, height >> 2), 1, 2, 1, true));
+            new Point(this._size.width >> 2, this._size.height >> 2), 1, 2, 1, true));
         this._wallHandlingManagers.add(arr);
     }
     public addTankElements(...tankElements: TankElement[]) {

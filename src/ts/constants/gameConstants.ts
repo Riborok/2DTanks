@@ -19,9 +19,9 @@ export class ResolutionManager {
     public static ACCELERATION_SIZE: number = 85;
     public static EXPLOSION_SIZE: number = 120;
     public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
-    public static setResolutionResizeCoeff(){
-        ResolutionManager.resizeWidthCoeff = window.screen.width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
-        ResolutionManager.resizeHeightCoeff = window.screen.height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
+    public static setResolutionResizeCoeff(width: number, height: number){
+        ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
+        ResolutionManager.resizeHeightCoeff = height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
 
         ResolutionManager.resizeConstants();
     }

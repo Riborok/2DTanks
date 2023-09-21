@@ -2,7 +2,7 @@ import {HandlingManager, IAddModel} from "./HandlingManager";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
-import {Field} from "../../Field";
+import {Canvas} from "../../Canvas";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../AnimationManager";
 import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
@@ -13,16 +13,17 @@ import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, ResolutionManager} from "../../../constants/gameConstants";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
-    private readonly _tireTracksManager: ITireTracksManager = new TireTracksManager();
+    private readonly _tireTracksManager: ITireTracksManager;
     private readonly _addBulletElement: IAddModel<BulletModel>;
     private readonly _animationManager: IAnimationManager;
     private readonly _KeyHandler: IKeyHandler;
-    public constructor(bulletManager: TankMovementManager, field: Field, elements: Map<number, TankElement>,
+    public constructor(bulletManager: TankMovementManager, canvas: Canvas, elements: Map<number, TankElement>,
                        addBulletElement: IAddModel<BulletModel>, animationManager: IAnimationManager, keyHandler: IKeyHandler) {
-        super(bulletManager, field, elements, ModelIDTracker.isTank);
+        super(bulletManager, canvas, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
         this._animationManager = animationManager;
         this._KeyHandler = keyHandler;
+        this._tireTracksManager = new TireTracksManager(canvas);
     }
     public handle(deltaTime: number): void {
         this._tireTracksManager.reduceOpacity();
@@ -85,7 +86,6 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
     private playShootAnimation(point: Point, angle: number, width: number, height: number, num: number){
         const shootAnimation = new TankShootAnimation(point, angle, width, height, num);
         this._animationManager.add(shootAnimation);
-        this._field.canvas.appendChild(shootAnimation.sprite);
     }
     public add(elements: Iterable<TankElement>) {
         super.add(elements);
@@ -93,13 +93,13 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
             const sprite = element.sprite;
 
             const entity = element.model.entity;
-            sprite.spawnTireTracks(this._field.canvas, entity.points[0], entity.angle,
+            sprite.spawnTireTracks(this._canvas, entity.points[0], entity.angle,
                 this._tireTracksManager.vanishingListOfTirePairs);
 
-            sprite.spawnDriftSmoke(this._field.canvas, this._animationManager);
+            sprite.spawnDriftSmoke(this._animationManager);
 
             const hullSprite = sprite.tankSpriteParts.hullSprite;
-            sprite.spawnTankAcceleration(this._field.canvas, hullSprite.accelerationEffectIndentX, hullSprite.height);
+            sprite.spawnTankAcceleration(this._canvas, hullSprite.accelerationEffectIndentX, hullSprite.height);
         }
     }
 }

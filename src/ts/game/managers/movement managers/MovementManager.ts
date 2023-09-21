@@ -46,7 +46,7 @@ export interface ITankMovementManager {
 }
 
 export interface IWallMovementManager {
-    hasAnyResidualMovement(wallElement: WallElement): boolean;
+    isCompleteMotion(wallElement: WallElement): boolean;
     movement(wallElement: WallElement, deltaTime: number): void;
 }
 

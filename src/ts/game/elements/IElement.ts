@@ -1,13 +1,14 @@
 import {IIdentifiable} from "../id/IIdentifiable";
-import {Sprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/Sprite";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {IEntity} from "../../entitiy/IEntity";
 import {IStorage} from "../../entitiy/IEntityCollisionSystem";
 import {Model} from "../../model/Model";
+import {Canvas} from "../Canvas";
 
 export interface IElement extends IIdentifiable {
     get model(): Model;
-    get sprite(): Sprite | TankSprite;
-    spawn(canvas: Element, entityStorage: IStorage<IEntity>): void;
-    vanish(entityStorage: IStorage<IEntity>): void;
+    get sprite(): ISprite | TankSprite;
+    spawn(canvas: Canvas, entityStorage: IStorage<IEntity>): void;
+    vanish(canvas: Canvas, entityStorage: IStorage<IEntity>): void;
 }

@@ -12,12 +12,10 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
     private static readonly UPDATE_TIMER_TIME: number = 70;
     private static readonly MAX_STAGE: number = 3;
     public get isEnded(): boolean {
-        if (this._isEnded)
-            this.remove();
         return this._isEnded;
     }
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
-        super(width, height, `7`);
+        super(width, height, 6);
         this._num = num === 0 ? 0 : 1;
         this._sprite.src = `${BulletImpactAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
 
@@ -26,11 +24,8 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
             point.y - height / 2 * Math.cos(angle)
         );
         SpriteManipulator.rotateToDefaultSpritePoint(this, newPoint, Math.sin(angle), Math.cos(angle));
-        this.setPosAndAngle(newPoint, angle);
-    }
-    private setPosAndAngle(point: Point, angle: number){
-        this.setPosition(point);
-        this.setAngle(angle);
+        this._point = newPoint;
+        this._angle = angle;
     }
     public changeStage(deltaTime: number): void {
         this._timer += deltaTime;

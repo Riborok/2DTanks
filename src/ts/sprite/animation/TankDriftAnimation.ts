@@ -10,12 +10,10 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
     private static readonly UPDATE_TIMER_TIME: number = 60;
     private static readonly MAX_STAGE: number = 9;
     public get isEnded(): boolean {
-        if (this._isEnded)
-            this.remove();
         return this._isEnded;
     }
-    public constructor(width: number, height: number) {
-        super(width, height, `6`);
+    protected constructor(width: number, height: number) {
+        super(width, height, 5);
         this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
     }
     public changeStage(deltaTime: number): void {
@@ -32,10 +30,10 @@ abstract class TankDriftAnimation extends Sprite implements IAnimation{
         }
     }
 }
-export class TopTankDriftAnimation extends TankDriftAnimation{
-    public setPosAndAngle(point: Point, angle: number){
-        this.setPosition(point);
-        this.setAngleWithScaling(angle, -1, 1);
+export class TopTankDriftAnimation extends TankDriftAnimation {
+    public constructor(width: number, height: number) {
+        super(width, height);
+        this._scaleX = -1;
     }
     public calcPosition(point: Point, sin: number, cos: number): Point{
         return new Point(
@@ -49,10 +47,6 @@ export class BottomTankDriftAnimation extends TankDriftAnimation{
     public constructor(width: number, height: number, trackHeight: number) {
         super(width, height);
         this._trackHeight = trackHeight;
-    }
-    public setPosAndAngle(point: Point, angle: number){
-        this.setPosition(point);
-        this.setAngle(angle);
     }
     public calcPosition(point: Point, sin: number, cos: number): Point {
         return new Point(

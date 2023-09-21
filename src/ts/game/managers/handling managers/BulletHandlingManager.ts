@@ -1,6 +1,6 @@
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletMovementManager} from "../movement managers/BulletMovementManager";
-import {Field} from "../../Field";
+import {Canvas} from "../../Canvas";
 import {IElement} from "../../elements/IElement";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
@@ -16,10 +16,10 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
     private readonly _animationManager: IAnimationManager;
 
-    public constructor(bulletManager: BulletMovementManager, field: Field, elements: Map<number, BulletElement>,
+    public constructor(bulletManager: BulletMovementManager, canvas: Canvas, elements: Map<number, BulletElement>,
                        handlingManagers: Iterable<IElementManager<IElement>>,
                        animationManager: IAnimationManager) {
-        super(bulletManager, field, elements, ModelIDTracker.isBullet);
+        super(bulletManager, canvas, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._animationManager = animationManager;
     }
@@ -59,7 +59,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 if (element) {
                     element.model.takeDamage(bulletCollisionData.bulletElement.model);
                     if (element.model.isDead()) {
-                        AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager, this._field.canvas)
+                        AnimationMaker.playDeathAnimation(element.model.entity, this._animationManager)
 
                         elementHandling.delete(element);
                     }
@@ -78,17 +78,16 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     private playImpactAnimation(point: Point, angle: number, width: number, height: number, num: number){
         const impactAnimation = new BulletImpactAnimation(point, angle, width, height, num);
         this._animationManager.add(impactAnimation);
-        this._field.canvas.appendChild(impactAnimation.sprite);
     }
 }
 
 export class BulletModelAdder implements IAddModel<BulletModel> {
     private readonly _elements: Map<number, BulletElement>;
-    private readonly _field: Field;
+    private readonly _canvas: Canvas;
     private readonly _bulletMovementManager: BulletMovementManager;
-    public constructor(elements: Map<number, BulletElement>, field: Field, bulletMovementManager: BulletMovementManager) {
+    public constructor(elements: Map<number, BulletElement>, canvas: Canvas, bulletMovementManager: BulletMovementManager) {
         this._elements = elements;
-        this._field = field;
+        this._canvas = canvas;
         this._bulletMovementManager = bulletMovementManager;
     }
     public addBulletModel(bulletModel: BulletModel, num: number) {
@@ -96,7 +95,7 @@ export class BulletModelAdder implements IAddModel<BulletModel> {
             const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
             if (this._bulletMovementManager.checkForSpawn(bulletElements)) {
                 this._elements.set(bulletElements.id, bulletElements);
-                bulletElements.spawn(this._field.canvas, this._bulletMovementManager.entityStorage);
+                bulletElements.spawn(this._canvas, this._bulletMovementManager.entityStorage);
             }
         }
     }

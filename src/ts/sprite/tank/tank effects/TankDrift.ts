@@ -3,6 +3,7 @@ import {clampAngle} from "../../../geometry/additionalFunc";
 import {BottomTankDriftAnimation, TopTankDriftAnimation} from "../../animation/TankDriftAnimation";
 import {IAnimationManager} from "../../../game/managers/AnimationManager";
 import {SpriteManipulator} from "../../SpriteManipulator";
+import {Canvas} from "../../../game/Canvas";
 
 export enum rotDirection{
     rotLeft = -1,
@@ -11,8 +12,7 @@ export enum rotDirection{
     rotNoRotate = 2
 }
 
-export class TankDrift{
-    private readonly _canvas: Element;
+export class TankDrift {
     private readonly _animationManager: IAnimationManager;
     private readonly _width: number;
     private readonly _height: number;
@@ -20,8 +20,7 @@ export class TankDrift{
     private _currAnimation: TopTankDriftAnimation | BottomTankDriftAnimation;
     private _delayedAngle: number = 0;
     private static readonly UPDATE_SMOKE_DELTA_ANGLE: number = 0.113446;
-    constructor(canvas: Element, animationManager: IAnimationManager, trackWidth: number, trackHeight: number) {
-        this._canvas = canvas;
+    public constructor(animationManager: IAnimationManager, trackWidth: number, trackHeight: number) {
         this._animationManager = animationManager;
         this._width = trackWidth / 4;
         this._height = trackWidth / 5;
@@ -52,11 +51,11 @@ export class TankDrift{
         const newSin: number = Math.sin(angle);
         const newCos: number = Math.cos(angle);
         SpriteManipulator.rotateToDefaultSpritePoint(this._currAnimation, point, newSin, newCos);
-        this._currAnimation.setPosAndAngle(point, angle);
+        this._currAnimation.point = point;
+        this._currAnimation.angle = angle;
     }
     private addAnimation(){
         this._animationManager.add(this._currAnimation);
-        this._canvas.appendChild(this._currAnimation.sprite);
     }
     public spawnTopSmoke(topPoint: Point, angle: number, sin: number, cos: number){
         this._currAnimation = new TopTankDriftAnimation(this._width, this._height);

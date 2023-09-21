@@ -2,6 +2,7 @@ import {Point} from "../../../geometry/Point";
 import {SpriteManipulator} from "../../SpriteManipulator";
 import {SpriteAcceleration} from "../../effects/SpriteAcceleration";
 import {ResolutionManager} from "../../../constants/gameConstants";
+import {Canvas} from "../../../game/Canvas";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;
@@ -13,10 +14,10 @@ export class TankAcceleration {
 
     private _counter: number = 0;
     private _state: number = 0;
-    private readonly _canvas: Element;
+    private readonly _canvas: Canvas;
     private readonly _indentX: number;
     private readonly _tankHeight: number;
-    public constructor(canvas: Element, indentX: number, tankHeight: number) {
+    public constructor(canvas: Canvas, indentX: number, tankHeight: number) {
         this._canvas = canvas;
         this._indentX = indentX;
         this._tankHeight = tankHeight;
@@ -35,8 +36,8 @@ export class TankAcceleration {
     }
     public setPosition(hullDefaultPoint: Point, sin: number, cos: number, hullAngle: number) {
         if (this._state === 0 && this._counter === 0) {
-            this._canvas.appendChild(this._topSpriteAccelerationEffect.sprite);
-            this._canvas.appendChild(this._bottomSpriteAccelerationEffect.sprite);
+            this._canvas.insert(this._topSpriteAccelerationEffect);
+            this._canvas.insert(this._bottomSpriteAccelerationEffect);
         }
         this.changeState();
 
@@ -59,8 +60,8 @@ export class TankAcceleration {
         topSpriteAccelerationEffect.setSrc(this._state);
         bottomSpriteAccelerationEffect.setSrc(this._state);
 
-        topSpriteAccelerationEffect.remove();
-        bottomSpriteAccelerationEffect.remove();
+        this._canvas.remove(this._topSpriteAccelerationEffect);
+        this._canvas.remove(this._bottomSpriteAccelerationEffect);
     }
     private calcPosition(point: Point, sin: number, cos: number, indentY: number): Point {
         return new Point(
