@@ -1,7 +1,7 @@
 import {Point} from "../../../geometry/Point";
 import {clampAngle} from "../../../geometry/additionalFunc";
 import {BottomTankDriftAnimation, TopTankDriftAnimation} from "../../animation/TankDriftAnimation";
-import {IAnimationManager} from "../../../game/managers/AnimationManager";
+import {IAnimationManager} from "../../../game/managers/animation managers/AnimationManager";
 import {SpriteManipulator} from "../../SpriteManipulator";
 
 export enum rotDirection{

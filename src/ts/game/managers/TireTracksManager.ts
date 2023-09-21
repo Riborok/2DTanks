@@ -8,7 +8,7 @@ export interface ITireTracksManager {
     reduceOpacity(): void;
 }
 
-export class TireTracksManager {
+export class TireTracksManager implements ITireTracksManager {
     private _vanishingListOfTirePairs : IDoublyLinkedList<TirePair> = new DoublyLinkedList<TirePair>()
     private static readonly MIN_REDUCING_OPACITY_NUMBER: number = 0.0001;
     private tanksAmount: number = 0;
