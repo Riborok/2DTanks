@@ -1,5 +1,4 @@
 import {MotionData} from "../../../additionally/type";
-import {TrackSprite} from "../tank parts/TrackSprite";
 import {IFrameByFrame} from "../../Sprite";
 
 export class TankTrackEffect {

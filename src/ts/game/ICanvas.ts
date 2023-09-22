@@ -1,4 +1,4 @@
-import {isImplementsIScalable, isImplementsIFrameByFrame, isImplementsIVanish, ISprite,} from "../sprite/Sprite";
+import {isImplementsIFrameByFrame, isImplementsIScalable, isImplementsIVanish, ISprite,} from "../sprite/Sprite";
 import {SpriteIDTracker} from "./id/SpriteIDTracker";
 import {IStorage, Size} from "../additionally/type";
 import {IIdentifiable} from "./id/IIdentifiable";

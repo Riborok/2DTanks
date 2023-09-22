@@ -1,6 +1,6 @@
-import {IFrameByFrame, IScalable, Sprite} from "../Sprite";
+import {IFrameByFrame, IScalable} from "../Sprite";
 import {Point} from "../../geometry/Point";
-import {AnimationSprite, IAnimation} from "./IAnimation";
+import {AnimationSprite} from "./IAnimation";
 
 abstract class TankDriftAnimation extends AnimationSprite implements IFrameByFrame{
     private static readonly UPDATE_TIMER_TIME: number = 60;
