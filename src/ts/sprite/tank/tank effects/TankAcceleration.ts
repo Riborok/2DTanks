@@ -31,8 +31,8 @@ export class TankAcceleration {
         if (this._counter === TankAcceleration.THRESHOLD) {
             this._counter = 0;
             this._state++;
-            this._topSpriteAccelerationEffect.setSrc(this._state);
-            this._bottomSpriteAccelerationEffect.setSrc(this._state);
+            this._topSpriteAccelerationEffect.frame = this._state;
+            this._bottomSpriteAccelerationEffect.frame = this._state;
         }
     }
     public setPosition(hullDefaultPoint: Point, sin: number, cos: number, hullAngle: number) {
@@ -58,8 +58,8 @@ export class TankAcceleration {
         const topSpriteAccelerationEffect = this._topSpriteAccelerationEffect;
         const bottomSpriteAccelerationEffect = this._bottomSpriteAccelerationEffect;
 
-        topSpriteAccelerationEffect.setSrc(this._state);
-        bottomSpriteAccelerationEffect.setSrc(this._state);
+        topSpriteAccelerationEffect.frame = this._state;
+        bottomSpriteAccelerationEffect.frame = this._state;
 
         this._storage.remove(this._topSpriteAccelerationEffect);
         this._storage.remove(this._bottomSpriteAccelerationEffect);

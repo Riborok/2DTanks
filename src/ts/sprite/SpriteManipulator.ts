@@ -48,7 +48,7 @@ export class SpriteManipulator{
         );
     }
     /**
-     * Updates the position and angle of a sprite, but first sets the point to the "default state".
+     * Updates the position and angle of a sprite, but first sets the point to the "default position".
      * @param sprite The sprite to be updated.
      * @param position The new position for the sprite.
      * @param sin The sine value of the rotation angle.

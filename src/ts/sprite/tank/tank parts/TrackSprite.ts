@@ -18,8 +18,8 @@ export abstract class TrackSprite extends Sprite implements ISpritePart {
         this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
         this._sprite.src = this._srcState0;
     }
-    public setSrc(state: number) {
-        this._sprite.src = state === 0 ? this._srcState0 : this._srcState1;
+    public setSrc(frame: number) {
+        this._sprite.src = frame === 0 ? this._srcState0 : this._srcState1;
     }
 }
 
