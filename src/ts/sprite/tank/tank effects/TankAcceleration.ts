@@ -7,14 +7,14 @@ import {ISprite} from "../../Sprite";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;
-    private static readonly LAST_STATE: number = 19;
-    private static readonly WORKING_STATE: number = 10;
+    private static readonly LAST_Frame: number = 19;
+    private static readonly WORKING_Frame: number = 10;
 
     private readonly _topSpriteAccelerationEffect: SpriteAcceleration = new SpriteAcceleration()
     private readonly _bottomSpriteAccelerationEffect: SpriteAcceleration = new SpriteAcceleration();
 
     private _counter: number = 0;
-    private _state: number = 0;
+    private _frame: number = 0;
     private readonly _storage: IStorage<ISprite>;
     private readonly _indentX: number;
     private readonly _tankHeight: number;
@@ -23,24 +23,24 @@ export class TankAcceleration {
         this._indentX = indentX;
         this._tankHeight = tankHeight;
     }
-    private changeState() {
-        if (this._state === TankAcceleration.LAST_STATE)
-            this._state = TankAcceleration.WORKING_STATE;
+    private changeFrame() {
+        if (this._frame === TankAcceleration.LAST_Frame)
+            this._frame = TankAcceleration.WORKING_Frame;
 
         this._counter++;
         if (this._counter === TankAcceleration.THRESHOLD) {
             this._counter = 0;
-            this._state++;
-            this._topSpriteAccelerationEffect.frame = this._state;
-            this._bottomSpriteAccelerationEffect.frame = this._state;
+            this._frame++;
+            this._topSpriteAccelerationEffect.frame = this._frame;
+            this._bottomSpriteAccelerationEffect.frame = this._frame;
         }
     }
     public setPosition(hullDefaultPoint: Point, sin: number, cos: number, hullAngle: number) {
-        if (this._state === 0 && this._counter === 0) {
+        if (this._frame === 0 && this._counter === 0) {
             this._storage.insert(this._topSpriteAccelerationEffect);
             this._storage.insert(this._bottomSpriteAccelerationEffect);
         }
-        this.changeState();
+        this.changeFrame();
 
         let position = this.calcPosition(hullDefaultPoint, sin, cos, this._tankHeight * 28 / 42);
         SpriteManipulator.updateSpritePart(this._topSpriteAccelerationEffect, position, sin, cos, hullAngle);
@@ -49,17 +49,17 @@ export class TankAcceleration {
         SpriteManipulator.updateSpritePart(this._bottomSpriteAccelerationEffect, position, sin, cos, hullAngle);
     }
     public removeAcceleration() {
-        if (this._state === 0 && this._counter === 0)
+        if (this._frame === 0 && this._counter === 0)
             return;
 
-        this._state = 0;
+        this._frame = 0;
         this._counter = 0;
 
         const topSpriteAccelerationEffect = this._topSpriteAccelerationEffect;
         const bottomSpriteAccelerationEffect = this._bottomSpriteAccelerationEffect;
 
-        topSpriteAccelerationEffect.frame = this._state;
-        bottomSpriteAccelerationEffect.frame = this._state;
+        topSpriteAccelerationEffect.frame = this._frame;
+        bottomSpriteAccelerationEffect.frame = this._frame;
 
         this._storage.remove(this._topSpriteAccelerationEffect);
         this._storage.remove(this._bottomSpriteAccelerationEffect);
