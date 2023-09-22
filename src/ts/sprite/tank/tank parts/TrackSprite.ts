@@ -1,26 +1,31 @@
 import {Point} from "../../../geometry/Point";
 import {ResolutionManager} from "../../../constants/gameConstants";
-import {ISpritePart, Sprite} from "../../Sprite";
+import {IAnimatedSprite, ISpritePart, Sprite} from "../../Sprite";
 
-export abstract class TrackSprite extends Sprite implements ISpritePart {
+export abstract class TrackSprite extends Sprite implements ISpritePart, IAnimatedSprite {
     abstract calcPosition(point: Point, sin: number, cos: number): Point;
+
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
-    private readonly _srcState0: string;
-    private readonly _srcState1: string;
+    private static readonly ORIGINAL_WIDTH: number = 246;
+    private static readonly ORIGINAL_HEIGHT: number = 42;
+
     private readonly _num: number;
+    private _frame: number = 0;
     protected static calcHeight(width: number) { return TrackSprite.PROPORTION_WIDTH_HEIGHT * width; }
     public get num() { return this._num }
     protected constructor(num: number, tankWidth: number, height: number) {
         super(tankWidth + ResolutionManager.TRACK_INDENT, height, 3);
-
         this._num = num;
-        this._srcState0 = `src/img/tanks/Tracks/Track_${num}_A.png`;
-        this._srcState1 = `src/img/tanks/Tracks/Track_${num}_B.png`;
-        this._sprite.src = this._srcState0;
+        this._sprite.src = `src/img/tanks/Tracks/Track_${num}.png`;
     }
-    public setSrc(frame: number) {
-        this._sprite.src = frame === 0 ? this._srcState0 : this._srcState1;
+    public set frame(value: number) {
+        this._frame = value;
     }
+    public get frame(): number {
+        return this._frame;
+    }
+    public get originalWidth(): number { return TrackSprite.ORIGINAL_WIDTH }
+    public get originalHeight(): number { return TrackSprite.ORIGINAL_HEIGHT }
 }
 
 export class TopTrackSprite extends TrackSprite  {

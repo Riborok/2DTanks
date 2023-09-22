@@ -151,6 +151,6 @@ export class TankSprite {
         SpriteManipulator.updateSpritePart(bottomTrackSprite, position, sin, cos, hullAngle)
 
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
-        this._tankTrackEffect.changeState(topTrackSprite, bottomTrackSprite);
+        this._tankTrackEffect.changeFrame(topTrackSprite, bottomTrackSprite);
     }
 }
