@@ -1,23 +1,19 @@
-import {Sprite} from "../Sprite";
+import {IFrameByFrame, Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
-import {IAnimation} from "./IAnimation";
+import {AnimationSprite, IAnimation} from "./IAnimation";
 import {SpriteManipulator} from "../SpriteManipulator";
 
-export class BulletImpactAnimation extends Sprite implements IAnimation{
-    private _animationStage: number = 0;
-    private _isEnded: boolean = false;
-    private _timer: number = 0;
-    private readonly _num: number;
-    private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_';
+export class BulletImpactAnimation extends AnimationSprite implements IFrameByFrame{
     private static readonly UPDATE_TIMER_TIME: number = 70;
-    private static readonly MAX_STAGE: number = 3;
-    public get isEnded(): boolean {
-        return this._isEnded;
-    }
+    private static readonly MAX_FRAME: number = 3;
+    private static readonly ORIGINAL_WIDTH: number = 120;
+    private static readonly ORIGINAL_HEIGHT: number = 205;
+
+    protected get UPDATE_TIMER_TIME(): number { return BulletImpactAnimation.UPDATE_TIMER_TIME }
+    protected get MAX_FRAME(): number { return BulletImpactAnimation.MAX_FRAME }
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
         super(width, height, 6);
-        this._num = num === 0 ? 0 : 1;
-        this._sprite.src = `${BulletImpactAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
+        this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_${num === 0 ? 0 : 1}.png`;
 
         const newPoint = new Point(
             point.x + height / 2 * Math.sin(angle),
@@ -27,17 +23,12 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
         this._point = newPoint;
         this._angle = angle;
     }
-    public changeFrame(deltaTime: number): void {
-        this._timer += deltaTime;
-        if (this._timer >= BulletImpactAnimation.UPDATE_TIMER_TIME){
-            this._timer -= BulletImpactAnimation.UPDATE_TIMER_TIME;
-
-            this._animationStage++;
-            if (this._animationStage <= BulletImpactAnimation.MAX_STAGE) {
-                this._sprite.src = `${BulletImpactAnimation.DEFAULT_PATH}${this._num}_${this._animationStage}.png`;
-            } else {
-                this._isEnded = true;
-            }
-        }
+    public set frame(value: number) {
+        this._frame = value;
     }
+    public get frame(): number {
+        return this._frame;
+    }
+    public get originalWidth(): number { return BulletImpactAnimation.ORIGINAL_WIDTH }
+    public get originalHeight(): number { return BulletImpactAnimation.ORIGINAL_HEIGHT }
 }
