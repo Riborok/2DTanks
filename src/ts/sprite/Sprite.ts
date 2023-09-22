@@ -2,16 +2,22 @@ import {Point} from "../geometry/Point";
 import {SpriteIDTracker} from "../game/id/SpriteIDTracker";
 import {IIdentifiable} from "../game/id/IIdentifiable";
 
-export interface ISprite extends IIdentifiable {
-    get width(): number;
-    get height(): number;
-    get sprite(): HTMLImageElement;
+export interface IAnimatedSprite {
+    set frame(value: number);
+    get frame(): number;
 
-    get point(): Point;
-    get angle(): number;
-
-    set point(value: Point);
-    set angle(value: number);
+    get originalWidth(): number;
+    get originalHeight(): number;
+}
+export function isImplementsIAnimatedSprite(obj: any): obj is IAnimatedSprite {
+    return (
+        'frame' in obj &&
+        'originalWidth' in obj &&
+        'originalHeight' in obj &&
+        typeof obj.frame === 'number' &&
+        typeof obj.originalWidth === 'number' &&
+        typeof obj.originalHeight === 'number'
+    );
 }
 
 export interface IVanish extends IIdentifiable {
@@ -38,6 +44,17 @@ export function isImplementsIScalable(obj: any): obj is IScalable {
     );
 }
 
+export interface ISprite extends IIdentifiable {
+    get width(): number;
+    get height(): number;
+    get sprite(): HTMLImageElement;
+
+    get point(): Point;
+    get angle(): number;
+
+    set point(value: Point);
+    set angle(value: number);
+}
 
 export abstract class Sprite implements ISprite {
     protected _sprite: HTMLImageElement;
