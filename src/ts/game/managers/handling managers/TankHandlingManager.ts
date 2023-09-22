@@ -6,8 +6,6 @@ import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../animation managers/AnimationManager";
 import {IKeyHandler} from "../../IKeyHandler";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IStorage} from "../../../additionally/type";
-import {ISprite} from "../../../sprite/Sprite";
 import {ITankAnimator, TankAnimator} from "../animation managers/Animators";
 import {IStorageWithIdRemoval} from "../../ICanvas";
 import {IIdentifiable} from "../../id/IIdentifiable";

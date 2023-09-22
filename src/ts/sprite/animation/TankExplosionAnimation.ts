@@ -1,6 +1,6 @@
-import {IFrameByFrame, Sprite} from "../Sprite";
+import {IFrameByFrame} from "../Sprite";
 import {Point} from "../../geometry/Point";
-import {AnimationSprite, IAnimation} from "./IAnimation";
+import {AnimationSprite} from "./IAnimation";
 import {ResolutionManager} from "../../constants/gameConstants";
 
 export class TankExplosionAnimation extends AnimationSprite implements IFrameByFrame{

@@ -1,7 +1,5 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TirePair} from "../../sprite/tank/tank effects/TankTireTrack";
-import {IStorage} from "../../additionally/type";
-import {ISprite} from "../../sprite/Sprite";
 import {IStorageWithIdRemoval} from "../ICanvas";
 import {IIdentifiable} from "../id/IIdentifiable";
 
