@@ -1,7 +1,7 @@
-import {IAnimatedSprite, Sprite} from "../Sprite";
+import {IFrameByFrame, Sprite} from "../Sprite";
 import {ResolutionManager} from "../../constants/gameConstants";
 
-export class SpriteAcceleration extends Sprite implements IAnimatedSprite {
+export class SpriteAcceleration extends Sprite implements IFrameByFrame {
     private static readonly ORIGINAL_SIZE: number = 256;
 
     private _frame: number = 0;

@@ -2,14 +2,14 @@ import {Point} from "../geometry/Point";
 import {SpriteIDTracker} from "../game/id/SpriteIDTracker";
 import {IIdentifiable} from "../game/id/IIdentifiable";
 
-export interface IAnimatedSprite {
+export interface IFrameByFrame {
     set frame(value: number);
     get frame(): number;
 
     get originalWidth(): number;
     get originalHeight(): number;
 }
-export function isImplementsIAnimatedSprite(obj: any): obj is IAnimatedSprite {
+export function isImplementsIFrameByFrame(obj: any): obj is IFrameByFrame {
     return (
         'frame' in obj &&
         'originalWidth' in obj &&

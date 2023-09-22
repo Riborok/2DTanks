@@ -1,6 +1,6 @@
 import {MotionData} from "../../../additionally/type";
 import {TrackSprite} from "../tank parts/TrackSprite";
-import {IAnimatedSprite} from "../../Sprite";
+import {IFrameByFrame} from "../../Sprite";
 
 export class TankTrackEffect {
     private static readonly MIN_THRESHOLD_COEFF: number = 17.5;
@@ -40,7 +40,7 @@ export class TankTrackEffect {
         }
     }
     public setResidualMovement() { this._isResidualMovement = true }
-    public changeFrame(trackSprite1: IAnimatedSprite, trackSprite2: IAnimatedSprite) {
+    public changeFrame(trackSprite1: IFrameByFrame, trackSprite2: IFrameByFrame) {
         this._counter++;
         if (this._counter >= this._currentThreshold) {
             this._counter = 0;
