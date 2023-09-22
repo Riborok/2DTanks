@@ -4,9 +4,9 @@ import {AnimationSprite, IAnimation} from "./IAnimation";
 import {ResolutionManager} from "../../constants/gameConstants";
 
 export class TankExplosionAnimation extends AnimationSprite implements IFrameByFrame{
-    private static readonly ORIGINAL_SIZE: number = 256;
     private static readonly UPDATE_TIMER_TIME: number = 90;
     private static readonly MAX_FRAME: number = 8;
+    private static readonly ORIGINAL_SIZE: number = 256;
 
     protected get UPDATE_TIMER_TIME(): number { return TankExplosionAnimation.UPDATE_TIMER_TIME }
     protected get MAX_FRAME(): number { return TankExplosionAnimation.MAX_FRAME }
