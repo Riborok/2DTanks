@@ -1,5 +1,5 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
-import {IAnimation, IAnimationSprite} from "../../../sprite/animation/IAnimation";
+import {AnimationSprite, IAnimation} from "../../../sprite/animation/IAnimation";
 import {IExecutioner} from "../handling managers/HandlingManager";
 import {IStorageWithIdRemoval} from "../../ICanvas";
 import {ISprite} from "../../../sprite/Sprite";
@@ -14,14 +14,14 @@ export class AnimationManager implements IAnimationManager{
     public constructor(storage: IStorageWithIdRemoval<IIdentifiable>) {
         this._storage = storage;
     }
-    public add(animationSprite: IAnimationSprite): void {
+    public add(animationSprite: AnimationSprite): void {
         this._storage.insert(animationSprite);
         this._animationList.addToTail(animationSprite);
     }
     public handle(deltaTime: number): void {
         if (!this._animationList.isEmpty())
             this._animationList.applyAndRemove(
-                (animation: IAnimation, deltaTime: number) => animation.changeStage(deltaTime),
+                (animation: IAnimation, deltaTime: number) => animation.changeFrame(deltaTime),
                 this.removalCondition.bind(this), deltaTime
             );
     }

@@ -1,34 +1,26 @@
-import {IScalable, Sprite} from "../Sprite";
+import {IFrameByFrame, IScalable, Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
-import {IAnimation} from "./IAnimation";
+import {AnimationSprite, IAnimation} from "./IAnimation";
 
-abstract class TankDriftAnimation extends Sprite implements IAnimation{
-    private _animationStage: number = 0;
-    private _isEnded: boolean = false;
-    private _timer: number = 0;
-    private static readonly DEFAULT_PATH: string = 'src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke_';
+abstract class TankDriftAnimation extends AnimationSprite implements IFrameByFrame{
     private static readonly UPDATE_TIMER_TIME: number = 60;
-    private static readonly MAX_STAGE: number = 9;
-    public get isEnded(): boolean {
-        return this._isEnded;
-    }
+    private static readonly MAX_FRAME: number = 9;
+    private static readonly ORIGINAL_SIZE: number = 496;
+
+    protected get UPDATE_TIMER_TIME(): number { return TankDriftAnimation.UPDATE_TIMER_TIME }
+    protected get MAX_FRAME(): number { return TankDriftAnimation.MAX_FRAME }
     protected constructor(width: number, height: number) {
         super(width, height, 5);
-        this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
+        this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke.png`;
     }
-    public changeStage(deltaTime: number): void {
-        this._timer += deltaTime;
-        if (this._timer >= TankDriftAnimation.UPDATE_TIMER_TIME){
-            this._timer -= TankDriftAnimation.UPDATE_TIMER_TIME;
-
-            this._animationStage++;
-            if (this._animationStage <= TankDriftAnimation.MAX_STAGE) {
-                this._sprite.src = `${TankDriftAnimation.DEFAULT_PATH}${this._animationStage}.png`;
-            } else {
-                this._isEnded = true;
-            }
-        }
+    public set frame(value: number) {
+        this._frame = value;
     }
+    public get frame(): number {
+        return this._frame;
+    }
+    public get originalWidth(): number { return TankDriftAnimation.ORIGINAL_SIZE }
+    public get originalHeight(): number { return TankDriftAnimation.ORIGINAL_SIZE }
 }
 export class TopTankDriftAnimation extends TankDriftAnimation implements IScalable {
     public constructor(width: number, height: number) {

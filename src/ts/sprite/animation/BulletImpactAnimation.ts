@@ -27,7 +27,7 @@ export class BulletImpactAnimation extends Sprite implements IAnimation{
         this._point = newPoint;
         this._angle = angle;
     }
-    public changeStage(deltaTime: number): void {
+    public changeFrame(deltaTime: number): void {
         this._timer += deltaTime;
         if (this._timer >= BulletImpactAnimation.UPDATE_TIMER_TIME){
             this._timer -= BulletImpactAnimation.UPDATE_TIMER_TIME;
