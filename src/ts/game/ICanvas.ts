@@ -1,4 +1,4 @@
-import {isImplementsIScalable, isImplementsIAnimatedSprite, isImplementsIVanish, ISprite,} from "../sprite/Sprite";
+import {isImplementsIScalable, isImplementsIFrameByFrame, isImplementsIVanish, ISprite,} from "../sprite/Sprite";
 import {SpriteIDTracker} from "./id/SpriteIDTracker";
 import {IStorage, Size} from "../additionally/type";
 import {IIdentifiable} from "./id/IIdentifiable";
@@ -72,7 +72,7 @@ export class Canvas implements ICanvas {
         if (isImplementsIScalable(sprite))
             this._bufferCtx.scale(sprite.scaleX, sprite.scaleY);
 
-        if (isImplementsIAnimatedSprite(sprite)) {
+        if (isImplementsIFrameByFrame(sprite)) {
             this._bufferCtx.drawImage(
                 sprite.sprite,
                 sprite.frame * sprite.originalWidth,

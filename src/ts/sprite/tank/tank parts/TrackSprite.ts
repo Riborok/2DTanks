@@ -1,8 +1,8 @@
 import {Point} from "../../../geometry/Point";
 import {ResolutionManager} from "../../../constants/gameConstants";
-import {IAnimatedSprite, ISpritePart, Sprite} from "../../Sprite";
+import {IFrameByFrame, ISpritePart, Sprite} from "../../Sprite";
 
-export abstract class TrackSprite extends Sprite implements ISpritePart, IAnimatedSprite {
+export abstract class TrackSprite extends Sprite implements ISpritePart, IFrameByFrame {
     abstract calcPosition(point: Point, sin: number, cos: number): Point;
 
     private static readonly PROPORTION_WIDTH_HEIGHT: number = 42 / 246;
