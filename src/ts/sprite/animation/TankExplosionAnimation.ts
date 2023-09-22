@@ -1,19 +1,15 @@
 import {IFrameByFrame, Sprite} from "../Sprite";
 import {Point} from "../../geometry/Point";
-import {IAnimation} from "./IAnimation";
+import {AnimationSprite, IAnimation} from "./IAnimation";
 import {ResolutionManager} from "../../constants/gameConstants";
 
-export class TankExplosionAnimation extends Sprite implements IAnimation, IFrameByFrame{
+export class TankExplosionAnimation extends AnimationSprite implements IFrameByFrame{
     private static readonly ORIGINAL_SIZE: number = 256;
     private static readonly UPDATE_TIMER_TIME: number = 90;
-    private static readonly MAX_STAGE: number = 8;
+    private static readonly MAX_FRAME: number = 8;
 
-    private _frame: number = 0;
-    private _isEnded: boolean = false;
-    private _timer: number = 0;
-    public get isEnded(): boolean {
-        return this._isEnded;
-    }
+    protected get UPDATE_TIMER_TIME(): number { return TankExplosionAnimation.UPDATE_TIMER_TIME }
+    protected get MAX_FRAME(): number { return TankExplosionAnimation.MAX_FRAME }
     public constructor(point: Point, angle: number) {
         super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, 6);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`;
@@ -23,18 +19,6 @@ export class TankExplosionAnimation extends Sprite implements IAnimation, IFrame
             point.y - ResolutionManager.EXPLOSION_SIZE / 2
         );
         this._angle = angle;
-    }
-    public changeStage(deltaTime: number): void {
-        this._timer += deltaTime;
-        if (this._timer >= TankExplosionAnimation.UPDATE_TIMER_TIME){
-            this._timer -= TankExplosionAnimation.UPDATE_TIMER_TIME;
-
-            this._frame++;
-            if (this._frame > TankExplosionAnimation.MAX_STAGE) {
-                this._frame = TankExplosionAnimation.MAX_STAGE;
-                this._isEnded = true;
-            }
-        }
     }
     public set frame(value: number) {
         this._frame = value;
