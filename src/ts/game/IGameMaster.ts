@@ -111,8 +111,7 @@ export class GameMaster implements IGameMaster {
         );
         this._wallHandlingManagers.add(wallsArray);
 
-        MazeCreator.calcGridPoints(new Point(xIndent, yIndent));
-        MazeCreator.createMazeLvl3(this._wallHandlingManagers, material);
+        this._wallHandlingManagers.add(MazeCreator.createMazeLvl3(material, MazeCreator.calcGridPoints(new Point(xIndent, yIndent))));
     }
     public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
