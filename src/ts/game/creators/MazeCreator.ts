@@ -29,8 +29,8 @@ export class MazeCreator {
             this.GRID_LINES[i] = point.y + i * sectionWidth;
         }
     }
-    public static createMaze(wallHandlingManager: HandlingManager<WallElement, WallMovementManager>,
-                             wallMaterialNum: number){
+    public static createMazeLvl1(wallHandlingManager: HandlingManager<WallElement, WallMovementManager>,
+                                 wallMaterialNum: number){
         MazeCreator._wallHandlingManagers = wallHandlingManager;
         MazeCreator._wallMaterialNum = wallMaterialNum;
 
