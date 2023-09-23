@@ -27,6 +27,12 @@ import {
     VK_W
 } from "../../constants/keyCodes";
 
+type PanelInfo = {
+    tankAttacker: HTMLDivElement,
+    keyCount: HTMLDivElement,
+    tankDefender: HTMLDivElement,
+}
+
 export class Game0 {
     private constructor() { }
     private static get CONTROL_1(): Control {
@@ -80,11 +86,9 @@ export class Game0 {
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size);
         gameMaster.addWallElements(wallsArray);
         gameMaster.addWallElements(createMaze(wallMaterial, point));
-
-        gameMaster.gameLoop.start();
     }
     private static readonly PANEL_HEIGHT: number = 5;
-    private static createInfoPanel(htmlCanvasElement: HTMLCanvasElement) {
+    private static createInfoPanel(htmlCanvasElement: HTMLCanvasElement): PanelInfo {
         htmlCanvasElement.style.top = `${Game0.PANEL_HEIGHT}%`;
         htmlCanvasElement.style.height = `${100 - Game0.PANEL_HEIGHT}%`;
 
@@ -106,5 +110,6 @@ export class Game0 {
         infoPanel.appendChild(tankAttacker);
         infoPanel.appendChild(keyCount);
         infoPanel.appendChild(tankDefender);
+        return  { tankAttacker, keyCount, tankDefender }
     }
 }

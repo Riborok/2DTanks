@@ -1,6 +1,10 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
 
+export interface IEventEmitter {
+    removeEventListeners(): void;
+}
+
 export interface IStorage<T> {
     insert(t: T): void;
     remove(t: T): void;
