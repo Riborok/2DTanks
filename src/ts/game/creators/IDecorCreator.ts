@@ -2,7 +2,7 @@ import {ResolutionManager} from "../../constants/gameConstants";
 import {BackgroundSprite} from "../../sprite/background/BackgroundSprite";
 import {Point} from "../../geometry/Point";
 import {IStorage, Size} from "../../additionally/type";
-import {ISprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/ISprite";
 
 export class DecorCreator {
     private constructor() { }

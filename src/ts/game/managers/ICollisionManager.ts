@@ -1,4 +1,4 @@
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {ICollisionDetection} from "../../entitiy/IEntityCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";

@@ -1,4 +1,4 @@
-import {Sprite} from "../Sprite";
+import {Sprite} from "../ISprite";
 import {MATERIAL, ResolutionManager} from "../../constants/gameConstants";
 import {getRandomInt} from "../../additionally/additionalFunc";
 

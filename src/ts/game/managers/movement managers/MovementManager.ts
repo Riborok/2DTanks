@@ -1,7 +1,7 @@
 import {TankElement} from "../../elements/TankElement";
 import {ICollisionManager} from "../ICollisionManager";
 import {WallElement} from "../../elements/WallElement";
-import {IEntity} from "../../../entitiy/IEntity";
+import {IEntity} from "../../../entitiy/entity/IEntity";
 import {BulletElement} from "../../elements/BulletElement";
 import {IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData, IStorage} from "../../../additionally/type";

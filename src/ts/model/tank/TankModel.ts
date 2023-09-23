@@ -1,7 +1,7 @@
 import {TankParts} from "../../components/tank parts/TankParts";
 import {BulletModel} from "../bullet/BulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {LandModel} from "../Model";
 import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";

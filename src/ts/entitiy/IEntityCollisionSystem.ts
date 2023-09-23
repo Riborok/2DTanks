@@ -1,4 +1,4 @@
-import {IEntity} from "./IEntity";
+import {IEntity} from "./entity/IEntity";
 import {CollisionDetector} from "../geometry/CollisionDetector";
 import {Point} from "../geometry/Point";
 import {IStorage} from "../additionally/type";

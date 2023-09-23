@@ -1,4 +1,4 @@
-import {ISpritePart, Sprite} from "../../Sprite";
+import {ISpritePart, Sprite} from "../../ISprite";
 import {ResolutionManager} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
 

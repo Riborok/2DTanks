@@ -1,6 +1,6 @@
 import {Action, IWallMovementManager, Movement, MovementManager} from "./MovementManager";
 import {WallElement} from "../../elements/WallElement";
-import {EntityManipulator} from "../../../entitiy/EntityManipulator";
+import {EntityManipulator} from "../../../entitiy/entity/EntityManipulator";
 
 export class WallMovementManager extends MovementManager implements IWallMovementManager {
     private residualAngularMovement(wallElement: WallElement, deltaTime: number) {

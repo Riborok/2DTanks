@@ -2,13 +2,13 @@ import {TankModel} from "../../model/tank/TankModel";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../components/tank parts/TankPartsCreator";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
-import {IEntity, RectangularEntity} from "../../entitiy/IEntity";
+import {IEntity, RectangularEntity} from "../../entitiy/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {Control, IStorage} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
-import {ISprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/ISprite";
 
 export class TankElement implements IElement {
     private readonly _model: TankModel;

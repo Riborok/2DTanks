@@ -1,5 +1,5 @@
 import {MotionData} from "../../../additionally/type";
-import {IFrameByFrame} from "../../Sprite";
+import {IFrameByFrame} from "../../ISprite";
 
 export class TankTrackEffect {
     private static readonly MIN_THRESHOLD_COEFF: number = 17.5;

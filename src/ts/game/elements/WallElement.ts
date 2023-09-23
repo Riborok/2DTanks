@@ -1,9 +1,9 @@
 import {WallModel} from "../../model/obstacle/WallModel";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
 import {IElement} from "./IElement";
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {IStorage} from "../../additionally/type";
-import {ISprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/ISprite";
 
 export class WallElement implements IElement {
     private readonly _model: WallModel;

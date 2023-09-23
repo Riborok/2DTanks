@@ -1,4 +1,4 @@
-import {Sprite} from "../Sprite";
+import {Sprite} from "../ISprite";
 import {MATERIAL, ResolutionManager, SHAPE} from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
 import {SpriteManipulator} from "../SpriteManipulator";
