@@ -1,4 +1,8 @@
-import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
+import {
+    AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_HEIGHT_AMOUNT,
+    OBSTACLE_WALL_WIDTH_AMOUNT,
+    RESISTANCE_COEFFICIENT
+} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Canvas, ICanvas} from "./ICanvas";
@@ -21,6 +25,7 @@ import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./IGameLoop";
 import {Size} from "../additionally/type";
+import {MazeCreator} from "./creators/MazeCreator";
 
 export interface IGameMaster {
     get gameLoop(): IGameLoop;
@@ -88,7 +93,7 @@ export class GameMaster implements IGameMaster {
         this.setCoefficients(backgroundMaterial);
 
         this.createBackgroundSprites(backgroundMaterial);
-        this.createWalls(wallMaterial);
+        this.createMaze(wallMaterial);
     }
     private setCoefficients(backgroundMaterial: number) {
         for (const handlingManager of this._handlingManagers) {
@@ -99,16 +104,14 @@ export class GameMaster implements IGameMaster {
     private createBackgroundSprites(material: number) {
         DecorCreator.fullFillBackground(material, this._size, this._canvas);
     }
-    private createWalls(material: number) {
-        this._wallHandlingManagers.add(ObstacleCreator.createWallsAroundPerimeter(material, this._size));
+    private createMaze(material: number) {
+        const {wallsArray, xIndent, yIndent } = ObstacleCreator.createWallsAroundPerimeter(
+            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, material, this._size
+        );
+        this._wallHandlingManagers.add(wallsArray);
 
-        // Additional walls
-        const arr = new Array<WallElement>();
-        arr.push(ObstacleCreator.createWall(
-            new Point(this._size.width >> 1, this._size.height >> 1), 0, 2, 0, true));
-        arr.push(ObstacleCreator.createWall(
-            new Point(this._size.width >> 2, this._size.height >> 2), 1, 2, 1, true));
-        this._wallHandlingManagers.add(arr);
+        MazeCreator.calcGridPoints(new Point(xIndent, yIndent));
+        MazeCreator.createMaze(this._wallHandlingManagers, material);
     }
     public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
