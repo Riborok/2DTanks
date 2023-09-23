@@ -2,7 +2,7 @@ import {TankModel} from "../../model/tank/TankModel";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../components/tank parts/TankPartsCreator";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
-import {IEntity, RectangularEntity} from "../../entitiy/entity/IEntity";
+import {IEntity, RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {Control, IStorage} from "../../additionally/type";
@@ -49,7 +49,7 @@ export class TankElement implements IElement {
         entityStorage.insert(entity);
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
-    public vanish(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
+    public terminate(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         const tankSpriteParts = this._sprite.tankSpriteParts;
         this._sprite.tankTireTrack.vanishFullTrack();
 

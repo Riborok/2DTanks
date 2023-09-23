@@ -2,7 +2,7 @@ import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionResult} from "../additionally/type";
 import {calcMidBetweenTwoPoint} from "./additionalFunc";
-import {IPolygon} from "../entitiy/IPolygon";
+import {IPolygon} from "../polygon/IPolygon";
 
 /**
  * Utility class for detecting collisions between polygons using the Separating Axis Theorem (SAT).

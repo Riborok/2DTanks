@@ -2,9 +2,9 @@ import {IBulletMovementManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData, CollisionPack} from "../../../additionally/type";
-import {EntityManipulator} from "../../../entitiy/entity/EntityManipulator";
+import {EntityManipulator} from "../../../polygon/entity/EntityManipulator";
 import {VectorUtils} from "../../../geometry/VectorUtils";
-import {PolygonManipulator} from "../../../entitiy/PolygonManipulator";
+import {PolygonManipulator} from "../../../polygon/PolygonManipulator";
 
 export class BulletMovementManager extends MovementManager implements IBulletMovementManager {
     private readonly _bulletCollisionDates: IIdToProcessing<BulletCollisionData> = new IdToProcessing();

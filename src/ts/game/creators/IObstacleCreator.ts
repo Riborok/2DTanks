@@ -1,5 +1,5 @@
 import {ResolutionManager, WALL_MASS} from "../../constants/gameConstants";
-import {RectangularEntity} from "../../entitiy/entity/IEntity";
+import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {WallElement} from "../elements/WallElement";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";

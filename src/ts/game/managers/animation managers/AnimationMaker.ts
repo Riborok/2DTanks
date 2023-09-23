@@ -1,5 +1,5 @@
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IEntity} from "../../../entitiy/entity/IEntity";
+import {IEntity} from "../../../polygon/entity/IEntity";
 import {TankExplosionAnimation} from "../../../sprite/animation/TankExplosionAnimation";
 import {getRandomInt} from "../../../additionally/additionalFunc";
 import {Point} from "../../../geometry/Point";

@@ -6,7 +6,7 @@ import {
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Canvas, ICanvas} from "./ICanvas";
-import {Quadtree} from "../entitiy/IEntityCollisionSystem";
+import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
 import {IKeyHandler, KeyHandler} from "./IKeyHandler";
@@ -26,6 +26,7 @@ import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./IGameLoop";
 import {Size} from "../additionally/type";
 import {MazeCreator} from "./creators/MazeCreator";
+import {IEntity} from "../polygon/entity/IEntity";
 
 export interface IGameMaster {
     get gameLoop(): IGameLoop;
@@ -52,7 +53,7 @@ export class GameMaster implements IGameMaster {
         this._gameLoop = new GameLoop(this._canvas);
         this._animationManager = new AnimationManager(this._canvas);
 
-        const entityCollisionSystem = new Quadtree(0, 0, width, height);
+        const entityCollisionSystem: IPolygonCollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0, width, height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
 
         const tankElements = new Map<number, TankElement>;
