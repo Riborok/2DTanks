@@ -105,7 +105,7 @@ export class GameMaster implements IGameMaster {
         // Additional walls
         const arr = new Array<WallElement>();
         arr.push(ObstacleCreator.createWall(
-            new Point(this._size.width >> 1, this._size.height >> 1), 0.79, 2, 0, true));
+            new Point(this._size.width >> 1, this._size.height >> 1), 0, 2, 0, true));
         arr.push(ObstacleCreator.createWall(
             new Point(this._size.width >> 2, this._size.height >> 2), 1, 2, 1, true));
         this._wallHandlingManagers.add(arr);
