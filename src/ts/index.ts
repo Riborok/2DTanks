@@ -20,8 +20,6 @@ import {
 } from "./constants/keyCodes";
 import {ResolutionManager} from "./constants/gameConstants";
 
-window.onmousedown = (event) => console.log(`x = ${event.clientX}px, y = ${event.clientY}px`);
-
 const htmlCanvasElement: HTMLCanvasElement = document.querySelector('#canvas');
 htmlCanvasElement.width = window.screen.width;
 htmlCanvasElement.height = window.screen.height;
@@ -56,3 +54,10 @@ const tank2 = new TankElement(new Point(450, 450), 0, 1,
 
 gameMaster.addTankElements(tank1, tank2);
 gameMaster.gameLoop.start();
+
+function handleClick(event: MouseEvent) {
+    const x = event.clientX - htmlCanvasElement.getBoundingClientRect().left;
+    const y = event.clientY - htmlCanvasElement.getBoundingClientRect().top;
+    console.log(`x = ${x}px, y = ${y}px`);
+}
+htmlCanvasElement.addEventListener('click', handleClick);

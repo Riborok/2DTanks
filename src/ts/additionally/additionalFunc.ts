@@ -46,6 +46,13 @@ export function remapValueToRange(value: number, currentRangeMin: number, curren
                            targetRangeMax: number): number {
     return (value - currentRangeMin) / (currentRangeMax - currentRangeMin) * (targetRangeMax - targetRangeMin) + targetRangeMin;
 }
+
+/**
+ * Rounds a number to a specified number of decimal places.
+ * @param number The number to be rounded.
+ * @param rounding The number of decimal places to round to.
+ * @returns The rounded number.
+ */
 export function roundNumber(number: number, rounding: number): number {
     return Math.round(number * rounding) / rounding;
 }
