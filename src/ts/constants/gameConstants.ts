@@ -6,7 +6,7 @@ export class ResolutionManager {
     public static BACKGROUND_SIZE: number = 115;
     public static WALL_WIDTH: number[] = [100, 50];
     public static WALL_HEIGHT: number[] = [50, 50];
-    public static TRACK_INDENT: number = 5;
+    public static TRACK_INDENT: number = 4;
     public static HULL_WIDTH: number[] = [57, 61, 58, 48, 61, 61, 57, 52];
     public static HULL_HEIGHT: number[] = [37, 47, 37, 31, 52, 42, 36, 31];
     public static TURRET_INDENT_X: number[] = [15, 19, 15, 11, 19, 19, 19, 15];
