@@ -1,3 +1,8 @@
+.sprite {
+    position: absolute;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
 #canvas {
     position: absolute;
     left: 0;
@@ -8,8 +13,37 @@
     transform: translateZ(0);
 }
 
-.sprite {
+#info-panel {
     position: absolute;
-    pointer-events: none;
-    will-change: transform, opacity;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to bottom, #808080, #585858, #464646);
+    color: white;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Trattatello, cursive;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+#tank-attacker::before,
+#tank-defender::before,
+#key-count::before {
+    font-weight: bold;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+#tank-attacker::before {
+    content: "Attacker's Health: ";
+    text-align: right;
+}
+#tank-defender::before {
+    content: "Defender's Health: ";
+    text-align: center;
+}
+#key-count::before {
+    content: "Amount of Keys: ";
+    text-align: left;
 }

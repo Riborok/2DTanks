@@ -1,8 +1,4 @@
-import {
-    AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_HEIGHT_AMOUNT,
-    OBSTACLE_WALL_WIDTH_AMOUNT,
-    RESISTANCE_COEFFICIENT
-} from "../constants/gameConstants";
+import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
 import {Canvas, ICanvas} from "./ICanvas";
@@ -10,8 +6,6 @@ import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSys
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
 import {IKeyHandler, KeyHandler} from "./IKeyHandler";
-import {ObstacleCreator} from "./creators/IObstacleCreator";
-import {Point} from "../geometry/Point";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
 import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
 import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
@@ -25,13 +19,13 @@ import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./IGameLoop";
 import {Size} from "../additionally/type";
-import {MazeCreator} from "./creators/MazeCreator";
 import {IEntity} from "../polygon/entity/IEntity";
 
 export interface IGameMaster {
     get gameLoop(): IGameLoop;
-    createField(backgroundMaterial: number, wallMaterial: number): void;
-    addTankElements(...tankElements: TankElement[]): void;
+    setBackgroundMaterial(backgroundMaterial: number): void;
+    addTankElements(tankElements: Iterable<TankElement>): void;
+    addWallElements(wallElements: Iterable<WallElement>): void;
 }
 
 export class GameMaster implements IGameMaster {
@@ -43,17 +37,19 @@ export class GameMaster implements IGameMaster {
     private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
     private readonly _bulletHandlingManager: HandlingManager<BulletElement, BulletMovementManager>;
 
-    private readonly _handlingManagers: HandlingManager<IElement, MovementManager>[] = new Array<HandlingManager<IElement, MovementManager>>;
+    private readonly _handlingManagers: HandlingManager<IElement, MovementManager>[] =
+        new Array<HandlingManager<IElement, MovementManager>>;
     private readonly _animationManager: IAnimationManager;
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
-    public constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
-        this._size = { width, height };
+    public constructor(ctx: CanvasRenderingContext2D, size: Size) {
+        this._size = size;
         this._canvas = new Canvas(ctx, this._size);
         this._gameLoop = new GameLoop(this._canvas);
         this._animationManager = new AnimationManager(this._canvas);
 
-        const entityCollisionSystem: IPolygonCollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0, width, height);
+        const entityCollisionSystem: IPolygonCollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
+            this._size.width, this._size.height);
         const collisionManager = new CollisionManager(entityCollisionSystem);
 
         const tankElements = new Map<number, TankElement>;
@@ -90,11 +86,10 @@ export class GameMaster implements IGameMaster {
         this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
     }
     public get gameLoop(): IGameLoop { return this._gameLoop }
-    public createField(backgroundMaterial: number, wallMaterial: number) {
+    public setBackgroundMaterial(backgroundMaterial: number) {
         this.setCoefficients(backgroundMaterial);
 
         this.createBackgroundSprites(backgroundMaterial);
-        this.createMaze(wallMaterial);
     }
     private setCoefficients(backgroundMaterial: number) {
         for (const handlingManager of this._handlingManagers) {
@@ -105,15 +100,10 @@ export class GameMaster implements IGameMaster {
     private createBackgroundSprites(material: number) {
         DecorCreator.fullFillBackground(material, this._size, this._canvas);
     }
-    private createMaze(material: number) {
-        const {wallsArray, xIndent, yIndent } = ObstacleCreator.createWallsAroundPerimeter(
-            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, material, this._size
-        );
-        this._wallHandlingManagers.add(wallsArray);
-
-        this._wallHandlingManagers.add(MazeCreator.createMazeLvl3(material, MazeCreator.calcGridPoints(new Point(xIndent, yIndent))));
-    }
-    public addTankElements(...tankElements: TankElement[]) {
+    public addTankElements(tankElements: Iterable<TankElement>) {
         this._tankHandlingManagers.add(tankElements);
+    }
+    public addWallElements(wallElements: Iterable<WallElement>) {
+        this._wallHandlingManagers.add(wallElements);
     }
 }

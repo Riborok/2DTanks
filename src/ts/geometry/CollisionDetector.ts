@@ -70,7 +70,7 @@ export class CollisionDetector {
             return null;
 
         return {collisionPoint: CollisionDetector.findClosestVertex(polygon1, polygon2, collisionAxis, isPolygon1Axis),
-            overlap: smallestOverlap};
+            overlap: smallestOverlap}
     }
     private static readonly EPSILON: number = 1;
     private static findClosestVertex(polygon1: IPolygon, polygon2: IPolygon, axis: Axis, isPolygon1Axis: boolean): Point {
@@ -113,7 +113,7 @@ export class CollisionDetector {
             }
         }
 
-        return { min, max, minPoint, maxPoint };
+        return { min, max, minPoint, maxPoint }
     }
     private static getAxes(polygon: IPolygon): Axis[] {
         const axes = new Array<Axis>();
@@ -137,7 +137,7 @@ export class CollisionDetector {
                 max = dotProduct;
         }
 
-        return { min, max };
+        return { min, max }
     }
 }
 type Projection = {

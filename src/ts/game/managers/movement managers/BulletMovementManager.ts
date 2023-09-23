@@ -2,7 +2,6 @@ import {IBulletMovementManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData, CollisionPack} from "../../../additionally/type";
-import {EntityManipulator} from "../../../polygon/entity/EntityManipulator";
 import {VectorUtils} from "../../../geometry/VectorUtils";
 import {PolygonManipulator} from "../../../polygon/PolygonManipulator";
 

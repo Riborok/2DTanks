@@ -109,7 +109,7 @@ export class TankTireTrack {
         firstBottomChainPoint = TankTireTrack.calcPositionOfFirstChain(firstBottomChainPoint,
             this._trackWidth, this.chainWidth, sin, cos);
 
-        return {topFirstChainPoint: firstTopChainPoint, bottomFirstChainPoint: firstBottomChainPoint};
+        return {topFirstChainPoint: firstTopChainPoint, bottomFirstChainPoint: firstBottomChainPoint}
     }
     public calcLastTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
         {topLastChainPoint: Point, bottomLastChainPoint: Point} {
@@ -118,7 +118,7 @@ export class TankTireTrack {
         const hullDefaultPoint = tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         const lastBottomChainPoint = tankSpriteParts.bottomTrackSprite.calcPosition(hullDefaultPoint, sin, cos);
 
-        return {topLastChainPoint: lastTopChainPoint, bottomLastChainPoint: lastBottomChainPoint};
+        return {topLastChainPoint: lastTopChainPoint, bottomLastChainPoint: lastBottomChainPoint}
     }
     public spawnFullTireTrack(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number){
         this._topFirstChainPoint = topPoint.clone();
@@ -151,15 +151,15 @@ export class TankTireTrack {
         const topLastDistance = calcDistance(topLastPoint, this._topLastChainPoint);
         const bottomLastDistance = calcDistance(bottomLastPoint, this._bottomLastChainPoint);
         if (topFirstDistance >= this._chainWidth)
-            return {isUpdate: true, prevPoint: this._topFirstChainPoint, currPoint: topFirstPoint};
+            return {isUpdate: true, prevPoint: this._topFirstChainPoint, currPoint: topFirstPoint}
         else if (bottomFirstDistance >= this._chainWidth)
-            return {isUpdate: true, prevPoint: this._bottomFirstChainPoint, currPoint: bottomFirstPoint};
+            return {isUpdate: true, prevPoint: this._bottomFirstChainPoint, currPoint: bottomFirstPoint}
         else if (topLastDistance >= this._chainWidth)
-            return {isUpdate: true, prevPoint: this._topLastChainPoint, currPoint: topLastPoint};
+            return {isUpdate: true, prevPoint: this._topLastChainPoint, currPoint: topLastPoint}
         else if (bottomLastDistance >= this._chainWidth)
-            return {isUpdate: true, prevPoint: this._bottomLastChainPoint, currPoint: bottomLastPoint};
+            return {isUpdate: true, prevPoint: this._bottomLastChainPoint, currPoint: bottomLastPoint}
         else
-            return { isUpdate: false };
+            return { isUpdate: false }
     }
     private getMovementAngle(firstPoint: Point, lastPoint: Point){
         const deltaX: number = lastPoint.x - firstPoint.x;
