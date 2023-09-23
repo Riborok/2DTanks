@@ -1,5 +1,5 @@
 import {IIdentifiable} from "../../game/id/IIdentifiable";
-import {Sprite} from "../Sprite";
+import {Sprite} from "../ISprite";
 
 export interface IAnimation extends IIdentifiable {
     get isEnded(): boolean;

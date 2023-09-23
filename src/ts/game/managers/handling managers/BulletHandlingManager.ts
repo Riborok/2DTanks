@@ -7,7 +7,7 @@ import {IAnimationManager} from "../animation managers/AnimationManager";
 import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {IStorage} from "../../../additionally/type";
-import {ISprite} from "../../../sprite/Sprite";
+import {ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {

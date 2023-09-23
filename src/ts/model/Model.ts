@@ -1,4 +1,4 @@
-import {IEntity} from "../entitiy/IEntity";
+import {IEntity} from "../entitiy/entity/IEntity";
 import {BulletModel} from "./bullet/BulletModel";
 import {IHealth} from "../additionally/type";
 import {AirForcesCalculator, LandForcesCalculator} from "./ForcesCalculator";

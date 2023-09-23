@@ -2,8 +2,9 @@ import {IBulletMovementManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
 import {BulletCollisionData, CollisionPack} from "../../../additionally/type";
-import {EntityManipulator} from "../../../entitiy/EntityManipulator";
+import {EntityManipulator} from "../../../entitiy/entity/EntityManipulator";
 import {VectorUtils} from "../../../geometry/VectorUtils";
+import {PolygonManipulator} from "../../../entitiy/PolygonManipulator";
 
 export class BulletMovementManager extends MovementManager implements IBulletMovementManager {
     private readonly _bulletCollisionDates: IIdToProcessing<BulletCollisionData> = new IdToProcessing();
@@ -28,7 +29,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
         let isCollisionOccurred = false;
         const count = Math.floor(VectorUtils.calcCoDirectionalScaleFactor(entity.velocity, movementVector));
         for (let i = count; i > 0; i--) {
-            EntityManipulator.moveEntity(entity, movementVector);
+            PolygonManipulator.movePolygon(entity, movementVector);
             const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
             if (collisionPacks) {
                 this._bulletCollisionDates.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
@@ -44,7 +45,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
             movementVector.scale(-count);
             movementVector.addVector(entity.velocity);
 
-            EntityManipulator.moveEntity(entity, movementVector);
+            PolygonManipulator.movePolygon(entity, movementVector);
             const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
             if (collisionPacks)
                 this._bulletCollisionDates.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });

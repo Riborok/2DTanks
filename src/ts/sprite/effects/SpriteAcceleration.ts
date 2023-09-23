@@ -1,4 +1,4 @@
-import {IFrameByFrame, Sprite} from "../Sprite";
+import {IFrameByFrame, Sprite} from "../ISprite";
 import {ResolutionManager} from "../../constants/gameConstants";
 
 export class SpriteAcceleration extends Sprite implements IFrameByFrame {

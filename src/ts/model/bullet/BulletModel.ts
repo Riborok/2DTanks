@@ -1,5 +1,5 @@
 import {IBullet} from "../../components/bullet/IBullet";
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {AirModel} from "../Model";
 import {IWeapon} from "../../components/tank parts/IWeapon";
 

@@ -2,7 +2,7 @@ import {MovementManager} from "../movement managers/MovementManager";
 import {IElement} from "../../elements/IElement";
 import {Model} from "../../../model/Model";
 import {IStorage} from "../../../additionally/type";
-import {ISprite} from "../../../sprite/Sprite";
+import {ISprite} from "../../../sprite/ISprite";
 
 export interface IAddModel<T extends Model> {
     addBulletModel(t: T, num: number): void;

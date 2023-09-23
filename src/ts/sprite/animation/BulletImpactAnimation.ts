@@ -1,4 +1,4 @@
-import {IFrameByFrame} from "../Sprite";
+import {IFrameByFrame} from "../ISprite";
 import {Point} from "../../geometry/Point";
 import {AnimationSprite} from "./IAnimation";
 import {SpriteManipulator} from "../SpriteManipulator";

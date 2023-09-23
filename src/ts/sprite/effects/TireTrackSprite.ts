@@ -1,4 +1,4 @@
-import {IVanish, Sprite} from "../Sprite";
+import {IVanish, Sprite} from "../ISprite";
 
 export class TireTrackSprite extends Sprite implements IVanish {
     public constructor(width: number, height: number, type: number) {

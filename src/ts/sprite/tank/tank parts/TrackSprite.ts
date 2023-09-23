@@ -1,6 +1,6 @@
 import {Point} from "../../../geometry/Point";
 import {ResolutionManager} from "../../../constants/gameConstants";
-import {IFrameByFrame, ISpritePart, Sprite} from "../../Sprite";
+import {IFrameByFrame, ISpritePart, Sprite} from "../../ISprite";
 
 export abstract class TrackSprite extends Sprite implements ISpritePart, IFrameByFrame {
     abstract calcPosition(point: Point, sin: number, cos: number): Point;

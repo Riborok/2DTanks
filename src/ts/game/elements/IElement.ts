@@ -1,7 +1,7 @@
 import {IIdentifiable} from "../id/IIdentifiable";
-import {ISprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/ISprite";
 import {TankSprite} from "../../sprite/tank/TankSprite";
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {Model} from "../../model/Model";
 import {IStorage} from "../../additionally/type";
 

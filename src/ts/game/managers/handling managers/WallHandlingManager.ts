@@ -4,7 +4,7 @@ import {WallMovementManager} from "../movement managers/WallMovementManager";
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {IStorage} from "../../../additionally/type";
-import {ISprite} from "../../../sprite/Sprite";
+import {ISprite} from "../../../sprite/ISprite";
 
 export class WallHandlingManager extends HandlingManager<WallElement, WallMovementManager> {
     private readonly _wallToProcess: IDoublyLinkedList<WallElement> = new DoublyLinkedList<WallElement>();

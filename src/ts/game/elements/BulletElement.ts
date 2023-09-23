@@ -1,9 +1,9 @@
 import {IElement} from "./IElement";
-import {IEntity} from "../../entitiy/IEntity";
+import {IEntity} from "../../entitiy/entity/IEntity";
 import {BulletSprite} from "../../sprite/bullet/BulletSprite";
 import {BulletModel} from "../../model/bullet/BulletModel";
 import {IStorage} from "../../additionally/type";
-import {ISprite} from "../../sprite/Sprite";
+import {ISprite} from "../../sprite/ISprite";
 
 export class BulletElement implements IElement {
     private readonly _model: BulletModel;

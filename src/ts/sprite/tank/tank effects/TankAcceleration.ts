@@ -3,7 +3,7 @@ import {SpriteManipulator} from "../../SpriteManipulator";
 import {SpriteAcceleration} from "../../effects/SpriteAcceleration";
 import {ResolutionManager} from "../../../constants/gameConstants"
 import {IStorage} from "../../../additionally/type";
-import {ISprite} from "../../Sprite";
+import {ISprite} from "../../ISprite";
 
 export class TankAcceleration {
     private static readonly THRESHOLD: number = 7;

@@ -1,4 +1,4 @@
-import {Sprite} from "./Sprite";
+import {Sprite} from "./ISprite";
 import {Point} from "../geometry/Point";
 import {PointRotator} from "../geometry/PointRotator";
 
