@@ -8,23 +8,22 @@ import {Point} from "../../geometry/Point";
 import {Size} from "../../additionally/type";
 
 export class ObstacleCreator {
-    private static readonly INDENT: number = 10;
-    private static readonly RAD_90: number = 90 * Math.PI / 180;
+    private static readonly RAD_90: number = Math.PI / 2;
     private static readonly RECT_NUM: number = 0;
     private constructor() { }
-    public static createWallsAroundPerimeter(materialNum: number, size: Size): Iterable<WallElement> {
+    public static createWallsAroundPerimeter(widthWallAmount: number, heightWallAmount: number,
+                                             materialNum: number, size: Size):
+                                            {wallsArray: Iterable<WallElement>, xIndent: number, yIndent: number} {
         const result = new Array<WallElement>();
-        const xIndent = this.calcIndent(size.width);
-        const yIndent = this.calcIndent(size.height - (ResolutionManager.WALL_HEIGHT[this.RECT_NUM] << 1));
+        const xIndent = this.calcIndent(widthWallAmount, size.width);
+        const yIndent = this.calcIndent(heightWallAmount,
+            size.height - 2 * ResolutionManager.WALL_HEIGHT[0]);
         this.createHorWalls(materialNum, xIndent, yIndent, size, result)
         this.createVertWalls(materialNum, xIndent, yIndent, size, result);
-        return result;
+        return {wallsArray: result, xIndent: xIndent, yIndent: yIndent};
     }
-    private static calcIndent(totalLength: number): number {
-        const currLength = totalLength - (this.INDENT << 1);
-        const indent = currLength - ResolutionManager.WALL_WIDTH[this.RECT_NUM] *
-            Math.floor(currLength / ResolutionManager.WALL_WIDTH[this.RECT_NUM]);
-        return (indent >> 1) + this.INDENT;
+    private static calcIndent(wallAmount: number, totalLength: number): number {
+        return (totalLength - wallAmount * ResolutionManager.WALL_WIDTH[0]) / 2;
     }
     private static createHorWalls(materialNum: number, xIndent: number, yIndent: number, size: Size, arr: Array<WallElement>) {
         for (let x = xIndent; x <= size.width - xIndent - ResolutionManager.WALL_WIDTH[this.RECT_NUM]; x +=
