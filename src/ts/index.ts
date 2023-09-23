@@ -37,27 +37,27 @@ const control1: Control = {
     turretCounterClockwiseKey: VK_C,
     shootKey: VK_B
 }
-const tank1 = new TankElement(new Point(300, 300), 0, 0,
+const tank1 = new TankElement(new Point(ResolutionManager.resizeX(300), ResolutionManager.resizeY(300)), 0, 0,
     0, 0, 0, 0, control1);
 
-const control2: Control = {
-    forwardKey: VK_UP,
-    backwardKey: VK_DOWN,
-    hullClockwiseKey: VK_RIGHT,
-    hullCounterClockwiseKey: VK_LEFT,
-    turretClockwiseKey: VK_PERIOD,
-    turretCounterClockwiseKey: VK_COMMA,
-    shootKey: VK_SLASH
-};
-const tank2 = new TankElement(new Point(450, 450), 0, 1,
-    0, 0, 0, 0, control2);
+// const control2: Control = {
+//     forwardKey: VK_UP,
+//     backwardKey: VK_DOWN,
+//     hullClockwiseKey: VK_RIGHT,
+//     hullCounterClockwiseKey: VK_LEFT,
+//     turretClockwiseKey: VK_PERIOD,
+//     turretCounterClockwiseKey: VK_COMMA,
+//     shootKey: VK_SLASH
+// };
+// const tank2 = new TankElement(new Point(450, 450), 0, 1,
+//     0, 0, 0, 0, control2);
 
-gameMaster.addTankElements(tank1, tank2);
+gameMaster.addTankElements(tank1);
 gameMaster.gameLoop.start();
 
 function handleClick(event: MouseEvent) {
     const x = event.clientX - htmlCanvasElement.getBoundingClientRect().left;
     const y = event.clientY - htmlCanvasElement.getBoundingClientRect().top;
-    console.log(`x = ${x}px, y = ${y}px`);
+    console.log(`x = ${ResolutionManager.undoResizeX(x)}px, y = ${ResolutionManager.undoResizeY(y)}px`);
 }
 htmlCanvasElement.addEventListener('click', handleClick);
