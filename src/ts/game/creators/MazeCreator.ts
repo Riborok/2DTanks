@@ -1,23 +1,26 @@
 import {Point} from "../../geometry/Point";
 import {WallElement} from "../elements/WallElement";
 import {ObstacleCreator} from "./IObstacleCreator";
-import {
-    ResolutionManager
-} from "../../constants/gameConstants";
+import {ResolutionManager} from "../../constants/gameConstants";
 import {PointRotator} from "../../geometry/PointRotator";
-type GridPack = {GRID_COLUMNS_AMOUNT: number, GRID_LINES_AMOUNT: number, GRID_COLUMNS: number[], GRID_LINES: number[]};
+
+type GridPack = {
+    GRID_COLUMNS_AMOUNT: number,
+    GRID_LINES_AMOUNT: number,
+    GRID_COLUMNS: number[],
+    GRID_LINES: number[]
+}
 export class MazeCreator {
     private static readonly GRID_COLUMNS_AMOUNT: number = 12;
     private static readonly GRID_LINES_AMOUNT: number = 6;
-    private constructor() {
-    }
-    public static calcGridPoints(point: Point): GridPack{
+    private constructor() { }
+    private static calcGridPoints(point: Point): GridPack{
         const gridPack: GridPack = {
             GRID_COLUMNS_AMOUNT: MazeCreator.GRID_COLUMNS_AMOUNT,
             GRID_LINES_AMOUNT: MazeCreator.GRID_LINES_AMOUNT,
             GRID_COLUMNS: [],
             GRID_LINES: []
-        };
+        }
         const sectionWidth = ResolutionManager.WALL_WIDTH[0] * 3 / 2;
 
         for (let i = 0; i < gridPack.GRID_COLUMNS_AMOUNT; i++){
@@ -36,10 +39,8 @@ export class MazeCreator {
         if (point.y === gridPack.GRID_LINES[0] || point.y === gridPack.GRID_LINES[gridPack.GRID_LINES.length - 1])
             throw new Error('Horizontal wall line was made on the obstacle!');
 
-        const arr = new Array<WallElement>();
-
         if (point.x !== gridPack.GRID_COLUMNS[0] && isFirstSquare) {
-            arr.push(ObstacleCreator.createWall(point, 0, wallMaterial, 1, true));
+            wallsArray.push(ObstacleCreator.createWall(point, 0, wallMaterial, 1, false));
         }
 
         let newPoint = new Point(point.x + ResolutionManager.WALL_WIDTH[1], point.y)
@@ -47,7 +48,7 @@ export class MazeCreator {
             if (newPoint.x >= gridPack.GRID_COLUMNS[gridPack.GRID_COLUMNS.length - 1])
                 throw new Error('Horizontal wall line was made on the obstacle!');
 
-            arr.push(ObstacleCreator.createWall(
+            wallsArray.push(ObstacleCreator.createWall(
                     new Point(newPoint.x, newPoint.y),
                     0, wallMaterial, 0, false
                 )
@@ -55,7 +56,7 @@ export class MazeCreator {
             newPoint = new Point(newPoint.x + ResolutionManager.WALL_WIDTH[0], point.y);
 
             if (i !== wallAmount - 1) {
-                arr.push(ObstacleCreator.createWall(
+                wallsArray.push(ObstacleCreator.createWall(
                         new Point(newPoint.x, newPoint.y),
                         0, wallMaterial, 1, false
                     )
@@ -64,15 +65,13 @@ export class MazeCreator {
             }
             else if (point.x + wallAmount * (ResolutionManager.WALL_WIDTH[0] + ResolutionManager.WALL_WIDTH[1]) <
                 gridPack.GRID_COLUMNS[gridPack.GRID_COLUMNS.length - 1] && isLastSquare) {
-                arr.push(ObstacleCreator.createWall(
+                wallsArray.push(ObstacleCreator.createWall(
                         new Point(newPoint.x, newPoint.y),
                         0, wallMaterial, 1, false
                     )
                 );
             }
         }
-
-        wallsArray.push(...arr);
     }
     private static makeVertWallLine(point: Point, wallAmount: number,
                                     isFirstSquare: boolean, isLastSquare: boolean,
@@ -80,11 +79,9 @@ export class MazeCreator {
         if (point.x === gridPack.GRID_COLUMNS[0] || point.x === gridPack.GRID_COLUMNS[gridPack.GRID_COLUMNS.length - 1])
             throw new Error('Vertical wall line was made on the obstacle!');
 
-        const arr = new Array<WallElement>();
-
         let visibleMainPoint = new Point(point.x, point.y);
         if (visibleMainPoint.y !== gridPack.GRID_LINES[0] && isFirstSquare) {
-            arr.push(ObstacleCreator.createWall(visibleMainPoint, 0, wallMaterial, 1, true));
+            wallsArray.push(ObstacleCreator.createWall(visibleMainPoint, 0, wallMaterial, 1, false));
         }
         visibleMainPoint = new Point(visibleMainPoint.x, visibleMainPoint.y + ResolutionManager.WALL_HEIGHT[1]);
 
@@ -103,7 +100,7 @@ export class MazeCreator {
             if (visibleMainPoint.y >= gridPack.GRID_LINES[gridPack.GRID_LINES.length - 1])
                 throw new Error('Vertical wall line was made on the obstacle!');
 
-            arr.push(ObstacleCreator.createWall(
+            wallsArray.push(ObstacleCreator.createWall(
                     new Point(actualMainPoint.x, actualMainPoint.y),
                     Math.PI / 2, wallMaterial, 0, false
                 )
@@ -112,7 +109,7 @@ export class MazeCreator {
             visibleMainPoint = new Point(visibleMainPoint.x, visibleMainPoint.y + ResolutionManager.WALL_WIDTH[0]);
 
             if (i !== wallAmount - 1) {
-                arr.push(ObstacleCreator.createWall(
+                wallsArray.push(ObstacleCreator.createWall(
                         new Point(visibleMainPoint.x, visibleMainPoint.y),
                         0, wallMaterial, 1, false
                     )
@@ -122,17 +119,16 @@ export class MazeCreator {
             }
             else if (point.y + wallAmount * (ResolutionManager.WALL_WIDTH[0] + ResolutionManager.WALL_HEIGHT[1]) <
                 gridPack.GRID_LINES[gridPack.GRID_LINES.length - 1] && isLastSquare) {
-                arr.push(ObstacleCreator.createWall(
+                wallsArray.push(ObstacleCreator.createWall(
                         new Point(visibleMainPoint.x, visibleMainPoint.y),
                         0, wallMaterial, 1, false
                     )
                 );
             }
         }
-
-        wallsArray.push(...arr);
     }
-    public static createMazeLvl1(wallMaterial: number, gridPack: GridPack): Iterable<WallElement>{
+    public static createMazeLvl1(wallMaterial: number, point: Point): Iterable<WallElement>{
+        const gridPack: GridPack = MazeCreator.calcGridPoints(point);
         const wallsArray = new Array<WallElement>();
 
         MazeCreator.makeVertWallLine(new Point(gridPack.GRID_COLUMNS[1], gridPack.GRID_LINES[1]), 1,
@@ -202,7 +198,8 @@ export class MazeCreator {
 
         return wallsArray;
     }
-    public static createMazeLvl2(wallMaterial: number, gridPack: GridPack): Iterable<WallElement> {
+    public static createMazeLvl2(wallMaterial: number, point: Point): Iterable<WallElement> {
+        const gridPack: GridPack = MazeCreator.calcGridPoints(point);
         const wallsArray = new Array<WallElement>();
 
         MazeCreator.makeHorWallLine(new Point(gridPack.GRID_COLUMNS[0], gridPack.GRID_LINES[1]), 2,
@@ -265,7 +262,8 @@ export class MazeCreator {
 
         return wallsArray;
     }
-    public static createMazeLvl3(wallMaterial: number, gridPack: GridPack): Iterable<WallElement> {
+    public static createMazeLvl3(wallMaterial: number, point: Point): Iterable<WallElement> {
+        const gridPack: GridPack = MazeCreator.calcGridPoints(point);
         const wallsArray = new Array<WallElement>();
 
         MazeCreator.makeVertWallLine(new Point(gridPack.GRID_COLUMNS[1], gridPack.GRID_LINES[0]), 1,

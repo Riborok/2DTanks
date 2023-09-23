@@ -13,14 +13,14 @@ export class ObstacleCreator {
     private constructor() { }
     public static createWallsAroundPerimeter(widthWallAmount: number, heightWallAmount: number,
                                              materialNum: number, size: Size):
-                                            {wallsArray: Iterable<WallElement>, xIndent: number, yIndent: number} {
+                                            {wallsArray: Iterable<WallElement>, point: Point} {
         const result = new Array<WallElement>();
         const xIndent = this.calcIndent(widthWallAmount, size.width);
         const yIndent = this.calcIndent(heightWallAmount,
             size.height - 2 * ResolutionManager.WALL_HEIGHT[0]);
         this.createHorWalls(materialNum, xIndent, yIndent, size, result)
         this.createVertWalls(materialNum, xIndent, yIndent, size, result);
-        return {wallsArray: result, xIndent: xIndent, yIndent: yIndent};
+        return { wallsArray: result, point: new Point(xIndent, yIndent) }
     }
     private static calcIndent(wallAmount: number, totalLength: number): number {
         return (totalLength - wallAmount * ResolutionManager.WALL_WIDTH[0]) / 2;

@@ -22,8 +22,8 @@ export class Canvas implements ICanvas {
     private _sprites: Map<number, ISprite>[] = [];
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
-
         this._ctx = ctx;
+        this._ctx.clearRect(0, 0, this._size.width, this._size.height);
 
         this._bufferCanvas = document.createElement("canvas");
         this._bufferCanvas.width = size.width;

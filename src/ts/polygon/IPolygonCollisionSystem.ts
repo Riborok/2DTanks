@@ -16,7 +16,7 @@ export class Quadtree<T extends IPolygon> implements IPolygonCollisionSystem<T>{
     private _root: QuadtreeNode<T>;
     private readonly _boundary: Boundary;
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {
-        this._boundary = { xStart, yStart, xLast, yLast };
+        this._boundary = { xStart, yStart, xLast, yLast }
         this._root = new QuadtreeNode(this._boundary);
     }
     public insert(t: T) {
