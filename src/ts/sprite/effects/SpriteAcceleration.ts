@@ -6,7 +6,7 @@ export class SpriteAcceleration extends Sprite implements IFrameByFrame {
 
     private _frame: number = 0;
     public constructor() {
-        super(ResolutionManager.ACCELERATION_SIZE, ResolutionManager.ACCELERATION_SIZE, 4);
+        super(ResolutionManager.ACCELERATION_SIZE, ResolutionManager.ACCELERATION_SIZE, 1);
         this._sprite.src = 'src/img/tanks/Effects/Movement/Movement.png';
     }
     public set frame(value: number) {
