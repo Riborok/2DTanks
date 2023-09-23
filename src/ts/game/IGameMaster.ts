@@ -18,11 +18,10 @@ import {HandlingManager} from "./managers/handling managers/HandlingManager";
 import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./IGameLoop";
-import {Size} from "../additionally/type";
+import {IEventEmitter, Size} from "../additionally/type";
 import {IEntity} from "../polygon/entity/IEntity";
 
-export interface IGameMaster {
-    get gameLoop(): IGameLoop;
+export interface IGameMaster extends IEventEmitter {
     setBackgroundMaterial(backgroundMaterial: number): void;
     addTankElements(tankElements: Iterable<TankElement>): void;
     addWallElements(wallElements: Iterable<WallElement>): void;
@@ -42,7 +41,19 @@ export class GameMaster implements IGameMaster {
     private readonly _animationManager: IAnimationManager;
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
+
+    private readonly handleVisibilityChange = () => {
+        if (document.hidden) {
+            this._gameLoop.stop();
+            this._keyHandler.clearKeys();
+        }
+        else {
+            this._gameLoop.start();
+        }
+    };
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
+        document.addEventListener("visibilitychange", this.handleVisibilityChange);
+
         this._size = size;
         this._canvas = new Canvas(ctx, this._size);
         this._gameLoop = new GameLoop(this._canvas);
@@ -84,8 +95,12 @@ export class GameMaster implements IGameMaster {
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
         this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
+        this._gameLoop.start();
     }
-    public get gameLoop(): IGameLoop { return this._gameLoop }
+    public removeEventListeners() {
+        this._keyHandler.removeEventListeners();
+        document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    }
     public setBackgroundMaterial(backgroundMaterial: number) {
         this.setCoefficients(backgroundMaterial);
 
