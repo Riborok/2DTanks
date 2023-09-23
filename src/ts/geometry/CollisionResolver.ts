@@ -1,4 +1,4 @@
-import {IEntity} from "../entitiy/entity/IEntity";
+import {IEntity} from "../polygon/entity/IEntity";
 import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";

@@ -1,7 +1,7 @@
 import {WallModel} from "../../model/obstacle/WallModel";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
 import {IElement} from "./IElement";
-import {IEntity} from "../../entitiy/entity/IEntity";
+import {IEntity} from "../../polygon/entity/IEntity";
 import {IStorage} from "../../additionally/type";
 import {ISprite} from "../../sprite/ISprite";
 
@@ -21,7 +21,7 @@ export class WallElement implements IElement {
         spriteStorage.insert(this._sprite);
         entityStorage.insert(this._model.entity);
     }
-    public vanish(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
+    public terminate(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         spriteStorage.remove(this._sprite);
         entityStorage.remove(this._model.entity);
     }

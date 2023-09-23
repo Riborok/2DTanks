@@ -1,6 +1,6 @@
 import {IBullet, LightBullet} from "../../components/bullet/IBullet";
 import {BulletModel} from "./BulletModel";
-import {RectangularEntity} from "../../entitiy/entity/IEntity";
+import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../../game/id/ModelIDTracker";
 import {Point} from "../../geometry/Point";

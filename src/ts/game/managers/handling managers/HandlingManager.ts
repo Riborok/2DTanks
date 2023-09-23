@@ -54,7 +54,7 @@ export abstract class HandlingManager<T extends IElement, V extends MovementMana
     public delete(element: T) {
         if (this._elements.has(element.id)) {
             this._elements.delete(element.id);
-            element.vanish(this._storage, this._movementManager.entityStorage);
+            element.terminate(this._storage, this._movementManager.entityStorage);
         }
     }
 }

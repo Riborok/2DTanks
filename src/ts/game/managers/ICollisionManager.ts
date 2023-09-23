@@ -1,5 +1,5 @@
-import {IEntity} from "../../entitiy/entity/IEntity";
-import {ICollisionDetection} from "../../entitiy/IEntityCollisionSystem";
+import {IEntity} from "../../polygon/entity/IEntity";
+import {ICollisionDetection} from "../../polygon/IPolygonCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
@@ -11,10 +11,10 @@ export interface ICollisionManager {
 }
 
 export class CollisionManager implements ICollisionManager {
-    private readonly _collisionDetection: ICollisionDetection;
+    private readonly _collisionDetection: ICollisionDetection<IEntity>;
     private _wallsForProcessing: IIdToProcessing<number> = new IdToProcessing();
     public get wallsForProcessing(): IIdToProcessing<number> { return this._wallsForProcessing }
-    public constructor(collisionDetection: ICollisionDetection) {
+    public constructor(collisionDetection: ICollisionDetection<IEntity>) {
         this._collisionDetection = collisionDetection;
     }
     public hasCollision(entity: IEntity): Iterable<CollisionPack> | null {

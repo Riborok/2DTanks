@@ -1,7 +1,7 @@
 import {TankElement} from "../../elements/TankElement";
 import {Point} from "../../../geometry/Point";
 import {Action, ITankMovementManager, Movement, MovementManager} from "./MovementManager";
-import {EntityManipulator} from "../../../entitiy/entity/EntityManipulator";
+import {EntityManipulator} from "../../../polygon/entity/EntityManipulator";
 
 type UpdateSprites = (point: Point, hullAngle: number, turretAngle: number) => void;
 export class TankMovementManager extends MovementManager implements ITankMovementManager{

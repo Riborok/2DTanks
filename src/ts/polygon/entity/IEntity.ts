@@ -1,13 +1,12 @@
 import {Point, Vector} from "../../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
-import {IIdentifiable} from "../../game/id/IIdentifiable";
 import {calcMidBetweenTwoPoint} from "../../geometry/additionalFunc";
 import {IPolygon} from "../IPolygon";
 
 /**
  * Interface representing an entity with points.
  */
-export interface IEntity extends IPolygon, IIdentifiable {
+export interface IEntity extends IPolygon {
     /**
      * Gets the points defining the entity. The points should be specified in a clockwise order.
      */
