@@ -37,7 +37,7 @@ const control1: Control = {
     turretCounterClockwiseKey: VK_C,
     shootKey: VK_B
 }
-const tank1 = new TankElement(new Point(ResolutionManager.resizeX(300), ResolutionManager.resizeY(300)), 0, 0,
+const tank1 = new TankElement(new Point(ResolutionManager.resizeX(180), ResolutionManager.resizeY(210)), 0, 0,
     0, 0, 0, 0, control1);
 
 // const control2: Control = {
