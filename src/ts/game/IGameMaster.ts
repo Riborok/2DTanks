@@ -18,7 +18,7 @@ import {HandlingManager} from "./managers/handling managers/HandlingManager";
 import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./processors/IGameLoop";
-import {IEventEmitter, IRulesManager, Size} from "../additionally/type";
+import {IEventEmitter, IExecutor, IRulesManager, Size} from "../additionally/type";
 import {IEntity} from "../polygon/entity/IEntity";
 import {ICollectibleItemManager, CollectibleItemManager} from "./bonuses/ICollectibleItemManager";
 import {ICollectibleItem} from "./bonuses/ICollectibleItem";
@@ -57,12 +57,14 @@ export class GameMaster implements IGameMaster {
             this._gameLoop.start();
         }
     };
-    public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManage: IRulesManager) {
+    public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManager: IRulesManager,
+                       ...additionalExecutioners: IExecutor[]) {
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
         this._size = size;
         this._canvas = new Canvas(ctx, this._size);
-        this._gameLoop = new GameLoop(this._canvas);
+        this._gameLoop = new GameLoop(this._canvas, rulesManager.endGameConditions.bind(rulesManager),
+            rulesManager.processPostGameActions.bind(rulesManager));
         this._animationManager = new AnimationManager(this._canvas);
 
         const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
@@ -79,7 +81,7 @@ export class GameMaster implements IGameMaster {
 
         const bulletAdder = new BulletModelAdder(bulletElements, this._canvas, bulletMovementManager);
 
-        this._itemCollisionManager = new CollectibleItemManager(this._canvas, rulesManage, this._size);
+        this._itemCollisionManager = new CollectibleItemManager(this._canvas, rulesManager, this._size);
 
         this._tankHandlingManagers = new TankHandlingManager(
             tankMovementManager,
@@ -100,11 +102,11 @@ export class GameMaster implements IGameMaster {
             this._canvas, bulletElements,
             this._handlingManagers,
             this._animationManager,
-            rulesManage
+            rulesManager
         );
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
-        this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
+        this._gameLoop.render.add(...this._handlingManagers, this._animationManager, ...additionalExecutioners);
         this._gameLoop.start();
     }
     public removeEventListeners() {

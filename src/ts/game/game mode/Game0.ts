@@ -79,7 +79,7 @@ export class Game0 {
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
                               tank1: TankElement, tank2: TankElement,
                               createMaze: (wallMaterial: number, point: Point) => Iterable<WallElement>) {
-        const gameMaster: IGameMaster = new GameMaster(ctx, size, new RulesManager());
+        const gameMaster: IGameMaster = new GameMaster(ctx, size, new RulesManager(tank1, tank2));
         gameMaster.setBackgroundMaterial(backgroundMaterial);
 
         gameMaster.addTankElements(tank1, tank2);
@@ -117,7 +117,28 @@ export class Game0 {
 }
 
 class RulesManager implements IRulesManager {
-    public addBonus(source: IElement, bonus: Bonus): void {
-
+    private _score: number = 0;
+    private readonly _attacker: IElement;
+    private readonly _defender: IElement;
+    public constructor(attacker: IElement, defender: IElement) {
+        this._attacker = attacker;
+        this._defender = defender;
+    }
+    public addBonus(source: IElement, bonus: Bonus): boolean {
+        switch (bonus) {
+            case Bonus.key:
+                if (source === this._attacker) {
+                    this._score++;
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+    public endGameConditions(): boolean {
+        return this._score !== 4;
+    }
+    public processPostGameActions(): void {
+        // ТУТ БУДЕТ ЗАПУСКАТЬСЯ СЛЕД ЛАБИРИНТЫ
     }
 }

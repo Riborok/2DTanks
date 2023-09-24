@@ -11,10 +11,12 @@ export interface IAmmo {
 }
 
 export interface IRulesManager {
-    addBonus(source: IElement, bonus: Bonus): void;
+    addBonus(source: IElement, bonus: Bonus): boolean;
+    endGameConditions(): boolean;
+    processPostGameActions(): void;
 }
 
-export interface IExecutioner {
+export interface IExecutor {
     handle(deltaTime: number): void;
 }
 

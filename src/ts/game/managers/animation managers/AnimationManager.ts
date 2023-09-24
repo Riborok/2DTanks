@@ -2,9 +2,9 @@ import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data st
 import {AnimationSprite, IAnimation} from "../../../sprite/animation/IAnimation";
 import {IStorageWithIdRemoval} from "../../processors/ICanvas";
 import {IIdentifiable} from "../../id/IIdentifiable";
-import {IExecutioner} from "../../../additionally/type";
+import {IExecutor} from "../../../additionally/type";
 
-export interface IAnimationManager extends IExecutioner {
+export interface IAnimationManager extends IExecutor {
     add(animation: IAnimation): void;
 }
 export class AnimationManager implements IAnimationManager{
