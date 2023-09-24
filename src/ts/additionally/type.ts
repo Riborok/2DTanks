@@ -1,13 +1,30 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
 import {IEntity} from "../polygon/entity/IEntity";
+import {ISprite} from "../sprite/ISprite";
+import {IPolygon} from "../polygon/IPolygon";
+import {IElement} from "../game/elements/IElement";
+import {Bonus} from "../game/bonuses/Bonus";
+
+export interface IRulesManager {
+    addBonus(source: IElement, bonus: Bonus): void;
+}
+
+export interface IExecutioner {
+    handle(deltaTime: number): void;
+}
 
 export interface IEventEmitter {
     removeEventListeners(): void;
 }
 
-export interface ICollisionManager<V> {
-    hasCollision(entity: IEntity): Iterable<V> | null;
+export interface IEntityLifecycle<T extends ISprite, V extends IPolygon> {
+    spawn(storage1: IStorage<T>, storage2: IStorage<V>): void;
+    terminate(storage1: IStorage<T>, storage2: IStorage<V>): void;
+}
+
+export interface ICollisionManager<T> {
+    hasCollision(entity: IEntity): Iterable<T> | null;
 }
 
 export interface IStorage<T> {
@@ -41,14 +58,14 @@ export type CollisionResult = {
     overlap: number;
 }
 
-export type ModelCollisionPack = {
+export type CollisionPack = {
     collisionPoint: Point,
     id: number
 }
 
 export type BulletCollisionData = {
     bulletElement: BulletElement;
-    collisionPacks: Iterable<ModelCollisionPack>;
+    collisionPacks: Iterable<CollisionPack>;
 }
 
 export interface IArmor {

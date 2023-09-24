@@ -3,13 +3,13 @@ import {ICollisionDetection} from "../../polygon/IPolygonCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
-import {ModelCollisionPack, ICollisionManager} from "../../additionally/type";
+import {CollisionPack, ICollisionManager} from "../../additionally/type";
 
 export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<ModelCollisionPack> {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<CollisionPack> {
 }
 
 export class ModelCollisionManager implements IModelCollisionManager {
@@ -19,9 +19,9 @@ export class ModelCollisionManager implements IModelCollisionManager {
     public constructor(collisionDetection: ICollisionDetection<IEntity>) {
         this._collisionDetection = collisionDetection;
     }
-    public hasCollision(entity: IEntity): Iterable<ModelCollisionPack> | null {
+    public hasCollision(entity: IEntity): Iterable<CollisionPack> | null {
         const receivingEntities = this._collisionDetection.getCollisions(entity);
-        const collisionPacks = new Array<ModelCollisionPack>();
+        const collisionPacks = new Array<CollisionPack>();
 
         for (const receivingEntity of receivingEntities) {
             const collisionPoint = CollisionResolver.resolveCollision(entity, receivingEntity);

@@ -1,7 +1,7 @@
 import {MovementManager} from "../movement managers/MovementManager";
 import {IElement} from "../../elements/IElement";
 import {Model} from "../../../model/Model";
-import {IStorage} from "../../../additionally/type";
+import {IExecutioner, IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/ISprite";
 
 export interface IAddModel<T extends Model> {
@@ -17,9 +17,6 @@ export interface IElementManager<T extends IElement> {
     get(id: number): T | null;
     get isResponsibleFor(): (id: number) => boolean;
 }
-export interface IExecutioner {
-    handle(deltaTime: number): void;
-}
 
 export abstract class HandlingManager<T extends IElement, V extends MovementManager> implements
         IGetMovementManager, IElementManager<T>, IExecutioner {
@@ -27,11 +24,11 @@ export abstract class HandlingManager<T extends IElement, V extends MovementMana
 
     protected readonly _elements: Map<number, T>;
     protected readonly _movementManager: V;
-    protected readonly _storage: IStorage<ISprite>;
+    protected readonly _spriteStorage: IStorage<ISprite>;
     protected readonly _isResponsibleFor: (id: number) => boolean;
     protected constructor(movementManager: V, storage: IStorage<ISprite>, elements: Map<number, T>, isResponsibleFor: (id: number) => boolean) {
         this._movementManager = movementManager;
-        this._storage = storage;
+        this._spriteStorage = storage;
         this._elements = elements;
         this._isResponsibleFor = isResponsibleFor;
     }
@@ -47,14 +44,14 @@ export abstract class HandlingManager<T extends IElement, V extends MovementMana
         for (const element of elements) {
             if (!this._elements.has(element.id)) {
                 this._elements.set(element.id, element);
-                element.spawn(this._storage, this._movementManager.entityStorage);
+                element.spawn(this._spriteStorage, this._movementManager.entityStorage);
             }
         }
     }
     public delete(element: T) {
         if (this._elements.has(element.id)) {
             this._elements.delete(element.id);
-            element.terminate(this._storage, this._movementManager.entityStorage);
+            element.terminate(this._spriteStorage, this._movementManager.entityStorage);
         }
     }
 }

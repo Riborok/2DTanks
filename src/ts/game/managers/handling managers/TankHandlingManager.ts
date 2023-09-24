@@ -81,13 +81,13 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
             const sprite = element.sprite;
 
             const entity = element.model.entity;
-            sprite.spawnTireTracks(this._storage, entity.points[0], entity.angle,
+            sprite.spawnTireTracks(this._spriteStorage, entity.points[0], entity.angle,
                 this._tireTracksManager.vanishingListOfTirePairs);
 
             sprite.spawnDriftSmoke(this._tankAnimator.animationManager);
 
             const hullSprite = sprite.tankSpriteParts.hullSprite;
-            sprite.spawnTankAcceleration(this._storage, hullSprite.accelerationEffectIndentX, hullSprite.height);
+            sprite.spawnTankAcceleration(this._spriteStorage, hullSprite.accelerationEffectIndentX, hullSprite.height);
         }
     }
 }
