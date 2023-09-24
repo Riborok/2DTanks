@@ -1,12 +1,13 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
+import {IEntity} from "../polygon/entity/IEntity";
 
 export interface IEventEmitter {
     removeEventListeners(): void;
 }
 
-export interface ICollisionManager<T, V> {
-    hasCollision(entity: T): Iterable<V> | null;
+export interface ICollisionManager<V> {
+    hasCollision(entity: IEntity): Iterable<V> | null;
 }
 
 export interface IStorage<T> {

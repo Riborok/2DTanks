@@ -4,7 +4,7 @@ import {IStorage} from "../additionally/type";
 import {IPolygon} from "./IPolygon";
 
 export interface ICollisionDetection<T extends IPolygon> {
-    getCollisions(t: T): Iterable<T>;
+    getCollisions(polygon: IPolygon): Iterable<T>;
 }
 
 export interface IPolygonCollisionSystem<T extends IPolygon> extends IStorage<T>, ICollisionDetection<T> {
@@ -22,8 +22,8 @@ export class Quadtree<T extends IPolygon> implements IPolygonCollisionSystem<T>{
     public insert(t: T) {
         this._root.insert(t);
     }
-    public getCollisions(t: T): Iterable<T> {
-        return this._root.getCollisions(t);
+    public getCollisions(polygon: IPolygon): Iterable<T> {
+        return this._root.getCollisions(polygon);
     }
     public remove(t: T) {
         this._root.remove(t);
@@ -110,24 +110,24 @@ class QuadtreeNode<T extends IPolygon> {
             }
         }
     }
-    public getCollisions(t: T): T[] {
+    public getCollisions(polygon: IPolygon): T[] {
         const collisionsInfo = new Array<T>();
 
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (child.isContainsPolygon(t))
-                    collisionsInfo.push(...child.getCollisions(t));
+                if (child.isContainsPolygon(polygon))
+                    collisionsInfo.push(...child.getCollisions(polygon));
         }
         else {
             for (const anotherT of this._polygons.values())
-                if (CollisionDetector.hasCollision(t, anotherT))
+                if (CollisionDetector.hasCollision(polygon, anotherT))
                     collisionsInfo.push(anotherT);
         }
 
         return collisionsInfo;
     }
-    private isContainsPolygon(t: T): boolean {
-        for (const point of t.points)
+    private isContainsPolygon(polygon: IPolygon): boolean {
+        for (const point of polygon.points)
             if (this.isContainsPoint(point))
                 return true;
 

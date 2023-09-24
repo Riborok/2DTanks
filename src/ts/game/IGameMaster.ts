@@ -1,6 +1,6 @@
 import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
-import {IModelCollisionManager, ModelCollisionManager} from "./managers/ICollisionManager";
+import {IModelCollisionManager, ModelCollisionManager} from "./managers/IModelCollisionManager";
 import {Canvas, ICanvas} from "./processors/ICanvas";
 import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
