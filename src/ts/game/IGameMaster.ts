@@ -26,9 +26,10 @@ import {ICollectibleItem} from "./bonuses/ICollectibleItem";
 export interface IGameMaster extends IEventEmitter {
     setBackgroundMaterial(backgroundMaterial: number): void;
 
+    addWallElements(wallElements: Iterable<WallElement>): void;
     addTankElements(...tankElements: TankElement[]): void;
     addBonuses(...collectibleItem: ICollectibleItem[]): void;
-    addWallElements(wallElements: Iterable<WallElement>): void;
+    addExecutioners(...executioners: IExecutor[]): void;
 }
 
 export class GameMaster implements IGameMaster {
@@ -57,8 +58,7 @@ export class GameMaster implements IGameMaster {
             this._gameLoop.start();
         }
     };
-    public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManager: IRulesManager,
-                       ...additionalExecutioners: IExecutor[]) {
+    public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManager: IRulesManager) {
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
         this._size = size;
@@ -106,7 +106,7 @@ export class GameMaster implements IGameMaster {
         );
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
-        this._gameLoop.render.add(...this._handlingManagers, this._animationManager, ...additionalExecutioners);
+        this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
         this._gameLoop.start();
     }
     public removeEventListeners() {
@@ -127,13 +127,16 @@ export class GameMaster implements IGameMaster {
     private createBackgroundSprites(material: number) {
         DecorCreator.fullFillBackground(material, this._size, this._canvas);
     }
-    public addTankElements(...tankElements: TankElement[]) {
-        this._tankHandlingManagers.add(tankElements);
-    }
     public addWallElements(wallElements: Iterable<WallElement>) {
         this._wallHandlingManagers.add(wallElements);
     }
-    public addBonuses(...collectibleItem: ICollectibleItem[]): void {
+    public addTankElements(...tankElements: TankElement[]) {
+        this._tankHandlingManagers.add(tankElements);
+    }
+    public addBonuses(...collectibleItem: ICollectibleItem[]) {
         this._itemCollisionManager.add(collectibleItem);
+    }
+    public addExecutioners(...executioners: IExecutor[]) {
+        this._gameLoop.render.add(...executioners);
     }
 }

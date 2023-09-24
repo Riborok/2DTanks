@@ -11,7 +11,7 @@ export interface IBullet extends IComponent{
 export class LightBullet implements IBullet {
     public get startingSpeed(): number { return 35 }
     public get damage(): number { return 15 }
-    public get armorPenetration(): number { return 5 }
+    public get armorPenetration(): number { return 0.1 }
     public get mass(): number { return 0.008 }
     public get health(): number { return 1 }
     public get num(): number { return 0 }

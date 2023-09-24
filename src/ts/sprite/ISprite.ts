@@ -13,10 +13,7 @@ export function isImplementsIFrameByFrame(obj: any): obj is IFrameByFrame {
     return (
         'frame' in obj &&
         'originalWidth' in obj &&
-        'originalHeight' in obj &&
-        typeof obj.frame === 'number' &&
-        typeof obj.originalWidth === 'number' &&
-        typeof obj.originalHeight === 'number'
+        'originalHeight' in obj
     );
 }
 
@@ -26,8 +23,7 @@ export interface IVanish extends IIdentifiable {
 }
 export function isImplementsIVanish(obj: any): obj is IVanish {
     return (
-        'opacity' in obj &&
-        typeof obj.opacity === 'number'
+        'opacity' in obj
     );
 }
 
@@ -38,9 +34,7 @@ export interface IScalable {
 export function isImplementsIScalable(obj: any): obj is IScalable {
     return (
         'scaleX' in obj &&
-        'scaleY' in obj &&
-        typeof obj.scaleX === 'number' &&
-        typeof obj.scaleY === 'number'
+        'scaleY' in obj
     );
 }
 

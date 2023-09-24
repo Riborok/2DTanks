@@ -23,9 +23,9 @@ export class ResolutionManager {
     public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
     public static KEY_SIZE: number = 50;
     public static BOX_SIZE: number = 50;
-    public static setResolutionResizeCoeff(size: Size){
-        ResolutionManager.resizeWidthCoeff = size.width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
-        ResolutionManager.resizeHeightCoeff = size.height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
+    public static setResolutionResizeCoeff(width: number, height: number){
+        ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
+        ResolutionManager.resizeHeightCoeff = height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
 
         ResolutionManager.resizeConstants();
     }
