@@ -2,16 +2,18 @@ import {IElement} from "./IElement";
 import {IEntity} from "../../polygon/entity/IEntity";
 import {BulletSprite} from "../../sprite/bullet/BulletSprite";
 import {BulletModel} from "../../model/bullet/BulletModel";
-import {IStorage} from "../../additionally/type";
+import {IAmmo, IStorage} from "../../additionally/type";
 import {ISprite} from "../../sprite/ISprite";
 
-export class BulletElement implements IElement {
+export class BulletElement implements IElement, IAmmo {
     private readonly _model: BulletModel;
     private readonly _sprite: BulletSprite;
     private readonly _id: number;
-    public constructor(model: BulletModel, sprite: BulletSprite) {
+    private readonly _source: IElement;
+    public constructor(model: BulletModel, num: number, source: IElement) {
         this._model = model;
-        this._sprite = sprite;
+        this._sprite = new BulletSprite(num);
+        this._source = source;
         this._id = model.entity.id;
     }
     public get id(): number {
@@ -30,5 +32,8 @@ export class BulletElement implements IElement {
     public terminate(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         spriteStorage.remove(this._sprite);
         entityStorage.remove(this._model.entity);
+    }
+    public get source(): IElement {
+        return this._source;
     }
 }

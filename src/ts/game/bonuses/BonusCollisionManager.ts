@@ -1,4 +1,4 @@
-import {ICollisionDetection} from "../../polygon/IPolygonCollisionSystem";
+import {ICollisionDetection} from "../../polygon/ICollisionSystem";
 import {ICollisionManager} from "../../additionally/type";
 import {IEntity} from "../../polygon/entity/IEntity";
 import {ICollectible} from "./ICollectible";

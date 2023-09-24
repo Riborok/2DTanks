@@ -1,5 +1,6 @@
-import {Control, Size} from "../../additionally/type";
+import {Control, IRulesManager, Size} from "../../additionally/type";
 import {
+    Bonus,
     OBSTACLE_WALL_HEIGHT_AMOUNT,
     OBSTACLE_WALL_WIDTH_AMOUNT,
     ResolutionManager
@@ -8,7 +9,7 @@ import {Point} from "../../geometry/Point";
 import {TankElement} from "../elements/TankElement";
 import {MazeCreator} from "../creators/MazeCreator";
 import {WallElement} from "../elements/WallElement";
-import {GameMaster} from "../IGameMaster";
+import {GameMaster, IGameMaster} from "../IGameMaster";
 import {ObstacleCreator} from "../creators/IObstacleCreator";
 import {
     VK_A,
@@ -26,6 +27,7 @@ import {
     VK_V,
     VK_W
 } from "../../constants/keyCodes";
+import {IElement} from "../elements/IElement";
 
 type PanelInfo = {
     tankAttacker: HTMLDivElement,
@@ -77,10 +79,10 @@ export class Game0 {
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
                               tank1: TankElement, tank2: TankElement,
                               createMaze: (wallMaterial: number, point: Point) => Iterable<WallElement>) {
-        const gameMaster = new GameMaster(ctx, size);
+        const gameMaster: IGameMaster = new GameMaster(ctx, size, new RulesManager());
         gameMaster.setBackgroundMaterial(backgroundMaterial);
 
-        gameMaster.addTankElements([tank1, tank2]);
+        gameMaster.addTankElements(tank1, tank2);
 
         const {wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size);
@@ -111,5 +113,11 @@ export class Game0 {
         infoPanel.appendChild(keyCount);
         infoPanel.appendChild(tankDefender);
         return  { tankAttacker, keyCount, tankDefender }
+    }
+}
+
+class RulesManager implements IRulesManager {
+    public addBonus(source: IElement, bonus: Bonus): void {
+
     }
 }

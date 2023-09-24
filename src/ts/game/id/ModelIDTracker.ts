@@ -8,6 +8,7 @@ export class ModelIDTracker {
     private static readonly TANK_TYPE: number = 0;
     private static readonly WALL_TYPE: number = 1;
     private static readonly BULLET_TYPE: number = 2;
+    private static readonly COLLECTIBLE_ITEM_TYPE: number = 3;
 
     private static readonly TYPE_DIVIDER: number = 1000;
     private static extractType(id: number): number {
@@ -76,4 +77,15 @@ export class ModelIDTracker {
         ModelIDTracker.checkForMaxValue(ModelIDTracker.BULLET_ID);
         return ++ModelIDTracker.BULLET_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.BULLET_TYPE;
     }
+
+    /**
+     * Get a unique ID for a collectible item entity.
+     * @returns A unique ID for a collectible item.
+     */
+    private static COLLECTIBLE_ITEM_ID: number = 0;
+    public static get collectibleItemId(): number {
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.COLLECTIBLE_ITEM_ID);
+        return ++ModelIDTracker.COLLECTIBLE_ITEM_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.COLLECTIBLE_ITEM_TYPE;
+    }
+
 }

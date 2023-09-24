@@ -4,7 +4,11 @@ import {IEntity} from "../polygon/entity/IEntity";
 import {ISprite} from "../sprite/ISprite";
 import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
-import {Bonus} from "../game/bonuses/Bonus";
+import {Bonus} from "../constants/gameConstants";
+
+export interface IAmmo {
+    get source(): IElement;
+}
 
 export interface IRulesManager {
     addBonus(source: IElement, bonus: Bonus): void;

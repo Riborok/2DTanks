@@ -94,3 +94,8 @@ export const GRAVITY_ACCELERATION: number = 0.01;
 export const OBSTACLE_WALL_WIDTH_AMOUNT: number = 17;
 export const OBSTACLE_WALL_HEIGHT_AMOUNT: number = 7;
 
+export enum Bonus {
+    kill = 0,
+    key = 1,
+}
+

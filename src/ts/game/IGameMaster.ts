@@ -2,7 +2,7 @@ import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/g
 import {DecorCreator} from "./creators/IDecorCreator";
 import {IModelCollisionManager, ModelCollisionManager} from "./managers/IModelCollisionManager";
 import {Canvas, ICanvas} from "./processors/ICanvas";
-import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSystem";
+import {ICollisionSystem, Quadtree} from "../polygon/ICollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
 import {IKeyHandler, KeyHandler} from "./input/IKeyHandler";
@@ -18,12 +18,16 @@ import {HandlingManager} from "./managers/handling managers/HandlingManager";
 import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./processors/IGameLoop";
-import {IEventEmitter, Size} from "../additionally/type";
+import {IEventEmitter, IRulesManager, Size} from "../additionally/type";
 import {IEntity} from "../polygon/entity/IEntity";
+import {ICollectibleItemManager, CollectibleItemManager} from "./bonuses/ICollectibleItemManager";
+import {ICollectibleItem} from "./bonuses/ICollectibleItem";
 
 export interface IGameMaster extends IEventEmitter {
     setBackgroundMaterial(backgroundMaterial: number): void;
-    addTankElements(tankElements: Iterable<TankElement>): void;
+
+    addTankElements(...tankElements: TankElement[]): void;
+    addBonuses(...collectibleItem: ICollectibleItem[]): void;
     addWallElements(wallElements: Iterable<WallElement>): void;
 }
 
@@ -31,6 +35,8 @@ export class GameMaster implements IGameMaster {
     private readonly _gameLoop: IGameLoop;
     private readonly _canvas: ICanvas;
     private readonly _size: Size;
+
+    private readonly _itemCollisionManager: ICollectibleItemManager;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
     private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
@@ -51,7 +57,7 @@ export class GameMaster implements IGameMaster {
             this._gameLoop.start();
         }
     };
-    public constructor(ctx: CanvasRenderingContext2D, size: Size) {
+    public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManage: IRulesManager) {
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
         this._size = size;
@@ -59,7 +65,7 @@ export class GameMaster implements IGameMaster {
         this._gameLoop = new GameLoop(this._canvas);
         this._animationManager = new AnimationManager(this._canvas);
 
-        const entityCollisionSystem: IPolygonCollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
+        const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
             this._size.width, this._size.height);
         const collisionManager: IModelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
 
@@ -73,13 +79,16 @@ export class GameMaster implements IGameMaster {
 
         const bulletAdder = new BulletModelAdder(bulletElements, this._canvas, bulletMovementManager);
 
+        this._itemCollisionManager = new CollectibleItemManager(this._canvas, rulesManage, this._size);
+
         this._tankHandlingManagers = new TankHandlingManager(
             tankMovementManager,
             this._canvas,
             tankElements,
             bulletAdder,
             this._animationManager,
-            this._keyHandler
+            this._keyHandler,
+            this._itemCollisionManager
         );
         this._wallHandlingManagers = new WallHandlingManager(
             wallMovementManager,
@@ -90,7 +99,8 @@ export class GameMaster implements IGameMaster {
             bulletMovementManager,
             this._canvas, bulletElements,
             this._handlingManagers,
-            this._animationManager
+            this._animationManager,
+            rulesManage
         );
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
@@ -115,10 +125,13 @@ export class GameMaster implements IGameMaster {
     private createBackgroundSprites(material: number) {
         DecorCreator.fullFillBackground(material, this._size, this._canvas);
     }
-    public addTankElements(tankElements: Iterable<TankElement>) {
+    public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
     }
     public addWallElements(wallElements: Iterable<WallElement>) {
         this._wallHandlingManagers.add(wallElements);
+    }
+    public addBonuses(...collectibleItem: ICollectibleItem[]): void {
+        this._itemCollisionManager.add(collectibleItem);
     }
 }

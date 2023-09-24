@@ -1,5 +1,5 @@
 import {IEntity} from "../../polygon/entity/IEntity";
-import {ICollisionDetection} from "../../polygon/IPolygonCollisionSystem";
+import {ICollisionDetection} from "../../polygon/ICollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
