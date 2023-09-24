@@ -7,12 +7,12 @@ export interface ICollisionDetection<T extends IPolygon> {
     getCollisions(polygon: IPolygon): Iterable<T>;
 }
 
-export interface IPolygonCollisionSystem<T extends IPolygon> extends IStorage<T>, ICollisionDetection<T> {
+export interface ICollisionSystem<T extends IPolygon> extends IStorage<T>, ICollisionDetection<T> {
 
 }
 
 type Boundary = { xStart: number, yStart: number, xLast: number, yLast: number }
-export class Quadtree<T extends IPolygon> implements IPolygonCollisionSystem<T>{
+export class Quadtree<T extends IPolygon> implements ICollisionSystem<T>{
     private _root: QuadtreeNode<T>;
     private readonly _boundary: Boundary;
     public constructor(xStart: number, yStart: number, xLast: number, yLast: number) {

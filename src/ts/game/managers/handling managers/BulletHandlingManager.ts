@@ -1,25 +1,26 @@
 import {BulletElement} from "../../elements/BulletElement";
 import {BulletMovementManager} from "../movement managers/BulletMovementManager";
 import {IElement} from "../../elements/IElement";
-import {BulletModel} from "../../../model/bullet/BulletModel";
-import {BulletSprite} from "../../../sprite/bullet/BulletSprite";
 import {IAnimationManager} from "../animation managers/AnimationManager";
-import {HandlingManager, IAddModel, IElementManager} from "./HandlingManager";
+import {HandlingManager, IAddElement, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IStorage} from "../../../additionally/type";
+import {IRulesManager, IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
+import {Bonus} from "../../../constants/gameConstants";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
     private readonly _bulletAnimator: IBulletAnimator;
+    private readonly _rulesManager: IRulesManager;
 
     public constructor(bulletManager: BulletMovementManager, storage: IStorage<ISprite>, elements: Map<number, BulletElement>,
                        handlingManagers: Iterable<IElementManager<IElement>>,
-                       animationManager: IAnimationManager) {
+                       animationManager: IAnimationManager, rulesManager: IRulesManager) {
         super(bulletManager, storage, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._bulletAnimator = new BulletAnimator(animationManager);
+        this._rulesManager = rulesManager;
     }
 
     public handle(deltaTime: number): void {
@@ -52,6 +53,9 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                     if (element.model.isDead()) {
                         this._bulletAnimator.createDeadAnimation(element);
 
+                        if (ModelIDTracker.isTank(element.id))
+                            this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);
+
                         elementHandling.delete(element);
                     }
                 }
@@ -68,7 +72,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     }
 }
 
-export class BulletModelAdder implements IAddModel<BulletModel> {
+export class BulletModelAdder implements IAddElement<BulletElement> {
     private readonly _elements: Map<number, BulletElement>;
     private readonly _storage: IStorage<ISprite>;
     private readonly _bulletMovementManager: BulletMovementManager;
@@ -77,12 +81,11 @@ export class BulletModelAdder implements IAddModel<BulletModel> {
         this._storage = storage;
         this._bulletMovementManager = bulletMovementManager;
     }
-    public addBulletModel(bulletModel: BulletModel, num: number) {
-        if (!this._elements.has(bulletModel.entity.id)) {
-            const bulletElements = new BulletElement(bulletModel, new BulletSprite(num));
-            if (this._bulletMovementManager.checkForSpawn(bulletElements)) {
-                this._elements.set(bulletElements.id, bulletElements);
-                bulletElements.spawn(this._storage, this._bulletMovementManager.entityStorage);
+    public addElement(bulletElement: BulletElement) {
+        if (!this._elements.has(bulletElement.id)) {
+            if (this._bulletMovementManager.checkForSpawn(bulletElement)) {
+                this._elements.set(bulletElement.id, bulletElement);
+                bulletElement.spawn(this._storage, this._bulletMovementManager.entityStorage);
             }
         }
     }
