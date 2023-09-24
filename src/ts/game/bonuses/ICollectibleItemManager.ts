@@ -39,8 +39,8 @@ export class CollectibleItemManager implements ICollectibleItemManager {
     }
     public checkForBonusHits(element: IElement) {
         for (const collectible of this._collisionManager.hasCollision(element.model.entity)) {
-            this._rulesManager.addBonus(element, collectible.bonus);
-            this.delete(this._items.get(collectible.id));
+            if (this._rulesManager.addBonus(element, collectible.bonus))
+                this.delete(this._items.get(collectible.id));
         }
     }
     private delete(element: ICollectibleItem) {

@@ -1,13 +1,13 @@
-import {IExecutioner} from "../../additionally/type";
+import {IExecutor} from "../../additionally/type";
 
 export interface IRender {
-    add(...executioner:  IExecutioner[]): void;
+    add(...executioner:  IExecutor[]): void;
     renderAll(deltaTime: number): void;
 }
 
 export class Render implements IRender {
-    private readonly _executioners: IExecutioner[] = new Array<IExecutioner>();
-    public add(...executioner:  IExecutioner[]) {
+    private readonly _executioners: IExecutor[] = new Array<IExecutor>();
+    public add(...executioner:  IExecutor[]) {
         this._executioners.push(...executioner);
     }
     public renderAll(deltaTime: number) {

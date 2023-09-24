@@ -1,6 +1,6 @@
 import {MovementManager} from "../movement managers/MovementManager";
 import {IElement} from "../../elements/IElement";
-import {IExecutioner, IStorage} from "../../../additionally/type";
+import {IExecutor, IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/ISprite";
 
 export interface IAddElement<T extends IElement> {
@@ -18,7 +18,7 @@ export interface IElementManager<T extends IElement> {
 }
 
 export abstract class HandlingManager<T extends IElement, V extends MovementManager> implements
-        IGetMovementManager, IElementManager<T>, IExecutioner {
+        IGetMovementManager, IElementManager<T>, IExecutor {
     public abstract handle(deltaTime: number): void;
 
     protected readonly _elements: Map<number, T>;
