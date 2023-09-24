@@ -1,6 +1,6 @@
 import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
-import {CollisionManager} from "./managers/ICollisionManager";
+import {IModelCollisionManager, ModelCollisionManager} from "./managers/ICollisionManager";
 import {Canvas, ICanvas} from "./processors/ICanvas";
 import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
@@ -61,7 +61,7 @@ export class GameMaster implements IGameMaster {
 
         const entityCollisionSystem: IPolygonCollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
             this._size.width, this._size.height);
-        const collisionManager = new CollisionManager(entityCollisionSystem);
+        const collisionManager: IModelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
 
         const tankElements = new Map<number, TankElement>;
         const wallElements = new Map<number, WallElement>;

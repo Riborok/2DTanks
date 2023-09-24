@@ -1,8 +1,16 @@
 import {Action, IWallMovementManager, Movement, MovementManager} from "./MovementManager";
 import {WallElement} from "../../elements/WallElement";
 import {EntityManipulator} from "../../../polygon/entity/EntityManipulator";
+import {IModelCollisionManager} from "../ICollisionManager";
+import {IStorage} from "../../../additionally/type";
+import {IEntity} from "../../../polygon/entity/IEntity";
 
 export class WallMovementManager extends MovementManager implements IWallMovementManager {
+    protected override readonly _collisionManager: IModelCollisionManager;
+    public constructor(entityStorage: IStorage<IEntity>, collisionManager: IModelCollisionManager) {
+        super(entityStorage, collisionManager);
+    }
+    public override get collisionManager(): IModelCollisionManager { return this._collisionManager }
     private residualAngularMovement(wallElement: WallElement, deltaTime: number) {
         if (!wallElement.model.isAngularMotionStopped())
             this.update(wallElement, wallElement.model.residualAngularMovement, EntityManipulator.angularMovement, deltaTime);
