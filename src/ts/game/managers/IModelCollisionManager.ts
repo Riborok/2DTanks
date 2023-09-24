@@ -9,7 +9,7 @@ export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<IEntity, ModelCollisionPack> {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<ModelCollisionPack> {
 }
 
 export class ModelCollisionManager implements IModelCollisionManager {

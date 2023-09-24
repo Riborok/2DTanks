@@ -1,7 +1,7 @@
 import {Action, IWallMovementManager, Movement, MovementManager} from "./MovementManager";
 import {WallElement} from "../../elements/WallElement";
 import {EntityManipulator} from "../../../polygon/entity/EntityManipulator";
-import {IModelCollisionManager} from "../ICollisionManager";
+import {IModelCollisionManager} from "../IModelCollisionManager";
 import {IStorage} from "../../../additionally/type";
 import {IEntity} from "../../../polygon/entity/IEntity";
 

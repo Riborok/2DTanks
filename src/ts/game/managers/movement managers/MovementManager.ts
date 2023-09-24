@@ -14,22 +14,22 @@ interface ISetCoefficients {
 }
 interface IEntityControl {
     get entityStorage(): IStorage<IEntity>;
-    get collisionManager(): ICollisionManager<IEntity, ModelCollisionPack>;
+    get collisionManager(): ICollisionManager<ModelCollisionPack>;
 }
 
 export abstract class MovementManager implements ISetCoefficients, IEntityControl {
     protected readonly _entityStorage: IStorage<IEntity>;
-    protected readonly _collisionManager: ICollisionManager<IEntity, ModelCollisionPack>;
+    protected readonly _collisionManager: ICollisionManager<ModelCollisionPack>;
     protected _resistanceCoeff: number = 0;
     protected _airResistanceCoeff: number = 0;
     public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
     public set airResistanceCoeff(airResistanceCoeff: number) { this._airResistanceCoeff = airResistanceCoeff }
-    public constructor(entityStorage: IStorage<IEntity>, collisionManager: ICollisionManager<IEntity, ModelCollisionPack>) {
+    public constructor(entityStorage: IStorage<IEntity>, collisionManager: ICollisionManager<ModelCollisionPack>) {
         this._entityStorage = entityStorage;
         this._collisionManager = collisionManager;
     }
     public get entityStorage(): IStorage<IEntity> { return this._entityStorage }
-    public get collisionManager(): ICollisionManager<IEntity, ModelCollisionPack> { return this._collisionManager }
+    public get collisionManager(): ICollisionManager<ModelCollisionPack> { return this._collisionManager }
 }
 
 export interface ITankMovementManager {
