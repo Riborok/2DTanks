@@ -1,6 +1,6 @@
 import {IScalable, Sprite} from "../ISprite";
 
-class KeySprite extends Sprite implements IScalable{
+export class KeySprite extends Sprite implements IScalable{
     private static readonly CHANGE_SCALE_X_NUMBER: number = 0.01;
     private _scaleX: number = 1;
     private _isIncreasing: boolean = false;

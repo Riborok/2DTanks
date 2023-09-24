@@ -62,7 +62,7 @@ export function roundNumber(number: number, rounding: number): number {
  * @param iterable The iterable to be checked.
  * @returns `true` if the iterable has at least one element, `false` otherwise.
  */
-export function hasElements(iterable: Iterable<any>) {
+export function hasContent(iterable: Iterable<any>) {
     for (const _ of iterable)
         return true;
     return false;
