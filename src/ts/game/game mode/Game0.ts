@@ -136,7 +136,7 @@ class RulesManager implements IRulesManager {
         return false;
     }
     public endGameConditions(): boolean {
-        return this._score !== 4;
+        return this._score === 4;
     }
     public processPostGameActions(): void {
         // ТУТ БУДЕТ ЗАПУСКАТЬСЯ СЛЕД ЛАБИРИНТЫ
