@@ -1,4 +1,4 @@
-import {IEventEmitter} from "../additionally/type";
+import {IEventEmitter} from "../../additionally/type";
 
 export interface IKeyHandler extends IEventEmitter {
     clearKeys(): void;

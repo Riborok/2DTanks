@@ -1,6 +1,6 @@
 import {DoublyLinkedList, IDoublyLinkedList} from "../../additionally/data structures/IDoublyLinkedList";
 import {TirePair} from "../../sprite/tank/tank effects/TankTireTrack";
-import {IStorageWithIdRemoval} from "../ICanvas";
+import {IStorageWithIdRemoval} from "../processors/ICanvas";
 import {IIdentifiable} from "../id/IIdentifiable";
 
 export interface ITireTracksManager {

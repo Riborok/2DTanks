@@ -1,4 +1,4 @@
-import {IExecutioner} from "./managers/handling managers/HandlingManager";
+import {IExecutioner} from "../managers/handling managers/HandlingManager";
 
 export interface IRender {
     add(...executioner:  IExecutioner[]): void;

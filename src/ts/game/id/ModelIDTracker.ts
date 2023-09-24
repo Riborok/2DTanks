@@ -4,6 +4,7 @@
  */
 export class ModelIDTracker {
     private constructor() { }
+
     private static readonly TANK_TYPE: number = 0;
     private static readonly WALL_TYPE: number = 1;
     private static readonly BULLET_TYPE: number = 2;
@@ -40,39 +41,39 @@ export class ModelIDTracker {
         return ModelIDTracker.extractType(id) === ModelIDTracker.BULLET_TYPE;
     }
 
-    // Current IDs for each entity type
-    private static ID: number = 0;
     private static readonly MAX_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / ModelIDTracker.TYPE_DIVIDER) - 1;
-    private static checkForMaxValue() {
-        if (ModelIDTracker.ID >= ModelIDTracker.MAX_VALUE)
+    private static checkForMaxValue(id: number) {
+        if (id >= ModelIDTracker.MAX_VALUE)
             throw new Error("Maximum ID is reached.");
-    }
-    private static getNextId(entityType: number): number {
-        ModelIDTracker.checkForMaxValue();
-        return ++ModelIDTracker.ID * ModelIDTracker.TYPE_DIVIDER + entityType;
     }
 
     /**
      * Get a unique ID for a tank entity.
      * @returns A unique ID for a tank.
      */
+    private static TANK_ID: number = 0;
     public static get tankId(): number {
-        return ModelIDTracker.getNextId(ModelIDTracker.TANK_TYPE);
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.TANK_ID);
+        return ++ModelIDTracker.TANK_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.TANK_TYPE;
     }
 
     /**
      * Get a unique ID for a wall entity.
      * @returns A unique ID for a wall.
      */
+    private static WALL_ID: number = 0;
     public static get wallId(): number {
-        return ModelIDTracker.getNextId(ModelIDTracker.WALL_TYPE);
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.WALL_ID);
+        return ++ModelIDTracker.WALL_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.WALL_TYPE;
     }
 
     /**
      * Get a unique ID for a bullet entity.
      * @returns A unique ID for a bullet.
      */
+    private static BULLET_ID: number = 0;
     public static get bulletId(): number {
-        return ModelIDTracker.getNextId(ModelIDTracker.BULLET_TYPE);
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.BULLET_ID);
+        return ++ModelIDTracker.BULLET_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.BULLET_TYPE;
     }
 }
