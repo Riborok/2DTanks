@@ -21,6 +21,8 @@ export class ResolutionManager {
     public static ACCELERATION_SIZE: number = 64;
     public static EXPLOSION_SIZE: number = 90;
     public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
+    public static KEY_SIZE: number = 50;
+    public static BOX_SIZE: number = 50;
     public static setResolutionResizeCoeff(size: Size){
         ResolutionManager.resizeWidthCoeff = size.width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
         ResolutionManager.resizeHeightCoeff = size.height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
@@ -81,6 +83,8 @@ export class ResolutionManager {
             ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i] =
                 ResolutionManager.resizeX(ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i]);
         }
+        ResolutionManager.KEY_SIZE = ResolutionManager.resizeX(ResolutionManager.KEY_SIZE);
+        ResolutionManager.BOX_SIZE = ResolutionManager.resizeX(ResolutionManager.BOX_SIZE);
     }
 }
 export const ANGLE_EPSILON: number = Math.PI / 180;

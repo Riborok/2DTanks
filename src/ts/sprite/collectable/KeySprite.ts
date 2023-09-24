@@ -1,11 +1,12 @@
 import {IScalable, Sprite} from "../ISprite";
+import {ResolutionManager} from "../../constants/gameConstants";
 
 export class KeySprite extends Sprite implements IScalable{
     private static readonly CHANGE_SCALE_X_NUMBER: number = 0.01;
     private _scaleX: number = 1;
     private _isIncreasing: boolean = false;
-    public constructor(width: number, height: number) {
-        super(width, height, 1);
+    public constructor() {
+        super(ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE, 1);
         this._sprite.src = "src/img/item/Key.png";
     }
     get scaleX(): number {
