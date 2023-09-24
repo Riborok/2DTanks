@@ -1,7 +1,7 @@
 import {IBulletMovementManager, MovementManager} from "./MovementManager";
 import {BulletElement} from "../../elements/BulletElement";
 import {IdToProcessing, IIdToProcessing} from "../IdToProcessing";
-import {BulletCollisionData, CollisionPack} from "../../../additionally/type";
+import {BulletCollisionData, ModelCollisionPack} from "../../../additionally/type";
 import {VectorUtils} from "../../../geometry/VectorUtils";
 import {PolygonManipulator} from "../../../polygon/PolygonManipulator";
 
@@ -29,7 +29,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
         const count = Math.floor(VectorUtils.calcCoDirectionalScaleFactor(entity.velocity, movementVector));
         for (let i = count; i > 0; i--) {
             PolygonManipulator.movePolygon(entity, movementVector);
-            const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
+            const collisionPacks: Iterable<ModelCollisionPack> | null = this._collisionManager.hasCollision(entity);
             if (collisionPacks) {
                 this._bulletCollisionDates.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
                 isCollisionOccurred = true;
@@ -45,7 +45,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
             movementVector.addVector(entity.velocity);
 
             PolygonManipulator.movePolygon(entity, movementVector);
-            const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
+            const collisionPacks: Iterable<ModelCollisionPack> | null = this._collisionManager.hasCollision(entity);
             if (collisionPacks)
                 this._bulletCollisionDates.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
         }
@@ -56,7 +56,7 @@ export class BulletMovementManager extends MovementManager implements IBulletMov
     public checkForSpawn(bulletElement: BulletElement): boolean {
         const entity = bulletElement.model.entity;
 
-        const collisionPacks: Iterable<CollisionPack> | null = this._collisionManager.hasCollision(entity);
+        const collisionPacks: Iterable<ModelCollisionPack> | null = this._collisionManager.hasCollision(entity);
         if (collisionPacks) {
             this._bulletCollisionDates.push({ bulletElement: bulletElement, collisionPacks: collisionPacks });
             return false;

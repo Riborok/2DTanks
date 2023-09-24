@@ -5,6 +5,10 @@ export interface IEventEmitter {
     removeEventListeners(): void;
 }
 
+export interface ICollisionManager<T, V> {
+    hasCollision(entity: T): Iterable<V> | null;
+}
+
 export interface IStorage<T> {
     insert(t: T): void;
     remove(t: T): void;
@@ -36,14 +40,14 @@ export type CollisionResult = {
     overlap: number;
 }
 
-export type CollisionPack = {
+export type ModelCollisionPack = {
     collisionPoint: Point,
     id: number
 }
 
 export type BulletCollisionData = {
     bulletElement: BulletElement;
-    collisionPacks: Iterable<CollisionPack>;
+    collisionPacks: Iterable<ModelCollisionPack>;
 }
 
 export interface IArmor {

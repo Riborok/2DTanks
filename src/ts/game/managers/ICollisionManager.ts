@@ -3,23 +3,25 @@ import {ICollisionDetection} from "../../polygon/IPolygonCollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
-import {CollisionPack} from "../../additionally/type";
+import {ModelCollisionPack, ICollisionManager} from "../../additionally/type";
 
-export interface ICollisionManager {
-    hasCollision(entity: IEntity): Iterable<CollisionPack> | null;
+export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export class CollisionManager implements ICollisionManager {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<IEntity, ModelCollisionPack> {
+}
+
+export class ModelCollisionManager implements IModelCollisionManager {
     private readonly _collisionDetection: ICollisionDetection<IEntity>;
     private _wallsForProcessing: IIdToProcessing<number> = new IdToProcessing();
     public get wallsForProcessing(): IIdToProcessing<number> { return this._wallsForProcessing }
     public constructor(collisionDetection: ICollisionDetection<IEntity>) {
         this._collisionDetection = collisionDetection;
     }
-    public hasCollision(entity: IEntity): Iterable<CollisionPack> | null {
+    public hasCollision(entity: IEntity): Iterable<ModelCollisionPack> | null {
         const receivingEntities = this._collisionDetection.getCollisions(entity);
-        const collisionPacks = new Array<CollisionPack>();
+        const collisionPacks = new Array<ModelCollisionPack>();
 
         for (const receivingEntity of receivingEntities) {
             const collisionPoint = CollisionResolver.resolveCollision(entity, receivingEntity);
