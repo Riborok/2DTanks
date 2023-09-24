@@ -4,10 +4,10 @@ import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../animation managers/AnimationManager";
-import {IKeyHandler} from "../../IKeyHandler";
+import {IKeyHandler} from "../../input/IKeyHandler";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {ITankAnimator, TankAnimator} from "../animation managers/Animators";
-import {IStorageWithIdRemoval} from "../../ICanvas";
+import {IStorageWithIdRemoval} from "../../processors/ICanvas";
 import {IIdentifiable} from "../../id/IIdentifiable";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {

@@ -1,11 +1,11 @@
 import {AIR_RESISTANCE_COEFFICIENT, RESISTANCE_COEFFICIENT} from "../constants/gameConstants";
 import {DecorCreator} from "./creators/IDecorCreator";
 import {CollisionManager} from "./managers/ICollisionManager";
-import {Canvas, ICanvas} from "./ICanvas";
+import {Canvas, ICanvas} from "./processors/ICanvas";
 import {IPolygonCollisionSystem, Quadtree} from "../polygon/IPolygonCollisionSystem";
 import {TankMovementManager} from "./managers/movement managers/TankMovementManager";
 import {TankElement} from "./elements/TankElement";
-import {IKeyHandler, KeyHandler} from "./IKeyHandler";
+import {IKeyHandler, KeyHandler} from "./input/IKeyHandler";
 import {WallMovementManager} from "./managers/movement managers/WallMovementManager";
 import {TankHandlingManager} from "./managers/handling managers/TankHandlingManager";
 import {WallHandlingManager} from "./managers/handling managers/WallHandlingManager";
@@ -17,7 +17,7 @@ import {BulletMovementManager} from "./managers/movement managers/BulletMovement
 import {HandlingManager} from "./managers/handling managers/HandlingManager";
 import {IElement} from "./elements/IElement";
 import {MovementManager} from "./managers/movement managers/MovementManager";
-import {GameLoop, IGameLoop} from "./IGameLoop";
+import {GameLoop, IGameLoop} from "./processors/IGameLoop";
 import {IEventEmitter, Size} from "../additionally/type";
 import {IEntity} from "../polygon/entity/IEntity";
 

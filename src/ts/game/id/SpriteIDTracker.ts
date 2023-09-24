@@ -4,27 +4,8 @@
  */
 export class SpriteIDTracker {
     private constructor() { }
+
     private static readonly Z_INDEX_DIVIDER: number = 1000;
-    private static ID: number = 0;
-    private static readonly MAX_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / SpriteIDTracker.Z_INDEX_DIVIDER) - 1;
-    private static checkForMaxValue() {
-        if (SpriteIDTracker.ID >= SpriteIDTracker.MAX_VALUE)
-            throw new Error("Maximum ID is reached.");
-    }
-    private static getNextId(zIndex: number): number {
-        SpriteIDTracker.checkForMaxValue();
-        return ++SpriteIDTracker.ID * SpriteIDTracker.Z_INDEX_DIVIDER + zIndex;
-    }
-
-    /**
-     * Generate a unique ID for a sprite with the specified zIndex.
-     * @param zIndex The zIndex of the sprite.
-     * @returns A unique ID for the sprite.
-     */
-    public static generate(zIndex: number): number {
-        return SpriteIDTracker.getNextId(zIndex);
-    }
-
     /**
      * Extract the zIndex from a sprite's ID.
      * @param id The ID of the sprite.
@@ -32,5 +13,25 @@ export class SpriteIDTracker {
      */
     public static extractZIndex(id: number): number {
         return id % SpriteIDTracker.Z_INDEX_DIVIDER;
+    }
+
+    private static readonly MAX_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / SpriteIDTracker.Z_INDEX_DIVIDER) - 1;
+    private static checkForMaxValue(id: number) {
+        if (id >= SpriteIDTracker.MAX_VALUE)
+            throw new Error("Maximum ID is reached.");
+    }
+
+    /**
+     * Generate a unique ID for a sprite with the specified zIndex.
+     * @param zIndex The zIndex of the sprite.
+     * @returns A unique ID for the sprite.
+     */
+    private static readonly IDs: number[] = [];
+    public static generate(zIndex: number): number {
+        for (let i = 0; i <= zIndex; i++)
+            SpriteIDTracker.IDs.push(0);
+
+        SpriteIDTracker.checkForMaxValue(SpriteIDTracker.IDs[zIndex]);
+        return ++SpriteIDTracker.IDs[zIndex] * SpriteIDTracker.Z_INDEX_DIVIDER + zIndex;
     }
 }
