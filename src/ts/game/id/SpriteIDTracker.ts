@@ -28,7 +28,7 @@ export class SpriteIDTracker {
      */
     private static readonly IDs: number[] = [];
     public static generate(zIndex: number): number {
-        for (let i = 0; i <= zIndex; i++)
+        for (let i = this.IDs.length; i <= zIndex; i++)
             SpriteIDTracker.IDs.push(0);
 
         SpriteIDTracker.checkForMaxValue(SpriteIDTracker.IDs[zIndex]);
