@@ -1,88 +1,75 @@
+import {FieldMap} from "../additionally/type";
+
 export class ResolutionManager {
     private static resizeWidthCoeff: number = 1;
     private static resizeHeightCoeff: number = 1;
     private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
     private static readonly DEVELOPING_SCREEN_HEIGHT: number = 1080;
-    public static BACKGROUND_SIZE: number = 115;
-    public static WALL_WIDTH: number[] = [100, 50];
-    public static WALL_HEIGHT: number[] = [50, 50];
-    public static TRACK_INDENT: number = 4;
-    public static HULL_WIDTH: number[] = [57, 61, 58, 48, 61, 61, 57, 52];
-    public static HULL_HEIGHT: number[] = [37, 47, 37, 31, 52, 42, 36, 31];
-    public static TURRET_INDENT_X: number[] = [15, 19, 15, 11, 19, 19, 19, 15];
-    public static TURRET_WIDTH: number[] = [32, 38, 27, 27, 22, 27, 32, 22];
-    public static TURRET_HEIGHT: number[] = [27, 27, 17, 27, 22, 22, 27, 22];
-    public static WEAPON_WIDTH: number[] = [35, 37, 30, 32, 38, 27, 32, 27];
-    public static WEAPON_HEIGHT: number[] = [11, 8, 11, 5, 8, 12, 11, 11];
-    public static BULLET_WIDTH: number[] = [12, 16, 23, 24, 19];
-    public static BULLET_HEIGHT: number[] = [5, 8, 10, 6, 8];
-    public static ACCELERATION_SIZE: number = 64;
-    public static EXPLOSION_SIZE: number = 90;
-    public static ACCELERATION_EFFECT_INDENT_X: number[] = [4, 10, 0, 0, 4, 4, 0, 0, 0];
-    public static KEY_SIZE: number = 50;
-    public static BOX_SIZE: number = 50;
+
+    public static get BACKGROUND_SIZE(): number { return <number>ResolutionManager.fieldsX.BACKGROUND_SIZE }
+    public static get WALL_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.WALL_WIDTH }
+    public static get WALL_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.WALL_HEIGHT }
+    public static get TRACK_INDENT(): number { return <number>ResolutionManager.fieldsY.TRACK_INDENT }
+    public static get HULL_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.HULL_WIDTH }
+    public static get HULL_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.HULL_HEIGHT }
+    public static get TURRET_INDENT_X(): number[] { return <number[]>ResolutionManager.fieldsX.TURRET_INDENT_X }
+    public static get TURRET_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.TURRET_WIDTH }
+    public static get TURRET_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.TURRET_HEIGHT }
+    public static get WEAPON_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.WEAPON_WIDTH }
+    public static get WEAPON_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.WEAPON_HEIGHT }
+    public static get BULLET_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.BULLET_WIDTH }
+    public static get BULLET_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.BULLET_HEIGHT }
+    public static get ACCELERATION_SIZE(): number { return <number>ResolutionManager.fieldsX.ACCELERATION_SIZE }
+    public static get EXPLOSION_SIZE(): number { return <number>ResolutionManager.fieldsX.EXPLOSION_SIZE }
+    public static get ACCELERATION_EFFECT_INDENT_X(): number[] { return <number[]>ResolutionManager.fieldsX.ACCELERATION_EFFECT_INDENT_X }
+    public static get KEY_SIZE(): number { return <number>ResolutionManager.fieldsX.KEY_SIZE }
+    public static get BOX_SIZE(): number { return <number>ResolutionManager.fieldsX.BOX_SIZE }
+
+    private static readonly fieldsX: FieldMap<number | number[]> = {
+        BACKGROUND_SIZE: 115,
+        WALL_WIDTH: [100, 50],
+        HULL_WIDTH: [57, 61, 58, 48, 61, 61, 57, 52],
+        TURRET_INDENT_X: [15, 19, 15, 11, 19, 19, 19, 15],
+        TURRET_WIDTH: [32, 38, 27, 27, 22, 27, 32, 22],
+        WEAPON_WIDTH: [35, 37, 30, 32, 38, 27, 32, 27],
+        BULLET_WIDTH: [12, 16, 23, 24, 19],
+        ACCELERATION_SIZE: 64,
+        EXPLOSION_SIZE: 90,
+        ACCELERATION_EFFECT_INDENT_X: [4, 10, 0, 0, 4, 4, 0, 0, 0],
+        KEY_SIZE: 50,
+        BOX_SIZE: 50,
+    };
+    private static readonly fieldsY: FieldMap<number | number[]> =  {
+        WALL_HEIGHT: [50, 50],
+        TRACK_INDENT: 4,
+        HULL_HEIGHT: [37, 47, 37, 31, 52, 42, 36, 31],
+        TURRET_HEIGHT: [27, 27, 17, 27, 22, 22, 27, 22],
+        WEAPON_HEIGHT: [11, 8, 11, 5, 8, 12, 11, 11],
+        BULLET_HEIGHT: [5, 8, 10, 6, 8],
+    };
+    public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
+    public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeHeightCoeff) }
+    public static undoResizeX(x: number): number { return Math.round(x / ResolutionManager.resizeWidthCoeff) }
+    public static undoResizeY(y: number): number { return Math.round(y / ResolutionManager.resizeHeightCoeff) }
     public static setResolutionResizeCoeff(width: number, height: number){
         ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
         ResolutionManager.resizeHeightCoeff = height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
 
         ResolutionManager.resizeConstants();
     }
-    public static resizeX(x: number): number{
-        return Math.round(x * ResolutionManager.resizeWidthCoeff);
-    }
-    public static resizeY(y: number): number{
-        return Math.round(y * ResolutionManager.resizeHeightCoeff);
-    }
-    public static undoResizeX(x: number): number{
-        return Math.round(x / ResolutionManager.resizeWidthCoeff);
-    }
-    public static undoResizeY(y: number): number{
-        return Math.round(y / ResolutionManager.resizeHeightCoeff);
-    }
     private static resizeConstants(){
-        ResolutionManager.BACKGROUND_SIZE = ResolutionManager.resizeX(ResolutionManager.BACKGROUND_SIZE);
-        for (let i = 0; i < ResolutionManager.WALL_WIDTH.length; i++) {
-            ResolutionManager.WALL_WIDTH[i] = ResolutionManager.resizeX(ResolutionManager.WALL_WIDTH[i]);
+        for (const key in ResolutionManager.fieldsX) {
+            const field = ResolutionManager.fieldsX[key];
+            ResolutionManager.fieldsX[key] = Array.isArray(field)
+                ? field.map(ResolutionManager.resizeX)
+                : ResolutionManager.resizeX(field);
         }
-        for (let i = 0; i < ResolutionManager.WALL_HEIGHT.length; i++) {
-            ResolutionManager.WALL_HEIGHT[i] = ResolutionManager.resizeY(ResolutionManager.WALL_HEIGHT[i]);
+        for (const key in ResolutionManager.fieldsY) {
+            const field = ResolutionManager.fieldsX[key];
+            ResolutionManager.fieldsX[key] = Array.isArray(field)
+                ? field.map(ResolutionManager.resizeY)
+                : ResolutionManager.resizeY(field);
         }
-        ResolutionManager.TRACK_INDENT = ResolutionManager.resizeY(ResolutionManager.TRACK_INDENT);
-        for (let i = 0; i < ResolutionManager.HULL_WIDTH.length; i++) {
-            ResolutionManager.HULL_WIDTH[i] = ResolutionManager.resizeX(ResolutionManager.HULL_WIDTH[i]);
-        }
-        for (let i = 0; i < ResolutionManager.HULL_HEIGHT.length; i++) {
-            ResolutionManager.HULL_HEIGHT[i] = ResolutionManager.resizeY(ResolutionManager.HULL_HEIGHT[i]);
-        }
-        for (let i = 0; i < ResolutionManager.TURRET_INDENT_X.length; i++) {
-            ResolutionManager.TURRET_INDENT_X[i] = ResolutionManager.resizeX(ResolutionManager.TURRET_INDENT_X[i]);
-        }
-        for (let i = 0; i < ResolutionManager.TURRET_WIDTH.length; i++) {
-            ResolutionManager.TURRET_WIDTH[i] = ResolutionManager.resizeX(ResolutionManager.TURRET_WIDTH[i]);
-        }
-        for (let i = 0; i < ResolutionManager.TURRET_HEIGHT.length; i++) {
-            ResolutionManager.TURRET_HEIGHT[i] = ResolutionManager.resizeY(ResolutionManager.TURRET_HEIGHT[i]);
-        }
-        for (let i = 0; i < ResolutionManager.WEAPON_WIDTH.length; i++) {
-            ResolutionManager.WEAPON_WIDTH[i] = ResolutionManager.resizeX(ResolutionManager.WEAPON_WIDTH[i]);
-        }
-        for (let i = 0; i < ResolutionManager.WEAPON_HEIGHT.length; i++) {
-            ResolutionManager.WEAPON_HEIGHT[i] = ResolutionManager.resizeY(ResolutionManager.WEAPON_HEIGHT[i]);
-        }
-        for (let i = 0; i < ResolutionManager.BULLET_WIDTH.length; i++) {
-            ResolutionManager.BULLET_WIDTH[i] = ResolutionManager.resizeX(ResolutionManager.BULLET_WIDTH[i]);
-        }
-        for (let i = 0; i < ResolutionManager.BULLET_HEIGHT.length; i++) {
-            ResolutionManager.BULLET_HEIGHT[i] = ResolutionManager.resizeY(ResolutionManager.BULLET_HEIGHT[i]);
-        }
-        ResolutionManager.ACCELERATION_SIZE = ResolutionManager.resizeX(ResolutionManager.ACCELERATION_SIZE);
-        ResolutionManager.EXPLOSION_SIZE = ResolutionManager.resizeX(ResolutionManager.EXPLOSION_SIZE);
-        for (let i = 0; i < ResolutionManager.ACCELERATION_EFFECT_INDENT_X.length; i++) {
-            ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i] =
-                ResolutionManager.resizeX(ResolutionManager.ACCELERATION_EFFECT_INDENT_X[i]);
-        }
-        ResolutionManager.KEY_SIZE = ResolutionManager.resizeX(ResolutionManager.KEY_SIZE);
-        ResolutionManager.BOX_SIZE = ResolutionManager.resizeX(ResolutionManager.BOX_SIZE);
     }
 }
 export const ANGLE_EPSILON: number = Math.PI / 180;

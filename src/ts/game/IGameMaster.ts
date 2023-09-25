@@ -30,6 +30,7 @@ export interface IGameMaster extends IEventEmitter {
     addTankElements(...tankElements: TankElement[]): void;
     addBonuses(...collectibleItem: ICollectibleItem[]): void;
     addExecutioners(...executioners: IExecutor[]): void;
+    finishGame(): void;
 }
 
 export class GameMaster implements IGameMaster {
@@ -137,5 +138,8 @@ export class GameMaster implements IGameMaster {
     }
     public addExecutioners(...executioners: IExecutor[]) {
         this._gameLoop.render.add(...executioners);
+    }
+    public finishGame() {
+        this._gameLoop.stop();
     }
 }

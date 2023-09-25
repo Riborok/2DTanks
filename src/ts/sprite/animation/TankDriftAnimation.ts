@@ -10,7 +10,8 @@ abstract class TankDriftAnimation extends AnimationSprite implements IFrameByFra
     protected get UPDATE_TIMER_TIME(): number { return TankDriftAnimation.UPDATE_TIMER_TIME }
     protected get MAX_FRAME(): number { return TankDriftAnimation.MAX_FRAME }
     protected constructor(width: number, height: number) {
-        super(width, height, 1);
+        const zIndex: number = 1;
+        super(width, height, zIndex);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke.png`;
     }
     public set frame(value: number) {

@@ -6,6 +6,10 @@ import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
 import {Bonus} from "../constants/gameConstants";
 
+export type FieldMap<T> = {
+    [key: string]: T;
+}
+
 export interface IAmmo {
     get source(): IElement;
 }

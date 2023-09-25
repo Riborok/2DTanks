@@ -12,7 +12,8 @@ export class BulletImpactAnimation extends AnimationSprite implements IFrameByFr
     protected get UPDATE_TIMER_TIME(): number { return BulletImpactAnimation.UPDATE_TIMER_TIME }
     protected get MAX_FRAME(): number { return BulletImpactAnimation.MAX_FRAME }
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
-        super(width, height, 1);
+        const zIndex: number = 1;
+        super(width, height, zIndex);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_${num === 0 ? 0 : 1}.png`;
 
         const newPoint = new Point(
