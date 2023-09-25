@@ -65,8 +65,8 @@ export class ResolutionManager {
                 : ResolutionManager.resizeX(field);
         }
         for (const key in ResolutionManager.fieldsY) {
-            const field = ResolutionManager.fieldsX[key];
-            ResolutionManager.fieldsX[key] = Array.isArray(field)
+            const field = ResolutionManager.fieldsY[key];
+            ResolutionManager.fieldsY[key] = Array.isArray(field)
                 ? field.map(ResolutionManager.resizeY)
                 : ResolutionManager.resizeY(field);
         }
