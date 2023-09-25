@@ -8,16 +8,14 @@ import {ISprite} from "../../sprite/ISprite";
 export class BulletElement implements IElement, IAmmo {
     private readonly _model: BulletModel;
     private readonly _sprite: BulletSprite;
-    private readonly _id: number;
     private readonly _source: IElement;
     public constructor(model: BulletModel, num: number, source: IElement) {
         this._model = model;
         this._sprite = new BulletSprite(num);
         this._source = source;
-        this._id = model.entity.id;
     }
     public get id(): number {
-        return this._id;
+        return this._model.entity.id;
     }
     public get model(): BulletModel {
         return this._model;

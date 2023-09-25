@@ -15,7 +15,6 @@ export interface IEntity extends IPolygon {
     get angle(): number;
     get angularVelocity(): number;
     set angularVelocity(value: number);
-    calcCenter(): Point;
     get radiusLength(): number;
     get momentOfInertia(): number;
     get lengthwiseArea(): number;

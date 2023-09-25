@@ -12,8 +12,6 @@ export interface IAmmo {
 
 export interface IRulesManager {
     addBonus(source: IElement, bonus: Bonus): boolean;
-    endGameConditions(): boolean;
-    processPostGameActions(): void;
 }
 
 export interface IExecutor {

@@ -1,6 +1,6 @@
 import {Sprite} from "../ISprite";
-import {ICollectible} from "../../game/bonuses/ICollectible";
 import {ResolutionManager} from "../../constants/gameConstants";
+import {Point} from "../../geometry/Point";
 
 enum Bullets{
     bulLight,
@@ -10,9 +10,11 @@ enum Bullets{
     bulSniper
 }
 
-class BoxSprite extends Sprite{
-    constructor(bulletType: Bullets) {
+export class BoxSprite extends Sprite{
+    constructor(bulletType: Bullets, point: Point, angle: number) {
         super(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE, 1);
+        this._point = point;
+        this._angle = angle;
         switch (bulletType){
             case Bullets.bulLight:
                 this._sprite.src = 'src/img/item/Light_Bullet_Box.png'

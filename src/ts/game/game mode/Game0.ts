@@ -28,6 +28,7 @@ import {
     VK_W
 } from "../../constants/keyCodes";
 import {IElement} from "../elements/IElement";
+import {CollectibleItemCreator} from "../bonuses/CollectibleItemCreator";
 
 type PanelInfo = {
     tankAttacker: HTMLDivElement,
@@ -88,6 +89,11 @@ export class Game0 {
         gameMaster.setBackgroundMaterial(backgroundMaterial);
         gameMaster.addExecutioners(new PanelInfoManager(rulesManager));
 
+        gameMaster.addBonuses(CollectibleItemCreator.create(Bonus.key,
+            new Point(ResolutionManager.resizeX(790), ResolutionManager.resizeY(680)),
+            0)
+        );
+
         gameMaster.addTankElements(tank1, tank2);
 
         const {wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
@@ -139,16 +145,18 @@ class RulesManager implements IRulesManager {
             case Bonus.key:
                 if (source === this._attacker) {
                     this._score++;
+                    if (this.endGameConditions())
+                        this.processPostGameActions();
                     return true;
                 }
                 break;
         }
         return false;
     }
-    public endGameConditions(): boolean {
+    private endGameConditions(): boolean {
         return this._score === 4;
     }
-    public processPostGameActions(): void {
+    private processPostGameActions(): void {
         this._gameMaster.removeEventListeners();
     }
     public get attacker(): TankElement { return this._attacker }
@@ -165,7 +173,7 @@ class PanelInfoManager implements IExecutor {
         this.updatePanel();
     }
     private _timer: number = 0;
-    private static readonly UPDATE_TIMER_TIME: number = 500;
+    private static readonly UPDATE_TIMER_TIME: number = 600;
     public handle(deltaTime: number): void {
         this._timer += deltaTime;
         if (this._timer >= PanelInfoManager.UPDATE_TIMER_TIME){

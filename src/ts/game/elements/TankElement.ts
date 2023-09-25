@@ -13,11 +13,10 @@ import {ISprite} from "../../sprite/ISprite";
 export class TankElement implements IElement {
     private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
-    private readonly _id: number;
     private _control: Control;
     public get model(): TankModel { return this._model }
     public get sprite(): TankSprite { return this._sprite }
-    public get id(): number { return this._id }
+    public get id(): number { return this._model.entity.id }
     public get control(): Control { return this._control }
     public set control(newControl: Control) { this._control = newControl }
     public constructor(point: Point, angle: number, color: number,
@@ -31,7 +30,6 @@ export class TankElement implements IElement {
             ResolutionManager.HULL_HEIGHT[hullNum] + (ResolutionManager.TRACK_INDENT << 1), angle,
             tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, ModelIDTracker.tankId);
         this._model = new TankModel(tankParts, rectangularEntity);
-        this._id = rectangularEntity.id;
 
         const track = tankParts.track;
         this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum),

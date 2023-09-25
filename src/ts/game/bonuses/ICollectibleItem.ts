@@ -11,14 +11,12 @@ export interface ICollectibleItem extends IIdentifiable, IEntityLifecycle<ISprit
 export class CollectibleItem implements ICollectibleItem {
     private readonly _collectible: ICollectible;
     private readonly _sprite: ISprite;
-    private readonly _id: number;
     public constructor(collectible: ICollectible, sprite: ISprite) {
         this._collectible = collectible;
         this._sprite = sprite;
-        this._id = collectible.id;
     }
     public get id(): number {
-        return this._id;
+        return this._collectible.id;
     }
     public get collectible(): ICollectible {
         return this._collectible;
