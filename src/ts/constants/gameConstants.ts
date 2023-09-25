@@ -1,5 +1,3 @@
-import {Size} from "../additionally/type";
-
 export class ResolutionManager {
     private static resizeWidthCoeff: number = 1;
     private static resizeHeightCoeff: number = 1;

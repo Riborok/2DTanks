@@ -8,15 +8,13 @@ import {ISprite} from "../../sprite/ISprite";
 export class WallElement implements IElement {
     private readonly _model: WallModel;
     private readonly _sprite: WallSprite;
-    private readonly _id: number;
     public constructor(model: WallModel, sprite: WallSprite) {
         this._model = model;
         this._sprite = sprite;
-        this._id = model.entity.id;
     }
     public get model(): WallModel { return this._model }
     public get sprite(): WallSprite { return this._sprite }
-    public get id(): number { return this._id }
+    public get id(): number { return this._model.entity.id }
     public spawn(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
         spriteStorage.insert(this._sprite);
         entityStorage.insert(this._model.entity);

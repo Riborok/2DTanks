@@ -63,8 +63,7 @@ export class GameMaster implements IGameMaster {
 
         this._size = size;
         this._canvas = new Canvas(ctx, this._size);
-        this._gameLoop = new GameLoop(this._canvas, rulesManager.endGameConditions.bind(rulesManager),
-            rulesManager.processPostGameActions.bind(rulesManager));
+        this._gameLoop = new GameLoop(this._canvas);
         this._animationManager = new AnimationManager(this._canvas);
 
         const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
