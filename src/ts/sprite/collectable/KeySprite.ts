@@ -7,7 +7,8 @@ export class KeySprite extends Sprite implements IScalable{
     private _scaleX: number = 1;
     private _isIncreasing: boolean = false;
     public constructor(point: Point, angle: number) {
-        super(ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE, 1);
+        const zIndex: number = 6;
+        super(ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE, zIndex);
         this._point = point;
         this._angle = angle;
         this._sprite.src = "src/img/item/Key.png";

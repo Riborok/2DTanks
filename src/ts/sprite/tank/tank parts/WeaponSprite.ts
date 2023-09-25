@@ -6,7 +6,8 @@ export class WeaponSprite extends Sprite implements ISpritePart {
     private readonly _indentX : number;
     private readonly _indentY : number;
     public constructor(num: number, indentX: number, indentY: number) {
-        super(ResolutionManager.WEAPON_WIDTH[num], ResolutionManager.WEAPON_HEIGHT[num], 5);
+        const zIndex: number = 5;
+        super(ResolutionManager.WEAPON_WIDTH[num], ResolutionManager.WEAPON_HEIGHT[num], zIndex);
         this._sprite.src = `src/img/tanks/Weapons/Weapon_${num}.png`;
         this._indentX = indentX;
         this._indentY = indentY;

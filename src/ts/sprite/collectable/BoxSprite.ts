@@ -12,7 +12,8 @@ enum Bullets{
 
 export class BoxSprite extends Sprite{
     constructor(bulletType: Bullets, point: Point, angle: number) {
-        super(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE, 1);
+        const zIndex: number = 6;
+        super(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE, zIndex);
         this._point = point;
         this._angle = angle;
         switch (bulletType){

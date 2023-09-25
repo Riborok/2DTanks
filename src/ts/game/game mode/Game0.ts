@@ -93,6 +93,14 @@ export class Game0 {
             new Point(ResolutionManager.resizeX(790), ResolutionManager.resizeY(680)),
             0)
         );
+        gameMaster.addBonuses(CollectibleItemCreator.create(Bonus.key,
+            new Point(ResolutionManager.resizeX(1690), ResolutionManager.resizeY(380)),
+            0)
+        );
+        gameMaster.addBonuses(CollectibleItemCreator.create(Bonus.key,
+            new Point(ResolutionManager.resizeX(1385), ResolutionManager.resizeY(495)),
+            0)
+        );
 
         gameMaster.addTankElements(tank1, tank2);
 
@@ -154,10 +162,11 @@ class RulesManager implements IRulesManager {
         return false;
     }
     private endGameConditions(): boolean {
-        return this._score === 4;
+        return this._score === 3;
     }
     private processPostGameActions(): void {
         this._gameMaster.removeEventListeners();
+        this._gameMaster.finishGame();
     }
     public get attacker(): TankElement { return this._attacker }
     public get defender(): TankElement { return this._defender }

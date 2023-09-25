@@ -11,7 +11,8 @@ export class TankExplosionAnimation extends AnimationSprite implements IFrameByF
     protected get UPDATE_TIMER_TIME(): number { return TankExplosionAnimation.UPDATE_TIMER_TIME }
     protected get MAX_FRAME(): number { return TankExplosionAnimation.MAX_FRAME }
     public constructor(point: Point, angle: number) {
-        super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, 1);
+        const zIndex: number = 1;
+        super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, zIndex);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`;
 
         this._point = new Point(
