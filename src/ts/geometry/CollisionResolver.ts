@@ -9,9 +9,11 @@ import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "./additionalFunc";
  */
 export class CollisionResolver {
     private constructor() {}
-    private static readonly COEFFICIENT_OF_RESTITUTION: number = 0.6;
+    private static readonly RETENTION_IMPULSE_COEFFICIENT: number = 0.6;
+    private static readonly RETENTION_ANGULAR_IMPULSE_COEFFICIENT: number = 0.011;
+
     private static readonly CORRECTION_FACTOR: number = 0.55;
-    private static readonly SMALL_ANGULAR_IMPULSE: number = 0.004;
+    private static readonly SMALL_ANGULAR_VELOCITY: number = 0.004;
     private static readonly ORTHOGONAL_IMPULSE: number = 0.0001;
 
     /**
@@ -27,7 +29,8 @@ export class CollisionResolver {
 
         const collisionNormal = this.calcCollisionNormal(collisionResult.collisionPoint,
             impartingEntity.calcCenter());
-        const impulseMagnitude = this.calsImpulseMagnitude(impartingEntity, receivingEntity, collisionNormal);
+        const impulseMagnitude = this.calcImpulseMagnitude(impartingEntity, receivingEntity, collisionNormal) +
+            this.calcAngularImpulseMagnitude(impartingEntity, receivingEntity);
 
         this.separateEntities(impartingEntity, collisionResult.overlap, collisionNormal);
         this.updateAngularVelocity(impartingEntity, receivingEntity, collisionResult.collisionPoint, impulseMagnitude, collisionNormal);
@@ -51,9 +54,9 @@ export class CollisionResolver {
             impartingImpulse = -impartingImpulse;
 
         // CRUTCH
-        if (Math.abs(impartingImpulse + impartingEntity.angularVelocity) < this.SMALL_ANGULAR_IMPULSE
+        if (Math.abs(impartingImpulse + impartingEntity.angularVelocity) < this.SMALL_ANGULAR_VELOCITY
                 && Math.abs(impartingImpulse) > this.ORTHOGONAL_IMPULSE)
-            impartingImpulse = Math.sign(impartingImpulse) === 1 ? this.SMALL_ANGULAR_IMPULSE  : -this.SMALL_ANGULAR_IMPULSE;
+            impartingImpulse = Math.sign(impartingImpulse) === 1 ? this.SMALL_ANGULAR_VELOCITY  : -this.SMALL_ANGULAR_VELOCITY;
 
         receivingEntity.angularVelocity += receivingImpulse;
         impartingEntity.angularVelocity += impartingImpulse;
@@ -88,12 +91,21 @@ export class CollisionResolver {
 
         for (const point of impartingEntity.points)
             point.addToCoordinates(correctionX, correctionY);
+
+        if (Math.abs(impartingEntity.angularVelocity) > this.SMALL_ANGULAR_VELOCITY)
+            impartingEntity.angularVelocity -= Math.sign(impartingEntity.angularVelocity) === 1
+                ? this.CORRECTION_FACTOR / impartingEntity.momentOfInertia
+                : -this.CORRECTION_FACTOR / impartingEntity.momentOfInertia;
     }
-    private static calsImpulseMagnitude(impartingEntity: IEntity, receivingEntity: IEntity, collisionNormal: Vector) {
+    private static calcImpulseMagnitude(impartingEntity: IEntity, receivingEntity: IEntity, collisionNormal: Vector) {
         const relativeVelocity = VectorUtils.subtract(impartingEntity.velocity, receivingEntity.velocity);
 
         return  VectorUtils.dotProduct(relativeVelocity, collisionNormal) * 2 /
-            (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.COEFFICIENT_OF_RESTITUTION;
+            (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.RETENTION_IMPULSE_COEFFICIENT;
+    }
+    private static calcAngularImpulseMagnitude(impartingEntity: IEntity, receivingEntity: IEntity): number {
+        return (impartingEntity.angularVelocity - receivingEntity.angularVelocity) /
+            (1 / impartingEntity.momentOfInertia + 1 / receivingEntity.momentOfInertia) * this.RETENTION_ANGULAR_IMPULSE_COEFFICIENT;
     }
     private static calcCollisionNormal(collisionPoint: Point, center: Point): Vector {
         const collisionNormal = VectorUtils.subtract(collisionPoint, center);

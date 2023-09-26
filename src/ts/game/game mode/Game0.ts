@@ -70,7 +70,8 @@ export class Game0 {
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
         const ctx = htmlCanvasElement.getContext('2d');
 
-        let point = new Point(ResolutionManager.resizeX(180), ResolutionManager.resizeY(210));
+        // let point = new Point(ResolutionManager.resizeX(180), ResolutionManager.resizeY(210));
+        let point = new Point(ResolutionManager.resizeX(1555), ResolutionManager.resizeY(680));
         const tank1 = new TankElement(point, 0, 0,
             0, 0, 0, 0, Game0.CONTROL_1);
 
