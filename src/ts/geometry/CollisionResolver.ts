@@ -10,11 +10,10 @@ import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "./additionalFunc";
 export class CollisionResolver {
     private constructor() {}
     private static readonly RETENTION_IMPULSE_COEFFICIENT: number = 0.6;
-    private static readonly RETENTION_ANGULAR_IMPULSE_COEFFICIENT: number = 0.011;
+    private static readonly RETENTION_ANGULAR_IMPULSE_COEFFICIENT: number = 0.012;
 
-    private static readonly CORRECTION_FACTOR: number = 0.55;
-    private static readonly SMALL_ANGULAR_VELOCITY: number = 0.004;
-    private static readonly ORTHOGONAL_IMPULSE: number = 0.0001;
+    private static readonly CORRECTION_FACTOR: number = 0.6;
+    private static readonly SMALL_ANGULAR_VELOCITY: number = 0.001;
 
     /**
      * Resolves a collision between two entities by calculating changes in velocity and angular velocity
@@ -52,11 +51,6 @@ export class CollisionResolver {
         let impartingImpulse = torqueImparting  / impartingEntity.momentOfInertia;
         if (this.shouldReverseReceiving(receivingEntity.angle, impartingNormal.angle))
             impartingImpulse = -impartingImpulse;
-
-        // CRUTCH
-        if (Math.abs(impartingImpulse + impartingEntity.angularVelocity) < this.SMALL_ANGULAR_VELOCITY
-                && Math.abs(impartingImpulse) > this.ORTHOGONAL_IMPULSE)
-            impartingImpulse = Math.sign(impartingImpulse) === 1 ? this.SMALL_ANGULAR_VELOCITY  : -this.SMALL_ANGULAR_VELOCITY;
 
         receivingEntity.angularVelocity += receivingImpulse;
         impartingEntity.angularVelocity += impartingImpulse;
