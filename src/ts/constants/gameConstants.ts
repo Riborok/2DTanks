@@ -27,25 +27,25 @@ export class ResolutionManager {
 
     private static readonly fieldsX: FieldMap<number | number[]> = {
         BACKGROUND_SIZE: 115,
-        WALL_WIDTH: [100, 50],
-        HULL_WIDTH: [57, 61, 58, 48, 61, 61, 57, 52],
-        TURRET_INDENT_X: [15, 19, 15, 11, 19, 19, 19, 15],
-        TURRET_WIDTH: [32, 38, 27, 27, 22, 27, 32, 22],
-        WEAPON_WIDTH: [35, 37, 30, 32, 38, 27, 32, 27],
-        BULLET_WIDTH: [12, 16, 23, 24, 19],
-        ACCELERATION_SIZE: 64,
-        EXPLOSION_SIZE: 90,
-        ACCELERATION_EFFECT_INDENT_X: [4, 10, 0, 0, 4, 4, 0, 0, 0],
-        KEY_SIZE: 50,
-        BOX_SIZE: 50,
+        WALL_WIDTH: [110, 55],
+        HULL_WIDTH: [63, 67, 64, 53, 67, 67, 63, 57],
+        TURRET_INDENT_X: [17, 21, 17, 12, 21, 21, 21, 17],
+        TURRET_WIDTH: [35, 42, 30, 30, 24, 30, 35, 24],
+        WEAPON_WIDTH: [39, 41, 33, 35, 42, 30, 35, 30],
+        BULLET_WIDTH: [13, 18, 25, 26, 21],
+        ACCELERATION_SIZE: 70,
+        EXPLOSION_SIZE: 99,
+        ACCELERATION_EFFECT_INDENT_X: [4, 11, 0, 0, 4, 4, 0, 0, 0],
+        KEY_SIZE: 55,
+        BOX_SIZE: 55,
     };
     private static readonly fieldsY: FieldMap<number | number[]> =  {
-        WALL_HEIGHT: [50, 50],
-        TRACK_INDENT: 4,
-        HULL_HEIGHT: [37, 47, 37, 31, 52, 42, 36, 31],
-        TURRET_HEIGHT: [27, 27, 17, 27, 22, 22, 27, 22],
-        WEAPON_HEIGHT: [11, 8, 11, 5, 8, 12, 11, 11],
-        BULLET_HEIGHT: [5, 8, 10, 6, 8],
+        WALL_HEIGHT: [55, 55],
+        TRACK_INDENT: 5,
+        HULL_HEIGHT: [41, 52, 41, 34, 57, 46, 40, 34],
+        TURRET_HEIGHT: [30, 30, 19, 30, 24, 24, 30, 24],
+        WEAPON_HEIGHT: [12, 9, 12, 6, 9, 13, 12, 12],
+        BULLET_HEIGHT: [6, 9, 11, 7, 9],
     };
     public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
     public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeHeightCoeff) }
