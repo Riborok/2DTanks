@@ -69,7 +69,7 @@ export class Game0 {
         const tank1 = new TankElement(point, 0, 0,
             0, 0, 0, 0, Game0.CONTROL_1);
 
-        point  = new Point(ResolutionManager.resizeX(1680), ResolutionManager.resizeY(800));
+        point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(850));
         const tank2 = new TankElement(point, 4.71, 1,
             0, 0, 0, 0, Game0.CONTROL_2);
 

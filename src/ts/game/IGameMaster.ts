@@ -22,6 +22,7 @@ import {IEventEmitter, IExecutor, IRulesManager, Size} from "../additionally/typ
 import {IEntity} from "../polygon/entity/IEntity";
 import {ICollectibleItemManager, CollectibleItemManager} from "./bonuses/ICollectibleItemManager";
 import {ICollectibleItem} from "./bonuses/ICollectibleItem";
+import {HealthBarManager, IHealthDrawManager} from "./managers/handling managers/HealthBarManager";
 
 export interface IGameMaster extends IEventEmitter {
     setBackgroundMaterial(backgroundMaterial: number): void;
@@ -47,6 +48,7 @@ export class GameMaster implements IGameMaster {
     private readonly _handlingManagers: HandlingManager<IElement, MovementManager>[] =
         new Array<HandlingManager<IElement, MovementManager>>;
     private readonly _animationManager: IAnimationManager;
+    private readonly _healthDrawManager: IHealthDrawManager;
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
 
@@ -66,6 +68,7 @@ export class GameMaster implements IGameMaster {
         this._canvas = new Canvas(ctx, this._size);
         this._gameLoop = new GameLoop(this._canvas);
         this._animationManager = new AnimationManager(this._canvas);
+        this._healthDrawManager = new HealthBarManager(this._canvas);
 
         const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
             this._size.width, this._size.height);
@@ -102,11 +105,12 @@ export class GameMaster implements IGameMaster {
             this._canvas, bulletElements,
             this._handlingManagers,
             this._animationManager,
-            rulesManager
+            rulesManager,
+            this._healthDrawManager
         );
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
-        this._gameLoop.render.add(...this._handlingManagers, this._animationManager);
+        this._gameLoop.render.add(...this._handlingManagers, this._animationManager, this._healthDrawManager);
         this._gameLoop.start();
     }
     public removeEventListeners() {
@@ -132,6 +136,10 @@ export class GameMaster implements IGameMaster {
     }
     public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
+
+        for (const tankEl of tankElements){
+            this._healthDrawManager.addToList(tankEl);
+        }
     }
     public addBonuses(...collectibleItem: ICollectibleItem[]) {
         this._itemCollisionManager.add(collectibleItem);

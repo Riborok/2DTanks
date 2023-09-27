@@ -1,7 +1,8 @@
 import {isImplementsIFrameByFrame, isImplementsIScalable, isImplementsIVanish, ISprite,} from "../../sprite/ISprite";
 import {SpriteIDTracker} from "../id/SpriteIDTracker";
-import {IStorage, Size} from "../../additionally/type";
+import {IRectangle, IStorage, Size} from "../../additionally/type";
 import {IIdentifiable} from "../id/IIdentifiable";
+import {HEALTH_BAR_WIDTH_COEFF, ResolutionManager} from "../../constants/gameConstants";
 
 export interface IDrawable {
     drawAll(): void;
@@ -12,6 +13,7 @@ export interface IStorageWithIdRemoval<T extends IIdentifiable> extends IStorage
 }
 
 export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>{
+    addRectangle(rect: IRectangle): void;
 }
 
 export class Canvas implements ICanvas {
@@ -19,6 +21,7 @@ export class Canvas implements ICanvas {
     private readonly _size: Size;
     private readonly _bufferCanvas: HTMLCanvasElement;
     private readonly _bufferCtx: CanvasRenderingContext2D;
+    private _rectangles: IRectangle[] = [];
     private _sprites: Map<number, ISprite>[] = [];
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
@@ -52,7 +55,23 @@ export class Canvas implements ICanvas {
             for (const sprite of sprites.values())
                 this.draw(sprite);
 
+        this.drawAdditionalShapes();
+
         this._ctx.drawImage(this._bufferCanvas, 0, 0);
+    }
+    private drawAdditionalShapes(){
+        this.drawRectangles();
+
+        this._rectangles = [];
+    }
+    private drawRectangles(){
+        for (const rect of this._rectangles){
+            this._bufferCtx.fillStyle = rect.color;
+            this._bufferCtx.fillRect(rect.point.x, rect.point.y, rect.width, rect.height);
+        }
+    }
+    public addRectangle(rect: IRectangle){
+        this._rectangles.push(rect);
     }
     public clear() {
         this._sprites = [];

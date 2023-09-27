@@ -23,6 +23,10 @@ export class TankModel extends LandModel implements IArmor {
     private _isDrift: boolean = false;
     private _armorStrength: number;
     private _turretAngle: number;
+
+    public get maxHealth(): number { return this._tankParts.hull.health }
+    public get maxArmor(): number { return this._tankParts.hull.armor }
+
     public constructor(tankParts: TankParts, entity: IEntity) {
         super(entity, tankParts.hull.health);
         this._tankParts = tankParts;
