@@ -3,7 +3,7 @@ import {WallElement} from "../../elements/WallElement";
 import {IEntity} from "../../../polygon/entity/IEntity";
 import {BulletElement} from "../../elements/BulletElement";
 import {IIdToProcessing} from "../IdToProcessing";
-import {BulletCollisionData, ICollisionManager, IStorage, CollisionPack} from "../../../additionally/type";
+import {BulletCollisionData, CollisionPack, ICollisionManager, IStorage} from "../../../additionally/type";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
 export type Movement = (entity: IEntity) => void;

@@ -3,12 +3,12 @@ import {BottomTrackSprite, TopTrackSprite} from "./tank parts/TrackSprite";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {TurretSprite} from "./tank parts/TurretSprite";
 import {WeaponSprite} from "./tank parts/WeaponSprite";
-import {TankSpriteParts} from "./TankSpriteParts";
+import {ITankSpriteParts, TankSpriteParts} from "./ITankSpriteParts";
 
 export class TankSpritePartsCreator {
     private constructor() {}
     public static create(color: number, hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
-                         ): TankSpriteParts {
+                         ): ITankSpriteParts {
         return new TankSpriteParts(
             new HullSprite(color, hullNum),
             new BottomTrackSprite(trackNum, ResolutionManager.HULL_WIDTH[hullNum], ResolutionManager.HULL_HEIGHT[hullNum]),

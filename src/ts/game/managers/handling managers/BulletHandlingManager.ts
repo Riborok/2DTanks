@@ -5,10 +5,10 @@ import {IAnimationManager} from "../animation managers/AnimationManager";
 import {HandlingManager, IAddElement, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {IRulesManager, IStorage} from "../../../additionally/type";
-import {isImplementsIScalable, ISprite} from "../../../sprite/ISprite";
+import {ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
 import {Bonus} from "../../../constants/gameConstants";
-import {HealthBarManager, IHealthDrawManager, isImplementsIArmor} from "./HealthBarManager";
+import {IHealthDrawManager} from "../additional/IHealthBarManager";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
@@ -53,16 +53,11 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 const element: IElement | null = elementHandling.get(id);
                 if (element) {
                     element.model.takeDamage(bulletCollisionData.bulletElement.model);
-
-                    if (!this._healthManager.isInTheList(element) &&
-                        element.model.health !== Infinity){
-                            this._healthManager.addToList(element);
-                    }
+                    this._healthManager.add(element.model);
 
                     if (element.model.isDead()) {
                         this._bulletAnimator.createDeadAnimation(element);
-
-                        this._healthManager.removeFromList(element);
+                        this._healthManager.remove(element.model);
 
                         if (ModelIDTracker.isTank(element.id))
                             this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);

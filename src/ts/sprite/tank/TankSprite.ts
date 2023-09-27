@@ -1,4 +1,4 @@
-import {TankSpriteParts} from "./TankSpriteParts";
+import {ITankSpriteParts} from "./ITankSpriteParts";
 import {Point} from "../../geometry/Point";
 import {directionMovement, TankTireTrack, TirePair} from "./tank effects/TankTireTrack";
 import {SpriteManipulator} from "../SpriteManipulator";
@@ -11,16 +11,16 @@ import {IAnimationManager} from "../../game/managers/animation managers/Animatio
 import {ISprite} from "../ISprite";
 
 export class TankSprite {
-    private readonly _tankSpriteParts: TankSpriteParts;
+    private readonly _tankSpriteParts: ITankSpriteParts;
     private _tankTireTrack: TankTireTrack;
     private _tankAcceleration: TankAcceleration;
     private _tankDrift: TankDrift;
     private readonly _tankTrackEffect: TankTrackEffect;
-    public constructor(tankSpriteParts: TankSpriteParts, forwardData: MotionData, backwardData: MotionData) {
+    public constructor(tankSpriteParts: ITankSpriteParts, forwardData: MotionData, backwardData: MotionData) {
         this._tankSpriteParts = tankSpriteParts;
         this._tankTrackEffect = new TankTrackEffect(forwardData, backwardData);
     }
-    public get tankSpriteParts(): TankSpriteParts { return this._tankSpriteParts }
+    public get tankSpriteParts(): ITankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
     public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
     public spawnTankAcceleration(storage: IStorage<ISprite>, indentX: number, tankHeight: number) {

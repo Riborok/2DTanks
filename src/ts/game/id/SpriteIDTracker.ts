@@ -26,7 +26,7 @@ export class SpriteIDTracker {
      * @param zIndex The zIndex of the sprite.
      * @returns A unique ID for the sprite.
      */
-    private static readonly IDs: number[] = [];
+    private static readonly IDs: number[] = new Array<number>();
     public static generate(zIndex: number): number {
         for (let i = this.IDs.length; i <= zIndex; i++)
             SpriteIDTracker.IDs.push(0);
