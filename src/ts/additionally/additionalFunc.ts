@@ -56,14 +56,3 @@ export function remapValueToRange(value: number, currentRangeMin: number, curren
 export function roundNumber(number: number, rounding: number): number {
     return Math.round(number * rounding) / rounding;
 }
-
-/**
- * Checks if an iterable has at least one element.
- * @param iterable The iterable to be checked.
- * @returns `true` if the iterable has at least one element, `false` otherwise.
- */
-export function hasContent(iterable: Iterable<any>) {
-    for (const _ of iterable)
-        return true;
-    return false;
-}

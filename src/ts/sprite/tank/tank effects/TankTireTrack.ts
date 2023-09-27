@@ -3,7 +3,7 @@ import {TireTrackChainSprite} from "../../effects/TireTrackChainSprite";
 import {DoublyLinkedList, IDoublyLinkedList} from "../../../additionally/data structures/IDoublyLinkedList";
 import {SpriteManipulator} from "../../SpriteManipulator";
 import {calcDistance, clampAngle} from "../../../geometry/additionalFunc";
-import {TankSpriteParts} from "../TankSpriteParts";
+import {ITankSpriteParts} from "../ITankSpriteParts";
 import {TopTrackSprite} from "../tank parts/TrackSprite";
 import {TireTrackSprite} from "../../effects/TireTrackSprite";
 import {ISprite, IVanish, Sprite} from "../../ISprite";
@@ -100,7 +100,7 @@ export class TankTireTrack {
 
         this._listOfTirePairs.addToHead(currTirePair);
     }
-    public calcFirstTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
+    public calcFirstTopBottomChainPoints(tankSpriteParts: ITankSpriteParts, point: Point, sin: number, cos: number):
         {topFirstChainPoint: Point, bottomFirstChainPoint: Point} {
         const firstTopChainPoint = TankTireTrack.calcPositionOfFirstChain(point,
             this._trackWidth, this.chainWidth, sin, cos);
@@ -111,7 +111,7 @@ export class TankTireTrack {
 
         return {topFirstChainPoint: firstTopChainPoint, bottomFirstChainPoint: firstBottomChainPoint}
     }
-    public calcLastTopBottomChainPoints(tankSpriteParts: TankSpriteParts, point: Point, sin: number, cos: number):
+    public calcLastTopBottomChainPoints(tankSpriteParts: ITankSpriteParts, point: Point, sin: number, cos: number):
         {topLastChainPoint: Point, bottomLastChainPoint: Point} {
 
         const lastTopChainPoint = point.clone();

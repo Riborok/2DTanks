@@ -1,8 +1,8 @@
 import {isImplementsIFrameByFrame, isImplementsIScalable, isImplementsIVanish, ISprite,} from "../../sprite/ISprite";
 import {SpriteIDTracker} from "../id/SpriteIDTracker";
-import {IRectangle, IStorage, Size} from "../../additionally/type";
+import {IStorage, Size} from "../../additionally/type";
 import {IIdentifiable} from "../id/IIdentifiable";
-import {HEALTH_BAR_WIDTH_COEFF, ResolutionManager} from "../../constants/gameConstants";
+import {IRectangle} from "./shapes/IRectangle";
 
 export interface IDrawable {
     drawAll(): void;
@@ -12,8 +12,11 @@ export interface IStorageWithIdRemoval<T extends IIdentifiable> extends IStorage
     removeById(identifiable: T): void;
 }
 
-export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>{
+export interface IShapeAdder {
     addRectangle(rect: IRectangle): void;
+}
+
+export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>, IShapeAdder{
 }
 
 export class Canvas implements ICanvas {
@@ -21,8 +24,8 @@ export class Canvas implements ICanvas {
     private readonly _size: Size;
     private readonly _bufferCanvas: HTMLCanvasElement;
     private readonly _bufferCtx: CanvasRenderingContext2D;
-    private _rectangles: IRectangle[] = [];
-    private _sprites: Map<number, ISprite>[] = [];
+    private readonly _rectangles: IRectangle[] = new Array<IRectangle>();
+    private readonly _sprites: Map<number, ISprite>[] = new Array<Map<number, ISprite>>();
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
         this._ctx = ctx;
@@ -62,7 +65,7 @@ export class Canvas implements ICanvas {
     private drawAdditionalShapes(){
         this.drawRectangles();
 
-        this._rectangles = [];
+        this._rectangles.length = 0;
     }
     private drawRectangles(){
         for (const rect of this._rectangles){
@@ -74,7 +77,8 @@ export class Canvas implements ICanvas {
         this._rectangles.push(rect);
     }
     public clear() {
-        this._sprites = [];
+        this._sprites.length = 0;
+        this._rectangles.length = 0;
     }
     private draw(sprite: ISprite) {
         this._bufferCtx.save();

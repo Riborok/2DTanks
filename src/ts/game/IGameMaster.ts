@@ -20,9 +20,9 @@ import {MovementManager} from "./managers/movement managers/MovementManager";
 import {GameLoop, IGameLoop} from "./processors/IGameLoop";
 import {IEventEmitter, IExecutor, IRulesManager, Size} from "../additionally/type";
 import {IEntity} from "../polygon/entity/IEntity";
-import {ICollectibleItemManager, CollectibleItemManager} from "./bonuses/ICollectibleItemManager";
+import {CollectibleItemManager, ICollectibleItemManager} from "./bonuses/ICollectibleItemManager";
 import {ICollectibleItem} from "./bonuses/ICollectibleItem";
-import {HealthBarManager, IHealthDrawManager} from "./managers/handling managers/HealthBarManager";
+import {HealthBarManager, IHealthDrawManager} from "./managers/additional/IHealthBarManager";
 
 export interface IGameMaster extends IEventEmitter {
     setBackgroundMaterial(backgroundMaterial: number): void;
@@ -137,9 +137,8 @@ export class GameMaster implements IGameMaster {
     public addTankElements(...tankElements: TankElement[]) {
         this._tankHandlingManagers.add(tankElements);
 
-        for (const tankEl of tankElements){
-            this._healthDrawManager.addToList(tankEl);
-        }
+        for (const tankElement of tankElements)
+            this._healthDrawManager.add(tankElement.model);
     }
     public addBonuses(...collectibleItem: ICollectibleItem[]) {
         this._itemCollisionManager.add(collectibleItem);

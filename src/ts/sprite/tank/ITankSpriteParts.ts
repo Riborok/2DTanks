@@ -3,7 +3,15 @@ import {BottomTrackSprite, TopTrackSprite} from "./tank parts/TrackSprite";
 import {TurretSprite} from "./tank parts/TurretSprite";
 import {WeaponSprite} from "./tank parts/WeaponSprite";
 
-export class TankSpriteParts {
+export interface ITankSpriteParts {
+    get hullSprite(): HullSprite;
+    get bottomTrackSprite(): BottomTrackSprite;
+    get topTrackSprite(): TopTrackSprite;
+    get turretSprite(): TurretSprite;
+    get weaponSprite(): WeaponSprite;
+}
+
+export class TankSpriteParts implements ITankSpriteParts {
     private readonly _hullSprite: HullSprite;
     private readonly _bottomTrackSprite: BottomTrackSprite;
     private readonly _topTrackSprite: TopTrackSprite;

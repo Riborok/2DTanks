@@ -81,15 +81,15 @@ export interface IArmor {
     get armor(): number;
     get maxArmor(): number;
 }
+export function isImplementsIArmor(obj: any): obj is IArmor{
+    return (
+        'armor' in obj &&
+        'armorStrength' in obj &&
+        'maxArmor' in obj
+    );
+}
 
 export interface IHealth {
     get health(): number;
     get maxHealth(): number;
-}
-
-export interface IRectangle {
-    get point(): Point;
-    get width(): number;
-    get height(): number;
-    get color(): string;
 }

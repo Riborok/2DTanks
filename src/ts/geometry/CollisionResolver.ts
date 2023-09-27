@@ -98,7 +98,7 @@ export class CollisionResolver {
             (1 / impartingEntity.mass + 1 / receivingEntity.mass) * this.RETENTION_IMPULSE_COEFFICIENT;
     }
     private static calcAngularImpulseMagnitude(impartingEntity: IEntity, receivingEntity: IEntity): number {
-        return (impartingEntity.angularVelocity - receivingEntity.angularVelocity) /
+        return (Math.abs(impartingEntity.angularVelocity - receivingEntity.angularVelocity)) /
             (1 / impartingEntity.momentOfInertia + 1 / receivingEntity.momentOfInertia) * this.RETENTION_ANGULAR_IMPULSE_COEFFICIENT;
     }
     private static calcCollisionNormal(collisionPoint: Point, center: Point): Vector {
