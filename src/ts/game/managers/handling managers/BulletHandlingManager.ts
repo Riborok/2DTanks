@@ -5,22 +5,25 @@ import {IAnimationManager} from "../animation managers/AnimationManager";
 import {HandlingManager, IAddElement, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
 import {IRulesManager, IStorage} from "../../../additionally/type";
-import {ISprite} from "../../../sprite/ISprite";
+import {isImplementsIScalable, ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
 import {Bonus} from "../../../constants/gameConstants";
+import {HealthBarManager, IHealthDrawManager, isImplementsIArmor} from "./HealthBarManager";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
     private readonly _bulletAnimator: IBulletAnimator;
     private readonly _rulesManager: IRulesManager;
+    private readonly _healthManager: IHealthDrawManager;
 
     public constructor(bulletManager: BulletMovementManager, storage: IStorage<ISprite>, elements: Map<number, BulletElement>,
-                       handlingManagers: Iterable<IElementManager<IElement>>,
-                       animationManager: IAnimationManager, rulesManager: IRulesManager) {
+                       handlingManagers: Iterable<IElementManager<IElement>>, animationManager: IAnimationManager,
+                       rulesManager: IRulesManager, healthManager: IHealthDrawManager) {
         super(bulletManager, storage, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._bulletAnimator = new BulletAnimator(animationManager);
         this._rulesManager = rulesManager;
+        this._healthManager = healthManager;
     }
 
     public handle(deltaTime: number): void {
@@ -50,8 +53,16 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 const element: IElement | null = elementHandling.get(id);
                 if (element) {
                     element.model.takeDamage(bulletCollisionData.bulletElement.model);
+
+                    if (!this._healthManager.isInTheList(element) &&
+                        element.model.health !== Infinity){
+                            this._healthManager.addToList(element);
+                    }
+
                     if (element.model.isDead()) {
                         this._bulletAnimator.createDeadAnimation(element);
+
+                        this._healthManager.removeFromList(element);
 
                         if (ModelIDTracker.isTank(element.id))
                             this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);

@@ -24,6 +24,9 @@ export class ResolutionManager {
     public static get ACCELERATION_EFFECT_INDENT_X(): number[] { return <number[]>ResolutionManager.fieldsX.ACCELERATION_EFFECT_INDENT_X }
     public static get KEY_SIZE(): number { return <number>ResolutionManager.fieldsX.KEY_SIZE }
     public static get BOX_SIZE(): number { return <number>ResolutionManager.fieldsX.BOX_SIZE }
+    public static get HEALTH_BAR_HEIGHT(): number { return <number>ResolutionManager.fieldsY.HEALTH_BAR_HEIGHT }
+    public static get ARMOR_BAR_HEIGHT(): number { return <number>ResolutionManager.fieldsY.ARMOR_BAR_HEIGHT }
+    public static get HEALTH_ARMOR_BAR_INDENT_Y(): number { return <number>ResolutionManager.fieldsY.HEALTH_ARMOR_BAR_INDENT_Y }
 
     private static readonly fieldsX: FieldMap<number | number[]> = {
         BACKGROUND_SIZE: 115,
@@ -46,6 +49,9 @@ export class ResolutionManager {
         TURRET_HEIGHT: [30, 30, 19, 30, 24, 24, 30, 24],
         WEAPON_HEIGHT: [12, 9, 12, 6, 9, 13, 12, 12],
         BULLET_HEIGHT: [6, 9, 11, 7, 9],
+        HEALTH_BAR_HEIGHT: 10,
+        ARMOR_BAR_HEIGHT: 4,
+        HEALTH_ARMOR_BAR_INDENT_Y: 3
     };
     public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
     public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeHeightCoeff) }
@@ -82,6 +88,9 @@ export const BULLET_ANIMATION_SIZE_INCREASE_COEFF: number = 5;
 export const GRAVITY_ACCELERATION: number = 0.01;
 export const OBSTACLE_WALL_WIDTH_AMOUNT: number = 17;
 export const OBSTACLE_WALL_HEIGHT_AMOUNT: number = 7;
+export const HEALTH_BAR_WIDTH_COEFF: number = 1.15;
+export const HEALTH_BAR_COLOR: string = 'green';
+export const ARMOR_BAR_COLOR: string = 'blue';
 
 export enum Bonus {
     kill = 0,

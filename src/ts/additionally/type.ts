@@ -79,8 +79,17 @@ export type BulletCollisionData = {
 export interface IArmor {
     get armorStrength(): number;
     get armor(): number;
+    get maxArmor(): number;
 }
 
 export interface IHealth {
     get health(): number;
+    get maxHealth(): number;
+}
+
+export interface IRectangle {
+    get point(): Point;
+    get width(): number;
+    get height(): number;
+    get color(): string;
 }

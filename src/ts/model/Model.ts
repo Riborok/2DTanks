@@ -6,6 +6,7 @@ import {AirForcesCalculator, LandForcesCalculator} from "./ForcesCalculator";
 export abstract class Model implements IHealth{
     protected readonly _entity: IEntity;
     protected _health: number;
+    public abstract get maxHealth(): number;
     protected constructor(entity: IEntity, health: number) {
         this._entity = entity;
         this._health = health;
