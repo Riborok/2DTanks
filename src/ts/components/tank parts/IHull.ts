@@ -9,8 +9,8 @@ export interface IHull extends IComponent{
 
 export class HullModel0 implements IHull {
     public get health(): number { return 100 }
-    public get armor(): number { return 10 }
+    public get armor(): number { return 1 }
     public get mass(): number { return 1 }
-    public get armorStrength(): number { return 1 }
+    public get armorStrength(): number { return 20 }
     public get num(): number { return 0 }
 }
