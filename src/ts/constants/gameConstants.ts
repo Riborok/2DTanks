@@ -89,7 +89,10 @@ export const GRAVITY_ACCELERATION: number = 0.01;
 export const OBSTACLE_WALL_WIDTH_AMOUNT: number = 17;
 export const OBSTACLE_WALL_HEIGHT_AMOUNT: number = 7;
 export const HEALTH_BAR_WIDTH_COEFF: number = 1.15;
-export const HEALTH_BAR_COLOR: string = 'green';
+export const HEALTH_BAR_HIGH_HP_COLOR: string = 'green';
+export const HEALTH_BAR_MEDIUM_HP_COLOR: string = 'yellow';
+export const HEALTH_BAR_LOW_HP_COLOR: string = 'red';
+
 export const ARMOR_BAR_COLOR: string = 'blue';
 
 export enum Bonus {
