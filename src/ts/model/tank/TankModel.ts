@@ -37,10 +37,8 @@ export class TankModel extends LandModel implements IArmor {
         this._armor -= bullet.armorPenetration;
         if (this._armor < 0) { this._armor = 0; }
 
-        let damage = bullet.damage - this._armor * this.armorStrength;
-        if (damage < 0) { damage = 0; }
-
-        this._health -= damage;
+        const damage = bullet.damage - this._armor * this.armorStrength;
+        if (damage > 0) { this._health -= damage; }
     }
     public get turretAngle(): number { return this._turretAngle }
     public get armor() { return this._armor }

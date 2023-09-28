@@ -4,13 +4,14 @@ import {calcDistance} from "../../../geometry/additionalFunc";
 import {IShapeAdder} from "../../processors/ICanvas";
 import {
     ARMOR_BAR_COLOR,
-    HEALTH_BAR_HIGH_HP_COLOR, HEALTH_BAR_LOW_HP_COLOR, HEALTH_BAR_MEDIUM_HP_COLOR,
+    HEALTH_BAR_HIGH_HP_COLOR,
+    HEALTH_BAR_LOW_HP_COLOR,
+    HEALTH_BAR_MEDIUM_HP_COLOR,
     HEALTH_BAR_WIDTH_COEFF,
     ResolutionManager
 } from "../../../constants/gameConstants";
 import {Rectangle} from "../../processors/shapes/IRectangle";
 import {Model} from "../../../model/Model";
-import {IElement} from "../../elements/IElement";
 
 export interface IHealthDrawManager extends IExecutor{
     add(model: Model): void;

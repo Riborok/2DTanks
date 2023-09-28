@@ -1,5 +1,4 @@
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IEntity} from "../../../polygon/entity/IEntity";
 import {TankExplosionAnimation} from "../../../sprite/animation/TankExplosionAnimation";
 import {getRandomInt} from "../../../additionally/additionalFunc";
 import {Point} from "../../../geometry/Point";
@@ -7,22 +6,26 @@ import {BulletImpactAnimation} from "../../../sprite/animation/BulletImpactAnima
 import {BULLET_ANIMATION_SIZE_INCREASE_COEFF, ResolutionManager} from "../../../constants/gameConstants";
 import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
 import {IAnimation} from "../../../sprite/animation/IAnimation";
+import {IElement} from "../../elements/IElement";
+import {BulletElement} from "../../elements/BulletElement";
 
 export class AnimationMaker{
-    public static playDeathAnimation(entity: IEntity): IAnimation {
-        if (ModelIDTracker.isWall(entity.id)){
+    public static playDeathAnimation(collisionPoint: Point, element: IElement): IAnimation {
+        if (ModelIDTracker.isWall(element.id)){
 
         }
 
-        if (ModelIDTracker.isTank(entity.id)){
+        if (ModelIDTracker.isTank(element.id)){
             return new TankExplosionAnimation(
-                entity.calcCenter(),
+                element.model.entity.calcCenter(),
                 getRandomInt(-Math.PI, Math.PI)
             );
         }
 
-        if (ModelIDTracker.isBullet(entity.id)){
-
+        if (ModelIDTracker.isBullet(element.id)){
+            const bulletElement = <BulletElement>element;
+            return this.playImpactAnimation(collisionPoint, bulletElement.model.entity.angle + Math.PI,
+                bulletElement.sprite.num);
         }
     }
     public static playImpactAnimation(point: Point, angle: number, num: number): IAnimation{
