@@ -4,12 +4,13 @@ import {calcDistance} from "../../../geometry/additionalFunc";
 import {IShapeAdder} from "../../processors/ICanvas";
 import {
     ARMOR_BAR_COLOR,
-    HEALTH_BAR_COLOR,
+    HEALTH_BAR_HIGH_HP_COLOR, HEALTH_BAR_LOW_HP_COLOR, HEALTH_BAR_MEDIUM_HP_COLOR,
     HEALTH_BAR_WIDTH_COEFF,
     ResolutionManager
 } from "../../../constants/gameConstants";
 import {Rectangle} from "../../processors/shapes/IRectangle";
 import {Model} from "../../../model/Model";
+import {IElement} from "../../elements/IElement";
 
 export interface IHealthDrawManager extends IExecutor{
     add(model: Model): void;
@@ -48,7 +49,7 @@ export class HealthBarManager implements IHealthDrawManager {
             center.y - tankHeight * 1.5
         );
 
-        this.drawHealthBar(healthPoint, healthWidth);
+        this.drawHealthBar(healthPoint, healthWidth, this.getHealthColor(model));
 
         if (isImplementsIArmor(model))
             this.drawArmorBar(model, tankWidth, healthPoint);
@@ -57,12 +58,22 @@ export class HealthBarManager implements IHealthDrawManager {
         return calcDistance(model.entity.points[0], model.entity.points[1]) *
             HEALTH_BAR_WIDTH_COEFF;
     }
-    private drawHealthBar(healthPoint: Point, healthWidth: number) {
+    private getHealthColor(model: Model): string{
+        if (model.health > model.maxHealth * 0.4)
+            return HEALTH_BAR_HIGH_HP_COLOR;
+        else
+            if (model.health > model.maxHealth * 0.15 &&
+                model.health <= model.maxHealth * 0.4)
+            return HEALTH_BAR_MEDIUM_HP_COLOR;
+        else
+            return HEALTH_BAR_LOW_HP_COLOR;
+    }
+    private drawHealthBar(healthPoint: Point, healthWidth: number, healthColor: string) {
         this._shapeAdder.addRectangle(new Rectangle(
             healthPoint,
             healthWidth,
             ResolutionManager.HEALTH_BAR_HEIGHT,
-            HEALTH_BAR_COLOR
+            healthColor
         ));
     }
     private drawArmorBar(model: Model & IArmor, tankWidth: number, healthPoint: Point) {
