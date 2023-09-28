@@ -56,13 +56,13 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                     this._healthManager.add(element.model);
 
                     if (element.model.isDead()) {
+                        elementHandling.delete(element);
                         this._bulletAnimator.createDeadAnimation(element);
+
                         this._healthManager.remove(element.model);
 
                         if (ModelIDTracker.isTank(element.id))
                             this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);
-
-                        elementHandling.delete(element);
                     }
                 }
             }
