@@ -61,9 +61,7 @@ export class HealthBarManager implements IHealthDrawManager {
     private getHealthColor(model: Model): string{
         if (model.health > model.maxHealth * 0.4)
             return HEALTH_BAR_HIGH_HP_COLOR;
-        else
-            if (model.health > model.maxHealth * 0.15 &&
-                model.health <= model.maxHealth * 0.4)
+        else if (model.health > model.maxHealth * 0.15 && model.health <= model.maxHealth * 0.4)
             return HEALTH_BAR_MEDIUM_HP_COLOR;
         else
             return HEALTH_BAR_LOW_HP_COLOR;
