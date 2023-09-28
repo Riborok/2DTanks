@@ -84,3 +84,7 @@ export interface ISpritePart {
      */
     calcPosition(point: Point, sin: number, cos: number): Point;
 }
+
+export interface ISpriteParts {
+    get getParts(): Iterable<ISpritePart>;
+}
