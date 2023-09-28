@@ -21,7 +21,7 @@ export class TankModel extends LandModel implements IArmor {
     private _bulletNum: number = 0;
     private _isBraking: boolean = false;
     private _isDrift: boolean = false;
-    private _armorStrength: number;
+    private _armor: number;
     private _turretAngle: number;
 
     public get maxHealth(): number { return this._tankParts.hull.health }
@@ -31,20 +31,20 @@ export class TankModel extends LandModel implements IArmor {
         super(entity, tankParts.hull.health);
         this._tankParts = tankParts;
         this._turretAngle = entity.angle;
-        this._armorStrength = tankParts.hull.armorStrength;
+        this._armor = tankParts.hull.armor;
     }
     public takeDamage(bullet: BulletModel) {
-        this._armorStrength -= bullet.armorPenetration;
-        if (this._armorStrength < 0) { this._armorStrength = 0; }
+        this._armor -= bullet.armorPenetration;
+        if (this._armor < 0) { this._armor = 0; }
 
-        let damage = bullet.damage - this._tankParts.hull.armor * this._armorStrength;
+        let damage = bullet.damage - this._armor * this.armorStrength;
         if (damage < 0) { damage = 0; }
 
         this._health -= damage;
     }
     public get turretAngle(): number { return this._turretAngle }
-    public get armor() { return this._tankParts.hull.armor }
-    public get armorStrength() { return this._armorStrength }
+    public get armor() { return this._armor }
+    public get armorStrength() { return this._tankParts.hull.armorStrength }
     public get bulletNum() { return this._bulletNum }
     public shot(): BulletModel | null {
         const dateNow = Date.now();

@@ -78,18 +78,18 @@ export class CollisionDetector {
         let extendedProjection: ExtendedProjection;
         if (isPolygon1Axis) {
             projection = this.getProjection(polygon1, axis);
-            extendedProjection = this.getExtendedProjection(polygon2, axis);
+            extendedProjection = this.getExtendedProjection(polygon2, axis, false);
         }
         else {
             projection = this.getProjection(polygon2, axis);
-            extendedProjection = this.getExtendedProjection(polygon1, axis);
+            extendedProjection = this.getExtendedProjection(polygon1, axis, true);
         }
 
         return (extendedProjection.max - projection.min < projection.max - extendedProjection.min)
             ? extendedProjection.maxPoint
             : extendedProjection.minPoint;
     }
-    private static getExtendedProjection(polygon: IPolygon, axis: Axis): ExtendedProjection {
+    private static getExtendedProjection(polygon: IPolygon, axis: Axis, calculateMidPoint: boolean): ExtendedProjection {
         let min = VectorUtils.dotProduct(axis, polygon.points[0]);
         let max = min;
         let minPoint = polygon.points[0];
@@ -98,12 +98,7 @@ export class CollisionDetector {
         for (let i = 1; i < polygon.points.length; i++) {
             const dotProduct = VectorUtils.dotProduct(axis, polygon.points[i]);
 
-            if (Math.abs(dotProduct - min) < this.EPSILON)
-                minPoint = calcMidBetweenTwoPoint(minPoint, polygon.points[i]);
-            else if (Math.abs(dotProduct - max) < this.EPSILON)
-                maxPoint = calcMidBetweenTwoPoint(maxPoint, polygon.points[i]);
-
-            else if (dotProduct < min) {
+            if (dotProduct < min) {
                 min = dotProduct;
                 minPoint = polygon.points[i];
             }
@@ -111,6 +106,10 @@ export class CollisionDetector {
                 max = dotProduct;
                 maxPoint = polygon.points[i];
             }
+            else if (calculateMidPoint && Math.abs(dotProduct - min) < this.EPSILON)
+                minPoint = calcMidBetweenTwoPoint(minPoint, polygon.points[i]);
+            else if (calculateMidPoint && Math.abs(dotProduct - max) < this.EPSILON)
+                maxPoint = calcMidBetweenTwoPoint(maxPoint, polygon.points[i]);
         }
 
         return { min, max, minPoint, maxPoint }
