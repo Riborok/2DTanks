@@ -12,7 +12,7 @@ interface IAnimator {
 
 export interface IBulletAnimator extends IAnimator {
     createImpactAnimation(collisionPoint: Point, bulletElement: BulletElement): void;
-    createDeadAnimation(element: IElement): void;
+    createDeadAnimation(collisionPoint: Point, element: IElement): void;
 }
 
 export interface ITankAnimator extends IAnimator {
@@ -27,8 +27,8 @@ export class BulletAnimator implements IBulletAnimator {
         this._animationManager.add(AnimationMaker.playImpactAnimation(collisionPoint,
             bulletElement.model.entity.angle + Math.PI, bulletElement.sprite.num));
     }
-    public createDeadAnimation(element: IElement) {
-        this._animationManager.add(AnimationMaker.playDeathAnimation(element.model.entity));
+    public createDeadAnimation(collisionPoint: Point, element: IElement) {
+        this._animationManager.add(AnimationMaker.playDeathAnimation(collisionPoint, element));
     }
 }
 

@@ -53,20 +53,22 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
                 const element: IElement | null = elementHandling.get(id);
                 if (element) {
                     element.model.takeDamage(bulletCollisionData.bulletElement.model);
-                    this._healthManager.add(element.model);
 
                     if (element.model.isDead()) {
                         elementHandling.delete(element);
-                        this._bulletAnimator.createDeadAnimation(element);
+                        this._bulletAnimator.createDeadAnimation(collisionPack.collisionPoint, element);
 
                         this._healthManager.remove(element.model);
 
                         if (ModelIDTracker.isTank(element.id))
                             this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);
                     }
+                    else
+                        this._healthManager.add(element.model);
                 }
             }
             this.delete(bulletCollisionData.bulletElement);
+            this._healthManager.remove(bulletCollisionData.bulletElement.model);
         }
 
         this._movementManager.bulletCollisionDates.clear();
