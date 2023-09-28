@@ -8,9 +8,9 @@ import {TankTrackEffect} from "./tank effects/TankTrackEffect";
 import {IStorage, MotionData} from "../../additionally/type";
 import {rotDirection, TankDrift} from "./tank effects/TankDrift";
 import {IAnimationManager} from "../../game/managers/animation managers/AnimationManager";
-import {ISprite} from "../ISprite";
+import {ISprite, ISpritePart, ISpriteParts} from "../ISprite";
 
-export class TankSprite {
+export class TankSprite implements ISpriteParts {
     private readonly _tankSpriteParts: ITankSpriteParts;
     private _tankTireTrack: TankTireTrack;
     private _tankAcceleration: TankAcceleration;
@@ -20,6 +20,7 @@ export class TankSprite {
         this._tankSpriteParts = tankSpriteParts;
         this._tankTrackEffect = new TankTrackEffect(forwardData, backwardData);
     }
+    public get getParts(): Iterable<ISpritePart> { return Object.values(this._tankSpriteParts) }
     public get tankSpriteParts(): ITankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
     public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
