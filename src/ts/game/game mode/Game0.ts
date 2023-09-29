@@ -137,11 +137,23 @@ class RulesManager implements IRulesManager {
     }
     public addBonus(source: IElement, bonus: Bonus): boolean {
         switch (bonus) {
+            case Bonus.kill:
+                return true;
             case Bonus.key:
                 if (source === this._attacker) {
                     this._score++;
                     if (this.endGameConditions())
                         this.processPostGameActions();
+                    return true;
+                }
+                break;
+            case Bonus.bulGrenade:
+            case Bonus.bulHeavy:
+            case Bonus.bulLight:
+            case Bonus.bulMedium:
+            case Bonus.bulSniper:
+                if (source instanceof TankElement) {
+                    source.model.takeBullet(bonus);
                     return true;
                 }
                 break;

@@ -14,11 +14,13 @@ import {getBarrelLength} from "../../components/tank parts/IWeapon";
 import {LandForcesCalculator} from "../ForcesCalculator";
 
 export class TankModel extends LandModel implements IArmor {
+    private static readonly DEFAULT_BULLET_NUM: number = 0;
+
     private readonly _tankParts: TankParts;
 
     private _lastTimeShot: number = Date.now();
-    private _bulletQuantity: number = 50;
-    private _bulletNum: number = 0;
+    private _bulletQuantity: number = 0;
+    private _bulletNum: number = TankModel.DEFAULT_BULLET_NUM;
     private _isBraking: boolean = false;
     private _isDrift: boolean = false;
     private _armor: number;
@@ -46,13 +48,15 @@ export class TankModel extends LandModel implements IArmor {
     public get bulletNum() { return this._bulletNum }
     public shot(): BulletModel | null {
         const dateNow = Date.now();
-        if (this._bulletQuantity === 0 || dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
+        if (dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
             return null;
+
+        if (this._bulletQuantity === 0) { this._bulletNum = TankModel.DEFAULT_BULLET_NUM; }
+        else                            { this._bulletQuantity--; }
 
         const bulletModel = BulletModelCreator.create(this._bulletNum, this.calcBulletExit(),
             this._turretAngle, this._tankParts.weapon);
         this._lastTimeShot = dateNow;
-        this._bulletQuantity--;
 
         return bulletModel;
     }
@@ -64,11 +68,9 @@ export class TankModel extends LandModel implements IArmor {
         const y = center.y + muzzleLength * Math.sin(this._turretAngle);
         return new Point(x, y);
     }
-    public incBulletQuantity(quantity: number) {
-        this._bulletQuantity = Math.min(this._bulletQuantity + quantity, this._tankParts.turret.bulletCapacity);
-    }
-    public takeNewBullet(bulletNum: number) {
+    public takeBullet(bulletNum: number) {
         this._bulletNum = bulletNum;
+        this._bulletQuantity = this._tankParts.turret.bulletCapacity;
     }
     public turretClockwiseMovement(deltaTime: number) { this._turretAngle += this._tankParts.turret.angleSpeed * deltaTime }
     public turretCounterclockwiseMovement(deltaTime: number) { this._turretAngle -= this._tankParts.turret.angleSpeed * deltaTime }
