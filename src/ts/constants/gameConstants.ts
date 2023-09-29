@@ -98,7 +98,12 @@ export const HEALTH_BAR_LOW_HP_COLOR: string = 'red';
 export const ARMOR_BAR_COLOR: string = 'blue';
 
 export enum Bonus {
-    kill = 0,
-    key = 1,
+    kill,
+    key,
+    bulLight = 0,
+    bulMedium = 1,
+    bulHeavy = 2,
+    bulGrenade = 3,
+    bulSniper = 4
 }
 
