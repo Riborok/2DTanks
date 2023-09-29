@@ -1,7 +1,7 @@
 import {Point} from "../../geometry/Point";
 import {WallElement} from "../elements/WallElement";
 import {ObstacleCreator} from "./IObstacleCreator";
-import {ResolutionManager} from "../../constants/gameConstants";
+import {ResolutionManager, WALL_GRID_COLUMNS_AMOUNT, WALL_GRID_LINES_AMOUNT} from "../../constants/gameConstants";
 import {PointRotator} from "../../geometry/PointRotator";
 
 type GridPack = {
@@ -11,13 +11,11 @@ type GridPack = {
     GRID_LINES: number[]
 }
 export class MazeCreator {
-    private static readonly GRID_COLUMNS_AMOUNT: number = 12;
-    private static readonly GRID_LINES_AMOUNT: number = 6;
     private constructor() { }
     private static calcGridPoints(point: Point): GridPack{
         const gridPack: GridPack = {
-            GRID_COLUMNS_AMOUNT: MazeCreator.GRID_COLUMNS_AMOUNT,
-            GRID_LINES_AMOUNT: MazeCreator.GRID_LINES_AMOUNT,
+            GRID_COLUMNS_AMOUNT: WALL_GRID_COLUMNS_AMOUNT,
+            GRID_LINES_AMOUNT: WALL_GRID_LINES_AMOUNT,
             GRID_COLUMNS: [],
             GRID_LINES: []
         }
