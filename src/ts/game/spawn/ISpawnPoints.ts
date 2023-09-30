@@ -1,15 +1,14 @@
 import {Point} from "../../geometry/Point";
-import {ResolutionManager, WALL_GRID_COLUMNS_AMOUNT, WALL_GRID_LINES_AMOUNT} from "../../constants/gameConstants";
+import {ResolutionManager, SPAWN_GRIDS_COLUMNS_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT} from "../../constants/gameConstants";
 import {getRandomInt} from "../../additionally/additionalFunc";
 
 export interface ISpawnPoints {
-    getRandomSpawnPoint(width: number, height: number): Point;
-    getSpawnPoint(width: number, height: number, row: number, column: number): Point;
+    getRandomSpawnPoint(width: number, height: number,
+                        minLine?: number, maxLine?: number, minColumn?: number, maxColumn?: number): Point;
+    getSpawnPoint(width: number, height: number, line: number, column: number): Point;
 }
 
 export class SpawnPoints implements ISpawnPoints{
-    private _spawnGridLinesAmount: number = WALL_GRID_LINES_AMOUNT - 1;
-    private _spawnGridColumnsAmount: number = WALL_GRID_COLUMNS_AMOUNT - 1;
     private _spawnPoints: Point[][] = [];
 
     constructor(point: Point) {
@@ -24,10 +23,10 @@ export class SpawnPoints implements ISpawnPoints{
         const indentX = ResolutionManager.WALL_WIDTH[0] + ResolutionManager.WALL_WIDTH[1];
         const indentY = ResolutionManager.WALL_WIDTH[0] + ResolutionManager.WALL_HEIGHT[1];
 
-        for (let i = 0; i < this._spawnGridLinesAmount; i++){
+        for (let i = 0; i < SPAWN_GRIDS_LINES_AMOUNT; i++){
             this._spawnPoints[i] = [];
 
-            for (let j = 0; j < this._spawnGridColumnsAmount; j++){
+            for (let j = 0; j < SPAWN_GRIDS_COLUMNS_AMOUNT; j++){
                 this._spawnPoints[i][j] = new Point(
                     firstSpawnPoint.x + indentX * j,
                     firstSpawnPoint.y + indentY * i
@@ -36,9 +35,11 @@ export class SpawnPoints implements ISpawnPoints{
         }
     }
 
-    public getRandomSpawnPoint(width: number, height: number): Point {
-        const line = getRandomInt(0, this._spawnGridLinesAmount - 1);
-        const column = getRandomInt(0, this._spawnGridColumnsAmount - 1);
+    public getRandomSpawnPoint(width: number, height: number,
+                               minLine: number = 0, maxLine: number = SPAWN_GRIDS_LINES_AMOUNT - 1,
+                               minColumn: number = 0, maxColumn: number = SPAWN_GRIDS_COLUMNS_AMOUNT - 1): Point {
+        const line = getRandomInt(minLine, maxLine);
+        const column = getRandomInt(minColumn, maxColumn);
 
         const point = this._spawnPoints[line][column];
 

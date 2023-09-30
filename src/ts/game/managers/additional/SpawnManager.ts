@@ -9,7 +9,7 @@ import {getRandomInt} from "../../../additionally/additionalFunc";
 export class SpawnManager implements IExecutor{
     private _ammoSpawnInterval: number = 5000;
     private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 6e4;
-    private static readonly RESPAWN_TRYS_AMOUNT: number = 5;
+    private static readonly RESPAWN_TRYS_AMOUNT: number = 42;
     private readonly _spawnPoints: ISpawnPoints;
     private readonly _collectibleItemManager: ICollectibleItemManager;
     private _timer: number = 0;
@@ -65,14 +65,16 @@ export class SpawnManager implements IExecutor{
         }
     }
 
-    public randomSpawn(bonusType: Bonus, width: number, height: number){
+    public randomSpawn(bonusType: Bonus, width: number, height: number,
+                       minLine: number, maxLine: number,
+                       minColumn: number, maxColumn: number){
         const bonus = CollectibleItemCreator.create(
             bonusType,
-            this._spawnPoints.getRandomSpawnPoint(width, height),
+            this._spawnPoints.getRandomSpawnPoint(width, height, minLine, maxLine, minColumn, maxColumn),
             0
         );
 
-        while (true){
+        for (let i = 0; i < SpawnManager.RESPAWN_TRYS_AMOUNT; i++){
             if (!this._collectibleItemManager.collisionManager.hasCollision(bonus.collectible)){
                 this._collectibleItemManager.addElement(bonus);
                 break;
