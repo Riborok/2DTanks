@@ -32,6 +32,8 @@ export interface IGameMaster extends IEventEmitter {
     addBonuses(...collectibleItem: ICollectibleItem[]): void;
     addExecutioners(...executioners: IExecutor[]): void;
     finishGame(): void;
+
+    get itemCollisionManager(): ICollectibleItemManager;
 }
 
 export class GameMaster implements IGameMaster {
@@ -51,6 +53,8 @@ export class GameMaster implements IGameMaster {
     private readonly _healthDrawManager: IHealthDrawManager;
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
+
+    get itemCollisionManager(): ICollectibleItemManager { return this._itemCollisionManager }
 
     private readonly handleVisibilityChange = () => {
         if (document.hidden) {
@@ -141,7 +145,7 @@ export class GameMaster implements IGameMaster {
             this._healthDrawManager.add(tankElement.model);
     }
     public addBonuses(...collectibleItem: ICollectibleItem[]) {
-        this._itemCollisionManager.add(collectibleItem);
+        this._itemCollisionManager.addElements(collectibleItem);
     }
     public addExecutioners(...executioners: IExecutor[]) {
         this._gameLoop.render.add(...executioners);

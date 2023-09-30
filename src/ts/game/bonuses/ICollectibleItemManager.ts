@@ -10,7 +10,9 @@ export interface IBonusCollisionChecker {
     checkForBonusHits(element: IElement): void;
 }
 export interface ICollectibleManager {
-    add(elements: Iterable<ICollectibleItem>): void;
+    addElements(elements: Iterable<ICollectibleItem>): void;
+    addElement(element: ICollectibleItem): void;
+    get collisionManager(): ICollisionManager<ICollectible>;
 }
 
 export interface ICollectibleItemManager extends ICollectibleManager, IBonusCollisionChecker {
@@ -22,6 +24,7 @@ export class CollectibleItemManager implements ICollectibleItemManager {
     private readonly _collectibleStorage: IStorage<ICollectible>;
     private readonly _rulesManager: IRulesManager;
     private readonly _collisionManager: ICollisionManager<ICollectible>;
+    get collisionManager(): ICollisionManager<ICollectible> { return this._collisionManager }
     public constructor(spriteStorage: IStorage<ISprite>, rulesManager: IRulesManager, size: Size) {
         this._spriteStorage = spriteStorage;
         const collisionSystem: ICollisionSystem<ICollectible> = new Quadtree(0, 0, size.width, size.height)
@@ -29,18 +32,23 @@ export class CollectibleItemManager implements ICollectibleItemManager {
         this._collisionManager = new BonusCollisionManager(collisionSystem);
         this._rulesManager = rulesManager;
     }
-    public add(elements: Iterable<ICollectibleItem>) {
-        for (const element of elements) {
-            if (!this._items.has(element.id)) {
-                this._items.set(element.id, element);
-                element.spawn(this._spriteStorage, this._collectibleStorage);
-            }
+    public addElements(elements: Iterable<ICollectibleItem>) {
+        for (const element of elements)
+            this.addElement(element);
+    }
+    public addElement(element: ICollectibleItem) {
+        if (!this._items.has(element.id)) {
+            this._items.set(element.id, element);
+            element.spawn(this._spriteStorage, this._collectibleStorage);
         }
     }
     public checkForBonusHits(element: IElement) {
-        for (const collectible of this._collisionManager.hasCollision(element.model.entity)) {
-            if (this._rulesManager.addBonus(element, collectible.bonus))
-                this.delete(this._items.get(collectible.id));
+        const collectibles = this._collisionManager.hasCollision(element.model.entity);
+        if (collectibles) {
+            for (const collectible of collectibles) {
+                if (this._rulesManager.addBonus(element, collectible.bonus))
+                    this.delete(this._items.get(collectible.id));
+            }
         }
     }
     private delete(element: ICollectibleItem) {

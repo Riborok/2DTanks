@@ -1,6 +1,5 @@
 import {Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
-import {IEntity} from "../polygon/entity/IEntity";
 import {ISprite} from "../sprite/ISprite";
 import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
@@ -32,7 +31,7 @@ export interface IEntityLifecycle<T extends ISprite, V extends IPolygon> {
 }
 
 export interface ICollisionManager<T> {
-    hasCollision(entity: IEntity): Iterable<T> | null;
+    hasCollision(polygon: IPolygon): Iterable<T> | null;
 }
 
 export interface IStorage<T> {

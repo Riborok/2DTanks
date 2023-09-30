@@ -94,16 +94,16 @@ export const HEALTH_BAR_WIDTH_COEFF: number = 1.15;
 export const HEALTH_BAR_HIGH_HP_COLOR: string = 'green';
 export const HEALTH_BAR_MEDIUM_HP_COLOR: string = 'yellow';
 export const HEALTH_BAR_LOW_HP_COLOR: string = 'red';
-
 export const ARMOR_BAR_COLOR: string = 'blue';
+export const AMOUNT_OF_KEYS: number = 3;
 
 export enum Bonus {
-    kill,
-    key,
     bulLight = 0,
     bulMedium = 1,
     bulHeavy = 2,
     bulGrenade = 3,
-    bulSniper = 4
+    bulSniper = 4,
+    kill = 5,
+    key = 6
 }
 
