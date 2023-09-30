@@ -1,18 +1,22 @@
-import {Point} from "../../../geometry/Point";
-import {ResolutionManager, WALL_GRID_COLUMNS_AMOUNT, WALL_GRID_LINES_AMOUNT} from "../../../constants/gameConstants";
+import {Point} from "../../geometry/Point";
+import {ResolutionManager, WALL_GRID_COLUMNS_AMOUNT, WALL_GRID_LINES_AMOUNT} from "../../constants/gameConstants";
+import {getRandomInt} from "../../additionally/additionalFunc";
 
-export interface ISpawnManager{
-    calcSpawnPoints(point: Point): void;
+export interface ISpawnPoints {
     getRandomSpawnPoint(width: number, height: number): Point;
     getSpawnPoint(width: number, height: number, row: number, column: number): Point;
 }
 
-export class SpawnManager implements ISpawnManager{
+export class SpawnPoints implements ISpawnPoints{
     private _spawnGridLinesAmount: number = WALL_GRID_LINES_AMOUNT - 1;
     private _spawnGridColumnsAmount: number = WALL_GRID_COLUMNS_AMOUNT - 1;
     private _spawnPoints: Point[][] = [];
 
-    public calcSpawnPoints(point: Point): void {
+    constructor(point: Point) {
+        this.calcSpawnPoints(point);
+    }
+
+    private calcSpawnPoints(point: Point): void {
         const firstSpawnPoint = new Point(
             point.x + ResolutionManager.WALL_WIDTH[0],
             point.y + ResolutionManager.WALL_HEIGHT[0] + ResolutionManager.WALL_WIDTH[0] / 2
@@ -33,8 +37,8 @@ export class SpawnManager implements ISpawnManager{
     }
 
     public getRandomSpawnPoint(width: number, height: number): Point {
-        const line = Math.floor(Math.random() * this._spawnGridLinesAmount);
-        const column = Math.floor(Math.random() * this._spawnGridColumnsAmount);
+        const line = getRandomInt(0, this._spawnGridLinesAmount - 1);
+        const column = getRandomInt(0, this._spawnGridColumnsAmount - 1);
 
         const point = this._spawnPoints[line][column];
 
