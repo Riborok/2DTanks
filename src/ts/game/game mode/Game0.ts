@@ -4,7 +4,9 @@ import {
     Bonus,
     OBSTACLE_WALL_HEIGHT_AMOUNT,
     OBSTACLE_WALL_WIDTH_AMOUNT,
-    ResolutionManager
+    ResolutionManager,
+    SPAWN_GRIDS_COLUMNS_AMOUNT,
+    SPAWN_GRIDS_LINES_AMOUNT
 } from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
 import {TankElement} from "../elements/TankElement";
@@ -96,21 +98,25 @@ export class Game0 {
         gameMaster.addWallElements(wallsArray);
         gameMaster.addWallElements(createMaze(wallMaterial, point));
 
+        gameMaster.addTankElements(tank1, tank2);
+
         const spawnManager = new SpawnManager(
             new SpawnPoints(point),
             gameMaster.itemCollisionManager
         );
 
         for (let i = 0; i < AMOUNT_OF_KEYS; i++){
-            spawnManager.randomSpawn(Bonus.key, ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE);
+            spawnManager.randomSpawn(
+                Bonus.key, ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE,
+                0, SPAWN_GRIDS_LINES_AMOUNT - 1,
+                Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+            );
         }
 
         gameMaster.addExecutioners(
             new PanelInfoManager(rulesManager),
             spawnManager
         );
-
-        gameMaster.addTankElements(tank1, tank2);
     }
 
     private static readonly PANEL_HEIGHT: number = 5;
