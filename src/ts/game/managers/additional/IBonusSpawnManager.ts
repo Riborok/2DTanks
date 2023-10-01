@@ -60,7 +60,7 @@ export class BonusSpawnManager implements IBonusSpawnManager {
 
         for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
             if (this._collectibleItemManager.collisionChecker.hasCollision(box.collectible)){
-                box.adjustPolygon(
+                box.adjustPosition(
                     this._spawnPoints.getRandomSpawnPoint(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE),
                     0
                 );
@@ -83,7 +83,7 @@ export class BonusSpawnManager implements IBonusSpawnManager {
 
         for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
             if (this._collectibleItemManager.collisionChecker.hasCollision(bonus.collectible)){
-                bonus.adjustPolygon(
+                bonus.adjustPosition(
                     this._spawnPoints.getRandomSpawnPoint(width, height, minLine, maxLine, minColumn, maxColumn),
                     0
                 );

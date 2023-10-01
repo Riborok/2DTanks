@@ -35,7 +35,7 @@ import {IPointSpawner, PointSpawner} from "../spawn/IPointSpawner";
 import {ITankSpawnManager, TankSpawnManager} from "../managers/additional/ITankSpawnManager";
 
 type CreateMaze = (wallMaterial: number, point: Point) => Iterable<WallElement>;
-type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) => void;
+type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) => void;
 
 export class Game0 {
     private constructor() { }
@@ -66,11 +66,8 @@ export class Game0 {
         ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
 
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
-        Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo);
-    }
-    private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
-        let point = new Point(ResolutionManager.resizeX(103), ResolutionManager.resizeY(355));
-        let tankInfo: TankInfo = {
+
+        const tankInfo1: TankInfo = {
             color: 0,
             hullNum: 0,
             trackNum: 0,
@@ -78,10 +75,7 @@ export class Game0 {
             weaponNum: 0,
             control: Game0.CONTROL_1,
         };
-        const tank1 = new TankElement(point, 4.71,  tankInfo);
-
-        point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(850));
-        tankInfo = {
+        const tankInfo2: TankInfo = {
             color: 1,
             hullNum: 0,
             trackNum: 0,
@@ -89,64 +83,22 @@ export class Game0 {
             weaponNum: 0,
             control: Game0.CONTROL_2,
         };
-        const tank2 = new TankElement(point, 4.71, tankInfo);
 
-        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl1,
+        Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo, tankInfo1, tankInfo2);
+    }
+    private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+        Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl1,
             Game0.createMaze2);
     }
-    private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
-        let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
-        let tankInfo: TankInfo = {
-            color: 0,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_1,
-        };
-        const tank1 = new TankElement(point, 0, tankInfo);
-
-        point  = new Point(ResolutionManager.resizeX(1585), ResolutionManager.resizeY(845));
-        tankInfo = {
-            color: 1,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_2,
-        };
-        const tank2 = new TankElement(point, 0, tankInfo);
-
-        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl2,
+    private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+        Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl2,
             Game0.createMaze3);
     }
-    private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
-        let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
-        let tankInfo: TankInfo = {
-            color: 0,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_1,
-        };
-        const tank1 = new TankElement(point, 0, tankInfo);
-
-        point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(845));
-        tankInfo = {
-            color: 1,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_2,
-        };
-        const tank2 = new TankElement(point, 3.14, tankInfo);
-
-        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl3,
+    private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+        Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl3,
             Game0.endGame);
     }
-    private static endGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
+    private static endGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
         const img = new Image(size.width, size.height);
         img.src = `src/img/cat.jpg`;
 
@@ -156,18 +108,17 @@ export class Game0 {
         }
     }
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
-                              tank1: TankElement, tank2: TankElement, panelInfo: HTMLDivElement, createMaze: CreateMaze,
+                              attacker: TankInfo, defender: TankInfo, panelInfo: HTMLDivElement, createMaze: CreateMaze,
                               nextMaze: NextMaze) {
         const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size
         );
         const pointSpawner = new PointSpawner(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
 
-        const rulesManager = new RulesManager(tank1, tank2, nextMaze, panelInfo, ctx, size, pointSpawner);
+        const rulesManager = new RulesManager(attacker, defender, nextMaze, panelInfo, ctx, size, pointSpawner);
 
         const gameMaster = rulesManager.gameMaster;
         gameMaster.setBackgroundMaterial(backgroundMaterial);
-        gameMaster.addTankElements(tank1, tank2);
 
         gameMaster.addWallElements(wallsArray);
         gameMaster.addWallElements(createMaze(wallMaterial, point));
@@ -216,30 +167,42 @@ export class Game0 {
 
 class RulesManager implements IRulesManager {
     private readonly _tankSpawnManager: ITankSpawnManager;
-    private readonly _attacker: TankElement;
-    private readonly _defender: TankElement;
+    private _attacker: TankElement;
+    private _defender: TankElement;
     private _score: number = 0;
 
     private readonly _panelInfo: HTMLDivElement;
     private readonly _gameMaster: IGameMaster;
     private readonly _nextMaze: NextMaze;
-    public constructor(attacker: TankElement, defender: TankElement, nextMaze: NextMaze,
+    public constructor(attacker: TankInfo, defender: TankInfo, nextMaze: NextMaze,
                        panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size,
                        pointSpawner: IPointSpawner) {
-        this._attacker = attacker;
-        this._defender = defender;
-
         this._panelInfo = panelInfo;
         this._gameMaster = new GameMaster(ctx, size, this);
         this._nextMaze = nextMaze;
 
         this._tankSpawnManager = new TankSpawnManager(pointSpawner,
             this._gameMaster.modelCollisionManager.collisionChecker, this._gameMaster);
+
+        this.randomAttackerSpawn(attacker);
+        this.randomDefenderSpawn(defender);
+    }
+    private randomAttackerSpawn(tankInfo: TankInfo) {
+        this._attacker = this._tankSpawnManager.randomSpawn(
+            tankInfo,
+            0, SPAWN_GRIDS_LINES_AMOUNT - 1,
+            0, Math.floor(SPAWN_GRIDS_COLUMNS_AMOUNT / 2)
+        );
+    }
+    private randomDefenderSpawn(tankInfo: TankInfo) {
+        this._defender = this._tankSpawnManager.randomSpawn(
+            tankInfo,
+            0, SPAWN_GRIDS_LINES_AMOUNT - 1,
+            Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+        );
     }
     public addBonus(source: IElement, bonus: Bonus): boolean {
         switch (bonus) {
-            case Bonus.kill:
-                return true;
             case Bonus.key:
                 if (source === this._attacker) {
                     this._score++;
@@ -261,13 +224,22 @@ class RulesManager implements IRulesManager {
         }
         return false;
     }
+    public processKill(murderer: IElement, victim: IElement) {
+        if (victim === this._attacker) {
+            this.randomAttackerSpawn(this._attacker.tankInfo);
+        }
+        else if (victim === this._defender) {
+            this.randomDefenderSpawn(this._defender.tankInfo);
+        }
+    }
     private endGameConditions(): boolean {
         return this._score === 3;
     }
     private processPostGameActions(): void {
         this._gameMaster.removeEventListeners();
         this._gameMaster.finishGame();
-        this._nextMaze(this._gameMaster.ctx, this._gameMaster.size, this.panelInfo);
+        this._nextMaze(this._gameMaster.ctx, this._gameMaster.size, this.panelInfo, this._attacker.tankInfo,
+            this._defender.tankInfo);
     }
     public get score(): number { return this._score }
     public get panelInfo(): HTMLDivElement { return this._panelInfo }

@@ -27,6 +27,8 @@ export class ResolutionManager {
     public static get HEALTH_BAR_HEIGHT(): number { return <number>ResolutionManager.fieldsY.HEALTH_BAR_HEIGHT }
     public static get ARMOR_BAR_HEIGHT(): number { return <number>ResolutionManager.fieldsY.ARMOR_BAR_HEIGHT }
     public static get HEALTH_ARMOR_BAR_INDENT_Y(): number { return <number>ResolutionManager.fieldsY.HEALTH_ARMOR_BAR_INDENT_Y }
+    public static getTankEntityWidth(num: number): number { return ResolutionManager.HULL_WIDTH[num] + ResolutionManager.TRACK_INDENT }
+    public static getTankEntityHeight(num: number): number { return ResolutionManager.HULL_HEIGHT[num] + (ResolutionManager.TRACK_INDENT << 1) }
 
     private static readonly fieldsX: FieldMap<number | number[]> = {
         BACKGROUND_SIZE: 115,
@@ -104,7 +106,6 @@ export enum Bonus {
     bulHeavy = 2,
     bulGrenade = 3,
     bulSniper = 4,
-    kill = 5,
-    key = 6
+    key = 5
 }
 

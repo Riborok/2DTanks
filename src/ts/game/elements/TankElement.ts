@@ -5,12 +5,12 @@ import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {IEntity, RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
-import {IStorage, TankInfo} from "../../additionally/type";
+import {IPositionAdjustable, IStorage, TankInfo} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
 import {ISprite} from "../../sprite/ISprite";
 
-export class TankElement implements IElement {
+export class TankElement implements IElement, IPositionAdjustable {
     private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
     private _tankInfo: TankInfo;
@@ -25,8 +25,8 @@ export class TankElement implements IElement {
         const tankParts = TankPartsCreator.create(tankInfo.hullNum, tankInfo.trackNum,
             tankInfo.turretNum, tankInfo.weaponNum);
         const rectangularEntity = new RectangularEntity(point,
-            ResolutionManager.HULL_WIDTH[tankInfo.hullNum] + ResolutionManager.TRACK_INDENT,
-            ResolutionManager.HULL_HEIGHT[tankInfo.hullNum] + (ResolutionManager.TRACK_INDENT << 1), angle,
+            ResolutionManager.getTankEntityWidth(tankInfo.hullNum),
+            ResolutionManager.getTankEntityHeight(tankInfo.hullNum), angle,
             tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, ModelIDTracker.tankId);
         this._model = new TankModel(tankParts, rectangularEntity);
 
@@ -58,5 +58,11 @@ export class TankElement implements IElement {
         spriteStorage.remove(tankSpriteParts.turretSprite);
 
         entityStorage.remove(this._model.entity);
+    }
+    public adjustPosition(point: Point, angle: number) {
+        this.model.entity.adjustPolygon(point,
+            ResolutionManager.getTankEntityWidth(this._tankInfo.hullNum),
+            ResolutionManager.getTankEntityHeight(this._tankInfo.hullNum),
+            angle);
     }
 }

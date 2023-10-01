@@ -4,7 +4,7 @@ import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IIdToProcessing";
 import {CollisionPack} from "../../additionally/type";
-import {CollisionChecker, GetCollisionChecker, ICollisionChecker} from "./ICollisionChecker";
+import {CollisionChecker, IGetCollisionChecker, ICollisionChecker} from "./ICollisionChecker";
 
 export interface ICollisionResolver {
     resolveCollision(entity: IEntity): Iterable<CollisionPack> | null;
@@ -13,7 +13,7 @@ export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export interface IModelCollisionManager extends IdleModelProvider, ICollisionResolver, GetCollisionChecker<IEntity> {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionResolver, IGetCollisionChecker<IEntity> {
 }
 
 export class ModelCollisionManager implements IModelCollisionManager {
