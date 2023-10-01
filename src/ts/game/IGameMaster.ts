@@ -24,15 +24,23 @@ import {CollectibleItemManager, ICollectibleItemManager} from "./bonuses/ICollec
 import {ICollectibleItem} from "./bonuses/ICollectibleItem";
 import {HealthBarManager, IHealthDrawManager} from "./managers/additional/IHealthBarManager";
 
-export interface IGameMaster extends IEventEmitter {
-    setBackgroundMaterial(backgroundMaterial: number): void;
-
+export interface IWallElementAdder {
     addWallElements(wallElements: Iterable<WallElement>): void;
+}
+export interface ITankElementAdder {
     addTankElements(...tankElements: TankElement[]): void;
+}
+export interface ICollectibleItemAdder {
     addBonuses(...collectibleItem: ICollectibleItem[]): void;
+}
+export interface IExecutorAdder {
     addExecutioners(...executioners: IExecutor[]): void;
+}
+export interface IGameMaster extends IEventEmitter, IWallElementAdder, ITankElementAdder, ICollectibleItemAdder, IExecutorAdder {
+    setBackgroundMaterial(backgroundMaterial: number): void;
     finishGame(): void;
 
+    get modelCollisionManager(): IModelCollisionManager;
     get itemCollisionManager(): ICollectibleItemManager;
     get size(): Size;
     get ctx(): CanvasRenderingContext2D;
@@ -44,6 +52,7 @@ export class GameMaster implements IGameMaster {
     private readonly _size: Size;
 
     private readonly _itemCollisionManager: ICollectibleItemManager;
+    private readonly _modelCollisionManager: IModelCollisionManager;
 
     private readonly _tankHandlingManagers: HandlingManager<TankElement, TankMovementManager>;
     private readonly _wallHandlingManagers: HandlingManager<WallElement, WallMovementManager>;
@@ -56,6 +65,7 @@ export class GameMaster implements IGameMaster {
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
 
+    public get modelCollisionManager(): IModelCollisionManager { return this._modelCollisionManager }
     public get itemCollisionManager(): ICollectibleItemManager { return this._itemCollisionManager }
     public get size(): Size { return this._size }
     public get ctx(): CanvasRenderingContext2D { return this._canvas.ctx }
@@ -80,15 +90,15 @@ export class GameMaster implements IGameMaster {
 
         const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
             this._size.width, this._size.height);
-        const modelCollisionManager: IModelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
+        this._modelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
 
         const tankElements = new Map<number, TankElement>;
         const wallElements = new Map<number, WallElement>;
         const bulletElements = new Map<number, BulletElement>;
 
-        const tankMovementManager = new TankMovementManager(entityCollisionSystem, modelCollisionManager);
-        const wallMovementManager = new WallMovementManager(entityCollisionSystem, modelCollisionManager);
-        const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, modelCollisionManager);
+        const tankMovementManager = new TankMovementManager(entityCollisionSystem, this._modelCollisionManager);
+        const wallMovementManager = new WallMovementManager(entityCollisionSystem, this._modelCollisionManager);
+        const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, this._modelCollisionManager);
 
         const bulletAdder = new BulletModelAdder(bulletElements, this._canvas, bulletMovementManager);
 

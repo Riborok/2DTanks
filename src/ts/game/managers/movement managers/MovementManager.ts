@@ -20,17 +20,17 @@ interface IEntityControl {
 
 export abstract class MovementManager implements ISetCoefficients, IEntityControl {
     protected readonly _entityStorage: IStorage<IEntity>;
-    protected readonly _collisionManager: ICollisionResolver;
+    protected readonly _collisionResolver: ICollisionResolver;
     protected _resistanceCoeff: number = 0;
     protected _airResistanceCoeff: number = 0;
     public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
     public set airResistanceCoeff(airResistanceCoeff: number) { this._airResistanceCoeff = airResistanceCoeff }
     public constructor(entityStorage: IStorage<IEntity>, collisionResolver: ICollisionResolver) {
         this._entityStorage = entityStorage;
-        this._collisionManager = collisionResolver;
+        this._collisionResolver = collisionResolver;
     }
     public get entityStorage(): IStorage<IEntity> { return this._entityStorage }
-    public get collisionResolver(): ICollisionResolver { return this._collisionManager }
+    public get collisionResolver(): ICollisionResolver { return this._collisionResolver }
 }
 
 export interface ITankMovementManager {

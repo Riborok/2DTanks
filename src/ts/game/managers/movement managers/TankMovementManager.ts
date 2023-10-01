@@ -60,7 +60,7 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         this._entityStorage.remove(entity);
         action.call(tankElement.model, this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
         movement(entity);
-        if (this._collisionManager.resolveCollision(entity))
+        if (this._collisionResolver.resolveCollision(entity))
             tankElement.sprite.removeAcceleration();
 
         updateSprites.call(tankElement.sprite, entity.points[0], entity.angle, tankElement.model.turretAngle);
