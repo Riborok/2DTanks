@@ -6,7 +6,14 @@ import {CollectibleItemCreator} from "../../bonuses/CollectibleItemCreator";
 import {ICollectibleItemManager} from "../../bonuses/ICollectibleItemManager";
 import {getRandomInt} from "../../../additionally/additionalFunc";
 
-export class BonusSpawnManager implements IExecutor{
+export interface IBonusSpawnManager extends IExecutor {
+    randomSpawn(bonusType: Bonus, width: number, height: number,
+                minLine: number, maxLine: number,
+                minColumn: number, maxColumn: number): void;
+    spawn(bonusType: Bonus, width: number, height: number, line: number, column: number): void;
+}
+
+export class BonusSpawnManager implements IBonusSpawnManager {
     private _ammoSpawnInterval: number = 5000;
     private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 6e4;
     private static readonly RESPAWN_TRYS_AMOUNT: number = 42 >> 3;

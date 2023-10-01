@@ -1,7 +1,7 @@
 import {HandlingManager, IAddElement} from "./HandlingManager";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
-import {ITireTracksManager, TireTracksManager} from "../TireTracksManager";
+import {ITireTracksManager, TireTracksManager} from "../ITireTracksManager";
 import {BulletModel} from "../../../model/bullet/BulletModel";
 import {IAnimationManager} from "../animation managers/AnimationManager";
 import {IKeyHandler} from "../../input/IKeyHandler";
