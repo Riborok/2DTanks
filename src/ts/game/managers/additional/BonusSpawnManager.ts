@@ -6,7 +6,7 @@ import {CollectibleItemCreator} from "../../bonuses/CollectibleItemCreator";
 import {ICollectibleItemManager} from "../../bonuses/ICollectibleItemManager";
 import {getRandomInt} from "../../../additionally/additionalFunc";
 
-export class SpawnManager implements IExecutor{
+export class BonusSpawnManager implements IExecutor{
     private _ammoSpawnInterval: number = 5000;
     private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 6e4;
     private static readonly RESPAWN_TRYS_AMOUNT: number = 42 >> 3;
@@ -30,7 +30,7 @@ export class SpawnManager implements IExecutor{
 
             this._timer = 0;
 
-            if (this._ammoSpawnInterval < SpawnManager.MAX_AMMO_SPAWN_INTERVAL)
+            if (this._ammoSpawnInterval < BonusSpawnManager.MAX_AMMO_SPAWN_INTERVAL)
                 this._ammoSpawnInterval += getRandomInt(1000, 5000);
         }
     }
@@ -51,8 +51,8 @@ export class SpawnManager implements IExecutor{
     private spawnRandomBox(boxType: Bonus, point: Point){
         const box = CollectibleItemCreator.create(boxType, point, 0);
 
-        for (let i = 0; i < SpawnManager.RESPAWN_TRYS_AMOUNT; i++){
-            if (this._collectibleItemManager.collisionManager.hasCollision(box.collectible)){
+        for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
+            if (this._collectibleItemManager.collisionDetector.hasCollision(box.collectible)){
                 box.adjustPolygon(
                     this._spawnPoints.getRandomSpawnPoint(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE),
                     0
@@ -74,8 +74,8 @@ export class SpawnManager implements IExecutor{
             0
         );
 
-        for (let i = 0; i < SpawnManager.RESPAWN_TRYS_AMOUNT; i++){
-            if (this._collectibleItemManager.collisionManager.hasCollision(bonus.collectible)){
+        for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
+            if (this._collectibleItemManager.collisionDetector.hasCollision(bonus.collectible)){
                 bonus.adjustPolygon(
                     this._spawnPoints.getRandomSpawnPoint(width, height, minLine, maxLine, minColumn, maxColumn),
                     0

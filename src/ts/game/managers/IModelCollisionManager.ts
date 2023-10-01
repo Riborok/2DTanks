@@ -3,35 +3,42 @@ import {ICollisionDetection} from "../../polygon/ICollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
-import {CollisionPack, ICollisionManager} from "../../additionally/type";
+import {CollisionPack} from "../../additionally/type";
+import {CollisionChecker, GetCollisionDetector, ICollisionChecker} from "./ICollisionChecker";
 
+export interface ICollisionResolver {
+    resolveCollision(entity: IEntity): Iterable<CollisionPack> | null;
+}
 export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export interface IModelCollisionManager extends IdleModelProvider, ICollisionManager<CollisionPack> {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionResolver, GetCollisionDetector<IEntity> {
 }
 
 export class ModelCollisionManager implements IModelCollisionManager {
-    private readonly _collisionDetection: ICollisionDetection<IEntity>;
+    private readonly _collisionDetector: ICollisionChecker<IEntity>;
     private _wallsForProcessing: IIdToProcessing<number> = new IdToProcessing();
     public get wallsForProcessing(): IIdToProcessing<number> { return this._wallsForProcessing }
+    public get collisionDetector(): ICollisionChecker<IEntity> { return this._collisionDetector }
     public constructor(collisionDetection: ICollisionDetection<IEntity>) {
-        this._collisionDetection = collisionDetection;
+        this._collisionDetector = new CollisionChecker(collisionDetection);
     }
-    public hasCollision(entity: IEntity): Iterable<CollisionPack> | null {
-        const receivingEntities = this._collisionDetection.getCollisions(entity);
-        const collisionPacks = new Array<CollisionPack>();
+    public resolveCollision(entity: IEntity): Iterable<CollisionPack> | null {
+        const collisions = this._collisionDetector.hasCollision(entity);
+        if (collisions) {
+            const collisionPacks = new Array<CollisionPack>();
 
-        for (const receivingEntity of receivingEntities) {
-            const collisionPoint = CollisionResolver.resolveCollision(entity, receivingEntity);
-            if (collisionPoint) {
-                collisionPacks.push({collisionPoint: collisionPoint, id: receivingEntity.id});
-                this.processCollision(receivingEntity);
+            for (const receivingEntity of collisions) {
+                const collisionPoint = CollisionResolver.resolveCollision(entity, receivingEntity);
+                if (collisionPoint) {
+                    collisionPacks.push({collisionPoint: collisionPoint, id: receivingEntity.id});
+                    this.processCollision(receivingEntity);
+                }
             }
+            return collisionPacks;
         }
-
-        return collisionPacks.length !== 0 ? collisionPacks : null;
+        return null;
     }
     private processCollision(receivingEntity: IEntity) {
         if (ModelIDTracker.isWall(receivingEntity.id))

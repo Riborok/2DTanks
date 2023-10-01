@@ -12,7 +12,7 @@ export class WallHandlingManager extends HandlingManager<WallElement, WallMoveme
         super(wallMovementManager, storage, elements, ModelIDTracker.isWall);
     }
     private addToProcess(): void {
-        const wallsForProcessing = this._movementManager.collisionManager.wallsForProcessing;
+        const wallsForProcessing = this._movementManager.collisionResolver.wallsForProcessing;
         if (wallsForProcessing.hasForProcessing()) {
             for (const wallID of wallsForProcessing.iterable)
                 this._wallToProcess.addToTail(this._elements.get(wallID));

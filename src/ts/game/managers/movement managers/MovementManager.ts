@@ -3,7 +3,8 @@ import {WallElement} from "../../elements/WallElement";
 import {IEntity} from "../../../polygon/entity/IEntity";
 import {BulletElement} from "../../elements/BulletElement";
 import {IIdToProcessing} from "../IdToProcessing";
-import {BulletCollisionData, CollisionPack, ICollisionManager, IStorage} from "../../../additionally/type";
+import {BulletCollisionData, IStorage} from "../../../additionally/type";
+import {ICollisionResolver} from "../IModelCollisionManager";
 
 export type Action = (resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) => void;
 export type Movement = (entity: IEntity) => void;
@@ -14,22 +15,22 @@ interface ISetCoefficients {
 }
 interface IEntityControl {
     get entityStorage(): IStorage<IEntity>;
-    get collisionManager(): ICollisionManager<CollisionPack>;
+    get collisionResolver(): ICollisionResolver;
 }
 
 export abstract class MovementManager implements ISetCoefficients, IEntityControl {
     protected readonly _entityStorage: IStorage<IEntity>;
-    protected readonly _collisionManager: ICollisionManager<CollisionPack>;
+    protected readonly _collisionManager: ICollisionResolver;
     protected _resistanceCoeff: number = 0;
     protected _airResistanceCoeff: number = 0;
     public set resistanceCoeff(resistanceCoeff: number) { this._resistanceCoeff = resistanceCoeff }
     public set airResistanceCoeff(airResistanceCoeff: number) { this._airResistanceCoeff = airResistanceCoeff }
-    public constructor(entityStorage: IStorage<IEntity>, collisionManager: ICollisionManager<CollisionPack>) {
+    public constructor(entityStorage: IStorage<IEntity>, collisionResolver: ICollisionResolver) {
         this._entityStorage = entityStorage;
-        this._collisionManager = collisionManager;
+        this._collisionManager = collisionResolver;
     }
     public get entityStorage(): IStorage<IEntity> { return this._entityStorage }
-    public get collisionManager(): ICollisionManager<CollisionPack> { return this._collisionManager }
+    public get collisionResolver(): ICollisionResolver { return this._collisionManager }
 }
 
 export interface ITankMovementManager {

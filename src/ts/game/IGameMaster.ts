@@ -80,15 +80,15 @@ export class GameMaster implements IGameMaster {
 
         const entityCollisionSystem: ICollisionSystem<IEntity> = new Quadtree<IEntity>(0, 0,
             this._size.width, this._size.height);
-        const collisionManager: IModelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
+        const modelCollisionManager: IModelCollisionManager = new ModelCollisionManager(entityCollisionSystem);
 
         const tankElements = new Map<number, TankElement>;
         const wallElements = new Map<number, WallElement>;
         const bulletElements = new Map<number, BulletElement>;
 
-        const tankMovementManager = new TankMovementManager(entityCollisionSystem, collisionManager);
-        const wallMovementManager = new WallMovementManager(entityCollisionSystem, collisionManager);
-        const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, collisionManager);
+        const tankMovementManager = new TankMovementManager(entityCollisionSystem, modelCollisionManager);
+        const wallMovementManager = new WallMovementManager(entityCollisionSystem, modelCollisionManager);
+        const bulletMovementManager = new BulletMovementManager(entityCollisionSystem, modelCollisionManager);
 
         const bulletAdder = new BulletModelAdder(bulletElements, this._canvas, bulletMovementManager);
 

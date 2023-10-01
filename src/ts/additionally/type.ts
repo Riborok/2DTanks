@@ -30,10 +30,6 @@ export interface IEntityLifecycle<T extends ISprite, V extends IPolygon> {
     terminate(storage1: IStorage<T>, storage2: IStorage<V>): void;
 }
 
-export interface ICollisionManager<T> {
-    hasCollision(polygon: IPolygon): Iterable<T> | null;
-}
-
 export interface IStorage<T> {
     insert(t: T): void;
     remove(t: T): void;

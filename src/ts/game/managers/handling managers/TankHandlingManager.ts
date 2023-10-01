@@ -10,24 +10,24 @@ import {ITankAnimator, TankAnimator} from "../animation managers/Animators";
 import {IStorageWithIdRemoval} from "../../processors/ICanvas";
 import {IIdentifiable} from "../../id/IIdentifiable";
 import {BulletElement} from "../../elements/BulletElement";
-import {IBonusCollisionChecker} from "../../bonuses/ICollectibleItemManager";
+import {IBonusCollisionManager} from "../../bonuses/ICollectibleItemManager";
 
 export class TankHandlingManager extends HandlingManager<TankElement, TankMovementManager> {
     private readonly _tireTracksManager: ITireTracksManager;
     private readonly _addBulletElement: IAddElement<BulletElement>;
     private readonly _tankAnimator: ITankAnimator;
     private readonly _KeyHandler: IKeyHandler;
-    private readonly _bonusCollisionChecker: IBonusCollisionChecker;
+    private readonly _bonusCollisionManager: IBonusCollisionManager;
     public constructor(bulletManager: TankMovementManager, storage: IStorageWithIdRemoval<IIdentifiable>,
                        elements: Map<number, TankElement>, addBulletElement: IAddElement<BulletElement>,
                        animationManager: IAnimationManager, keyHandler: IKeyHandler,
-                       collectibleManager: IBonusCollisionChecker) {
+                       bonusCollisionManager: IBonusCollisionManager) {
         super(bulletManager, storage, elements, ModelIDTracker.isTank);
         this._addBulletElement = addBulletElement;
         this._KeyHandler = keyHandler;
         this._tankAnimator = new TankAnimator(animationManager);
         this._tireTracksManager = new TireTracksManager(storage);
-        this._bonusCollisionChecker = collectibleManager;
+        this._bonusCollisionManager = bonusCollisionManager;
     }
     public handle(deltaTime: number): void {
         this._tireTracksManager.reduceOpacity();
@@ -80,7 +80,7 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
                 }
             }
 
-            this._bonusCollisionChecker.checkForBonusHits(tankElement);
+            this._bonusCollisionManager.checkForBonusHits(tankElement);
         }
     }
     public add(elements: Iterable<TankElement>) {
