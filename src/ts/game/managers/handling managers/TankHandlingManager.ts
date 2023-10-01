@@ -33,7 +33,7 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
         this._tireTracksManager.reduceOpacity();
 
         for (const tankElement of this._elements.values()) {
-            const control = tankElement.control;
+            const control = tankElement.tankInfo.control;
 
             let action = this._KeyHandler.isKeyDown(control.turretClockwiseKey);
             let oppositeAction = this._KeyHandler.isKeyDown(control.turretCounterClockwiseKey);

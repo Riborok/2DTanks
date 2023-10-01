@@ -5,6 +5,15 @@ import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
 import {Bonus} from "../constants/gameConstants";
 
+export type TankInfo = {
+    color: number;
+    hullNum: number;
+    trackNum: number;
+    turretNum: number;
+    weaponNum: number;
+    control: Control;
+};
+
 export type FieldMap<T> = {
     [key: string]: T;
 }

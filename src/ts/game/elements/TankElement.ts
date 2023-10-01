@@ -5,7 +5,7 @@ import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
 import {IEntity, RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../id/ModelIDTracker";
-import {Control, IStorage} from "../../additionally/type";
+import {IStorage, TankInfo} from "../../additionally/type";
 import {Point} from "../../geometry/Point";
 import {IElement} from "./IElement";
 import {ISprite} from "../../sprite/ISprite";
@@ -13,26 +13,26 @@ import {ISprite} from "../../sprite/ISprite";
 export class TankElement implements IElement {
     private readonly _model: TankModel;
     private readonly _sprite: TankSprite;
-    private _control: Control;
+    private _tankInfo: TankInfo;
     public get model(): TankModel { return this._model }
     public get sprite(): TankSprite { return this._sprite }
     public get id(): number { return this._model.entity.id }
-    public get control(): Control { return this._control }
-    public set control(newControl: Control) { this._control = newControl }
-    public constructor(point: Point, angle: number, color: number,
-                       hullNum: number, trackNum: number, turretNum: number, weaponNum: number,
-                       control: Control) {
-        this._control = control;
+    public get tankInfo(): TankInfo { return this._tankInfo }
+    public set tankInfo(newTankInfo: TankInfo) { this._tankInfo = newTankInfo }
+    public constructor(point: Point, angle: number, tankInfo: TankInfo) {
+        this._tankInfo = tankInfo;
 
-        const tankParts = TankPartsCreator.create(hullNum, trackNum, turretNum, weaponNum);
+        const tankParts = TankPartsCreator.create(tankInfo.hullNum, tankInfo.trackNum,
+            tankInfo.turretNum, tankInfo.weaponNum);
         const rectangularEntity = new RectangularEntity(point,
-            ResolutionManager.HULL_WIDTH[hullNum] + ResolutionManager.TRACK_INDENT,
-            ResolutionManager.HULL_HEIGHT[hullNum] + (ResolutionManager.TRACK_INDENT << 1), angle,
+            ResolutionManager.HULL_WIDTH[tankInfo.hullNum] + ResolutionManager.TRACK_INDENT,
+            ResolutionManager.HULL_HEIGHT[tankInfo.hullNum] + (ResolutionManager.TRACK_INDENT << 1), angle,
             tankParts.turret.mass + tankParts.hull.mass + tankParts.weapon.mass, ModelIDTracker.tankId);
         this._model = new TankModel(tankParts, rectangularEntity);
 
         const track = tankParts.track;
-        this._sprite = new TankSprite(TankSpritePartsCreator.create(color, hullNum, trackNum, turretNum, weaponNum),
+        this._sprite = new TankSprite(TankSpritePartsCreator.create(tankInfo.color, tankInfo.hullNum,
+                tankInfo.trackNum, tankInfo.turretNum, tankInfo.weaponNum),
             track.forwardData, track.backwardData);
     }
     public spawn(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {

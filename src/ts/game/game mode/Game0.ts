@@ -1,4 +1,4 @@
-import {Control, IExecutor, IRulesManager, Size} from "../../additionally/type";
+import {Control, IExecutor, IRulesManager, Size, TankInfo} from "../../additionally/type";
 import {
     Bonus,
     OBSTACLE_WALL_HEIGHT_AMOUNT,
@@ -70,36 +70,78 @@ export class Game0 {
     }
     private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
         let point = new Point(ResolutionManager.resizeX(103), ResolutionManager.resizeY(355));
-        const tank1 = new TankElement(point, 4.71, 0,
-            0, 0, 0, 0, Game0.CONTROL_1);
+        let tankInfo: TankInfo = {
+            color: 0,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_1,
+        };
+        const tank1 = new TankElement(point, 4.71,  tankInfo);
 
         point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(850));
-        const tank2 = new TankElement(point, 4.71, 1,
-            0, 0, 0, 0, Game0.CONTROL_2);
+        tankInfo = {
+            color: 1,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_2,
+        };
+        const tank2 = new TankElement(point, 4.71, tankInfo);
 
         Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl1,
             Game0.createMaze2);
     }
     private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
         let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
-        const tank1 = new TankElement(point, 0, 0,
-            0, 0, 0, 0, Game0.CONTROL_1);
+        let tankInfo: TankInfo = {
+            color: 0,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_1,
+        };
+        const tank1 = new TankElement(point, 0, tankInfo);
 
         point  = new Point(ResolutionManager.resizeX(1585), ResolutionManager.resizeY(845));
-        const tank2 = new TankElement(point, 0, 2,
-            0, 0, 0, 0, Game0.CONTROL_2);
+        tankInfo = {
+            color: 1,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_2,
+        };
+        const tank2 = new TankElement(point, 0, tankInfo);
 
         Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl2,
             Game0.createMaze3);
     }
     private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
         let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
-        const tank1 = new TankElement(point, 0, 0,
-            0, 0, 0, 0, Game0.CONTROL_1);
+        let tankInfo: TankInfo = {
+            color: 0,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_1,
+        };
+        const tank1 = new TankElement(point, 0, tankInfo);
 
         point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(845));
-        const tank2 = new TankElement(point, 3.14, 3,
-            0, 0, 0, 0, Game0.CONTROL_2);
+        tankInfo = {
+            color: 1,
+            hullNum: 0,
+            trackNum: 0,
+            turretNum: 0,
+            weaponNum: 0,
+            control: Game0.CONTROL_2,
+        };
+        const tank2 = new TankElement(point, 3.14, tankInfo);
 
         Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl3,
             Game0.endGame);
