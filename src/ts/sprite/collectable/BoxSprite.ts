@@ -3,7 +3,7 @@ import {Bonus, ResolutionManager} from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
 
 export class BoxSprite extends Sprite{
-    constructor(bulletType: Bonus, point: Point, angle: number) {
+    public constructor(bulletType: Bonus, point: Point, angle: number) {
         const zIndex: number = 6;
         super(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE, zIndex);
         this._point = point;

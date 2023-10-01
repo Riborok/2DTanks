@@ -9,12 +9,12 @@ import {getRandomInt} from "../../../additionally/additionalFunc";
 export class SpawnManager implements IExecutor{
     private _ammoSpawnInterval: number = 5000;
     private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 6e4;
-    private static readonly RESPAWN_TRYS_AMOUNT: number = 42;
+    private static readonly RESPAWN_TRYS_AMOUNT: number = 42 >> 3;
     private readonly _spawnPoints: ISpawnPoints;
     private readonly _collectibleItemManager: ICollectibleItemManager;
     private _timer: number = 0;
 
-    constructor(spawnPoints: ISpawnPoints, collectibleItemManager: ICollectibleItemManager) {
+    public constructor(spawnPoints: ISpawnPoints, collectibleItemManager: ICollectibleItemManager) {
         this._spawnPoints = spawnPoints;
         this._collectibleItemManager = collectibleItemManager;
     }
@@ -58,7 +58,7 @@ export class SpawnManager implements IExecutor{
                     0
                 );
             }
-            else{
+            else {
                 this._collectibleItemManager.addElement(box);
                 break;
             }
@@ -75,11 +75,18 @@ export class SpawnManager implements IExecutor{
         );
 
         for (let i = 0; i < SpawnManager.RESPAWN_TRYS_AMOUNT; i++){
-            if (!this._collectibleItemManager.collisionManager.hasCollision(bonus.collectible)){
+            if (this._collectibleItemManager.collisionManager.hasCollision(bonus.collectible)){
+                bonus.adjustPolygon(
+                    this._spawnPoints.getRandomSpawnPoint(width, height, minLine, maxLine, minColumn, maxColumn),
+                    0
+                );
+            }
+            else {
                 this._collectibleItemManager.addElement(bonus);
-                break;
+                return;
             }
         }
+        throw Error(`Failed to spawn all the keys`);
     }
 
     public spawn(bonusType: Bonus, width: number, height: number, line: number, column: number){
