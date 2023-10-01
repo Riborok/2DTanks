@@ -17,6 +17,7 @@ export interface IShapeAdder {
 }
 
 export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>, IShapeAdder{
+    get ctx(): CanvasRenderingContext2D;
 }
 
 export class Canvas implements ICanvas {
@@ -36,6 +37,7 @@ export class Canvas implements ICanvas {
         this._bufferCanvas.height = size.height;
         this._bufferCtx = this._bufferCanvas.getContext("2d");
     }
+    public get ctx() { return this._ctx }
     public insert(sprite: ISprite) {
         const zIndex = SpriteIDTracker.extractZIndex(sprite.id);
         for (let i = this._sprites.length; i <= zIndex; i++)

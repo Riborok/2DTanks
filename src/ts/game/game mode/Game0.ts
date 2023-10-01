@@ -1,12 +1,9 @@
 import {Control, IExecutor, IRulesManager, Size} from "../../additionally/type";
 import {
-    AMOUNT_OF_KEYS,
     Bonus,
     OBSTACLE_WALL_HEIGHT_AMOUNT,
     OBSTACLE_WALL_WIDTH_AMOUNT,
-    ResolutionManager,
-    SPAWN_GRIDS_COLUMNS_AMOUNT,
-    SPAWN_GRIDS_LINES_AMOUNT
+    ResolutionManager, SPAWN_GRIDS_COLUMNS_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT,
 } from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
 import {TankElement} from "../elements/TankElement";
@@ -34,10 +31,11 @@ import {IElement} from "../elements/IElement";
 import {SpawnManager} from "../managers/additional/SpawnManager";
 import {SpawnPoints} from "../spawn/ISpawnPoints";
 
+type CreateMaze = (wallMaterial: number, point: Point) => Iterable<WallElement>;
+type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) => void;
+
 export class Game0 {
-
     private constructor() { }
-
     private static get CONTROL_1(): Control {
         return {
             forwardKey: VK_W,
@@ -49,7 +47,6 @@ export class Game0 {
             shootKey: VK_B
         }
     }
-
     private static get CONTROL_2(): Control {
         return {
             forwardKey: VK_UP,
@@ -61,66 +58,101 @@ export class Game0 {
             shootKey: VK_SLASH
         }
     }
-
     public static start(htmlCanvasElement: HTMLCanvasElement) {
         const panelInfo: HTMLDivElement = Game0.createInfoPanel(htmlCanvasElement);
         ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
 
-        Game0.createMaze1(htmlCanvasElement, panelInfo);
-    }
-
-    private static createMaze1(htmlCanvasElement: HTMLCanvasElement, panelInfo: HTMLDivElement) {
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
-        const ctx = htmlCanvasElement.getContext('2d');
-
-        // let point = new Point(ResolutionManager.resizeX(180), ResolutionManager.resizeY(210));
-        let point = new Point(ResolutionManager.resizeX(1555), ResolutionManager.resizeY(680));
-        const tank1 = new TankElement(point, 0, 0,
+        Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo);
+    }
+    private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
+        let point = new Point(ResolutionManager.resizeX(103), ResolutionManager.resizeY(355));
+        const tank1 = new TankElement(point, 4.71, 0,
             0, 0, 0, 0, Game0.CONTROL_1);
 
         point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(850));
         const tank2 = new TankElement(point, 4.71, 1,
             0, 0, 0, 0, Game0.CONTROL_2);
 
-        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl1);
+        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl1,
+            Game0.createMaze2);
     }
+    private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
+        let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
+        const tank1 = new TankElement(point, 0, 0,
+            0, 0, 0, 0, Game0.CONTROL_1);
 
+        point  = new Point(ResolutionManager.resizeX(1585), ResolutionManager.resizeY(845));
+        const tank2 = new TankElement(point, 0, 2,
+            0, 0, 0, 0, Game0.CONTROL_2);
+
+        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl2,
+            Game0.createMaze3);
+    }
+    private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
+        let point = new Point(ResolutionManager.resizeX(100), ResolutionManager.resizeY(845));
+        const tank1 = new TankElement(point, 0, 0,
+            0, 0, 0, 0, Game0.CONTROL_1);
+
+        point  = new Point(ResolutionManager.resizeX(1750), ResolutionManager.resizeY(845));
+        const tank2 = new TankElement(point, 3.14, 3,
+            0, 0, 0, 0, Game0.CONTROL_2);
+
+        Game0.createMaze(ctx, size, 1, 2, tank1, tank2, panelInfo, MazeCreator.createMazeLvl3,
+            Game0.endGame);
+    }
+    private static endGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) {
+        const img = new Image(size.width, size.height);
+        img.src = `src/img/cat.jpg`;
+
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, size.width, size.height);
+            panelInfo.textContent = 'The attacker wins';
+        }
+    }
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
-                              tank1: TankElement, tank2: TankElement, panelInfo: HTMLDivElement,
-                              createMaze: (wallMaterial: number, point: Point) => Iterable<WallElement>) {
-        const rulesManager = new RulesManager(tank1, tank2, panelInfo, ctx, size);
+                              tank1: TankElement, tank2: TankElement, panelInfo: HTMLDivElement, createMaze: CreateMaze,
+                              nextMaze: NextMaze) {
+        const rulesManager = new RulesManager(tank1, tank2, nextMaze, panelInfo, ctx, size);
 
         const gameMaster = rulesManager.gameMaster;
         gameMaster.setBackgroundMaterial(backgroundMaterial);
-
-        const {wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
-            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size);
-        gameMaster.addWallElements(wallsArray);
-        gameMaster.addWallElements(createMaze(wallMaterial, point));
-
         gameMaster.addTankElements(tank1, tank2);
 
+        const point = Game0.addWallsAndMaze(gameMaster, wallMaterial, size, createMaze);
+
         const spawnManager = new SpawnManager(
-            new SpawnPoints(point),
+            new SpawnPoints(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT),
             gameMaster.itemCollisionManager
         );
 
-        for (let i = 0; i < AMOUNT_OF_KEYS; i++){
-            spawnManager.randomSpawn(
-                Bonus.key, ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE,
-                0, SPAWN_GRIDS_LINES_AMOUNT - 1,
-                Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
-            );
-        }
+        Game0.addKeys(spawnManager);
 
         gameMaster.addExecutioners(
             new PanelInfoManager(rulesManager),
             spawnManager
         );
     }
+    private static readonly AMOUNT_OF_KEYS: number = 3;
+    private static addKeys(spawnManager: SpawnManager) {
+        for (let i = 0; i < Game0.AMOUNT_OF_KEYS; i++){
+            spawnManager.randomSpawn(
+                Bonus.key, ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE,
+                0, SPAWN_GRIDS_LINES_AMOUNT - 1,
+                Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+            );
+        }
+    }
+    private static addWallsAndMaze(gameMaster: IGameMaster, wallMaterial: number, size: Size, createMaze: CreateMaze): Point {
+        const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
+            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size
+        );
+        gameMaster.addWallElements(wallsArray);
+        gameMaster.addWallElements(createMaze(wallMaterial, point));
+        return point;
+    }
 
     private static readonly PANEL_HEIGHT: number = 5;
-
     private static createInfoPanel(htmlCanvasElement: HTMLCanvasElement): HTMLDivElement {
         htmlCanvasElement.style.top = `${Game0.PANEL_HEIGHT}%`;
         htmlCanvasElement.style.height = `${100 - Game0.PANEL_HEIGHT}%`;
@@ -140,16 +172,21 @@ export class Game0 {
 }
 
 class RulesManager implements IRulesManager {
-    private _score: number = 0;
     private readonly _attacker: TankElement;
     private readonly _defender: TankElement;
+    private _score: number = 0;
+
     private readonly _panelInfo: HTMLDivElement;
     private readonly _gameMaster: IGameMaster;
-    public constructor(attacker: TankElement, defender: TankElement, panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size) {
+    private readonly _nextMaze: NextMaze;
+    public constructor(attacker: TankElement, defender: TankElement, nextMaze: NextMaze,
+                       panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size) {
         this._attacker = attacker;
         this._defender = defender;
+
         this._panelInfo = panelInfo;
         this._gameMaster = new GameMaster(ctx, size, this);
+        this._nextMaze = nextMaze;
     }
     public addBonus(source: IElement, bonus: Bonus): boolean {
         switch (bonus) {
@@ -182,6 +219,7 @@ class RulesManager implements IRulesManager {
     private processPostGameActions(): void {
         this._gameMaster.removeEventListeners();
         this._gameMaster.finishGame();
+        this._nextMaze(this._gameMaster.ctx, this._gameMaster.size, this.panelInfo);
     }
     public get score(): number { return this._score }
     public get panelInfo(): HTMLDivElement { return this._panelInfo }
@@ -190,11 +228,9 @@ class RulesManager implements IRulesManager {
 
 class PanelInfoManager implements IExecutor {
     private readonly _rulesManager: RulesManager;
-    private _lastScore: number;
+    private _lastScore: number = Infinity;
     public constructor(rulesManager: RulesManager) {
         this._rulesManager = rulesManager;
-        this._lastScore = rulesManager.score;
-        this.updatePanel();
     }
     public handle() {
         if (this._lastScore !== this._rulesManager.score) {

@@ -34,6 +34,8 @@ export interface IGameMaster extends IEventEmitter {
     finishGame(): void;
 
     get itemCollisionManager(): ICollectibleItemManager;
+    get size(): Size;
+    get ctx(): CanvasRenderingContext2D;
 }
 
 export class GameMaster implements IGameMaster {
@@ -54,7 +56,9 @@ export class GameMaster implements IGameMaster {
 
     private readonly _keyHandler: IKeyHandler = new KeyHandler();
 
-    get itemCollisionManager(): ICollectibleItemManager { return this._itemCollisionManager }
+    public get itemCollisionManager(): ICollectibleItemManager { return this._itemCollisionManager }
+    public get size(): Size { return this._size }
+    public get ctx(): CanvasRenderingContext2D { return this._canvas.ctx }
 
     private readonly handleVisibilityChange = () => {
         if (document.hidden) {
@@ -152,5 +156,6 @@ export class GameMaster implements IGameMaster {
     }
     public finishGame() {
         this._gameLoop.stop();
+        this.ctx.clearRect(0, 0, this._size.width, this._size.height);
     }
 }

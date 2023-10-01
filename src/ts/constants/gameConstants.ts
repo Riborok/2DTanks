@@ -97,7 +97,6 @@ export const HEALTH_BAR_HIGH_HP_COLOR: string = 'green';
 export const HEALTH_BAR_MEDIUM_HP_COLOR: string = 'yellow';
 export const HEALTH_BAR_LOW_HP_COLOR: string = 'red';
 export const ARMOR_BAR_COLOR: string = 'blue';
-export const AMOUNT_OF_KEYS: number = 3;
 
 export enum Bonus {
     bulLight = 0,

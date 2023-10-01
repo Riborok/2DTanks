@@ -21,7 +21,7 @@ export interface IHealthDrawManager extends IExecutor{
 export class HealthBarManager implements IHealthDrawManager {
     private readonly _drawList: Map<number, Model> = new Map<number, Model>();
     private readonly _shapeAdder: IShapeAdder;
-    constructor(shapeAdder: IShapeAdder) {
+    public constructor(shapeAdder: IShapeAdder) {
         this._shapeAdder = shapeAdder;
     }
     public add(model: Model) {
