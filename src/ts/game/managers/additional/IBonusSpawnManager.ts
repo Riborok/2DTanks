@@ -1,7 +1,7 @@
 import {IExecutor} from "../../../additionally/type";
 import {Bonus, ResolutionManager} from "../../../constants/gameConstants";
 import {Point} from "../../../geometry/Point";
-import {ISpawnPoints} from "../../spawn/ISpawnPoints";
+import {IPointSpawner} from "../../spawn/IPointSpawner";
 import {CollectibleItemCreator} from "../../bonuses/CollectibleItemCreator";
 import {ICollectibleItemManager} from "../../bonuses/ICollectibleItemManager";
 import {getRandomInt} from "../../../additionally/additionalFunc";
@@ -17,12 +17,12 @@ export class BonusSpawnManager implements IBonusSpawnManager {
     private _ammoSpawnInterval: number = 5000;
     private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 6e4;
     private static readonly RESPAWN_TRYS_AMOUNT: number = 42 >> 3;
-    private readonly _spawnPoints: ISpawnPoints;
+    private readonly _spawnPoints: IPointSpawner;
     private readonly _collectibleItemManager: ICollectibleItemManager;
     private _timer: number = 0;
 
-    public constructor(spawnPoints: ISpawnPoints, collectibleItemManager: ICollectibleItemManager) {
-        this._spawnPoints = spawnPoints;
+    public constructor(pointSpawner: IPointSpawner, collectibleItemManager: ICollectibleItemManager) {
+        this._spawnPoints = pointSpawner;
         this._collectibleItemManager = collectibleItemManager;
     }
 

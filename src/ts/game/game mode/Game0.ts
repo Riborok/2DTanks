@@ -31,7 +31,8 @@ import {
 } from "../../constants/keyCodes";
 import {IElement} from "../elements/IElement";
 import {BonusSpawnManager, IBonusSpawnManager} from "../managers/additional/IBonusSpawnManager";
-import {SpawnPoints} from "../spawn/ISpawnPoints";
+import {IPointSpawner, PointSpawner} from "../spawn/IPointSpawner";
+import {ITankSpawnManager, TankSpawnManager} from "../managers/additional/ITankSpawnManager";
 
 type CreateMaze = (wallMaterial: number, point: Point) => Iterable<WallElement>;
 type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement) => void;
@@ -115,16 +116,22 @@ export class Game0 {
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
                               tank1: TankElement, tank2: TankElement, panelInfo: HTMLDivElement, createMaze: CreateMaze,
                               nextMaze: NextMaze) {
-        const rulesManager = new RulesManager(tank1, tank2, nextMaze, panelInfo, ctx, size);
+        const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
+            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size
+        );
+        const pointSpawner = new PointSpawner(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
+
+        const rulesManager = new RulesManager(tank1, tank2, nextMaze, panelInfo, ctx, size, pointSpawner);
 
         const gameMaster = rulesManager.gameMaster;
         gameMaster.setBackgroundMaterial(backgroundMaterial);
         gameMaster.addTankElements(tank1, tank2);
 
-        const point = Game0.addWallsAndMaze(gameMaster, wallMaterial, size, createMaze);
+        gameMaster.addWallElements(wallsArray);
+        gameMaster.addWallElements(createMaze(wallMaterial, point));
 
         const spawnManager: IBonusSpawnManager = new BonusSpawnManager(
-            new SpawnPoints(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT),
+            pointSpawner,
             gameMaster.itemCollisionManager
         );
 
@@ -144,14 +151,6 @@ export class Game0 {
                 Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
             );
         }
-    }
-    private static addWallsAndMaze(gameMaster: IGameMaster, wallMaterial: number, size: Size, createMaze: CreateMaze): Point {
-        const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
-            OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size
-        );
-        gameMaster.addWallElements(wallsArray);
-        gameMaster.addWallElements(createMaze(wallMaterial, point));
-        return point;
     }
 
     private static readonly PANEL_HEIGHT: number = 5;
@@ -174,6 +173,7 @@ export class Game0 {
 }
 
 class RulesManager implements IRulesManager {
+    private readonly _tankSpawnManager: ITankSpawnManager;
     private readonly _attacker: TankElement;
     private readonly _defender: TankElement;
     private _score: number = 0;
@@ -182,13 +182,17 @@ class RulesManager implements IRulesManager {
     private readonly _gameMaster: IGameMaster;
     private readonly _nextMaze: NextMaze;
     public constructor(attacker: TankElement, defender: TankElement, nextMaze: NextMaze,
-                       panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size) {
+                       panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size,
+                       pointSpawner: IPointSpawner) {
         this._attacker = attacker;
         this._defender = defender;
 
         this._panelInfo = panelInfo;
         this._gameMaster = new GameMaster(ctx, size, this);
         this._nextMaze = nextMaze;
+
+        this._tankSpawnManager = new TankSpawnManager(pointSpawner,
+            this._gameMaster.modelCollisionManager.collisionChecker, this._gameMaster);
     }
     public addBonus(source: IElement, bonus: Bonus): boolean {
         switch (bonus) {
