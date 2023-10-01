@@ -5,6 +5,10 @@ import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
 import {Bonus} from "../constants/gameConstants";
 
+export interface IPositionAdjustable {
+    adjustPosition(point: Point, angle: number): void;
+}
+
 export type TankInfo = {
     color: number;
     hullNum: number;
@@ -24,6 +28,7 @@ export interface IAmmo {
 
 export interface IRulesManager {
     addBonus(source: IElement, bonus: Bonus): boolean;
+    processKill(murderer: IElement, victim: IElement): void;
 }
 
 export interface IExecutor {

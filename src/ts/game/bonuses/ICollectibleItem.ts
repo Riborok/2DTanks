@@ -1,13 +1,12 @@
-import {IEntityLifecycle, IStorage} from "../../additionally/type";
+import {IEntityLifecycle, IPositionAdjustable, IStorage} from "../../additionally/type";
 import {ISprite} from "../../sprite/ISprite";
 import {ICollectible} from "./ICollectible";
 import {IIdentifiable} from "../id/IIdentifiable";
 import {Point} from "../../geometry/Point";
 
-export interface ICollectibleItem extends IIdentifiable, IEntityLifecycle<ISprite, ICollectible>{
+export interface ICollectibleItem extends IIdentifiable, IPositionAdjustable, IEntityLifecycle<ISprite, ICollectible>{
     get collectible(): ICollectible;
     get sprite(): ISprite;
-    adjustPolygon(point: Point, angle: number): void;
 }
 
 export class CollectibleItem implements ICollectibleItem {
@@ -34,7 +33,7 @@ export class CollectibleItem implements ICollectibleItem {
         spriteStorage.remove(this._sprite);
         entityStorage.remove(this._collectible);
     }
-    public adjustPolygon(point: Point, angle: number) {
+    public adjustPosition(point: Point, angle: number) {
         this._collectible.adjustPolygon(point, this._sprite.width, this._sprite.height, angle);
         this._sprite.point = point;
         this._sprite.angle = angle;

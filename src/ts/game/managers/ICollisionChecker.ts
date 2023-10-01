@@ -1,13 +1,12 @@
 import {IPolygon} from "../../polygon/IPolygon";
 import {ICollisionDetection} from "../../polygon/ICollisionSystem";
 import {hasElements} from "../../additionally/additionalFunc";
-import {ICollectible} from "../bonuses/ICollectible";
 
 export interface ICollisionChecker<T extends IPolygon> {
     hasCollision(polygon: IPolygon): Iterable<T> | null;
 }
 
-export interface GetCollisionChecker<T extends IPolygon> {
+export interface IGetCollisionChecker<T extends IPolygon> {
     get collisionChecker(): ICollisionChecker<T>;
 }
 

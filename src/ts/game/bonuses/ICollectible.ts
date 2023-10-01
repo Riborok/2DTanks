@@ -1,12 +1,11 @@
-import {IPolygon} from "../../polygon/IPolygon";
+import {IPolygon, IPolygonAdjustable} from "../../polygon/IPolygon";
 import {Bonus} from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
 import {calcMidBetweenTwoPoint} from "../../geometry/additionalFunc";
 import {PolygonManipulator} from "../../polygon/PolygonManipulator";
 
-export interface ICollectible extends IPolygon {
+export interface ICollectible extends IPolygon, IPolygonAdjustable {
     get bonus(): Bonus;
-    adjustPolygon(point: Point, width: number, height: number, angle: number): void;
 }
 
 export class RectangularBonus implements ICollectible {

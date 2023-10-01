@@ -1,12 +1,12 @@
 import {Point, Vector} from "../../geometry/Point";
 import {EntityManipulator} from "./EntityManipulator";
 import {calcMidBetweenTwoPoint} from "../../geometry/additionalFunc";
-import {IPolygon} from "../IPolygon";
+import {IPolygon, IPolygonAdjustable} from "../IPolygon";
 
 /**
  * Interface representing an entity with points.
  */
-export interface IEntity extends IPolygon {
+export interface IEntity extends IPolygon, IPolygonAdjustable {
     /**
      * Gets the points defining the entity. The points should be specified in a clockwise order.
      */
@@ -30,7 +30,7 @@ const scalingCoeff: number = 3.75;
 export class RectangularEntity implements IEntity {
     private static readonly scalingCoeff = (1 / 12) * scalingCoeff;
 
-    private readonly _points: Point[];
+    private _points: Point[];
     private readonly _mass: number;
     private readonly _id: number;
     private _angularVelocity: number = 0;
@@ -48,6 +48,9 @@ export class RectangularEntity implements IEntity {
         this._id = id;
         this._width = width;
         this._height = height;
+        this.adjustPolygon(point, width, height, angle);
+    }
+    public adjustPolygon(point: Point, width: number, height: number, angle: number) {
         this._points = [point.clone(),
             new Point(point.x + width, point.y),
             new Point(point.x + width, point.y + height),

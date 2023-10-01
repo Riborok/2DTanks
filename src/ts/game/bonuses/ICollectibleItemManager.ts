@@ -3,7 +3,7 @@ import {ISprite} from "../../sprite/ISprite";
 import {ICollectible} from "./ICollectible";
 import {IElement} from "../elements/IElement";
 import {ICollisionSystem, Quadtree} from "../../polygon/ICollisionSystem";
-import {CollisionChecker, GetCollisionChecker, ICollisionChecker} from "../managers/ICollisionChecker";
+import {CollisionChecker, IGetCollisionChecker, ICollisionChecker} from "../managers/ICollisionChecker";
 import {IRulesManager, IStorage, Size} from "../../additionally/type";
 
 export interface IBonusCollisionManager {
@@ -14,7 +14,7 @@ export interface ICollectibleManager {
     addElement(element: ICollectibleItem): void;
 }
 
-export interface ICollectibleItemManager extends ICollectibleManager, IBonusCollisionManager, GetCollisionChecker<ICollectible> {
+export interface ICollectibleItemManager extends ICollectibleManager, IBonusCollisionManager, IGetCollisionChecker<ICollectible> {
 }
 
 export class CollectibleItemManager implements ICollectibleItemManager {

@@ -60,8 +60,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
 
                         this._healthManager.remove(element.model);
 
-                        if (ModelIDTracker.isTank(element.id))
-                            this._rulesManager.addBonus(bulletCollisionData.bulletElement.source, Bonus.kill);
+                        this._rulesManager.processKill(bulletCollisionData.bulletElement.source, element);
                     }
                     else
                         this._healthManager.add(element.model);

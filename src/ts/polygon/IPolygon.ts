@@ -8,3 +8,7 @@ export interface IPolygon extends IIdentifiable {
     get points(): Point[];
     calcCenter(): Point;
 }
+
+export interface IPolygonAdjustable {
+    adjustPolygon(point: Point, width: number, height: number, angle: number): void;
+}
