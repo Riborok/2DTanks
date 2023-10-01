@@ -2,13 +2,13 @@ import {Point} from "../../geometry/Point";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {getRandomInt} from "../../additionally/additionalFunc";
 
-export interface ISpawnPoints {
+export interface IPointSpawner {
     getRandomSpawnPoint(width: number, height: number,
                         minLine?: number, maxLine?: number, minColumn?: number, maxColumn?: number): Point;
     getSpawnPoint(width: number, height: number, line: number, column: number): Point;
 }
 
-export class SpawnPoints implements ISpawnPoints{
+export class PointSpawner implements IPointSpawner{
     private _spawnPoints: Point[][] = [];
     private readonly _spawnGridsLinesAmount: number;
     private readonly _spawnGridsColumnsAmount: number;
