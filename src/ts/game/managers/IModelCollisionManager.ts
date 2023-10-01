@@ -2,7 +2,7 @@ import {IEntity} from "../../polygon/entity/IEntity";
 import {ICollisionDetection} from "../../polygon/ICollisionSystem";
 import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
-import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
+import {IdToProcessing, IIdToProcessing} from "./IIdToProcessing";
 import {CollisionPack} from "../../additionally/type";
 import {CollisionChecker, GetCollisionChecker, ICollisionChecker} from "./ICollisionChecker";
 

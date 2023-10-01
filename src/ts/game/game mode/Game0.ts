@@ -30,7 +30,7 @@ import {
     VK_W
 } from "../../constants/keyCodes";
 import {IElement} from "../elements/IElement";
-import {BonusSpawnManager} from "../managers/additional/BonusSpawnManager";
+import {BonusSpawnManager, IBonusSpawnManager} from "../managers/additional/IBonusSpawnManager";
 import {SpawnPoints} from "../spawn/ISpawnPoints";
 
 type CreateMaze = (wallMaterial: number, point: Point) => Iterable<WallElement>;
@@ -123,7 +123,7 @@ export class Game0 {
 
         const point = Game0.addWallsAndMaze(gameMaster, wallMaterial, size, createMaze);
 
-        const spawnManager = new BonusSpawnManager(
+        const spawnManager: IBonusSpawnManager = new BonusSpawnManager(
             new SpawnPoints(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT),
             gameMaster.itemCollisionManager
         );
@@ -136,7 +136,7 @@ export class Game0 {
         );
     }
     private static readonly AMOUNT_OF_KEYS: number = 3;
-    private static addKeys(spawnManager: BonusSpawnManager) {
+    private static addKeys(spawnManager: IBonusSpawnManager) {
         for (let i = 0; i < Game0.AMOUNT_OF_KEYS; i++){
             spawnManager.randomSpawn(
                 Bonus.key, ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE,

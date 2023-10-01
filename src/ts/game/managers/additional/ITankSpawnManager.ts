@@ -3,7 +3,11 @@ import {CollisionChecker} from "../ICollisionChecker";
 import {IEntity} from "../../../polygon/entity/IEntity";
 import {ITankElementAdder} from "../../IGameMaster";
 
-export class TankSpawnManager {
+export interface ITankSpawnManager {
+
+}
+
+export class TankSpawnManager implements ITankSpawnManager {
     private readonly _spawnPoints: ISpawnPoints;
     private readonly _collisionChecker: CollisionChecker<IEntity>;
     private readonly _tankElementAdder: ITankElementAdder;
