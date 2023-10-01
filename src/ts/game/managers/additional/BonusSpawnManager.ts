@@ -52,7 +52,7 @@ export class BonusSpawnManager implements IExecutor{
         const box = CollectibleItemCreator.create(boxType, point, 0);
 
         for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
-            if (this._collectibleItemManager.collisionDetector.hasCollision(box.collectible)){
+            if (this._collectibleItemManager.collisionChecker.hasCollision(box.collectible)){
                 box.adjustPolygon(
                     this._spawnPoints.getRandomSpawnPoint(ResolutionManager.BOX_SIZE, ResolutionManager.BOX_SIZE),
                     0
@@ -75,7 +75,7 @@ export class BonusSpawnManager implements IExecutor{
         );
 
         for (let i = 0; i < BonusSpawnManager.RESPAWN_TRYS_AMOUNT; i++){
-            if (this._collectibleItemManager.collisionDetector.hasCollision(bonus.collectible)){
+            if (this._collectibleItemManager.collisionChecker.hasCollision(bonus.collectible)){
                 bonus.adjustPolygon(
                     this._spawnPoints.getRandomSpawnPoint(width, height, minLine, maxLine, minColumn, maxColumn),
                     0

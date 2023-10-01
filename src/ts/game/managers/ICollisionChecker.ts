@@ -7,8 +7,8 @@ export interface ICollisionChecker<T extends IPolygon> {
     hasCollision(polygon: IPolygon): Iterable<T> | null;
 }
 
-export interface GetCollisionDetector<T extends IPolygon> {
-    get collisionDetector(): ICollisionChecker<T>;
+export interface GetCollisionChecker<T extends IPolygon> {
+    get collisionChecker(): ICollisionChecker<T>;
 }
 
 export class CollisionChecker<T extends IPolygon> implements ICollisionChecker<T> {

@@ -4,7 +4,7 @@ import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IdToProcessing";
 import {CollisionPack} from "../../additionally/type";
-import {CollisionChecker, GetCollisionDetector, ICollisionChecker} from "./ICollisionChecker";
+import {CollisionChecker, GetCollisionChecker, ICollisionChecker} from "./ICollisionChecker";
 
 export interface ICollisionResolver {
     resolveCollision(entity: IEntity): Iterable<CollisionPack> | null;
@@ -13,14 +13,14 @@ export interface IdleModelProvider {
     get wallsForProcessing(): IIdToProcessing<number>;
 }
 
-export interface IModelCollisionManager extends IdleModelProvider, ICollisionResolver, GetCollisionDetector<IEntity> {
+export interface IModelCollisionManager extends IdleModelProvider, ICollisionResolver, GetCollisionChecker<IEntity> {
 }
 
 export class ModelCollisionManager implements IModelCollisionManager {
     private readonly _collisionDetector: ICollisionChecker<IEntity>;
     private _wallsForProcessing: IIdToProcessing<number> = new IdToProcessing();
     public get wallsForProcessing(): IIdToProcessing<number> { return this._wallsForProcessing }
-    public get collisionDetector(): ICollisionChecker<IEntity> { return this._collisionDetector }
+    public get collisionChecker(): ICollisionChecker<IEntity> { return this._collisionDetector }
     public constructor(collisionDetection: ICollisionDetection<IEntity>) {
         this._collisionDetector = new CollisionChecker(collisionDetection);
     }

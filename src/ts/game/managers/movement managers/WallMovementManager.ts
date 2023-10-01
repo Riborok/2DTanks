@@ -6,11 +6,11 @@ import {IStorage} from "../../../additionally/type";
 import {IEntity} from "../../../polygon/entity/IEntity";
 
 export class WallMovementManager extends MovementManager implements IWallMovementManager {
-    protected override readonly _collisionManager: IModelCollisionManager;
+    protected override readonly _collisionResolver: IModelCollisionManager;
     public constructor(entityStorage: IStorage<IEntity>, modelCollisionManager: IModelCollisionManager) {
         super(entityStorage, modelCollisionManager);
     }
-    public override get collisionResolver(): IModelCollisionManager { return this._collisionManager }
+    public override get collisionResolver(): IModelCollisionManager { return this._collisionResolver }
     private residualAngularMovement(wallElement: WallElement, deltaTime: number) {
         if (!wallElement.model.isAngularMotionStopped())
             this.update(wallElement, wallElement.model.residualAngularMovement, EntityManipulator.angularMovement, deltaTime);
@@ -24,7 +24,7 @@ export class WallMovementManager extends MovementManager implements IWallMovemen
         this._entityStorage.remove(entity);
         action.call(wallElement.model, this._resistanceCoeff, this._airResistanceCoeff, deltaTime);
         movement(entity);
-        this._collisionManager.resolveCollision(entity);
+        this._collisionResolver.resolveCollision(entity);
 
         wallElement.sprite.updateAfterAction(entity.points[0], entity.angle);
 
