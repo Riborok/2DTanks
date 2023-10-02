@@ -4,25 +4,24 @@ import {IElement} from "../../elements/IElement";
 import {IAnimationManager} from "../animation managers/AnimationManager";
 import {HandlingManager, IAddElement, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IRulesManager, IStorage} from "../../../additionally/type";
+import {IKillProcessor, IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
-import {Bonus} from "../../../constants/gameConstants";
 import {IHealthDrawManager} from "../additional/IHealthBarManager";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
     private readonly _bulletAnimator: IBulletAnimator;
-    private readonly _rulesManager: IRulesManager;
+    private readonly _killProcessor: IKillProcessor;
     private readonly _healthManager: IHealthDrawManager;
 
     public constructor(bulletManager: BulletMovementManager, storage: IStorage<ISprite>, elements: Map<number, BulletElement>,
                        handlingManagers: Iterable<IElementManager<IElement>>, animationManager: IAnimationManager,
-                       rulesManager: IRulesManager, healthManager: IHealthDrawManager) {
+                       killProcessor: IKillProcessor, healthManager: IHealthDrawManager) {
         super(bulletManager, storage, elements, ModelIDTracker.isBullet);
         this._handlingManagers = handlingManagers;
         this._bulletAnimator = new BulletAnimator(animationManager);
-        this._rulesManager = rulesManager;
+        this._killProcessor = killProcessor;
         this._healthManager = healthManager;
     }
 
@@ -60,7 +59,7 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
 
                         this._healthManager.remove(element.model);
 
-                        this._rulesManager.processKill(bulletCollisionData.bulletElement.source, element);
+                        this._killProcessor.processKill(bulletCollisionData.bulletElement.source, element);
                     }
                     else
                         this._healthManager.add(element.model);

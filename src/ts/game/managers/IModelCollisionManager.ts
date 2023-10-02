@@ -4,7 +4,7 @@ import {CollisionResolver} from "../../geometry/CollisionResolver";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {IdToProcessing, IIdToProcessing} from "./IIdToProcessing";
 import {CollisionPack} from "../../additionally/type";
-import {CollisionChecker, IGetCollisionChecker, ICollisionChecker} from "./ICollisionChecker";
+import {CollisionChecker, ICollisionChecker, IGetCollisionChecker} from "./ICollisionChecker";
 
 export interface ICollisionResolver {
     resolveCollision(entity: IEntity): Iterable<CollisionPack> | null;
