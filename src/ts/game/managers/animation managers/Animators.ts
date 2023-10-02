@@ -3,7 +3,7 @@ import {Point} from "../../../geometry/Point";
 import {BulletElement} from "../../elements/BulletElement";
 import {AnimationMaker} from "./AnimationMaker";
 import {IElement} from "../../elements/IElement";
-import {BulletModel} from "../../../model/bullet/BulletModel";
+import {IBulletModel} from "../../../model/bullet/IBulletModel";
 import {calcMidBetweenTwoPoint} from "../../../geometry/additionalFunc";
 
 interface IAnimator {
@@ -16,7 +16,7 @@ export interface IBulletAnimator extends IAnimator {
 }
 
 export interface ITankAnimator extends IAnimator {
-    createShootAnimation(bulletModel: BulletModel, num: number): void;
+    createShootAnimation(bulletModel: IBulletModel, num: number): void;
 }
 
 export class BulletAnimator implements IBulletAnimator {
@@ -36,7 +36,7 @@ export class TankAnimator implements ITankAnimator {
     private readonly _animationManager: IAnimationManager;
     public constructor(animationManager: IAnimationManager) { this._animationManager = animationManager }
     public get animationManager(): IAnimationManager { return this._animationManager }
-    public createShootAnimation(bulletModel: BulletModel, num: number) {
+    public createShootAnimation(bulletModel: IBulletModel, num: number) {
         this._animationManager.add(AnimationMaker.playShootAnimation(
             calcMidBetweenTwoPoint(bulletModel.entity.points[0], bulletModel.entity.points[3]),
             bulletModel.entity.angle,

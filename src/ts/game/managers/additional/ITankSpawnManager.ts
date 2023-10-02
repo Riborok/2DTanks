@@ -47,7 +47,7 @@ export class TankSpawnManager implements ITankSpawnManager {
                 return tankElement;
             }
         }
-        throw Error(`Failed to spawn the tank`);
+        throw new Error(`Failed to spawn the tank`);
     }
     private static readonly ANGLES = [0, 1.57, 3.14, 4.71];
     private static getRandomAngle(): number {

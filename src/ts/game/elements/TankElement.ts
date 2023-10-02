@@ -1,4 +1,4 @@
-import {TankModel} from "../../model/tank/TankModel";
+import {ITankModel, TankModel} from "../../model/tank/ITankModel";
 import {TankSprite} from "../../sprite/tank/TankSprite";
 import {TankPartsCreator} from "../../components/tank parts/TankPartsCreator";
 import {TankSpritePartsCreator} from "../../sprite/tank/TankSpritePartsCreator";
@@ -11,10 +11,10 @@ import {IElement} from "./IElement";
 import {ISprite} from "../../sprite/ISprite";
 
 export class TankElement implements IElement, IPositionAdjustable {
-    private readonly _model: TankModel;
+    private readonly _model: ITankModel;
     private readonly _sprite: TankSprite;
     private _tankInfo: TankInfo;
-    public get model(): TankModel { return this._model }
+    public get model(): ITankModel { return this._model }
     public get sprite(): TankSprite { return this._sprite }
     public get id(): number { return this._model.entity.id }
     public get tankInfo(): TankInfo { return this._tankInfo }

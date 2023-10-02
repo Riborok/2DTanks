@@ -3,7 +3,7 @@ import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ModelIDTracker} from "../id/ModelIDTracker";
 import {WallElement} from "../elements/WallElement";
 import {WallSprite} from "../../sprite/obstacles/WallSprite";
-import {WallModel} from "../../model/obstacle/WallModel";
+import {WallModel} from "../../model/obstacle/IWallModel";
 import {Point} from "../../geometry/Point";
 import {Size} from "../../additionally/type";
 

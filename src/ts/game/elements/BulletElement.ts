@@ -1,15 +1,15 @@
 import {IElement} from "./IElement";
 import {IEntity} from "../../polygon/entity/IEntity";
 import {BulletSprite} from "../../sprite/bullet/BulletSprite";
-import {BulletModel} from "../../model/bullet/BulletModel";
+import {IBulletModel} from "../../model/bullet/IBulletModel";
 import {IAmmo, IStorage} from "../../additionally/type";
 import {ISprite} from "../../sprite/ISprite";
 
 export class BulletElement implements IElement, IAmmo {
-    private readonly _model: BulletModel;
+    private readonly _model: IBulletModel;
     private readonly _sprite: BulletSprite;
     private readonly _source: IElement;
-    public constructor(model: BulletModel, num: number, source: IElement) {
+    public constructor(model: IBulletModel, num: number, source: IElement) {
         this._model = model;
         this._sprite = new BulletSprite(num);
         this._source = source;
@@ -17,7 +17,7 @@ export class BulletElement implements IElement, IAmmo {
     public get id(): number {
         return this._model.entity.id;
     }
-    public get model(): BulletModel {
+    public get model(): IBulletModel {
         return this._model;
     }
     public get sprite(): BulletSprite {

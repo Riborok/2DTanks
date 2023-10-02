@@ -11,24 +11,24 @@ import {
     ResolutionManager
 } from "../../../constants/gameConstants";
 import {Rectangle} from "../../processors/shapes/IRectangle";
-import {Model} from "../../../model/Model";
+import {IModel} from "../../../model/IModel";
 
 export interface IHealthDrawManager extends IExecutor{
-    add(model: Model): void;
-    remove(model: Model): void;
+    add(model: IModel): void;
+    remove(model: IModel): void;
 }
 
 export class HealthBarManager implements IHealthDrawManager {
-    private readonly _drawList: Map<number, Model> = new Map<number, Model>();
+    private readonly _drawList: Map<number, IModel> = new Map<number, IModel>();
     private readonly _shapeAdder: IShapeAdder;
     public constructor(shapeAdder: IShapeAdder) {
         this._shapeAdder = shapeAdder;
     }
-    public add(model: Model) {
+    public add(model: IModel) {
         if (model.maxHealth !== Infinity)
             this._drawList.set(model.entity.id, model);
     }
-    public remove(model: Model) {
+    public remove(model: IModel) {
         this._drawList.delete(model.entity.id);
     }
     public handle() {
@@ -39,7 +39,7 @@ export class HealthBarManager implements IHealthDrawManager {
             this.drawBar(value);
         }
     }
-    private drawBar(model: Model) {
+    private drawBar(model: IModel) {
         const tankWidth = this.calculateTankWidth(model);
         const healthWidth = tankWidth / model.maxHealth * model.health;
         const tankHeight = calcDistance(model.entity.points[1], model.entity.points[2]);
@@ -55,11 +55,11 @@ export class HealthBarManager implements IHealthDrawManager {
         if (isImplementsIArmor(model))
             this.drawArmorBar(model, tankWidth, healthPoint);
     }
-    private calculateTankWidth(model: Model): number {
+    private calculateTankWidth(model: IModel): number {
         return calcDistance(model.entity.points[0], model.entity.points[1]) *
             HEALTH_BAR_WIDTH_COEFF;
     }
-    private getHealthColor(model: Model): string{
+    private getHealthColor(model: IModel): string{
         if (model.health > model.maxHealth * 0.4)
             return HEALTH_BAR_HIGH_HP_COLOR;
         else if (model.health > model.maxHealth * 0.15 && model.health <= model.maxHealth * 0.4)
@@ -75,7 +75,7 @@ export class HealthBarManager implements IHealthDrawManager {
             healthColor
         ));
     }
-    private drawArmorBar(model: Model & IArmor, tankWidth: number, healthPoint: Point) {
+    private drawArmorBar(model: IModel & IArmor, tankWidth: number, healthPoint: Point) {
         const armorWidth = tankWidth / model.maxArmor * model.armor;
 
         const center = model.entity.calcCenter();
