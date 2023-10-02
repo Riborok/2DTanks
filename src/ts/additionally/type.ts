@@ -26,9 +26,14 @@ export interface IAmmo {
     get source(): IElement;
 }
 
-export interface IRulesManager {
+export interface IBonusManager {
     addBonus(source: IElement, bonus: Bonus): boolean;
+}
+
+export interface IKillProcessor {
     processKill(murderer: IElement, victim: IElement): void;
+}
+export interface IRulesManager extends IKillProcessor, IBonusManager{
 }
 
 export interface IExecutor {
