@@ -34,8 +34,8 @@ export abstract class MovementManager implements ISetCoefficients, IEntityContro
 }
 
 export interface ITankMovementManager {
-    hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
-    hullClockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    counterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;
+    clockwiseMovement(tankElement: TankElement, deltaTime: number): void;
     forwardMovement(tankElement: TankElement, deltaTime: number): void;
     backwardMovement(tankElement: TankElement, deltaTime: number): void;
     turretCounterclockwiseMovement(tankElement: TankElement, deltaTime: number): void;

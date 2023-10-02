@@ -1,9 +1,17 @@
 import {IEntity} from "../polygon/entity/IEntity";
-import {BulletModel} from "./bullet/BulletModel";
+import {IBulletModel} from "./bullet/IBulletModel";
 import {IHealth} from "../additionally/type";
 import {AirForcesCalculator, LandForcesCalculator} from "./ForcesCalculator";
 
-export abstract class Model implements IHealth{
+export interface IModel extends IHealth {
+    isDead(): boolean;
+    get entity(): IEntity;
+    isIdle(): boolean;
+    isAngularMotionStopped(): boolean;
+    takeDamage(bullet: IBulletModel): void;
+}
+
+export abstract class Model implements IModel {
     protected readonly _entity: IEntity;
     protected _health: number;
     public abstract get maxHealth(): number;
@@ -37,10 +45,14 @@ export abstract class Model implements IHealth{
         else
             entity.angularVelocity -= angularVelocity + acceleration > 0 ? -angularVelocity : acceleration;
     }
-    public takeDamage(bullet: BulletModel) { this._health -= bullet.damage }
+    public takeDamage(bullet: IBulletModel) { this._health -= bullet.damage }
 }
 
-export abstract class LandModel extends Model{
+export interface ILandModel extends IModel {
+    residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+    residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+}
+export abstract class LandModel extends Model implements ILandModel {
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const acceleration = LandForcesCalculator.calcAcceleration(
@@ -57,7 +69,11 @@ export abstract class LandModel extends Model{
     }
 }
 
-export abstract class AirModel extends Model{
+export interface IAirModel extends IModel {
+    residualMovement(airResistanceCoeff: number, deltaTime: number): void;
+    residualAngularMovement(airResistanceCoeff: number, deltaTime: number): void;
+}
+export abstract class AirModel extends Model implements IAirModel {
     public residualMovement(airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const acceleration = AirForcesCalculator.calcAcceleration(

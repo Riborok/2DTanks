@@ -4,6 +4,23 @@ import {ISprite} from "../sprite/ISprite";
 import {IPolygon} from "../polygon/IPolygon";
 import {IElement} from "../game/elements/IElement";
 import {Bonus} from "../constants/gameConstants";
+import {IBulletModel} from "../model/bullet/IBulletModel";
+
+export interface IBulletReceiver {
+    get bulletNum(): number;
+    takeBullet(bulletNum: number): void;
+}
+
+export interface IBulletShooter {
+    shot(): IBulletModel | null;
+}
+
+export interface ILandMovement {
+    clockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+    counterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+    forwardMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+    backwardMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number): void;
+}
 
 export interface IPositionAdjustable {
     adjustPosition(point: Point, angle: number): void;

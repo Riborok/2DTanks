@@ -2,7 +2,7 @@ import {HandlingManager, IAddElement} from "./HandlingManager";
 import {TankElement} from "../../elements/TankElement";
 import {TankMovementManager} from "../movement managers/TankMovementManager";
 import {ITireTracksManager, TireTracksManager} from "../ITireTracksManager";
-import {BulletModel} from "../../../model/bullet/BulletModel";
+import {IBulletModel} from "../../../model/bullet/IBulletModel";
 import {IAnimationManager} from "../animation managers/AnimationManager";
 import {IKeyHandler} from "../../input/IKeyHandler";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
@@ -63,16 +63,16 @@ export class TankHandlingManager extends HandlingManager<TankElement, TankMoveme
             oppositeAction = this._KeyHandler.isKeyDown(control.hullCounterClockwiseKey);
             if ((action && !oppositeAction) || (!action && oppositeAction)) {
                 if (action)
-                    this._movementManager.hullClockwiseMovement(tankElement, deltaTime);
+                    this._movementManager.clockwiseMovement(tankElement, deltaTime);
                 else if (oppositeAction)
-                    this._movementManager.hullCounterclockwiseMovement(tankElement, deltaTime);
+                    this._movementManager.counterclockwiseMovement(tankElement, deltaTime);
             }
             else
                 this._movementManager.residualAngularMovement(tankElement, deltaTime);
 
             action = this._KeyHandler.isKeyDown(control.shootKey);
             if (action) {
-                const bulletModel: BulletModel | null = tankElement.model.shot();
+                const bulletModel: IBulletModel | null = tankElement.model.shot();
                 if (bulletModel) {
                     const num = tankElement.model.bulletNum;
                     this._tankAnimator.createShootAnimation(bulletModel, num);

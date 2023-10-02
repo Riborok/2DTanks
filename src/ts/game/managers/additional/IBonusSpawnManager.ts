@@ -93,7 +93,7 @@ export class BonusSpawnManager implements IBonusSpawnManager {
                 return;
             }
         }
-        throw Error(`Failed to spawn all the keys`);
+        throw new Error(`Failed to spawn all the keys`);
     }
 
     public spawn(bonusType: Bonus, width: number, height: number, line: number, column: number){

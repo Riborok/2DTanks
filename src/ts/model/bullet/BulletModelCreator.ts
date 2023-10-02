@@ -1,5 +1,5 @@
 import {IBullet, LightBullet} from "../../components/bullet/IBullet";
-import {BulletModel} from "./BulletModel";
+import {BulletModel, IBulletModel} from "./IBulletModel";
 import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {ModelIDTracker} from "../../game/id/ModelIDTracker";
@@ -9,7 +9,7 @@ import {PointRotator} from "../../geometry/PointRotator";
 
 export class BulletModelCreator {
     private constructor() { }
-    public static create(num: number, point: Point, angle: number, weapon: IWeapon): BulletModel {
+    public static create(num: number, point: Point, angle: number, weapon: IWeapon): IBulletModel {
         const bullet = BulletModelCreator.createBullet(num);
 
         const newPoint = BulletModelCreator.calcDefaultEntityPoint(num, point, angle);

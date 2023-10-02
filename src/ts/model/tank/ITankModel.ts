@@ -1,11 +1,11 @@
 import {TankParts} from "../../components/tank parts/TankParts";
-import {BulletModel} from "../bullet/BulletModel";
+import {IBulletModel} from "../bullet/IBulletModel";
 import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../../polygon/entity/IEntity";
-import {LandModel} from "../Model";
+import {ILandModel, LandModel} from "../IModel";
 import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
-import {IArmor, MotionData} from "../../additionally/type";
+import {IArmor, IBulletReceiver, IBulletShooter, ILandMovement, MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
 import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
 import {remapValueToRange} from "../../additionally/additionalFunc";
@@ -13,7 +13,16 @@ import {getTurretWidth} from "../../components/tank parts/ITurret";
 import {getBarrelLength} from "../../components/tank parts/IWeapon";
 import {LandForcesCalculator} from "../ForcesCalculator";
 
-export class TankModel extends LandModel implements IArmor {
+interface ITurretControl {
+    get turretAngle(): number;
+    turretClockwiseMovement(deltaTime: number): void;
+    turretCounterclockwiseMovement(deltaTime: number): void;
+}
+
+export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletShooter, ITurretControl, IBulletReceiver {
+}
+
+export class TankModel extends LandModel implements ITankModel {
     private static readonly DEFAULT_BULLET_NUM: number = 0;
 
     private readonly _tankParts: TankParts;
@@ -35,7 +44,7 @@ export class TankModel extends LandModel implements IArmor {
         this._turretAngle = entity.angle;
         this._armor = tankParts.hull.armor;
     }
-    public takeDamage(bullet: BulletModel) {
+    public takeDamage(bullet: IBulletModel) {
         this._armor -= bullet.armorPenetration;
         if (this._armor < 0) { this._armor = 0; }
 
@@ -43,10 +52,10 @@ export class TankModel extends LandModel implements IArmor {
         if (damage > 0) { this._health -= damage; }
     }
     public get turretAngle(): number { return this._turretAngle }
-    public get armor() { return this._armor }
-    public get armorStrength() { return this._tankParts.hull.armorStrength }
-    public get bulletNum() { return this._bulletNum }
-    public shot(): BulletModel | null {
+    public get armor(): number { return this._armor }
+    public get armorStrength(): number { return this._tankParts.hull.armorStrength }
+    public get bulletNum(): number { return this._bulletNum }
+    public shot(): IBulletModel | null {
         const dateNow = Date.now();
         if (dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
             return null;
@@ -75,7 +84,7 @@ export class TankModel extends LandModel implements IArmor {
     public turretClockwiseMovement(deltaTime: number) { this._turretAngle += this._tankParts.turret.angleSpeed * deltaTime }
     public turretCounterclockwiseMovement(deltaTime: number) { this._turretAngle -= this._tankParts.turret.angleSpeed * deltaTime }
     private incTurretAngle(deltaAngle: number) { this._turretAngle += deltaAngle }
-    public hullClockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
+    public clockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (entity.angularVelocity < angularData.finishSpeed)
@@ -87,7 +96,7 @@ export class TankModel extends LandModel implements IArmor {
 
         this.incTurretAngle(entity.angularVelocity);
     }
-    public hullCounterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
+    public counterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
         const angularData = this._tankParts.track.angularData;
         if (-entity.angularVelocity < angularData.finishSpeed)

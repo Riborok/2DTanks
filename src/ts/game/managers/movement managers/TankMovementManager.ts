@@ -38,12 +38,12 @@ export class TankMovementManager extends MovementManager implements ITankMovemen
         tankElement.model.turretClockwiseMovement(deltaTime);
         TankMovementManager.turretUpdate(tankElement);
     }
-    public hullCounterclockwiseMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.hullCounterclockwiseMovement, EntityManipulator.angularMovement,
+    public counterclockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.counterclockwiseMovement, EntityManipulator.angularMovement,
             tankElement.sprite.preUpdateAction, deltaTime);
     }
-    public hullClockwiseMovement(tankElement: TankElement, deltaTime: number) {
-        this.hullUpdate(tankElement, tankElement.model.hullClockwiseMovement, EntityManipulator.angularMovement,
+    public clockwiseMovement(tankElement: TankElement, deltaTime: number) {
+        this.hullUpdate(tankElement, tankElement.model.clockwiseMovement, EntityManipulator.angularMovement,
             tankElement.sprite.preUpdateAction, deltaTime);
     }
     public forwardMovement(tankElement: TankElement, deltaTime: number) {
