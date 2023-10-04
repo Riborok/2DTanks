@@ -22,8 +22,9 @@ export class WallHandlingManager extends HandlingManager<WallElement, WallMoveme
     public handle(deltaTime: number): void {
         this.addToProcess();
         if (!this._wallToProcess.isEmpty()) {
-            this._wallToProcess.applyAndRemove(this._movementManager.movement.bind(this._movementManager),
-                this._movementManager.isCompleteMotion.bind(this._movementManager), deltaTime);
+            this._wallToProcess.applyAndRemove(this.action, this.removalCondition, deltaTime);
         }
     }
+    private readonly action = (wallElement: WallElement, deltaTime: number) => this._movementManager.movement(wallElement, deltaTime);
+    private readonly removalCondition = (wallElement: WallElement) => this._movementManager.isCompleteMotion(wallElement);
 }

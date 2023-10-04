@@ -58,6 +58,7 @@ export interface IExecutor {
 }
 
 export interface IEventEmitter {
+    addEventListeners(): void;
     removeEventListeners(): void;
 }
 

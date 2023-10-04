@@ -67,3 +67,12 @@ export function hasElements(iterable: Iterable<any>): boolean {
         return true;
     return false;
 }
+
+/**
+ * Clears all child elements from the document body.
+ */
+export function clearDOM() {
+    const rootElement = document.body;
+    while (rootElement.firstChild)
+        rootElement.removeChild(rootElement.firstChild);
+}

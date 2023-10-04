@@ -19,14 +19,11 @@ export class AnimationManager implements IAnimationManager{
     }
     public handle(deltaTime: number): void {
         if (!this._animationList.isEmpty())
-            this._animationList.applyAndRemove(
-                (animation: IAnimation, deltaTime: number) => animation.changeFrame(deltaTime),
-                this.removalCondition.bind(this), deltaTime
-            );
+            this._animationList.applyAndRemove(this.action, this.removalCondition, deltaTime);
     }
-    private removalCondition(animation: IAnimation) {
-        if (animation.isEnded)
-            this._storage.removeById(animation);
+    private readonly action = (animation: IAnimation, deltaTime: number) => animation.changeFrame(deltaTime);
+    private readonly removalCondition = (animation: IAnimation) => {
+        if (animation.isEnded) { this._storage.removeById(animation); }
         return animation.isEnded;
     }
 }

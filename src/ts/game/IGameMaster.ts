@@ -80,8 +80,6 @@ export class GameMaster implements IGameMaster {
         }
     };
     public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManager: IRulesManager) {
-        document.addEventListener("visibilitychange", this.handleVisibilityChange);
-
         this._size = size;
         this._canvas = new Canvas(ctx, this._size);
         this._gameLoop = new GameLoop(this._canvas);
@@ -130,6 +128,10 @@ export class GameMaster implements IGameMaster {
 
         this._gameLoop.render.add(...this._handlingManagers, this._animationManager, this._healthDrawManager);
         this._gameLoop.start();
+    }
+    public addEventListeners(): void {
+        this._keyHandler.addEventListeners();
+        document.addEventListener("visibilitychange", this.handleVisibilityChange);
     }
     public removeEventListeners() {
         this._keyHandler.removeEventListeners();

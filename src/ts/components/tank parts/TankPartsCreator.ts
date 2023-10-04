@@ -18,7 +18,8 @@ import {
     TurretModel3,
     TurretModel4,
     TurretModel5,
-    TurretModel6, TurretModel7
+    TurretModel6,
+    TurretModel7
 } from "./ITurret";
 import {
     IWeapon,
@@ -27,7 +28,8 @@ import {
     WeaponModel2,
     WeaponModel3,
     WeaponModel4,
-    WeaponModel5, WeaponModel6,
+    WeaponModel5,
+    WeaponModel6,
     WeaponModel7
 } from "./IWeapon";
 import {TankParts} from "./TankParts";
