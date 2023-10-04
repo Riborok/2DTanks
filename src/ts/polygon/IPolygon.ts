@@ -6,6 +6,7 @@ import {IIdentifiable} from "../game/id/IIdentifiable";
  */
 export interface IPolygon extends IIdentifiable {
     get points(): Point[];
+    get angle(): number;
     calcCenter(): Point;
 }
 

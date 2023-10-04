@@ -48,9 +48,9 @@ export class BonusSpawnManager implements IBonusSpawnManager {
         if (res < 40)
             return Bonus.bulMedium;
         else if (res < 70)
-            return Bonus.bulHeavy;
+            return Bonus.bulSniper;
         else if (res < 85)
-            return Bonus.bulGrenade;
+            return Bonus.bulHeavy;
         else
             return Bonus.bulGrenade;
     }

@@ -1,3 +1,5 @@
+import {ANGLE_EPSILON} from "../constants/gameConstants";
+
 /**
  * Generates a random integer between the specified minimum and maximum values, inclusive.
  * @param min The minimum value of the range.
@@ -75,4 +77,14 @@ export function clearDOM() {
     const rootElement = document.body;
     while (rootElement.firstChild)
         rootElement.removeChild(rootElement.firstChild);
+}
+
+/**
+ * Checks if two angles are approximately orthogonal in radians.
+ * @param {number} angle1 - The first angle in radians.
+ * @param {number} angle2 - The second angle in radians.
+ * @returns {boolean} True if the angles are approximately orthogonal, otherwise false.
+ */
+export function areOrthogonal(angle1: number, angle2: number): boolean {
+    return Math.abs(Math.abs(angle1 - angle2) - Math.PI / 2) < ANGLE_EPSILON;
 }

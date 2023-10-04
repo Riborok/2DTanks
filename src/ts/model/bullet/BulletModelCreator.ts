@@ -1,4 +1,4 @@
-import {IBullet, LightBullet} from "../../components/bullet/IBullet";
+import {HeavyBullet, IBullet, LightBullet, MediumBullet, SniperBullet} from "../../components/bullet/IBullet";
 import {BulletModel, IBulletModel} from "./IBulletModel";
 import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
@@ -17,14 +17,15 @@ export class BulletModelCreator {
         const entity = new RectangularEntity(newPoint, ResolutionManager.BULLET_WIDTH[num],
             ResolutionManager.BULLET_HEIGHT[num], angle, bullet.mass, ModelIDTracker.bulletId);
 
-        const speed = bullet.startingSpeed * weapon.startingSpeedCoeff;
-        entity.velocity.x = speed * Math.cos(angle);
-        entity.velocity.y = speed * Math.sin(angle);
+        bullet.damage *= weapon.damageCoeff;
+        bullet.armorPenetration *= weapon.armorPenetrationCoeff;
+        bullet.startingSpeed *= weapon.startingSpeedCoeff;
+        entity.velocity.x = bullet.startingSpeed * Math.cos(angle);
+        entity.velocity.y = bullet.startingSpeed * Math.sin(angle);
 
         return new BulletModel(
             bullet,
-            entity,
-            weapon
+            entity
         );
     }
     private static calcDefaultEntityPoint(num: number, point: Point, angle: number): Point{
@@ -45,6 +46,12 @@ export class BulletModelCreator {
         switch (num) {
             case 0:
                 return new LightBullet();
+            case 1:
+                return new MediumBullet();
+            case 2:
+                return new HeavyBullet();
+            case 3:
+                return new SniperBullet();
             default:
                 throw new Error(`Bullet model ${num} was not found`);
         }
