@@ -7,7 +7,141 @@
     <link rel="stylesheet" href="src/index.css">
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <script src="src/js/bundle.js"></script>
+<div style="width: 99vw; height: 90vh">
+    <div class="half-hor-div">
+        <div class="select-div">
+            <div class="view-div">
+                <div class="view-element">
+                    <button id="prevHull">
+                        <img src="src/img/GUI/prev.png" alt="Prev choose" class="btn-img">
+                    </button>
+                </div>
+
+                <div class="view-element">
+                    <img src="src/img/tanks/Hulls/Hull_0/Hull_0.png" alt="Hull" class="hull">
+                </div>
+
+                <div class="view-element">
+                    <button id="nextHull">
+                        <img src="src/img/GUI/next.png" alt="Next choose" class="btn-img">
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-div">
+                <p id = "hullInfo"> крутой текст </p>
+            </div>
+        </div>
+
+        <div class="select-div">
+            <div class="view-div">
+                <div class="view-element">
+                    <button id="prevTrack">
+                        <img src="src/img/GUI/prev.png" alt="Prev choose" class="btn-img">
+                    </button>
+                </div>
+
+                <div class="view-element">
+                    <img src="src/img/tanks/Tracks/Track_0_Solo.png" alt="Track" class="track">
+                </div>
+
+                <div class="view-element">
+                    <button id="nextTrack">
+                        <img src="src/img/GUI/next.png" alt="Next choose" class="btn-img">
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-div">
+                <p id = "trackInfo"> крутой текст </p>
+            </div>
+        </div>
+
+        <div class="select-div">
+            <div class="view-div">
+                <div class="view-element">
+                    <button id="prevTurret">
+                        <img src="src/img/GUI/prev.png" alt="Prev choose" class="btn-img">
+                    </button>
+                </div>
+
+                <div class="view-element">
+                    <img src="src/img/tanks/Turrets/Turret_0/Turret_0.png" alt="Turret" class="turret">
+                </div>
+
+                <div class="view-element">
+                    <button id="nextTurret">
+                        <img src="src/img/GUI/next.png" alt="Next choose" class="btn-img">
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-div">
+                <p id = "turretInfo"> крутой текст </p>
+            </div>
+        </div>
+
+        <div class="select-div">
+            <div class="view-div">
+                <div class="view-element">
+                    <button id="prevWeapon">
+                        <img src="src/img/GUI/prev.png" alt="Prev choose" class="btn-img">
+                    </button>
+                </div>
+
+                <div class="view-element">
+                    <img src="src/img/tanks/Weapons/Weapon_0.png" alt="Weapon" class="weapon">
+                </div>
+
+                <div class="view-element">
+                    <button id="nextWeapon">
+                        <img src="src/img/GUI/next.png" alt="Next choose" class="btn-img">
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-div">
+                <p id = "weaponInfo"> крутой текст </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="half-hor-div">
+        <div class="view-tank">
+            <img src="./src/img/tanks/Tracks/Track_0_Solo.png" alt="Track" class="track-top-view">
+            <img src="./src/img/tanks/Tracks/Track_0_Solo.png" alt="Track" class="track-bottom-view">
+            <img src="./src/img/tanks/Hulls/Hull_0/Hull_0.png" alt="Hull" class="hull-view">
+            <img src="./src/img/tanks/Weapons/Weapon_0.png" alt="Weapon" class="weapon-view">
+            <img src="./src/img/tanks/Turrets/Turret_0/Turret_0.png" alt="Turret" class="turret-view">
+        </div>
+
+        <div class="color-choose">
+            <div class="view-element">
+                <button id="prevColor">
+                    <img src="src/img/GUI/prev.png" alt="Prev choose" class="btn-img">
+                </button>
+            </div>
+
+            <div class="view-element">
+                <div class="color"></div>
+            </div>
+
+            <div class="view-element">
+                <button id="nextColor">
+                    <img src="src/img/GUI/next.png" alt="Next choose" class="btn-img">
+                </button>
+            </div>
+        </div>
+
+        <div class="accept-div">
+            <button id="accept">
+                <img src="./src/img/GUI/ok.png" alt="Accept" class="btn-img">
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="src/js/bundle.js"></script>
+
 </body>
 </html>
