@@ -29,4 +29,5 @@ export class RectangularBonus implements ICollectible {
         if (angle !== 0)
             PolygonManipulator.rotatePolygon(this, angle);
     }
+    public get angle(): number { return Math.atan2(this._points[1].y - this._points[0].y, this._points[1].x - this._points[0].x) }
 }

@@ -12,7 +12,6 @@ export interface IEntity extends IPolygon, IPolygonAdjustable {
      */
     get mass(): number;
     get velocity(): Vector;
-    get angle(): number;
     get angularVelocity(): number;
     set angularVelocity(value: number);
     get radiusLength(): number;

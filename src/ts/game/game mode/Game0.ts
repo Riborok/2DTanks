@@ -37,11 +37,11 @@ export class Game0 {
             Game0.createMaze2);
     }
     private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
-        Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl2,
+        Game0.createMaze(ctx, size, 2, 1, attacker, defender, panelInfo, MazeCreator.createMazeLvl2,
             Game0.createMaze3);
     }
     private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
-        Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl3,
+        Game0.createMaze(ctx, size, 0, 0, attacker, defender, panelInfo, MazeCreator.createMazeLvl3,
             Game0.endGame);
     }
     private static endGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
