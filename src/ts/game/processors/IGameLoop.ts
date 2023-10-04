@@ -17,13 +17,13 @@ export class GameLoop implements IGameLoop {
     public start() {
         if (!this._isGameLoopActive) {
             this._isGameLoopActive = true;
-            requestAnimationFrame(() => this.gameLoop());
+            requestAnimationFrame(this.gameLoop);
         }
     }
     public stop() {
         this._isGameLoopActive = false;
     }
-    private gameLoop() {
+    private readonly gameLoop = () => {
         if (!this._isGameLoopActive)
             return;
 
@@ -34,6 +34,6 @@ export class GameLoop implements IGameLoop {
 
         this._lastFrameTime = currentTime;
 
-        requestAnimationFrame(() => this.gameLoop());
+        requestAnimationFrame(this.gameLoop);
     }
 }

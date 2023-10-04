@@ -7,13 +7,9 @@ export interface IKeyHandler extends IEventEmitter {
 
 export class KeyHandler implements IKeyHandler {
     private readonly _keys: Set<number> = new Set();
-    private readonly keyDownHandler: (event: KeyboardEvent) => void;
-    private readonly keyUpHandler: (event: KeyboardEvent) => void;
-    public constructor() {
-        this.keyDownHandler = this.handleKeyDown.bind(this);
-        this.keyUpHandler = this.handleKeyUp.bind(this);
-        document.addEventListener('keydown', this.keyDownHandler);
-        document.addEventListener('keyup', this.keyUpHandler);
+    public addEventListeners(): void {
+        document.addEventListener('keydown', this.handleKeyDown);
+        document.addEventListener('keyup', this.handleKeyUp);
     }
     public clearKeys() {
         this._keys.clear();
@@ -22,13 +18,13 @@ export class KeyHandler implements IKeyHandler {
         return this._keys.has(keyCode);
     }
     public removeEventListeners() {
-        document.removeEventListener('keydown', this.keyDownHandler);
-        document.removeEventListener('keyup', this.keyUpHandler);
+        document.removeEventListener('keydown', this.handleKeyDown);
+        document.removeEventListener('keyup', this.handleKeyUp);
     }
-    private handleKeyDown(event: KeyboardEvent) {
+    private handleKeyDown = (event: KeyboardEvent) => {
         this._keys.add(event.keyCode);
     }
-    private handleKeyUp(event: KeyboardEvent) {
+    private handleKeyUp = (event: KeyboardEvent) => {
         this._keys.delete(event.keyCode);
     }
 }

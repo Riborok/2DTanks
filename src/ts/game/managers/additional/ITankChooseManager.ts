@@ -4,8 +4,11 @@ import {
     HullModel1,
     HullModel2,
     HullModel3,
-    HullModel4, HullModel5, HullModel6,
-    HullModel7, IHull
+    HullModel4,
+    HullModel5,
+    HullModel6,
+    HullModel7,
+    IHull
 } from "../../../components/tank parts/IHull";
 import {ITrack, TrackModel0, TrackModel1, TrackModel2, TrackModel3} from "../../../components/tank parts/ITrack";
 import {
@@ -13,7 +16,10 @@ import {
     TurretModel0,
     TurretModel1,
     TurretModel2,
-    TurretModel3, TurretModel4, TurretModel5, TurretModel6,
+    TurretModel3,
+    TurretModel4,
+    TurretModel5,
+    TurretModel6,
     TurretModel7
 } from "../../../components/tank parts/ITurret";
 import {
@@ -21,34 +27,46 @@ import {
     WeaponModel0,
     WeaponModel1,
     WeaponModel2,
-    WeaponModel3, WeaponModel4, WeaponModel5, WeaponModel6,
+    WeaponModel3,
+    WeaponModel4,
+    WeaponModel5,
+    WeaponModel6,
     WeaponModel7
 } from "../../../components/tank parts/IWeapon";
 import {Control, TankInfo} from "../../../additionally/type";
-import {Game0} from "../../game mode/Game0";
 import {
     VK_A,
     VK_B,
-    VK_C, VK_COMMA,
+    VK_C,
+    VK_COMMA,
     VK_D,
     VK_DOWN,
     VK_LEFT,
     VK_PERIOD,
     VK_RIGHT,
-    VK_S, VK_SLASH,
+    VK_S,
+    VK_SLASH,
     VK_UP,
     VK_V,
     VK_W
 } from "../../../constants/keyCodes";
-import {gameStart} from "../../../index";
 
-export class TankChooseManager{
-    private _hullKit: ComponentKit<IHull> = new ComponentKit<IHull>();
-    private _trackKit: ComponentKit<ITrack> = new ComponentKit<ITrack>();
-    private _turretKit: ComponentKit<ITurret> = new ComponentKit<ITurret>();
-    private _weaponKit: ComponentKit<IWeapon> = new ComponentKit<IWeapon>();
-    private _colorKit: ComponentKit<string> = new ComponentKit<string>();
+type GameStart = (attackerInfo: TankInfo, defenderInfo: TankInfo) => void;
+export interface ITankChooseManager {
+    start(gameStart: GameStart, buttons: NodeListOf<HTMLButtonElement>): void;
+}
+
+export class TankChooseManager implements ITankChooseManager {
     private static readonly DEFAULT_PATH: string = "./src/img/tanks";
+
+    private readonly _hullKit: ComponentKit<IHull> = new ComponentKit<IHull>();
+    private readonly _trackKit: ComponentKit<ITrack> = new ComponentKit<ITrack>();
+    private readonly  _turretKit: ComponentKit<ITurret> = new ComponentKit<ITurret>();
+    private readonly _weaponKit: ComponentKit<IWeapon> = new ComponentKit<IWeapon>();
+    private readonly _colorKit: ComponentKit<string> = new ComponentKit<string>();
+
+    private _gameStart: GameStart;
+
     private _hullPath: string;
     private _trackPath: string;
     private _turretPath: string;
@@ -79,7 +97,9 @@ export class TankChooseManager{
         }
     }
 
-    constructor(buttons: NodeListOf<HTMLButtonElement>) {
+    public start(gameStart: GameStart, buttons: NodeListOf<HTMLButtonElement>) {
+        this._gameStart = gameStart;
+
         this.addHullsToKit();
         this.addTracksToKit();
         this.addTurretsToKit();
@@ -267,11 +287,9 @@ export class TankChooseManager{
                 control: TankChooseManager.CONTROL_2,
             }
 
-            gameStart(this._attackerTankInfo, defenderTankInfo);
+            this._gameStart(this._attackerTankInfo, defenderTankInfo);
         }
     }
-
-
 }
 
 

@@ -1,4 +1,4 @@
-import {Control, IExecutor, IRulesManager, Size, TankInfo} from "../../additionally/type";
+import {IExecutor, IRulesManager, Size, TankInfo} from "../../additionally/type";
 import {
     Bonus,
     OBSTACLE_WALL_HEIGHT_AMOUNT,
@@ -13,22 +13,6 @@ import {MazeCreator} from "../creators/MazeCreator";
 import {WallElement} from "../elements/WallElement";
 import {GameMaster, IGameMaster} from "../IGameMaster";
 import {ObstacleCreator} from "../creators/IObstacleCreator";
-import {
-    VK_A,
-    VK_B,
-    VK_C,
-    VK_COMMA,
-    VK_D,
-    VK_DOWN,
-    VK_LEFT,
-    VK_PERIOD,
-    VK_RIGHT,
-    VK_S,
-    VK_SLASH,
-    VK_UP,
-    VK_V,
-    VK_W
-} from "../../constants/keyCodes";
 import {IElement} from "../elements/IElement";
 import {BonusSpawnManager, IBonusSpawnManager} from "../managers/additional/IBonusSpawnManager";
 import {IPointSpawner, PointSpawner} from "../spawn/IPointSpawner";
@@ -64,10 +48,14 @@ export class Game0 {
         const img = new Image(size.width, size.height);
         img.src = `src/img/cat.jpg`;
 
-        img.onload = () => {
+        const onloadListener = () => {
             ctx.drawImage(img, 0, 0, size.width, size.height);
             panelInfo.textContent = 'The attacker wins';
-        }
+
+            img.removeEventListener('load', onloadListener);
+        };
+
+        img.addEventListener('load', onloadListener);
     }
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
                               attacker: TankInfo, defender: TankInfo, panelInfo: HTMLDivElement, createMaze: CreateMaze,
@@ -96,6 +84,7 @@ export class Game0 {
             new PanelInfoManager(rulesManager),
             spawnManager
         );
+        gameMaster.addEventListeners();
     }
     private static readonly AMOUNT_OF_KEYS: number = 3;
     private static addKeys(spawnManager: IBonusSpawnManager) {
