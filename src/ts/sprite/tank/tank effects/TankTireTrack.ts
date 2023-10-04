@@ -23,10 +23,9 @@ export class TankTireTrack {
     private readonly _storage: IStorage<ISprite>;
     private readonly _trackWidth: number;
     private readonly _trackHeight: number;
-    private readonly _trackType: number;
     private readonly _chainWidth: number;
     private readonly _chainHeight: number;
-    private readonly _chainType: number;
+    private readonly _tireTrackType: number;
     private _topFirstChainPoint: Point;
     private _bottomFirstChainPoint: Point;
     private _topLastChainPoint: Point;
@@ -39,10 +38,9 @@ export class TankTireTrack {
         this._storage = storage;
         this._trackWidth = topTrackSprite.width;
         this._trackHeight = topTrackSprite.height;
-        this._trackType = topTrackSprite.num;
         this._chainWidth = this.calcWidthOfChain();
         this._chainHeight = topTrackSprite.height;
-        this._chainType = topTrackSprite.num % 2;
+        this._tireTrackType = Math.floor(topTrackSprite.num / 2);
     }
     private calcWidthOfChain(): number{
         return this._trackWidth / TankTireTrack.AMOUNT_OF_CHAINS;
@@ -76,8 +74,8 @@ export class TankTireTrack {
     }
     private createTireTrackChainPair(topPoint: Point, bottomPoint: Point, hullAngle: number, sin: number, cos: number): TirePair {
         const currTirePair = {
-            topTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
-            bottomTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._chainType),
+            topTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._tireTrackType),
+            bottomTire: new TireTrackChainSprite(this._chainWidth, this._chainHeight, this._tireTrackType),
         }
         this._storage.insert(currTirePair.topTire);
         this._storage.insert(currTirePair.bottomTire);
@@ -90,8 +88,8 @@ export class TankTireTrack {
         this.vanishFullTrack();
 
         const currTirePair = {
-            topTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
-            bottomTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._trackType),
+            topTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._tireTrackType),
+            bottomTire: new TireTrackSprite(this._trackWidth, this._trackHeight, this._tireTrackType),
         }
         this._storage.insert(currTirePair.topTire);
         this._storage.insert(currTirePair.bottomTire);

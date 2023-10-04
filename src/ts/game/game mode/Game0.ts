@@ -39,52 +39,14 @@ type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivEl
 
 export class Game0 {
     private constructor() { }
-    private static get CONTROL_1(): Control {
-        return {
-            forwardKey: VK_W,
-            backwardKey: VK_S,
-            hullClockwiseKey: VK_D,
-            hullCounterClockwiseKey: VK_A,
-            turretClockwiseKey: VK_V,
-            turretCounterClockwiseKey: VK_C,
-            shootKey: VK_B
-        }
-    }
-    private static get CONTROL_2(): Control {
-        return {
-            forwardKey: VK_UP,
-            backwardKey: VK_DOWN,
-            hullClockwiseKey: VK_RIGHT,
-            hullCounterClockwiseKey: VK_LEFT,
-            turretClockwiseKey: VK_PERIOD,
-            turretCounterClockwiseKey: VK_COMMA,
-            shootKey: VK_SLASH
-        }
-    }
-    public static start(htmlCanvasElement: HTMLCanvasElement) {
+
+    public static start(htmlCanvasElement: HTMLCanvasElement, attackerInfo: TankInfo, defenderInfo: TankInfo) {
         const panelInfo: HTMLDivElement = Game0.createInfoPanel(htmlCanvasElement);
         ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
 
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
 
-        const tankInfo1: TankInfo = {
-            color: 0,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_1,
-        };
-        const tankInfo2: TankInfo = {
-            color: 1,
-            hullNum: 0,
-            trackNum: 0,
-            turretNum: 0,
-            weaponNum: 0,
-            control: Game0.CONTROL_2,
-        };
-
-        Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo, tankInfo1, tankInfo2);
+        Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo, attackerInfo, defenderInfo);
     }
     private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
         Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl1,
