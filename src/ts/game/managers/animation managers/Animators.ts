@@ -12,6 +12,7 @@ interface IAnimator {
 
 export interface IBulletAnimator extends IAnimator {
     createImpactAnimation(collisionPoint: Point, bulletElement: BulletElement): void;
+    createExplosionAnimation(collisionPoint: Point, size: number, angle: number): void;
     createDeadAnimation(collisionPoint: Point, element: IElement): void;
 }
 
@@ -26,6 +27,9 @@ export class BulletAnimator implements IBulletAnimator {
     public createImpactAnimation(collisionPoint: Point, bulletElement: BulletElement) {
         this._animationManager.add(AnimationMaker.playImpactAnimation(collisionPoint,
             bulletElement.model.entity.angle + Math.PI, bulletElement.sprite.num));
+    }
+    public createExplosionAnimation(collisionPoint: Point, size: number, angle: number) {
+        this._animationManager.add(AnimationMaker.playGrenadeExplosionAnimation(collisionPoint, size, angle));
     }
     public createDeadAnimation(collisionPoint: Point, element: IElement) {
         this._animationManager.add(AnimationMaker.playDeathAnimation(collisionPoint, element));

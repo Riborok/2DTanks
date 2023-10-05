@@ -4,10 +4,13 @@ import {IElement} from "../../elements/IElement";
 import {IAnimationManager} from "../animation managers/AnimationManager";
 import {HandlingManager, IAddElement, IElementManager} from "./HandlingManager";
 import {ModelIDTracker} from "../../id/ModelIDTracker";
-import {IKillProcessor, IStorage} from "../../../additionally/type";
+import {BulletCollisionData, IKillProcessor, IStorage} from "../../../additionally/type";
 import {ISprite} from "../../../sprite/ISprite";
 import {BulletAnimator, IBulletAnimator} from "../animation managers/Animators";
 import {IHealthDrawManager} from "../additional/IHealthBarManager";
+import {getFirstElement, getRandomInt} from "../../../additionally/additionalFunc";
+import {ResolutionManager} from "../../../constants/gameConstants";
+import {IExplosiveBullet} from "../../../components/bullet/IBullet";
 
 export class BulletHandlingManager extends HandlingManager<BulletElement, BulletMovementManager> {
     private readonly _handlingManagers: Iterable<IElementManager<IElement>>;
@@ -44,32 +47,50 @@ export class BulletHandlingManager extends HandlingManager<BulletElement, Bullet
     }
     private handleBulletCollisions() {
         for (const bulletCollisionData of this._movementManager.bulletCollisionDates.iterable) {
-            for (const collisionPack of bulletCollisionData.collisionPacks) {
-                this._bulletAnimator.createImpactAnimation(collisionPack.collisionPoint, bulletCollisionData.bulletElement);
-
-                const id = collisionPack.id;
-                const elementHandling = this.getElementHandling(id);
-                const element: IElement | null = elementHandling.get(id);
-                if (element) {
-                    element.model.takeDamage(bulletCollisionData.bulletElement.model);
-
-                    if (element.model.isDead()) {
-                        elementHandling.delete(element);
-                        this._bulletAnimator.createDeadAnimation(collisionPack.collisionPoint, element);
-
-                        this._healthManager.remove(element.model);
-
-                        this._killProcessor.processKill(bulletCollisionData.bulletElement.source, element);
-                    }
-                    else
-                        this._healthManager.add(element.model);
-                }
-            }
-            this.delete(bulletCollisionData.bulletElement);
-            this._healthManager.remove(bulletCollisionData.bulletElement.model);
+            this.handleBulletDeletion(bulletCollisionData);
+            this.handleExplosiveBullet(bulletCollisionData);
+            this.handleCollisionPacks(bulletCollisionData);
         }
-
         this._movementManager.bulletCollisionDates.clear();
+    }
+    private handleCollisionPacks(bulletCollisionData: BulletCollisionData) {
+        for (const collisionPack of bulletCollisionData.collisionPacks) {
+            const id = collisionPack.id;
+            const elementHandling = this.getElementHandling(id);
+            const element: IElement | null = elementHandling.get(id);
+            if (element) {
+                element.model.takeDamage(bulletCollisionData.bulletElement.model);
+
+                if (element.model.isDead()) {
+                    elementHandling.delete(element);
+                    this._bulletAnimator.createDeadAnimation(collisionPack.collisionPoint, element);
+
+                    this._healthManager.remove(element.model);
+
+                    this._killProcessor.processKill(bulletCollisionData.bulletElement.source, element);
+                }
+                else
+                    this._healthManager.add(element.model);
+            }
+        }
+    }
+    private handleExplosiveBullet(bulletCollisionData: BulletCollisionData) {
+        const firstCollisionPoint = getFirstElement(bulletCollisionData.collisionPacks).collisionPoint;
+        const explosionBullet: IExplosiveBullet | null = bulletCollisionData.bulletElement.model.isExplosiveBullet;
+
+        if (explosionBullet) {
+            const size = ResolutionManager.GRENADE_EXPLOSION_SIZE + getRandomInt(-30, 30);
+            const angle = getRandomInt(-Math.PI, Math.PI);
+            this._bulletAnimator.createExplosionAnimation(firstCollisionPoint, size, angle);
+            const affectedArea = explosionBullet.createAffectedArea(firstCollisionPoint, size, angle);
+            bulletCollisionData.collisionPacks = this._movementManager.collisionResolver.resolveCollision(affectedArea);
+        }
+        else
+            this._bulletAnimator.createImpactAnimation(firstCollisionPoint, bulletCollisionData.bulletElement);
+    }
+    private handleBulletDeletion(bulletCollisionData: BulletCollisionData) {
+        this.delete(bulletCollisionData.bulletElement);
+        this._healthManager.remove(bulletCollisionData.bulletElement.model);
     }
     private getElementHandling(id: number): IElementManager<IElement> {
         for (const handlingManager of this._handlingManagers)

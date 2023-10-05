@@ -1,4 +1,7 @@
 import {IComponent} from "../IComponent";
+import {Point} from "../../geometry/Point";
+import {IEntity, RectangularEntity} from "../../polygon/entity/IEntity";
+import {ModelIDTracker} from "../../game/id/ModelIDTracker";
 
 export interface IBullet extends IComponent {
     startingSpeed: number;
@@ -6,6 +9,13 @@ export interface IBullet extends IComponent {
     damage: number;
     armorPenetration: number;
     mass: number;
+}
+
+export interface IExplosiveBullet {
+    createAffectedArea(center: Point, size: number, angle: number): IEntity;
+}
+export function isImplementsIExplosiveBullet(obj: any): obj is IExplosiveBullet {
+    return ('createAffectedArea' in obj);
 }
 
 export class LightBullet implements IBullet {
@@ -70,4 +80,31 @@ export class SniperBullet implements IBullet {
     public mass: number = SniperBullet.MASS;
     public health: number = SniperBullet.HEALTH;
     public get num(): number { return SniperBullet.NUM }
+}
+
+export class GrenadeBullet implements IBullet, IExplosiveBullet {
+    private static readonly STARTING_SPEED: number = 10;
+    private static readonly DAMAGE: number = 40;
+    private static readonly ARMOR_PENETRATION: number = 0.25;
+    private static readonly MASS: number = 0.035;
+    private static readonly HEALTH: number = 15;
+    private static readonly NUM: number = 4;
+
+    public startingSpeed: number = GrenadeBullet.STARTING_SPEED;
+    public damage: number = GrenadeBullet.DAMAGE;
+    public armorPenetration: number = GrenadeBullet.ARMOR_PENETRATION;
+    public mass: number = GrenadeBullet.MASS;
+    public health: number = GrenadeBullet.HEALTH;
+    public get num(): number { return GrenadeBullet.NUM }
+    public createAffectedArea(center: Point, size: number, angle: number): IEntity {
+        const point = new Point(center.x - size / 2, center.y - size / 2);
+        return new RectangularEntity(
+            point,
+            size,
+            size,
+            angle,
+            this.mass,
+            ModelIDTracker.otherId
+        );
+    }
 }

@@ -1,4 +1,11 @@
-import {HeavyBullet, IBullet, LightBullet, MediumBullet, SniperBullet} from "../../components/bullet/IBullet";
+import {
+    GrenadeBullet,
+    HeavyBullet,
+    IBullet,
+    LightBullet,
+    MediumBullet,
+    SniperBullet
+} from "../../components/bullet/IBullet";
 import {BulletModel, IBulletModel} from "./IBulletModel";
 import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ResolutionManager} from "../../constants/gameConstants";
@@ -52,6 +59,8 @@ export class BulletModelCreator {
                 return new HeavyBullet();
             case 3:
                 return new SniperBullet();
+            case 4:
+                return new GrenadeBullet();
             default:
                 throw new Error(`Bullet model ${num} was not found`);
         }

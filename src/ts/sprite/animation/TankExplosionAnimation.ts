@@ -12,12 +12,12 @@ export class TankExplosionAnimation extends AnimationSprite implements IFrameByF
     protected get MAX_FRAME(): number { return TankExplosionAnimation.MAX_FRAME }
     public constructor(point: Point, angle: number) {
         const zIndex: number = 1;
-        super(ResolutionManager.EXPLOSION_SIZE, ResolutionManager.EXPLOSION_SIZE, zIndex);
+        super(ResolutionManager.TANK_EXPLOSION_SIZE, ResolutionManager.TANK_EXPLOSION_SIZE, zIndex);
         this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`;
 
         this._point = new Point(
-            point.x - ResolutionManager.EXPLOSION_SIZE / 2,
-            point.y - ResolutionManager.EXPLOSION_SIZE / 2
+            point.x - ResolutionManager.TANK_EXPLOSION_SIZE / 2,
+            point.y - ResolutionManager.TANK_EXPLOSION_SIZE / 2
         );
         this._angle = angle;
     }
