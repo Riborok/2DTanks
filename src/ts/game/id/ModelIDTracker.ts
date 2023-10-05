@@ -9,6 +9,7 @@ export class ModelIDTracker {
     private static readonly WALL_TYPE: number = 1;
     private static readonly BULLET_TYPE: number = 2;
     private static readonly COLLECTIBLE_ITEM_TYPE: number = 3;
+    private static readonly OTHER_TYPE: number = 4;
 
     private static readonly TYPE_DIVIDER: number = 1000;
     private static extractType(id: number): number {
@@ -79,7 +80,7 @@ export class ModelIDTracker {
     }
 
     /**
-     * Get a unique ID for a collectible item entity.
+     * Get a unique ID for a collectible item.
      * @returns A unique ID for a collectible item.
      */
     private static COLLECTIBLE_ITEM_ID: number = 0;
@@ -88,4 +89,13 @@ export class ModelIDTracker {
         return ++ModelIDTracker.COLLECTIBLE_ITEM_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.COLLECTIBLE_ITEM_TYPE;
     }
 
+    /**
+     * Get a unique ID for others.
+     * @returns A unique ID for others.
+     */
+    private static OTHER_ID: number = 0;
+    public static get otherId(): number {
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.OTHER_ID);
+        return ++ModelIDTracker.OTHER_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.OTHER_TYPE;
+    }
 }

@@ -71,6 +71,17 @@ export function hasElements(iterable: Iterable<any>): boolean {
 }
 
 /**
+ * Gets the first element from an Iterable.
+ * @param iterable The Iterable to retrieve the first element from.
+ * @returns The first element of the Iterable, or null if the Iterable is empty.
+ */
+export function getFirstElement<T>(iterable: Iterable<T>): T | null {
+    for (const iterableElement of iterable)
+        return iterableElement;
+    return null;
+}
+
+/**
  * Clears all child elements from the document body.
  */
 export function clearDOM() {

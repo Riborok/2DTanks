@@ -20,7 +20,8 @@ export class ResolutionManager {
     public static get BULLET_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.BULLET_WIDTH }
     public static get BULLET_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.BULLET_HEIGHT }
     public static get ACCELERATION_SIZE(): number { return <number>ResolutionManager.fieldsX.ACCELERATION_SIZE }
-    public static get EXPLOSION_SIZE(): number { return <number>ResolutionManager.fieldsX.EXPLOSION_SIZE }
+    public static get TANK_EXPLOSION_SIZE(): number { return <number>ResolutionManager.fieldsX.TANK_EXPLOSION_SIZE }
+    public static get GRENADE_EXPLOSION_SIZE(): number { return <number>ResolutionManager.fieldsX.GRENADE_EXPLOSION_SIZE }
     public static get ACCELERATION_EFFECT_INDENT_X(): number[] { return <number[]>ResolutionManager.fieldsX.ACCELERATION_EFFECT_INDENT_X }
     public static get KEY_SIZE(): number { return <number>ResolutionManager.fieldsX.KEY_SIZE }
     public static get BOX_SIZE(): number { return <number>ResolutionManager.fieldsX.BOX_SIZE }
@@ -39,7 +40,8 @@ export class ResolutionManager {
         WEAPON_WIDTH: [39, 41, 33, 35, 42, 30, 35, 30],
         BULLET_WIDTH: [13, 18, 25, 26, 21],
         ACCELERATION_SIZE: 70,
-        EXPLOSION_SIZE: 99,
+        TANK_EXPLOSION_SIZE: 99,
+        GRENADE_EXPLOSION_SIZE: 100,
         ACCELERATION_EFFECT_INDENT_X: [4, 11, 0, 0, 4, 4, 0, 0, 0],
         KEY_SIZE: 55,
         BOX_SIZE: 55,

@@ -8,6 +8,7 @@ import {TankShootAnimation} from "../../../sprite/animation/TankShootAnimation";
 import {IAnimation} from "../../../sprite/animation/IAnimation";
 import {IElement} from "../../elements/IElement";
 import {BulletElement} from "../../elements/BulletElement";
+import {GrenadeExplosionAnimation} from "../../../sprite/animation/GrenadeExplosionAnimation";
 
 export class AnimationMaker{
     public static playDeathAnimation(collisionPoint: Point, element: IElement): IAnimation {
@@ -41,5 +42,8 @@ export class AnimationMaker{
             ResolutionManager.BULLET_WIDTH[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
             ResolutionManager.BULLET_HEIGHT[num] * BULLET_ANIMATION_SIZE_INCREASE_COEFF,
             num);
+    }
+    public static playGrenadeExplosionAnimation(collisionPoint: Point, size: number, angle: number): IAnimation {
+        return new GrenadeExplosionAnimation(collisionPoint, angle, size);
     }
 }

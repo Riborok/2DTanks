@@ -13,7 +13,7 @@ export class KeySprite extends Sprite implements IScalable{
         this._angle = angle;
         this._sprite.src = "src/img/item/Key.png";
     }
-    get scaleX(): number {
+    public get scaleX(): number {
         if (this._isIncreasing){
             this._scaleX += KeySprite.CHANGE_SCALE_X_NUMBER;
 
@@ -28,5 +28,5 @@ export class KeySprite extends Sprite implements IScalable{
 
         return this._scaleX;
     }
-    get scaleY(): number { return 1 }
+    public get scaleY(): number { return 1 }
 }

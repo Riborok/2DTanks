@@ -229,7 +229,7 @@ export class TankChooseManager implements ITankChooseManager {
         (document.querySelector('.turret-view') as HTMLImageElement).src = this._turretPath;
         (document.querySelector('.weapon') as HTMLImageElement).src = this._weaponPath;
         (document.querySelector('.weapon-view') as HTMLImageElement).src = this._weaponPath;
-        (document.querySelector('.color') as HTMLDivElement).style.backgroundColor = this._colorKit.getCurrComponent();
+        (document.querySelector('.color') as HTMLDivElement).style.backgroundColor = this._colorKit.currComponent;
     }
 
     private illustrateCharacteristics(){
@@ -240,24 +240,24 @@ export class TankChooseManager implements ITankChooseManager {
     }
 
     private getHullCharacteristic(): string{
-        const hull = this._hullKit.getCurrComponent();
+        const hull = this._hullKit.currComponent;
         return `Mass: ${hull.mass} | Health: ${hull.health} | Armor: ${hull.armor} | Armor Strength: ${hull.armorStrength}`;
     }
 
     private getTrackCharacteristic(): string{
-        const track = this._trackKit.getCurrComponent();
+        const track = this._trackKit.currComponent;
         return `Max Forward Speed: ${track.forwardData.finishSpeed} | Forward Acceleration: ${track.forwardData.force} | 
                 Max Backward Speed: ${track.backwardData.finishSpeed} | Backward Acceleration: ${track.backwardData.force} |
                 Max Angular Speed: ${track.angularData.finishSpeed} | Angular Acceleration: ${track.angularData.force}`;
     }
 
     private getTurretCharacteristic(): string{
-        const turret = this._turretKit.getCurrComponent();
+        const turret = this._turretKit.currComponent;
         return `Mass: ${turret.mass} | Angle Speed: ${turret.angleSpeed} | Bullet Capacity: ${turret.bulletCapacity}`;
     }
 
     private getWeaponCharacteristic(): string{
-        const weapon = this._weaponKit.getCurrComponent();
+        const weapon = this._weaponKit.currComponent;
         return `Mass: ${weapon.mass} | Penetration: ${weapon.armorPenetrationCoeff} | Damage: ${weapon.damageCoeff} | Bullet Speed: ${weapon.startingSpeedCoeff} | Reload Speed: ${weapon.reloadSpeed}`;
     }
 
@@ -292,37 +292,24 @@ export class TankChooseManager implements ITankChooseManager {
     }
 }
 
-
 class ComponentKit<T>{
     private _kit: T[] = [];
     private _size: number = 0;
     private _currComponentIndex: number = 0;
-
-    get currComponentIndex (): number { return this._currComponentIndex }
-    set currComponentIndex (value: number) { this._currComponentIndex = value }
-
-    constructor() {
-    }
-
-    public addComponent(component: T){
-        this._kit[this._size++] = component;
-    }
-
+    public get currComponent(): T { return this._kit[this._currComponentIndex] }
+    public get currComponentIndex (): number { return this._currComponentIndex }
+    public set currComponentIndex (value: number) { this._currComponentIndex = value }
+    public addComponent(component: T){ this._kit[this._size++] = component }
     public switchToPrevComponent(){
         this._currComponentIndex--;
 
         if (this._currComponentIndex < 0)
             this._currComponentIndex = this._size - 1;
     }
-
     public switchToNextComponent(){
         this._currComponentIndex++;
 
         if (this._currComponentIndex >= this._size)
             this._currComponentIndex = 0;
-    }
-
-    public getCurrComponent(): T{
-        return this._kit[this._currComponentIndex];
     }
 }
