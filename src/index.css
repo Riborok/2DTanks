@@ -31,8 +31,16 @@
 
 #key-count {
     user-select: none;
-    flex-grow: 1;
+    position: absolute;
+    left: 0;
+    right: 0;
     text-align: center;
+}
+
+#time-count {
+    user-select: none;
+    margin-left: 1%;
+    text-align: left;
 }
 
 body {
@@ -173,5 +181,3 @@ div p {
     justify-content: center;
     align-items: center;
 }
-
-

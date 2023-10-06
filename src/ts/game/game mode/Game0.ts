@@ -19,38 +19,48 @@ import {IPointSpawner, PointSpawner} from "../spawn/IPointSpawner";
 import {ITankSpawnManager, TankSpawnManager} from "../managers/additional/ITankSpawnManager";
 
 type CreateMaze = (wallMaterial: number, point: Point) => Iterable<WallElement>;
-type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) => void;
+type NextMaze = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, attacker: TankInfo, defender: TankInfo) => void;
+type CompleteGame = (ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, isAttackerWin: boolean) => void;
+
+type PanelInfo = {
+    keyPanel: HTMLDivElement,
+    timePanel: HTMLDivElement,
+};
 
 export class Game0 {
     private constructor() { }
 
     public static start(htmlCanvasElement: HTMLCanvasElement, attackerInfo: TankInfo, defenderInfo: TankInfo) {
-        const panelInfo: HTMLDivElement = Game0.createInfoPanel(htmlCanvasElement);
+        const panelInfo = Game0.createInfoPanel(htmlCanvasElement);
         ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
 
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
 
         Game0.createMaze1(htmlCanvasElement.getContext('2d'), size, panelInfo, attackerInfo, defenderInfo);
     }
-    private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+    private static createMaze1(ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, attacker: TankInfo, defender: TankInfo) {
         Game0.createMaze(ctx, size, 1, 2, attacker, defender, panelInfo, MazeCreator.createMazeLvl1,
             Game0.createMaze2);
     }
-    private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+    private static createMaze2(ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, attacker: TankInfo, defender: TankInfo) {
         Game0.createMaze(ctx, size, 2, 1, attacker, defender, panelInfo, MazeCreator.createMazeLvl2,
             Game0.createMaze3);
     }
-    private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+    private static createMaze3(ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, attacker: TankInfo, defender: TankInfo) {
         Game0.createMaze(ctx, size, 0, 0, attacker, defender, panelInfo, MazeCreator.createMazeLvl3,
-            Game0.endGame);
+            Game0.giveAttackerVictory);
     }
-    private static endGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: HTMLDivElement, attacker: TankInfo, defender: TankInfo) {
+    private static giveAttackerVictory(ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, attacker: TankInfo, defender: TankInfo) {
+        Game0.completeGame(ctx, size, panelInfo, true);
+    }
+    private static completeGame(ctx: CanvasRenderingContext2D, size: Size, panelInfo: PanelInfo, isAttackerWin: boolean) {
         const img = new Image(size.width, size.height);
         img.src = `src/img/cat.jpg`;
 
         const onloadListener = () => {
             ctx.drawImage(img, 0, 0, size.width, size.height);
-            panelInfo.textContent = 'The attacker wins';
+            panelInfo.keyPanel.textContent = isAttackerWin ? 'The attacker wins' : 'The defender wins';
+            panelInfo.timePanel.remove();
 
             img.removeEventListener('load', onloadListener);
         };
@@ -58,14 +68,14 @@ export class Game0 {
         img.addEventListener('load', onloadListener);
     }
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
-                              attacker: TankInfo, defender: TankInfo, panelInfo: HTMLDivElement, createMaze: CreateMaze,
+                              attacker: TankInfo, defender: TankInfo, panelInfo: PanelInfo, createMaze: CreateMaze,
                               nextMaze: NextMaze) {
         const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, wallMaterial, size
         );
         const pointSpawner = new PointSpawner(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
 
-        const rulesManager = new RulesManager(attacker, defender, nextMaze, panelInfo, ctx, size, pointSpawner);
+        const rulesManager = new RulesManager(attacker, defender, nextMaze, panelInfo, ctx, size, pointSpawner, Game0.completeGame);
 
         const gameMaster = rulesManager.gameMaster;
         gameMaster.setBackgroundMaterial(backgroundMaterial);
@@ -81,7 +91,8 @@ export class Game0 {
         Game0.addKeys(spawnManager);
 
         gameMaster.addExecutioners(
-            new PanelInfoManager(rulesManager),
+            new ScoreInfoManager(rulesManager),
+            new TimeInfoManager(rulesManager),
             spawnManager
         );
         gameMaster.addEventListeners();
@@ -98,7 +109,7 @@ export class Game0 {
     }
 
     private static readonly PANEL_HEIGHT: number = 5;
-    private static createInfoPanel(htmlCanvasElement: HTMLCanvasElement): HTMLDivElement {
+    private static createInfoPanel(htmlCanvasElement: HTMLCanvasElement): PanelInfo {
         htmlCanvasElement.style.top = `${Game0.PANEL_HEIGHT}%`;
         htmlCanvasElement.style.height = `${100 - Game0.PANEL_HEIGHT}%`;
 
@@ -108,29 +119,47 @@ export class Game0 {
 
         document.body.appendChild(infoPanel);
 
-        const keyCount = document.createElement('div');
-        keyCount.id = "key-count";
+        const timePanel = document.createElement('div');
+        timePanel.id = "time-count";
+        infoPanel.appendChild(timePanel);
 
-        infoPanel.appendChild(keyCount);
-        return keyCount;
+        const keyPanel = document.createElement('div');
+        keyPanel.id = "key-count";
+        infoPanel.appendChild(keyPanel);
+
+        return { keyPanel, timePanel };
     }
 }
 
-class RulesManager implements IRulesManager {
+interface IScoreInfo {
+    get keyPanel(): HTMLDivElement;
+    get score(): number;
+}
+interface ITimeInfo {
+    get timePanel(): HTMLDivElement;
+    get finishTime(): number;
+    giveDefenderVictory(): void;
+}
+
+class RulesManager implements IRulesManager, IScoreInfo, ITimeInfo {
+    private static readonly FINISH_TIME: number = 60;
+
     private readonly _tankSpawnManager: ITankSpawnManager;
     private _attacker: TankElement;
     private _defender: TankElement;
     private _score: number = 0;
 
-    private readonly _panelInfo: HTMLDivElement;
+    private readonly _panelInfo: PanelInfo;
     private readonly _gameMaster: IGameMaster;
     private readonly _nextMaze: NextMaze;
+    private readonly _completeGame: CompleteGame;
     public constructor(attacker: TankInfo, defender: TankInfo, nextMaze: NextMaze,
-                       panelInfo: HTMLDivElement, ctx: CanvasRenderingContext2D, size: Size,
-                       pointSpawner: IPointSpawner) {
+                       panelInfo: PanelInfo, ctx: CanvasRenderingContext2D, size: Size,
+                       pointSpawner: IPointSpawner, completeGame: CompleteGame) {
         this._panelInfo = panelInfo;
         this._gameMaster = new GameMaster(ctx, size, this);
         this._nextMaze = nextMaze;
+        this._completeGame = completeGame;
 
         this._tankSpawnManager = new TankSpawnManager(pointSpawner,
             this._gameMaster.modelCollisionManager.collisionChecker, this._gameMaster);
@@ -189,27 +218,56 @@ class RulesManager implements IRulesManager {
     private processPostGameActions(): void {
         this._gameMaster.removeEventListeners();
         this._gameMaster.finishGame();
-        this._nextMaze(this._gameMaster.ctx, this._gameMaster.size, this.panelInfo, this._attacker.tankInfo,
+        this._nextMaze(this._gameMaster.ctx, this._gameMaster.size, this._panelInfo, this._attacker.tankInfo,
             this._defender.tankInfo);
     }
+    public giveDefenderVictory(): void {
+        this._gameMaster.removeEventListeners();
+        this._gameMaster.finishGame();
+        this._completeGame(this._gameMaster.ctx, this._gameMaster.size, this._panelInfo, false);
+    }
     public get score(): number { return this._score }
-    public get panelInfo(): HTMLDivElement { return this._panelInfo }
+    public get keyPanel(): HTMLDivElement { return this._panelInfo.keyPanel }
+    public get timePanel(): HTMLDivElement { return this._panelInfo.timePanel }
     public get gameMaster(): IGameMaster { return this._gameMaster }
+    public get finishTime(): number { return RulesManager.FINISH_TIME }
 }
 
-class PanelInfoManager implements IExecutor {
-    private readonly _rulesManager: RulesManager;
-    private _lastScore: number = Infinity;
-    public constructor(rulesManager: RulesManager) {
-        this._rulesManager = rulesManager;
+class TimeInfoManager implements IExecutor {
+    private static readonly SECOND: number = 1000;
+
+    private readonly _timeInfo: ITimeInfo;
+    private _elapsedTime: number = 0;
+    private _counter = 0;
+    public constructor(timeInfo: ITimeInfo) {
+        this._timeInfo = timeInfo;
     }
-    public handle() {
-        if (this._lastScore !== this._rulesManager.score) {
-            this._lastScore = this._rulesManager.score;
+    public handle(deltaTime: number) {
+        this._counter += deltaTime;
+        if (this._counter >= TimeInfoManager.SECOND) {
+            this._counter -= TimeInfoManager.SECOND;
             this.updatePanel();
         }
     }
     private updatePanel() {
-        this._rulesManager.panelInfo.textContent = `Amount of Keys: ${this._lastScore}`;
+        this._timeInfo.timePanel.textContent = `Elapsed time: ${++this._elapsedTime}`;
+        if (this._elapsedTime > this._timeInfo.finishTime) { this._timeInfo.giveDefenderVictory(); }
+    }
+}
+
+class ScoreInfoManager implements IExecutor {
+    private readonly _scoreData: IScoreInfo;
+    private _lastScore: number = Infinity;
+    public constructor(scoreData: IScoreInfo) {
+        this._scoreData = scoreData;
+    }
+    public handle() {
+        if (this._lastScore !== this._scoreData.score) {
+            this._lastScore = this._scoreData.score;
+            this.updatePanel();
+        }
+    }
+    private updatePanel() {
+        this._scoreData.keyPanel.textContent = `Amount of Keys: ${this._lastScore}`;
     }
 }
