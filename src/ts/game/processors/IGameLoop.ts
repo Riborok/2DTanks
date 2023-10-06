@@ -9,7 +9,7 @@ export interface IGameLoop {
 
 export class GameLoop implements IGameLoop {
     private _isGameLoopActive: boolean = false;
-    private _lastFrameTime: number = performance.now();
+    private _lastFrameTime: number;
     private readonly _render: IRender = new Render();
     private readonly _drawable: IDrawable;
     public constructor(drawable: IDrawable) { this._drawable = drawable }
@@ -17,6 +17,7 @@ export class GameLoop implements IGameLoop {
     public start() {
         if (!this._isGameLoopActive) {
             this._isGameLoopActive = true;
+            this._lastFrameTime = performance.now();
             requestAnimationFrame(this.gameLoop);
         }
     }

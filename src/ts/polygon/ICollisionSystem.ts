@@ -23,9 +23,9 @@ export class Quadtree<T extends IPolygon> implements ICollisionSystem<T>{
         this._root.insert(t);
     }
     public getCollisions(polygon: IPolygon): Iterable<T> {
-        const collisionsInfo = new Array<T>;
+        const collisionsInfo = new Map<number, T>;
         this._root.getCollisions(polygon, collisionsInfo);
-        return collisionsInfo;
+        return [...collisionsInfo.values()];
     }
     public remove(t: T) {
         this._root.remove(t);
@@ -112,7 +112,7 @@ class QuadtreeNode<T extends IPolygon> {
             }
         }
     }
-    public getCollisions(polygon: IPolygon, collisionsInfo: T[]) {
+    public getCollisions(polygon: IPolygon, collisionsInfo: Map<number, T>) {
         if (this.isSubdivide()) {
             for (const child of this._children)
                 if (child.isContainsPolygon(polygon))
@@ -120,8 +120,8 @@ class QuadtreeNode<T extends IPolygon> {
         }
         else {
             for (const anotherT of this._polygons.values())
-                if (CollisionDetector.hasCollision(polygon, anotherT) && !collisionsInfo.includes(anotherT))
-                    collisionsInfo.push(anotherT);
+                if (CollisionDetector.hasCollision(polygon, anotherT))
+                    collisionsInfo.set(anotherT.id, anotherT);
         }
     }
     private isContainsPolygon(polygon: IPolygon): boolean {
