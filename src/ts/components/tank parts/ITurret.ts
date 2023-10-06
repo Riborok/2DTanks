@@ -13,7 +13,7 @@ export function getTurretWidth(turret: ITurret): number {
 
 export class TurretModel0 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0006;
-    private static readonly MASS: number = 0.35;
+    private static readonly MASS: number = 0.25;
     private static readonly BULLET_CAPACITY: number = 3;
     private static readonly NUM: number = 0;
 
@@ -25,7 +25,7 @@ export class TurretModel0 implements ITurret{
 
 export class TurretModel1 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.001;
-    private static readonly MASS: number = 0.25;
+    private static readonly MASS: number = 0.15;
     private static readonly BULLET_CAPACITY: number = 2;
     private static readonly NUM: number = 1;
 
@@ -37,7 +37,7 @@ export class TurretModel1 implements ITurret{
 
 export class TurretModel2 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0004;
-    private static readonly MASS: number = 0.4;
+    private static readonly MASS: number = 0.3;
     private static readonly BULLET_CAPACITY: number = 5;
     private static readonly NUM: number = 2;
 
@@ -49,7 +49,7 @@ export class TurretModel2 implements ITurret{
 
 export class TurretModel3 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0008;
-    private static readonly MASS: number = 0.4;
+    private static readonly MASS: number = 0.3;
     private static readonly BULLET_CAPACITY: number = 3;
     private static readonly NUM: number = 3;
 
@@ -61,7 +61,7 @@ export class TurretModel3 implements ITurret{
 
 export class TurretModel4 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0005;
-    private static readonly MASS: number = 0.37;
+    private static readonly MASS: number = 0.27;
     private static readonly BULLET_CAPACITY: number = 4;
     private static readonly NUM: number = 4;
 
@@ -73,7 +73,7 @@ export class TurretModel4 implements ITurret{
 
 export class TurretModel5 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0003;
-    private static readonly MASS: number = 0.5;
+    private static readonly MASS: number = 0.4;
     private static readonly BULLET_CAPACITY: number = 6;
     private static readonly NUM: number = 5;
 
@@ -85,7 +85,7 @@ export class TurretModel5 implements ITurret{
 
 export class TurretModel6 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.00045;
-    private static readonly MASS: number = 0.42;
+    private static readonly MASS: number = 0.32;
     private static readonly BULLET_CAPACITY: number = 5;
     private static readonly NUM: number = 6;
 
@@ -97,7 +97,7 @@ export class TurretModel6 implements ITurret{
 
 export class TurretModel7 implements ITurret{
     private static readonly ANGLE_SPEED: number = 0.0008;
-    private static readonly MASS: number = 0.45;
+    private static readonly MASS: number = 0.35;
     private static readonly BULLET_CAPACITY: number = 4;
     private static readonly NUM: number = 7;
 

@@ -10,7 +10,7 @@ export interface IHull extends IComponent{
 export class HullModel0 implements IHull {
     private static readonly HEALTH: number = 100;
     private static readonly ARMOR: number = 1;
-    private static readonly MASS: number = 1;
+    private static readonly MASS: number = 0.8;
     private static readonly ARMOR_STRENGTH: number = 20;
     private static readonly NUM: number = 0;
 
@@ -24,7 +24,7 @@ export class HullModel0 implements IHull {
 export class HullModel1 implements IHull {
     private static readonly HEALTH: number = 90;
     private static readonly ARMOR: number = 1.1;
-    private static readonly MASS: number = 1;
+    private static readonly MASS: number = 0.8;
     private static readonly ARMOR_STRENGTH: number = 25;
     private static readonly NUM: number = 1;
 
@@ -38,7 +38,7 @@ export class HullModel1 implements IHull {
 export class HullModel2 implements IHull {
     private static readonly HEALTH: number = 150;
     private static readonly ARMOR: number = 1;
-    private static readonly MASS: number = 1.5;
+    private static readonly MASS: number = 1.3;
     private static readonly ARMOR_STRENGTH: number = 20;
     private static readonly NUM: number = 2;
 
@@ -52,7 +52,7 @@ export class HullModel2 implements IHull {
 export class HullModel3 implements IHull {
     private static readonly HEALTH: number = 100;
     private static readonly ARMOR: number = 1.5;
-    private static readonly MASS: number = 1.5;
+    private static readonly MASS: number = 1.3;
     private static readonly ARMOR_STRENGTH: number = 30;
     private static readonly NUM: number = 3;
 
@@ -66,7 +66,7 @@ export class HullModel3 implements IHull {
 export class HullModel4 implements IHull {
     private static readonly HEALTH: number = 90;
     private static readonly ARMOR: number = 0.9;
-    private static readonly MASS: number = 0.9;
+    private static readonly MASS: number = 0.7;
     private static readonly ARMOR_STRENGTH: number = 18;
     private static readonly NUM: number = 4;
 
@@ -80,7 +80,7 @@ export class HullModel4 implements IHull {
 export class HullModel5 implements IHull {
     private static readonly HEALTH: number = 110;
     private static readonly ARMOR: number = 0.5;
-    private static readonly MASS: number = 0.9;
+    private static readonly MASS: number = 0.7;
     private static readonly ARMOR_STRENGTH: number = 20;
     private static readonly NUM: number = 5;
 
@@ -94,7 +94,7 @@ export class HullModel5 implements IHull {
 export class HullModel6 implements IHull {
     private static readonly HEALTH: number = 100;
     private static readonly ARMOR: number = 0.6;
-    private static readonly MASS: number = 0.95;
+    private static readonly MASS: number = 0.75;
     private static readonly ARMOR_STRENGTH: number = 22;
     private static readonly NUM: number = 6;
 
@@ -108,7 +108,7 @@ export class HullModel6 implements IHull {
 export class HullModel7 implements IHull {
     private static readonly HEALTH: number = 85;
     private static readonly ARMOR: number = 0.6;
-    private static readonly MASS: number = 0.5;
+    private static readonly MASS: number = 0.3;
     private static readonly ARMOR_STRENGTH: number = 25;
     private static readonly NUM: number = 7;
 
