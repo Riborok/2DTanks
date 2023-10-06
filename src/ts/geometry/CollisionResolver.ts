@@ -10,7 +10,7 @@ import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "./additionalFunc";
 export class CollisionResolver {
     private constructor() {}
     private static readonly RETENTION_IMPULSE_COEFFICIENT: number = 0.6;
-    private static readonly RETENTION_ANGULAR_IMPULSE_COEFFICIENT: number = 0.012;
+    private static readonly RETENTION_ANGULAR_IMPULSE_COEFFICIENT: number = 0.006;
 
     private static readonly CORRECTION_FACTOR: number = 0.6;
     private static readonly SMALL_ANGULAR_VELOCITY: number = 0.001;
