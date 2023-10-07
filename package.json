@@ -1,15 +1,14 @@
 {
   "name": "2dtanks",
   "version": "1.0.0",
-  "description": "",
+  "description": "A 2D multiplayer game featuring tanks, developed from scratch by Egor Pankratiev and Stanislav Gabrus. Engage in exciting real-time tank battles with other players, all without the use of additional libraries or engines.",
   "main": "index.html",
   "scripts": {
     "serve": "webpack-dev-server",
     "build-dev": "webpack --mode=development",
-    "build-prod": "webpack --mode=production",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-prod": "webpack --mode=production"
   },
-  "keywords": [],
+  "keywords": ["game development", "multiplayer", "2D game", "tanks", "web development", "indie game", "action game", "multiplayer battles", "web-based", "player vs. player", "tank warfare"],
   "author": "Egor Pankratiev, Stanislav Gabrus",
   "license": "MIT",
   "devDependencies": {
