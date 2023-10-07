@@ -142,7 +142,7 @@ interface ITimeInfo {
 }
 
 class RulesManager implements IRulesManager, IScoreInfo, ITimeInfo {
-    private static readonly FINISH_TIME: number = 60;
+    private static readonly FINISH_TIME: number = 300;
 
     private readonly _tankSpawnManager: ITankSpawnManager;
     private _attacker: TankElement;
