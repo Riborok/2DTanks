@@ -57,15 +57,11 @@ export class Game0 {
         const img = new Image(size.width, size.height);
         img.src = `src/img/cat.jpg`;
 
-        const onloadListener = () => {
+        img.onload = () => {
             ctx.drawImage(img, 0, 0, size.width, size.height);
             panelInfo.keyPanel.textContent = isAttackerWin ? 'The attacker wins' : 'The defender wins';
             panelInfo.timePanel.remove();
-
-            img.removeEventListener('load', onloadListener);
         };
-
-        img.addEventListener('load', onloadListener);
     }
     private static createMaze(ctx: CanvasRenderingContext2D, size: Size, backgroundMaterial: number, wallMaterial: number,
                               attacker: TankInfo, defender: TankInfo, panelInfo: PanelInfo, createMaze: CreateMaze,
