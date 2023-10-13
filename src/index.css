@@ -24,18 +24,20 @@
     justify-content: space-between;
     align-items: center;
     font-family: Trattatello, cursive;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    font-size: 2.5vh;
+    text-shadow: 0.2em 0.2em 0.5em rgba(0, 0, 0, 0.6);
 }
 
 #key-count {
-    user-select: none;
     position: absolute;
+    user-select: none;
     left: 0;
     right: 0;
     text-align: center;
 }
 
 #time-count {
+    position: absolute;
     user-select: none;
     margin-left: 1%;
     text-align: left;
