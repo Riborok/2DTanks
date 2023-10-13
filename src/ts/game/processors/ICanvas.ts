@@ -43,10 +43,16 @@ export class Canvas implements ICanvas {
         for (let i = this._sprites.length; i <= zIndex; i++)
             this._sprites.push(new Map<number, ISprite>());
 
-        sprite.sprite.onload = () => { this._sprites[zIndex].set(sprite.id, sprite) };
+        if (sprite.sprite.complete)
+            this._sprites[zIndex].set(sprite.id, sprite);
+        else
+            sprite.sprite.onload = () => { this._sprites[zIndex].set(sprite.id, sprite) };
     }
     public remove(sprite: ISprite) {
-        this.removeById(sprite);
+        if (sprite.sprite.complete)
+            this.removeById(sprite);
+        else
+            sprite.sprite.onload = () => { this.removeById(sprite) };
     }
     public removeById(identifiable: IIdentifiable) {
         const zIndex = SpriteIDTracker.extractZIndex(identifiable.id);
