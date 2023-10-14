@@ -9,7 +9,7 @@ export class HullSprite extends Sprite implements ISpritePart {
         const zIndex: number = 4;
         super(ResolutionManager.HULL_WIDTH[num], ResolutionManager.HULL_HEIGHT[num], zIndex);
         this._accelerationEffectIndentX = ResolutionManager.ACCELERATION_EFFECT_INDENT_X[num];
-        this._sprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
+        this._imgSprite.src = `src/img/tanks/Hulls/Hull_${num}/Hull_${color}.png`;
     }
     /**
      * Calculates the initial position of the hull sprite based on a reference point,

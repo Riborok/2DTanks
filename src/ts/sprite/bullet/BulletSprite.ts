@@ -9,7 +9,7 @@ export class BulletSprite extends Sprite {
     public constructor(num: number) {
         const zIndex: number = 3;
         super(ResolutionManager.BULLET_WIDTH[num], ResolutionManager.BULLET_HEIGHT[num], zIndex);
-        this._sprite.src = `src/img/tanks/Bullets/Bullet_${num}.png`;
+        this._imgSprite.src = `src/img/tanks/Bullets/Bullet_${num}.png`;
         this._num = num;
     }
     public updateAfterAction(point: Point, angle: number) {

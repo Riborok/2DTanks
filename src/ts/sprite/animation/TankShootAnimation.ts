@@ -14,7 +14,7 @@ export class TankShootAnimation extends AnimationSprite implements IFrameByFrame
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
         const zIndex: number = 1;
         super(width, height, zIndex);
-        this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Shot_${num === 0 ? 0 : 1}.png`;
+        this._imgSprite.src = `src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Shot_${num === 0 ? 0 : 1}.png`;
 
         const newPoint = new Point(
             point.x + height / 2 * Math.sin(angle),

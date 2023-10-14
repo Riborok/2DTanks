@@ -38,10 +38,13 @@ export function isImplementsIScalable(obj: any): obj is IScalable {
     );
 }
 
-export interface ISprite extends IIdentifiable {
+export interface IGetImgSprite {
+    get imgSprite(): HTMLImageElement;
+}
+
+export interface ISprite extends IIdentifiable, IGetImgSprite {
     get width(): number;
     get height(): number;
-    get sprite(): HTMLImageElement;
 
     get point(): Point;
     get angle(): number;
@@ -51,19 +54,19 @@ export interface ISprite extends IIdentifiable {
 }
 
 export abstract class Sprite implements ISprite {
-    protected _sprite: HTMLImageElement;
+    protected _imgSprite: HTMLImageElement;
     private readonly _id: number;
 
     protected _point: Point;
     protected _angle: number;
     protected constructor(width: number, height: number, zIndex: number) {
-        this._sprite = new Image(width, height);
-        this._sprite.classList.add('sprite');
+        this._imgSprite = new Image(width, height);
+        this._imgSprite.classList.add('sprite');
         this._id = SpriteIDTracker.generate(zIndex);
     }
-    public get width(): number { return this._sprite.width }
-    public get height(): number { return this._sprite.height }
-    public get sprite(): HTMLImageElement { return this._sprite }
+    public get imgSprite(): HTMLImageElement { return this._imgSprite }
+    public get width(): number { return this._imgSprite.width }
+    public get height(): number { return this._imgSprite.height }
     public get id(): number { return this._id }
 
     public get point(): Point { return this._point }

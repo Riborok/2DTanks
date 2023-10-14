@@ -1,7 +1,7 @@
 import {IIdentifiable} from "../../game/id/IIdentifiable";
-import {Sprite} from "../ISprite";
+import {IGetImgSprite, Sprite} from "../ISprite";
 
-export interface IAnimation extends IIdentifiable {
+export interface IAnimation extends IIdentifiable, IGetImgSprite {
     get isEnded(): boolean;
     changeFrame(deltaTime: number): void;
 }

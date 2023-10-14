@@ -17,7 +17,7 @@ export abstract class TrackSprite extends Sprite implements ISpritePart, IFrameB
         const zIndex: number = 3;
         super(tankWidth + ResolutionManager.TRACK_INDENT, height, zIndex);
         this._num = num;
-        this._sprite.src = `src/img/tanks/Tracks/Track_${num}.png`;
+        this._imgSprite.src = `src/img/tanks/Tracks/Track_${num}.png`;
     }
     public set frame(value: number) {
         this._frame = value;

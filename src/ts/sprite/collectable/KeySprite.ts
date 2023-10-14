@@ -11,7 +11,7 @@ export class KeySprite extends Sprite implements IScalable{
         super(ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE, zIndex);
         this._point = point;
         this._angle = angle;
-        this._sprite.src = "src/img/item/Key.png";
+        this._imgSprite.src = "src/img/item/Key.png";
     }
     public get scaleX(): number {
         if (this._isIncreasing){

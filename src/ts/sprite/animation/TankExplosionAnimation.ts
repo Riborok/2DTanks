@@ -13,7 +13,7 @@ export class TankExplosionAnimation extends AnimationSprite implements IFrameByF
     public constructor(point: Point, angle: number) {
         const zIndex: number = 1;
         super(ResolutionManager.TANK_EXPLOSION_SIZE, ResolutionManager.TANK_EXPLOSION_SIZE, zIndex);
-        this._sprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`;
+        this._imgSprite.src = `src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`;
 
         this._point = new Point(
             point.x - ResolutionManager.TANK_EXPLOSION_SIZE / 2,
