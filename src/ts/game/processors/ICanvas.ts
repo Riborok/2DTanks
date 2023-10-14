@@ -1,4 +1,10 @@
-import {isImplementsIFrameByFrame, isImplementsIScalable, isImplementsIVanish, ISprite,} from "../../sprite/ISprite";
+import {
+    IGetImgSprite,
+    isImplementsIFrameByFrame,
+    isImplementsIScalable,
+    isImplementsIVanish,
+    ISprite,
+} from "../../sprite/ISprite";
 import {SpriteIDTracker} from "../id/SpriteIDTracker";
 import {IStorage, Size} from "../../additionally/type";
 import {IIdentifiable} from "../id/IIdentifiable";
@@ -16,7 +22,7 @@ export interface IShapeAdder {
     addRectangle(rect: IRectangle): void;
 }
 
-export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable>, IShapeAdder{
+export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable & IGetImgSprite>, IShapeAdder{
     get ctx(): CanvasRenderingContext2D;
 }
 
@@ -43,20 +49,18 @@ export class Canvas implements ICanvas {
         for (let i = this._sprites.length; i <= zIndex; i++)
             this._sprites.push(new Map<number, ISprite>());
 
-        if (sprite.sprite.complete)
+        if (sprite.imgSprite.complete)
             this._sprites[zIndex].set(sprite.id, sprite);
         else
-            sprite.sprite.onload = () => { this._sprites[zIndex].set(sprite.id, sprite) };
+            sprite.imgSprite.onload = () => { this._sprites[zIndex].set(sprite.id, sprite) };
     }
     public remove(sprite: ISprite) {
-        if (sprite.sprite.complete)
-            this.removeById(sprite);
-        else
-            sprite.sprite.onload = () => { this.removeById(sprite) };
+        this.removeById(sprite);
     }
-    public removeById(identifiable: IIdentifiable) {
-        const zIndex = SpriteIDTracker.extractZIndex(identifiable.id);
+    public removeById(identifiable: IIdentifiable & IGetImgSprite) {
+        identifiable.imgSprite.onload = null;
 
+        const zIndex = SpriteIDTracker.extractZIndex(identifiable.id);
         this._sprites[zIndex].delete(identifiable.id);
     }
     public drawAll() {
@@ -105,7 +109,7 @@ export class Canvas implements ICanvas {
 
         if (isImplementsIFrameByFrame(sprite)) {
             this._bufferCtx.drawImage(
-                sprite.sprite,
+                sprite.imgSprite,
                 sprite.frame * sprite.originalWidth,
                 0,
                 sprite.originalWidth,
@@ -117,7 +121,7 @@ export class Canvas implements ICanvas {
             );
         }
         else
-            this._bufferCtx.drawImage(sprite.sprite, -halfWidth, -halfHeight, sprite.width, sprite.height);
+            this._bufferCtx.drawImage(sprite.imgSprite, -halfWidth, -halfHeight, sprite.width, sprite.height);
 
         this._bufferCtx.restore();
     }

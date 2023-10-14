@@ -7,7 +7,7 @@ export class WallSprite extends Sprite {
     public constructor(materialNum: number, shapeNum: number) {
         const zIndex: number = 3;
         super(ResolutionManager.WALL_WIDTH[shapeNum], ResolutionManager.WALL_HEIGHT[shapeNum], zIndex);
-        this._sprite.src = `src/img/blocks/${MATERIAL[materialNum]}_${SHAPE[shapeNum]}.png`;
+        this._imgSprite.src = `src/img/blocks/${MATERIAL[materialNum]}_${SHAPE[shapeNum]}.png`;
     }
     public updateAfterAction(point: Point, angle: number) {
         point = point.clone();
