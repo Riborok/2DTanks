@@ -1,4 +1,4 @@
-import {Point} from "../geometry/Point";
+import {Axis, Point} from "../geometry/Point";
 import {BulletElement} from "../game/elements/BulletElement";
 import {ISprite} from "../sprite/ISprite";
 import {IPolygon} from "../polygon/IPolygon";
@@ -124,4 +124,8 @@ export function isImplementsIArmor(obj: any): obj is IArmor{
 export interface IHealth {
     get health(): number;
     get maxHealth(): number;
+}
+
+export interface IStaticAxis {
+    get axes(): Axis[];
 }
