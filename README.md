@@ -10,7 +10,7 @@ ___
 You can start playing this awesome game by the following ways:
 
 ### 1. Github pages
-Just click the next [link](https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley)
+Just click the next [link](https://riborok.github.io/2DTanks/)
 and start playing.
 
 ### 2. Clone repository
@@ -155,8 +155,8 @@ ___
 
 ## Authors
 ___
-Main dev: Egor Pankratiev  
-Side dev: Stanislau Habrus
+* Egor Pankratiev  
+* Stanislau Habrus
 
 ## License
 ___
