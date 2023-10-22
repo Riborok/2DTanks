@@ -9,7 +9,8 @@ export class ModelIDTracker {
     private static readonly WALL_TYPE: number = 1;
     private static readonly BULLET_TYPE: number = 2;
     private static readonly COLLECTIBLE_ITEM_TYPE: number = 3;
-    private static readonly OTHER_TYPE: number = 4;
+    private static readonly QUADTREE_BOUNDARY_TYPE: number = 4;
+    private static readonly OTHER_TYPE: number = 5;
 
     private static readonly TYPE_DIVIDER: number = 1000;
     private static extractType(id: number): number {
@@ -87,6 +88,16 @@ export class ModelIDTracker {
     public static get collectibleItemId(): number {
         ModelIDTracker.checkForMaxValue(ModelIDTracker.COLLECTIBLE_ITEM_ID);
         return ++ModelIDTracker.COLLECTIBLE_ITEM_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.COLLECTIBLE_ITEM_TYPE;
+    }
+
+    /**
+     * Get a unique ID for a quadtree boundary.
+     * @returns A unique ID for a quadtree boundary.
+     */
+    private static QUADTREE_BOUNDARY_ID: number = 0;
+    public static get quadtreeBoundaryId(): number {
+        ModelIDTracker.checkForMaxValue(ModelIDTracker.QUADTREE_BOUNDARY_ID);
+        return ++ModelIDTracker.QUADTREE_BOUNDARY_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.QUADTREE_BOUNDARY_TYPE;
     }
 
     /**

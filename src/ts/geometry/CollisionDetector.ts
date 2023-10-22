@@ -5,6 +5,12 @@ import {calcMidBetweenTwoPoint} from "./additionalFunc";
 import {IPolygon} from "../polygon/IPolygon";
 import {areOrthogonal} from "../additionally/additionalFunc";
 
+class CollisionResultHelper {
+    smallestOverlap: number = Number.MAX_VALUE;
+    collisionAxis: Axis = null;
+    isPolygon1Axis: boolean = false;
+}
+
 /**
  * Utility class for detecting collisions between polygons using the Separating Axis Theorem (SAT).
  */
@@ -12,28 +18,47 @@ export class CollisionDetector {
     private constructor() { }
 
     /**
+     * Calculates the axes for a given polygon using its points.
+     * These axes are used for collision detection using the Separating Axis Theorem (SAT).
+     * @param polygon The polygon for which to calculate the axes.
+     * @returns An array of axes representing the edges of the polygon.
+     */
+    public static getAxes(polygon: IPolygon): Axis[] {
+        const axes = new Array<Axis>();
+        const lastIndex = polygon.points.length - 1;
+
+        for (let i = 0; i < lastIndex; i++)
+            axes.push(Axis.create(polygon.points[i], polygon.points[i + 1]));
+        axes.push(Axis.create(polygon.points[lastIndex], polygon.points[0]));
+
+        return axes;
+    }
+
+    /**
      * Checks if two polygons are intersecting using the Separating Axis Theorem (SAT).
+     * This function takes in two polygons and their corresponding sets of axes for collision detection.
      * @param polygon1 The first polygon to check for intersection.
      * @param polygon2 The second polygon to check for intersection.
+     * @param axes1 The axes for collision detection of the first polygon.
+     * @param axes2 The axes for collision detection of the second polygon.
      * @returns `true` if the two polygons intersect, `false` otherwise.
      */
-    public static hasCollision(polygon1: IPolygon, polygon2: IPolygon): boolean {
-        const axes1 = CollisionDetector.getAxes(polygon1);
-        const axes2 = CollisionDetector.getAxes(polygon2);
-
-        function areProjectionsOverlapping(axes: Axis[]): boolean {
-            for (const axis of axes) {
-                const projection1 = CollisionDetector.getProjection(polygon1, axis);
-                const projection2 = CollisionDetector.getProjection(polygon2, axis);
-
-                if (Math.min(projection1.max - projection2.min, projection2.max - projection1.min) <= 0)
-                    return false;
-            }
-            return true;
-        }
-
-        return areProjectionsOverlapping(axes1) && areProjectionsOverlapping(axes2);
+    public static hasCollision(polygon1: IPolygon,  polygon2: IPolygon, axes1: Axis[], axes2: Axis[]): boolean {
+        return CollisionDetector.areProjectionsOverlapping(axes1, polygon1, polygon2) &&
+            CollisionDetector.areProjectionsOverlapping(axes2, polygon1, polygon2);
     }
+    private static areProjectionsOverlapping(axes: Axis[], polygon1: IPolygon, polygon2: IPolygon): boolean {
+        for (const axis of axes) {
+            const projection1 = CollisionDetector.getProjection(polygon1, axis);
+            const projection2 = CollisionDetector.getProjection(polygon2, axis);
+
+            if (Math.min(projection1.max - projection2.min, projection2.max - projection1.min) <= 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Calculates the collision result between two polygons using the Separating Axis Theorem (SAT).
      * @param polygon1 The first polygon to calculate collision result for.
@@ -44,35 +69,37 @@ export class CollisionDetector {
         const axes1 = CollisionDetector.getAxes(polygon1);
         const axes2 = CollisionDetector.getAxes(polygon2);
 
-        let smallestOverlap = Number.MAX_VALUE;
-        let collisionAxis: Axis;
-        let isPolygon1Axis: boolean;
+        const collisionResultHelp: CollisionResultHelper = new CollisionResultHelper();
 
-        function isSmallestOverlapAxisFound(axes: Axis[]): boolean {
-            const isAxes1 = axes === axes1;
-            for (const axis of axes) {
-                const projection1 = CollisionDetector.getProjection(polygon1, axis);
-                const projection2 = CollisionDetector.getProjection(polygon2, axis);
-
-                const overlap = Math.min(projection1.max - projection2.min, projection2.max - projection1.min);
-
-                if (overlap <= 0)
-                    return false;
-
-                if (overlap < smallestOverlap) {
-                    smallestOverlap = overlap;
-                    collisionAxis = axis;
-                    isPolygon1Axis = isAxes1;
-                }
-            }
-            return true;
-        }
-        if (!isSmallestOverlapAxisFound(axes1) || !isSmallestOverlapAxisFound(axes2))
+        if (!CollisionDetector.isSmallestOverlapAxisFound(axes1, true, polygon1, polygon2, collisionResultHelp)
+                ||
+            !CollisionDetector.isSmallestOverlapAxisFound(axes2, false, polygon1, polygon2, collisionResultHelp))
             return null;
 
-        return {collisionPoint: CollisionDetector.findClosestVertex(polygon1, polygon2, collisionAxis, isPolygon1Axis),
-            overlap: smallestOverlap}
+        return {collisionPoint: CollisionDetector.findClosestVertex(polygon1, polygon2,
+                collisionResultHelp.collisionAxis, collisionResultHelp.isPolygon1Axis),
+            overlap: collisionResultHelp.smallestOverlap}
     }
+    private static isSmallestOverlapAxisFound(axes: Axis[], isAxes1: boolean, polygon1: IPolygon, polygon2: IPolygon,
+                                              collisionResultHelp: CollisionResultHelper): boolean {
+        for (const axis of axes) {
+            const projection1 = CollisionDetector.getProjection(polygon1, axis);
+            const projection2 = CollisionDetector.getProjection(polygon2, axis);
+
+            const overlap = Math.min(projection1.max - projection2.min, projection2.max - projection1.min);
+
+            if (overlap <= 0)
+                return false;
+
+            if (overlap < collisionResultHelp.smallestOverlap) {
+                collisionResultHelp.smallestOverlap = overlap;
+                collisionResultHelp.collisionAxis = axis;
+                collisionResultHelp.isPolygon1Axis = isAxes1;
+            }
+        }
+        return true;
+    }
+
     private static readonly EPSILON: number = 1;
     private static findClosestVertex(polygon1: IPolygon, polygon2: IPolygon, axis: Axis, isPolygon1Axis: boolean): Point {
         let projection: Projection;
@@ -114,16 +141,6 @@ export class CollisionDetector {
         }
 
         return { min, max, minPoint, maxPoint }
-    }
-    private static getAxes(polygon: IPolygon): Axis[] {
-        const axes = new Array<Axis>();
-        const lastIndex = polygon.points.length - 1;
-
-        for (let i = 0; i < lastIndex; i++)
-            axes.push(Axis.create(polygon.points[i], polygon.points[i + 1]));
-        axes.push(Axis.create(polygon.points[lastIndex], polygon.points[0]));
-
-        return axes;
     }
     private static getProjection(polygon: IPolygon, axis: Vector): Projection {
         let min = VectorUtils.dotProduct(axis, polygon.points[0]);

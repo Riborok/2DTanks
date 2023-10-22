@@ -1,6 +1,8 @@
 # 2D Tanks
 ___
-This little project was made by two people just for fun. In this game you
+This little project was made by two people just for fun. 
+We didn't use any additional libraries or frameworks, 
+everything was created by our own hands. In this game you
 need to play with your friend. One gonna be attacker and the other a defender.
 And before all we want to apologize for html to frontenders, cause it's new
 for us, and it's written really terrible :(
