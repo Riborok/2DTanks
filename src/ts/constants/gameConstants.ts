@@ -2,9 +2,7 @@ import {FieldMap} from "../additionally/type";
 
 export class ResolutionManager {
     private static resizeWidthCoeff: number = 1;
-    private static resizeHeightCoeff: number = 1;
     private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
-    private static readonly DEVELOPING_SCREEN_HEIGHT: number = 1080;
 
     public static get BACKGROUND_SIZE(): number { return <number>ResolutionManager.fieldsX.BACKGROUND_SIZE }
     public static get WALL_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.WALL_WIDTH }
@@ -58,12 +56,11 @@ export class ResolutionManager {
         HEALTH_ARMOR_BAR_INDENT_Y: 3
     };
     public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
-    public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeHeightCoeff) }
+    public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeWidthCoeff) }
     public static undoResizeX(x: number): number { return Math.round(x / ResolutionManager.resizeWidthCoeff) }
-    public static undoResizeY(y: number): number { return Math.round(y / ResolutionManager.resizeHeightCoeff) }
-    public static setResolutionResizeCoeff(width: number, height: number){
+    public static undoResizeY(y: number): number { return Math.round(y / ResolutionManager.resizeWidthCoeff) }
+    public static setResolutionResizeCoeff(width: number){
         ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
-        ResolutionManager.resizeHeightCoeff = height / ResolutionManager.DEVELOPING_SCREEN_HEIGHT;
 
         ResolutionManager.resizeConstants();
     }
