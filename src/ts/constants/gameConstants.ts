@@ -57,8 +57,6 @@ export class ResolutionManager {
     };
     public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
     public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeWidthCoeff) }
-    public static undoResizeX(x: number): number { return Math.round(x / ResolutionManager.resizeWidthCoeff) }
-    public static undoResizeY(y: number): number { return Math.round(y / ResolutionManager.resizeWidthCoeff) }
     public static setResolutionResizeCoeff(width: number){
         ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
 
