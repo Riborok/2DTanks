@@ -32,7 +32,7 @@ export class Game0 {
 
     public static start(htmlCanvasElement: HTMLCanvasElement, attackerInfo: TankInfo, defenderInfo: TankInfo) {
         const panelInfo = Game0.createInfoPanel(htmlCanvasElement);
-        ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width, htmlCanvasElement.height);
+        ResolutionManager.setResolutionResizeCoeff(htmlCanvasElement.width);
 
         const size: Size = { width: htmlCanvasElement.width, height: htmlCanvasElement.height }
 
