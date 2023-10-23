@@ -27,27 +27,6 @@ export class SpriteManipulator{
         );
     }
     /**
-     * Rotates a point associated with a tank parts sprite part using the provided sine and cosine values
-     * to the sprite actual point (where we see main point of the sprite).
-     * The function modifies the `point` parameter with the new rotated coordinates.
-     * @param sprite The tank parts sprite part to which the point belongs.
-     * @param point The point to be rotated. Its coordinates will be updated.
-     * @param sin The sine value of the rotation angle.
-     * @param cos The cosine value of the rotation angle.
-     */
-    public static rotateToActualSpritePoint(sprite: Sprite, point: Point, sin: number, cos: number) {
-        const halfWidth = sprite.width >> 1;
-        const halfHeight = sprite.height >> 1;
-
-        // Rotate the figure by the reverse angle to align it to 0 degrees
-        // Utilizes the properties of sine and cosine: sin(-a) = -sin(a) and cos(-a) = cos(a)
-        PointRotator.rotatePointAroundTarget(
-            point,
-            new Point(point.x + halfWidth, point.y + halfHeight),
-            sin, cos
-        );
-    }
-    /**
      * Updates the position and angle of a sprite, but first sets the point to the "default position".
      * @param sprite The sprite to be updated.
      * @param position The new position for the sprite.
