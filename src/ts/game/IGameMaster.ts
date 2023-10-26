@@ -72,11 +72,11 @@ export class GameMaster implements IGameMaster {
 
     private readonly handleVisibilityChange = () => {
         if (document.hidden) {
-            this._gameLoop.pause();
+            this._gameLoop.stop();
             this._keyHandler.clearKeys();
         }
         else {
-            this._gameLoop.resume();
+            this._gameLoop.start();
         }
     };
     public constructor(ctx: CanvasRenderingContext2D, size: Size, rulesManager: IRulesManager) {

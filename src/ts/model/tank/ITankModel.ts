@@ -27,7 +27,7 @@ export class TankModel extends LandModel implements ITankModel {
 
     private readonly _tankParts: TankParts;
 
-    private _lastTimeShot: number = Date.now();
+    private _lastTimeShot: number = performance.now();
     private _bulletQuantity: number = 0;
     private _bulletNum: number = TankModel.DEFAULT_BULLET_NUM;
     private _isBraking: boolean = false;
@@ -56,7 +56,7 @@ export class TankModel extends LandModel implements ITankModel {
     public get armorStrength(): number { return this._tankParts.hull.armorStrength }
     public get bulletNum(): number { return this._bulletNum }
     public shot(): IBulletModel | null {
-        const dateNow = Date.now();
+        const dateNow = performance.now();
         if (dateNow - this._lastTimeShot < this._tankParts.weapon.reloadSpeed)
             return null;
 
