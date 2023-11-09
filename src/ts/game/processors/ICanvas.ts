@@ -64,8 +64,6 @@ export class Canvas implements ICanvas {
         this._sprites[zIndex].delete(identifiable.id);
     }
     public drawAll() {
-        this._bufferCtx.clearRect(0, 0, this._size.width, this._size.height);
-
         for (const sprites of this._sprites)
             for (const sprite of sprites.values())
                 this.draw(sprite);

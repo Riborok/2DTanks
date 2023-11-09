@@ -39,6 +39,7 @@ export interface IExecutorAdder {
 export interface IGameMaster extends IEventEmitter, IWallElementAdder, ITankElementAdder, ICollectibleItemAdder, IExecutorAdder {
     setBackgroundMaterial(backgroundMaterial: number): void;
     finishGame(): void;
+    startGame(): void;
 
     get modelCollisionManager(): IModelCollisionManager;
     get itemCollisionManager(): ICollectibleItemManager;
@@ -127,7 +128,6 @@ export class GameMaster implements IGameMaster {
         this._handlingManagers.push(this._tankHandlingManagers, this._wallHandlingManagers, this._bulletHandlingManager);
 
         this._gameLoop.render.add(...this._handlingManagers, this._animationManager, this._healthDrawManager);
-        this._gameLoop.start();
     }
     public addEventListeners(): void {
         this._keyHandler.addEventListeners();
@@ -165,6 +165,9 @@ export class GameMaster implements IGameMaster {
     }
     public addExecutioners(...executioners: IExecutor[]) {
         this._gameLoop.render.add(...executioners);
+    }
+    public startGame() {
+        this._gameLoop.start();
     }
     public finishGame() {
         this._gameLoop.stop();
