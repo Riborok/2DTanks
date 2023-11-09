@@ -91,7 +91,9 @@ export class Game0 {
             new TimeInfoManager(rulesManager),
             spawnManager
         );
+
         gameMaster.addEventListeners();
+        gameMaster.startGame();
     }
     private static readonly AMOUNT_OF_KEYS: number = 3;
     private static addKeys(spawnManager: IBonusSpawnManager) {
