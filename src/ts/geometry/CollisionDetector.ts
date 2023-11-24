@@ -3,7 +3,7 @@ import {VectorUtils} from "./VectorUtils";
 import {CollisionResult} from "../additionally/type";
 import {calcMidBetweenTwoPoint} from "./additionalFunc";
 import {IPolygon} from "../polygon/IPolygon";
-import {areOrthogonal} from "../additionally/additionalFunc";
+import {areOrthogonal, areOrthogonalOrCollinear} from "../additionally/additionalFunc";
 
 class CollisionResultHelper {
     smallestOverlap: number = Number.MAX_VALUE;
@@ -104,7 +104,7 @@ export class CollisionDetector {
     private static findClosestVertex(polygon1: IPolygon, polygon2: IPolygon, axis: Axis, isPolygon1Axis: boolean): Point {
         let projection: Projection;
         let extendedProjection: ExtendedProjection;
-        if (isPolygon1Axis && !areOrthogonal(polygon1.angle, polygon2.angle)) {
+        if (isPolygon1Axis && !areOrthogonalOrCollinear(polygon1.angle, polygon2.angle)) {
             projection = this.getProjection(polygon1, axis);
             extendedProjection = this.getExtendedProjection(polygon2, axis, false);
         }

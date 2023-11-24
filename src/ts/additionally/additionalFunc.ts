@@ -92,10 +92,32 @@ export function clearDOM() {
 
 /**
  * Checks if two angles are approximately orthogonal in radians.
- * @param {number} angle1 - The first angle in radians.
- * @param {number} angle2 - The second angle in radians.
+ * @param {number} angle1 - The first angle in radians. Should be normalized to the range [-π, π].
+ * @param {number} angle2 - The second angle in radians. Should be normalized to the range [-π, π].
  * @returns {boolean} True if the angles are approximately orthogonal, otherwise false.
  */
 export function areOrthogonal(angle1: number, angle2: number): boolean {
-    return Math.abs(Math.abs(angle1 - angle2) - Math.PI / 2) < ANGLE_EPSILON;
+    const diff = Math.abs(angle1 - angle2);
+    return Math.abs(diff - Math.PI / 2) < ANGLE_EPSILON || Math.abs(diff - 1.5 * Math.PI) < ANGLE_EPSILON;
+}
+
+/**
+ * Checks if two vectors are approximately collinear given their angles in radians.
+ * @param {number} angle1 - The angle of the first vector in radians. Should be normalized to the range [-π, π].
+ * @param {number} angle2 - The angle of the second vector in radians. Should be normalized to the range [-π, π].
+ * @returns {boolean} True if the vectors are approximately collinear, otherwise false.
+ */
+export function areCollinear(angle1: number, angle2: number): boolean {
+    const diff = Math.abs(angle1 - angle2);
+    return diff < ANGLE_EPSILON || Math.abs(diff - Math.PI) < ANGLE_EPSILON || Math.abs(diff - 2 * Math.PI) < ANGLE_EPSILON;
+}
+
+/**
+ * Checks if two vectors are approximately orthogonal or collinear given their angles in radians.
+ * @param {number} angle1 - The angle of the first vector in radians. Should be normalized to the range [-π, π].
+ * @param {number} angle2 - The angle of the second vector in radians. Should be normalized to the range [-π, π].
+ * @returns {boolean} True if the vectors are approximately orthogonal or collinear, otherwise false.
+ */
+export function areOrthogonalOrCollinear(angle1: number, angle2: number): boolean {
+    return areOrthogonal(angle1, angle2) || areCollinear(angle1, angle2);
 }
