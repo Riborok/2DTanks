@@ -66,7 +66,6 @@ export class Quadtree<T extends IPolygon> implements ICollisionSystem<T>{
 
 class QuadtreeNode<T extends IPolygon> {
     private static readonly CAPACITY: number = 8;
-    private static readonly HALF_CAPACITY: number = QuadtreeNode.CAPACITY >> 1;
 
     // The private variable _totalPolygons represents the total amount of polygons within a node.
     // However,this count may not be equivalent to the amount of polygons in the node
@@ -136,7 +135,7 @@ class QuadtreeNode<T extends IPolygon> {
                     child.remove(t, axes);
                     this._totalPolygons += child._totalPolygons;
                 }
-                if (this._totalPolygons <= QuadtreeNode.HALF_CAPACITY)
+                if (this._totalPolygons <= (QuadtreeNode.CAPACITY >> 1))
                     this.mergeWithChildren();
             }
             else {
@@ -148,7 +147,7 @@ class QuadtreeNode<T extends IPolygon> {
     public getCollisions(polygon: IPolygon, axes: Axis[], collisionsInfo: Map<number, T>) {
         if (this.isSubdivide()) {
             for (const child of this._children)
-                if (CollisionDetector.hasCollision(this._boundary, polygon, this._boundary.axes, axes))
+                if (CollisionDetector.hasCollision(child._boundary, polygon, child._boundary.axes, axes))
                     child.getCollisions(polygon, axes, collisionsInfo);
         }
         else {
