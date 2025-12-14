@@ -4,19 +4,40 @@
   "description": "A 2D multiplayer game featuring tanks, developed from scratch by Egor Pankratiev and Stanislav Gabrus. Engage in exciting real-time tank battles with other players, all without the use of additional libraries or engines.",
   "main": "index.html",
   "scripts": {
-    "serve": "webpack-dev-server",
+    "serve": "webpack serve --mode=development",
     "build-dev": "webpack --mode=development",
     "build-prod": "webpack --mode=production"
   },
-  "keywords": ["game development", "multiplayer", "2D game", "tanks", "web development", "indie game", "action game", "multiplayer battles", "web-based", "player vs. player", "tank warfare"],
+  "keywords": [
+    "game development",
+    "multiplayer",
+    "2D game",
+    "tanks",
+    "web development",
+    "indie game",
+    "action game",
+    "multiplayer battles",
+    "web-based",
+    "player vs. player",
+    "tank warfare"
+  ],
   "author": "Egor Pankratiev, Stanislav Gabrus",
   "license": "MIT",
   "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.9",
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
-  }
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
