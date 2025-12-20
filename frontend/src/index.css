@@ -1,0 +1,192 @@
+.sprite {
+    position: absolute;
+    pointer-events: none;
+}
+
+.canvas {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: green;
+}
+
+#info-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to bottom, #808080, #585858, #464646);
+    color: white;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Trattatello, cursive;
+    font-size: 2.5vh;
+    text-shadow: 0.2em 0.2em 0.5em rgba(0, 0, 0, 0.6);
+}
+
+#key-count {
+    position: absolute;
+    user-select: none;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+#time-count {
+    position: absolute;
+    user-select: none;
+    margin-left: 1%;
+    text-align: left;
+}
+
+body {
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+html {
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    font-family: "Comic Sans MS", sans-serif;
+}
+
+.half-hor-div {
+    width: 50%;
+    float: left;
+    height: 100%;
+}
+
+.select-div {
+    height: 25%;
+}
+
+.view-div {
+    height: 70%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.view-element {
+    width: 20%;
+    margin-left: 50px;
+    margin-right: 50px;
+    display: inline-block;
+    vertical-align: top;
+    box-sizing: border-box;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    background: none;
+}
+
+.btn-img {
+    width: 50px;
+}
+
+.hull {
+    width: 100px;
+}
+
+.track {
+    width: 105px;
+}
+
+.turret {
+    width: 50px;
+}
+
+.weapon {
+    width: 50px;
+}
+
+.color {
+    width: 50px;
+    height: 50px;
+    background-color: rgb(77, 90, 121);
+    margin: 0 auto;
+}
+
+.info-div {
+    height: 30%;
+    text-align: center;
+}
+
+div p {
+    font-size: 100%;
+    color: #444444;
+}
+
+.view-tank {
+    height: 60%;
+    position: relative;
+}
+
+.color-choose {
+    height: 10%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hull-view {
+    top: 100px;
+    left: 210px;
+    width: 245px;
+    height: 163px;
+    position: absolute;
+}
+
+.track-top-view {
+    top: 85px;
+    left: 210px;
+    width: 260px;
+    height: 44px;
+    position: absolute;
+}
+
+.track-bottom-view {
+    top: 235px;
+    left: 210px;
+    width: 260px;
+    height: 44px;
+    position: absolute;
+}
+
+.turret-view {
+    top: 130px;
+    left: 280px;
+    width: 120px;
+    height: 106px;
+    position: absolute;
+}
+
+.weapon-view {
+    top: 165px;
+    left: 390px;
+    width: 118px;
+    height: 36px;
+    position: absolute;
+}
+
+.accept-div {
+    height: 30%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

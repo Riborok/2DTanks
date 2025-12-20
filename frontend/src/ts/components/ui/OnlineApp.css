@@ -1,0 +1,419 @@
+/* Base styles from App.css */
+.app-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%);
+    background-attachment: fixed;
+    font-family: 'Arial', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Override tank-customizer background for online version */
+.app-container .tank-customizer {
+    background: rgba(20, 20, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+/* Connection Screen */
+.connection-screen {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%);
+    background-attachment: fixed;
+    position: relative;
+}
+
+.connection-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+.connection-container {
+    background: rgba(20, 20, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    min-width: 400px;
+    position: relative;
+    z-index: 1;
+}
+
+.game-title {
+    color: #fff;
+    font-size: 48px;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.connection-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.connection-button {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    border: none;
+    border-radius: 15px;
+    padding: 15px 40px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 206, 201, 0.4);
+}
+
+.connection-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 206, 201, 0.6);
+}
+
+.connection-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.join-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.room-code-input {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 18px;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.room-code-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.join-button {
+    min-width: 150px;
+}
+
+.error-message {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 0, 0, 0.2);
+    border: 2px solid rgba(255, 0, 0, 0.5);
+    border-radius: 10px;
+    color: #ff6b6b;
+    font-size: 16px;
+}
+
+/* Lobby Screen */
+.lobby-screen {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%);
+    background-attachment: fixed;
+    position: relative;
+}
+
+.lobby-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 4px
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+.lobby-container {
+    background: rgba(20, 20, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+    min-width: 500px;
+    color: white;
+}
+
+.lobby-title {
+    font-size: 36px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.room-code-section {
+    margin-bottom: 30px;
+}
+
+.room-code-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.room-code-display {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.room-code {
+    flex: 1;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    font-size: 24px;
+    letter-spacing: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.copy-button {
+    padding: 15px 25px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.copy-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.players-status {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.player-status {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.player-status h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.player-status p {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.ready-button {
+    padding: 10px 30px;
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ready-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 206, 201, 0.4);
+}
+
+.game-starting {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 206, 201, 0.2);
+    border: 2px solid rgba(0, 206, 201, 0.5);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 18px;
+}
+
+/* Game Screen */
+.game-screen {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-canvas {
+    position: absolute;
+    top: 5%;
+    left: 0;
+    width: 100%;
+    height: 95%;
+    display: block;
+    z-index: 0;
+}
+
+.game-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    z-index: 10000;
+    pointer-events: none; /* Allow clicks to pass through to canvas */
+}
+
+.game-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    pointer-events: auto; /* Re-enable pointer events for stats */
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    font-size: 18px;
+    color: white;
+}
+
+.stat-item label {
+    font-weight: bold;
+    min-width: 80px;
+}
+
+.stat-item span {
+    font-weight: normal;
+}
+
+/* Game End Screen */
+.game-end-screen {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 60px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    color: white;
+    min-width: 400px;
+}
+
+.game-end-screen h1 {
+    font-size: 48px;
+    margin-bottom: 30px;
+}
+
+.game-end-screen p {
+    font-size: 20px;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.game-end-screen button {
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 206, 201, 0.4);
+}
+
+.game-end-screen button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 206, 201, 0.6);
+}
+
+/* Import tank customizer styles */
+@import './App.css';

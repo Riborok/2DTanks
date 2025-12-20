@@ -1,0 +1,29 @@
+{
+  "name": "2dtanks-server",
+  "version": "1.0.0",
+  "description": "Server for 2D Tanks multiplayer game",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "dev:watch": "ts-node-dev --respawn src/server.ts"
+  },
+  "keywords": [
+    "game-server",
+    "multiplayer",
+    "tanks"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "8.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}
