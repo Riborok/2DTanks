@@ -77,28 +77,49 @@ export class Room {
         }
     }
 
-    setTankConfig(playerId: string, config: TankConfig): void {
+    setTankConfig(playerId: string, config: TankConfig): { success: boolean; message?: string } {
         const player = this.players.get(playerId);
-        if (player) {
-            player.tankConfig = config;
-            console.log(`[ROOM ${this.code}] Player ${playerId} (${player.role}) selected tank config`);
-            this.broadcastRoomUpdate();
+        if (!player) {
+            return { success: false, message: 'Player not found' };
         }
-    }
 
-    setReady(playerId: string, ready: boolean): void {
-        const player = this.players.get(playerId);
-        if (player) {
-            player.ready = ready;
-            console.log(`[ROOM ${this.code}] Player ${playerId} (${player.role}) ready status: ${ready}`);
-            this.broadcastRoomUpdate();
-
-            // Check if both players are ready
-            if (ready && this.areAllPlayersReady()) {
-                console.log(`[ROOM ${this.code}] All players ready - starting game!`);
-                this.startGame();
+        // Check if color is already taken by another player
+        for (const otherPlayer of this.players.values()) {
+            if (otherPlayer.id !== playerId && otherPlayer.tankConfig && otherPlayer.tankConfig.color === config.color) {
+                console.log(`[ROOM ${this.code}] Player ${playerId} tried to select color ${config.color} but it's already taken by ${otherPlayer.id}`);
+                return { success: false, message: `Color ${config.color} is already selected by another player` };
             }
         }
+
+        player.tankConfig = config;
+        console.log(`[ROOM ${this.code}] Player ${playerId} (${player.role}) selected tank config with color ${config.color}`);
+        this.broadcastRoomUpdate();
+        return { success: true };
+    }
+
+    setReady(playerId: string, ready: boolean): { success: boolean; message?: string } {
+        const player = this.players.get(playerId);
+        if (!player) {
+            return { success: false, message: 'Player not found' };
+        }
+
+        // Can't be ready without tank config
+        if (ready && !player.tankConfig) {
+            console.log(`[ROOM ${this.code}] Player ${playerId} tried to become ready without tank config`);
+            return { success: false, message: 'Cannot become ready without selecting a tank' };
+        }
+
+        player.ready = ready;
+        console.log(`[ROOM ${this.code}] Player ${playerId} (${player.role}) ready status: ${ready}`);
+        this.broadcastRoomUpdate();
+
+        // Check if both players are ready
+        if (ready && this.areAllPlayersReady()) {
+            console.log(`[ROOM ${this.code}] All players ready - starting game!`);
+            this.startGame();
+        }
+
+        return { success: true };
     }
 
     private areAllPlayersReady(): boolean {

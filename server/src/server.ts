@@ -47,10 +47,22 @@ wss.on('connection', (ws: WebSocket, req) => {
                 }
             } else if (data.type === 'tankConfig' && roomCode && playerId) {
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} selected tank config`);
-                roomManager.setTankConfig(roomCode, playerId, data.data);
+                const result = roomManager.setTankConfig(roomCode, playerId, data.data);
+                if (!result.success) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: result.message || 'Failed to set tank config'
+                    }));
+                }
             } else if (data.type === 'ready' && roomCode && playerId) {
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} is ready: ${data.ready}`);
-                roomManager.setReady(roomCode, playerId, data.ready);
+                const result = roomManager.setReady(roomCode, playerId, data.ready);
+                if (!result.success) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: result.message || 'Failed to set ready status'
+                    }));
+                }
             } else if (data.type === 'action') {
                 if (roomCode && playerId) {
                     const action = data.action || data;

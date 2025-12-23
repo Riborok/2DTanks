@@ -63,7 +63,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                                         ? 'Готов' 
                                         : 'Ожидание готовности'
                         }</p>
-                        {myPlayer?.ready !== true && (
+                        {myPlayer?.ready !== true && myPlayer?.tankConfig && (
                             <button 
                                 className="ready-button" 
                                 onClick={onReady}

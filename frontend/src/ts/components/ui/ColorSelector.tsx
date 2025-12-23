@@ -3,9 +3,10 @@
 interface ColorSelectorProps {
     currentIndex: number;
     onChange: (index: number) => void;
+    occupiedColors?: number[]; // Массив индексов занятых цветов
 }
 
-const ColorSelector: React.FC<ColorSelectorProps> = ({ currentIndex, onChange }) => {
+const ColorSelector: React.FC<ColorSelectorProps> = ({ currentIndex, onChange, occupiedColors = [] }) => {
     const colors = [
         '#4c5977',
         '#766f4b',
@@ -13,26 +14,25 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({ currentIndex, onChange })
         '#4e7b76',
     ];
 
-    const handlePrev = () => {
-        onChange(currentIndex > 0 ? currentIndex - 1 : colors.length - 1);
-    };
-
-    const handleNext = () => {
-        onChange(currentIndex < colors.length - 1 ? currentIndex + 1 : 0);
+    const handleColorClick = (index: number) => {
+        if (!occupiedColors.includes(index)) {
+            onChange(index);
+        }
     };
 
     return (
         <div className="color-selector">
-            <button className="nav-button" onClick={handlePrev}>
-                <img src="/src/img/GUI/prev.png" alt="Prev" className="btn-img" />
-            </button>
-            <div
-                className="color-display"
-                style={{ backgroundColor: colors[currentIndex] }}
-            />
-            <button className="nav-button" onClick={handleNext}>
-                <img src="/src/img/GUI/next.png" alt="Next" className="btn-img" />
-            </button>
+            <div className="color-list">
+                {colors.map((color, index) => (
+                    <div
+                        key={index}
+                        className={`color-item ${index === currentIndex ? 'color-selected' : ''} ${occupiedColors.includes(index) ? 'color-occupied' : ''}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorClick(index)}
+                        title={occupiedColors.includes(index) ? 'Цвет уже выбран другим игроком' : `Цвет ${index + 1}`}
+                    />
+                ))}
+            </div>
         </div>
     );
 };

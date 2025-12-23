@@ -32,18 +32,20 @@ export class RoomManager {
         return { playerId: result };
     }
 
-    setTankConfig(roomCode: string, playerId: string, config: any): void {
+    setTankConfig(roomCode: string, playerId: string, config: any): { success: boolean; message?: string } {
         const room = this.rooms.get(roomCode);
         if (room) {
-            room.setTankConfig(playerId, config);
+            return room.setTankConfig(playerId, config);
         }
+        return { success: false, message: 'Room not found' };
     }
 
-    setReady(roomCode: string, playerId: string, ready: boolean): void {
+    setReady(roomCode: string, playerId: string, ready: boolean): { success: boolean; message?: string } {
         const room = this.rooms.get(roomCode);
         if (room) {
-            room.setReady(playerId, ready);
+            return room.setReady(playerId, ready);
         }
+        return { success: false, message: 'Room not found' };
     }
 
     handlePlayerAction(roomCode: string, playerId: string, action: any): void {

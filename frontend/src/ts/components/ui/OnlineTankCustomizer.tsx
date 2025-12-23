@@ -19,9 +19,12 @@ interface OnlineTankCustomizerProps {
         turretNum: number;
         weaponNum: number;
     }) => void;
+    occupiedColors?: number[]; // Массив индексов занятых цветов
+    myPlayerId?: string; // ID текущего игрока для исключения своего цвета из занятых
+    players?: Array<{ playerId: string; tankConfig?: { color: number } }>; // Список игроков
 }
 
-const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept }) => {
+const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, occupiedColors, myPlayerId, players }) => {
     const [config, setConfig] = useState<TankConfig>({
         hullIndex: 0,
         trackIndex: 0,
@@ -29,6 +32,19 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept })
         weaponIndex: 0,
         colorIndex: 0,
     });
+
+    // Вычисляем занятые цвета из списка игроков (кроме текущего игрока)
+    const getOccupiedColors = (): number[] => {
+        if (occupiedColors) {
+            return occupiedColors;
+        }
+        if (!players || !myPlayerId) {
+            return [];
+        }
+        return players
+            .filter(p => p.playerId !== myPlayerId && p.tankConfig?.color !== undefined)
+            .map(p => p.tankConfig!.color);
+    };
 
     const updateConfig = (key: keyof TankConfig, value: number) => {
         setConfig(prev => ({ ...prev, [key]: value }));
@@ -84,6 +100,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept })
                 <ColorSelector
                     currentIndex={config.colorIndex}
                     onChange={(index) => updateConfig('colorIndex', index)}
+                    occupiedColors={getOccupiedColors()}
                 />
                 <button className="accept-button" onClick={handleAccept}>
                     <img src="/src/img/GUI/ok.png" alt="Accept" />

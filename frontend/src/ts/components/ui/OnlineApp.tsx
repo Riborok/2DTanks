@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WebSocketClient } from '../../online/WebSocketClient';
 import ConnectionScreen from './ConnectionScreen';
 import OnlineTankCustomizer from './OnlineTankCustomizer';
@@ -26,6 +26,10 @@ const OnlineApp: React.FC = () => {
     const [error, setError] = useState<string>('');
     const [gameEndReason, setGameEndReason] = useState<{ winner: 'attacker' | 'defender'; reason: string } | null>(null);
     const [myTankConfig, setMyTankConfig] = useState<any>(null);
+    
+    // Use refs to access latest values in callbacks
+    const myPlayerIdRef = useRef<string>('');
+    const screenRef = useRef<Screen>('connection');
 
     useEffect(() => {
         // Connect to WebSocket server
@@ -37,15 +41,24 @@ const OnlineApp: React.FC = () => {
         // Listen for messages
         wsClient.on('joined', (message) => {
             console.log('Joined room:', message.roomId, 'as', message.role);
+            const playerId = message.playerId || '';
             setRoomId(message.roomId || '');
-            setMyPlayerId(message.playerId || '');
+            setMyPlayerId(playerId);
+            myPlayerIdRef.current = playerId;
             setMyRole(message.role || 'attacker');
             setScreen('tankSelection');
+            screenRef.current = 'tankSelection';
             setError('');
         });
 
         wsClient.on('error', (message) => {
-            setError(message.message || 'Ошибка подключения');
+            const errorMessage = message.message || 'Ошибка подключения';
+            setError(errorMessage);
+            console.error('WebSocket error:', errorMessage);
+            // If error occurs during tank config, stay on tank selection screen
+            if (screen === 'tankSelection') {
+                // Error already shown, don't navigate away
+            }
         });
 
         wsClient.on('roomUpdate', (message) => {
@@ -59,12 +72,27 @@ const OnlineApp: React.FC = () => {
                 }));
                 console.log('Players with explicit ready status:', playersWithReady);
                 setPlayers(playersWithReady);
+                
+                // Check if my player has tank config - if so, we can move to lobby
+                // Use refs to access latest values
+                const currentMyPlayerId = myPlayerIdRef.current;
+                const currentScreen = screenRef.current;
+                const myPlayer = playersWithReady.find((p: Player) => p.playerId === currentMyPlayerId);
+                
+                if (myPlayer?.tankConfig && currentScreen === 'tankSelection') {
+                    console.log('Moving to lobby - tank config confirmed');
+                    setMyTankConfig(myPlayer.tankConfig);
+                    setScreen('lobby');
+                    screenRef.current = 'lobby';
+                    setError(''); // Clear any previous errors
+                }
             }
         });
 
         wsClient.on('gameStart', () => {
             console.log('Game starting!');
             setScreen('game');
+            screenRef.current = 'game';
         });
 
         wsClient.on('snapshot', () => {
@@ -73,6 +101,7 @@ const OnlineApp: React.FC = () => {
             // But as fallback, ensure we're on game screen if we receive snapshots
             setScreen(prevScreen => {
                 if (prevScreen !== 'game' && prevScreen !== 'gameEnd') {
+                    screenRef.current = 'game';
                     return 'game';
                 }
                 return prevScreen;
@@ -102,14 +131,13 @@ const OnlineApp: React.FC = () => {
         turretNum: number;
         weaponNum: number;
     }) => {
-        // Send tank config to server and move to lobby
-        console.log('Sending tank config and moving to lobby');
+        // Send tank config to server (don't move to lobby yet - wait for confirmation)
+        console.log('Sending tank config to server');
         wsClient.send({
             type: 'tankConfig',
             data: config
         });
-        setMyTankConfig(config);
-        setScreen('lobby');
+        // Don't update state yet - wait for roomUpdate to confirm the config was accepted
     };
 
     const handleReady = () => {
@@ -136,8 +164,10 @@ const OnlineApp: React.FC = () => {
     const handleBackToMenu = () => {
         wsClient.disconnect();
         setScreen('connection');
+        screenRef.current = 'connection';
         setRoomId('');
         setMyPlayerId('');
+        myPlayerIdRef.current = '';
         setMyRole('attacker');
         setPlayers([]);
         setError('');
@@ -161,7 +191,11 @@ const OnlineApp: React.FC = () => {
             )}
 
             {screen === 'tankSelection' && (
-                <OnlineTankCustomizer onAccept={handleTankConfigAccept} />
+                <OnlineTankCustomizer 
+                    onAccept={handleTankConfigAccept}
+                    players={players}
+                    myPlayerId={myPlayerId}
+                />
             )}
 
             {screen === 'lobby' && (
