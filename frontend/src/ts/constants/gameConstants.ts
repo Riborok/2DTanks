@@ -4,6 +4,48 @@ export class ResolutionManager {
     private static resizeWidthCoeff: number = 1;
     private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
 
+    // Store original (base) values that never change
+    private static readonly baseFieldsX: FieldMap<number | number[]> = {
+        BACKGROUND_SIZE: 115,
+        WALL_WIDTH: [110, 55],
+        HULL_WIDTH: [63, 67, 64, 53, 67, 67, 63, 57],
+        TURRET_INDENT_X: [17, 21, 17, 12, 21, 21, 21, 17],
+        TURRET_WIDTH: [35, 42, 30, 30, 24, 30, 35, 24],
+        WEAPON_WIDTH: [39, 41, 33, 35, 42, 30, 35, 30],
+        BULLET_WIDTH: [13, 18, 25, 26, 21],
+        ACCELERATION_SIZE: 70,
+        TANK_EXPLOSION_SIZE: 99,
+        GRENADE_EXPLOSION_SIZE: 100,
+        ACCELERATION_EFFECT_INDENT_X: [4, 11, 0, 0, 4, 4, 0, 0, 0],
+        KEY_SIZE: 55,
+        BOX_SIZE: 55,
+    };
+    private static readonly baseFieldsY: FieldMap<number | number[]> =  {
+        WALL_HEIGHT: [55, 55],
+        TRACK_INDENT: 5,
+        HULL_HEIGHT: [41, 52, 41, 34, 57, 46, 40, 34],
+        TURRET_HEIGHT: [30, 30, 19, 30, 24, 24, 30, 24],
+        WEAPON_HEIGHT: [12, 9, 12, 6, 9, 13, 12, 12],
+        BULLET_HEIGHT: [6, 9, 11, 7, 9],
+        HEALTH_BAR_HEIGHT: 10,
+        ARMOR_BAR_HEIGHT: 4,
+        HEALTH_ARMOR_BAR_INDENT_Y: 3
+    };
+
+    // Cached scaled values (computed from base values using current resizeWidthCoeff)
+    // Initialize by deep copying arrays from base values
+    private static fieldsX: FieldMap<number | number[]> = ResolutionManager.deepCopyFields(ResolutionManager.baseFieldsX);
+    private static fieldsY: FieldMap<number | number[]> = ResolutionManager.deepCopyFields(ResolutionManager.baseFieldsY);
+    
+    private static deepCopyFields(fields: FieldMap<number | number[]>): FieldMap<number | number[]> {
+        const copy: FieldMap<number | number[]> = {};
+        for (const key in fields) {
+            const value = fields[key];
+            copy[key] = Array.isArray(value) ? [...value] : value;
+        }
+        return copy;
+    }
+
     public static get BACKGROUND_SIZE(): number { return <number>ResolutionManager.fieldsX.BACKGROUND_SIZE }
     public static get WALL_WIDTH(): number[] { return <number[]>ResolutionManager.fieldsX.WALL_WIDTH }
     public static get WALL_HEIGHT(): number[] { return <number[]>ResolutionManager.fieldsY.WALL_HEIGHT }
@@ -29,51 +71,25 @@ export class ResolutionManager {
     public static getTankEntityWidth(num: number): number { return ResolutionManager.HULL_WIDTH[num] + ResolutionManager.TRACK_INDENT }
     public static getTankEntityHeight(num: number): number { return ResolutionManager.HULL_HEIGHT[num] + (ResolutionManager.TRACK_INDENT << 1) }
 
-    private static readonly fieldsX: FieldMap<number | number[]> = {
-        BACKGROUND_SIZE: 115,
-        WALL_WIDTH: [110, 55],
-        HULL_WIDTH: [63, 67, 64, 53, 67, 67, 63, 57],
-        TURRET_INDENT_X: [17, 21, 17, 12, 21, 21, 21, 17],
-        TURRET_WIDTH: [35, 42, 30, 30, 24, 30, 35, 24],
-        WEAPON_WIDTH: [39, 41, 33, 35, 42, 30, 35, 30],
-        BULLET_WIDTH: [13, 18, 25, 26, 21],
-        ACCELERATION_SIZE: 70,
-        TANK_EXPLOSION_SIZE: 99,
-        GRENADE_EXPLOSION_SIZE: 100,
-        ACCELERATION_EFFECT_INDENT_X: [4, 11, 0, 0, 4, 4, 0, 0, 0],
-        KEY_SIZE: 55,
-        BOX_SIZE: 55,
-    };
-    private static readonly fieldsY: FieldMap<number | number[]> =  {
-        WALL_HEIGHT: [55, 55],
-        TRACK_INDENT: 5,
-        HULL_HEIGHT: [41, 52, 41, 34, 57, 46, 40, 34],
-        TURRET_HEIGHT: [30, 30, 19, 30, 24, 24, 30, 24],
-        WEAPON_HEIGHT: [12, 9, 12, 6, 9, 13, 12, 12],
-        BULLET_HEIGHT: [6, 9, 11, 7, 9],
-        HEALTH_BAR_HEIGHT: 10,
-        ARMOR_BAR_HEIGHT: 4,
-        HEALTH_ARMOR_BAR_INDENT_Y: 3
-    };
     public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
     public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeWidthCoeff) }
     public static setResolutionResizeCoeff(width: number){
         ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
-
         ResolutionManager.resizeConstants();
     }
     private static resizeConstants(){
-        for (const key in ResolutionManager.fieldsX) {
-            const field = ResolutionManager.fieldsX[key];
-            ResolutionManager.fieldsX[key] = Array.isArray(field)
-                ? field.map(ResolutionManager.resizeX)
-                : ResolutionManager.resizeX(field);
+        // Always compute scaled values from base values (not from already-scaled values)
+        for (const key in ResolutionManager.baseFieldsX) {
+            const baseField = ResolutionManager.baseFieldsX[key];
+            ResolutionManager.fieldsX[key] = Array.isArray(baseField)
+                ? baseField.map(val => ResolutionManager.resizeX(val))
+                : ResolutionManager.resizeX(baseField);
         }
-        for (const key in ResolutionManager.fieldsY) {
-            const field = ResolutionManager.fieldsY[key];
-            ResolutionManager.fieldsY[key] = Array.isArray(field)
-                ? field.map(ResolutionManager.resizeY)
-                : ResolutionManager.resizeY(field);
+        for (const key in ResolutionManager.baseFieldsY) {
+            const baseField = ResolutionManager.baseFieldsY[key];
+            ResolutionManager.fieldsY[key] = Array.isArray(baseField)
+                ? baseField.map(val => ResolutionManager.resizeY(val))
+                : ResolutionManager.resizeY(baseField);
         }
     }
 }

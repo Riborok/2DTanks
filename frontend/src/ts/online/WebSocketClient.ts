@@ -42,7 +42,7 @@ export class WebSocketClient {
     private isConnecting: boolean = false;
     private wasConnected: boolean = false;
 
-    constructor(url: string = 'ws://localhost:3000') {
+    constructor(url: string = 'ws://10.52.188.253:3000') {
         this.url = url;
     }
 

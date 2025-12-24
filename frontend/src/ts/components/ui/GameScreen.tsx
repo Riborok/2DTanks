@@ -29,6 +29,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
     const rendererRef = useRef<OnlineGameRenderer | null>(null);
     const animationFrameRef = useRef<number | null>(null);
     const snapshotRef = useRef<GameWorldSnapshot | null>(null);
+    const tankConfigsRef = useRef<Map<string, { hullNum: number; trackNum: number; turretNum: number; weaponNum: number; color: number }>>(new Map());
+    const menuRef = useRef<HTMLDivElement>(null); // Ref for the game UI menu
     
     const [keysPressed, setKeysPressed] = useState<Set<number>>(new Set());
     const keysPressedRef = useRef<Set<number>>(new Set());
@@ -71,19 +73,63 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Set canvas size (same as original: window.screen.width/height)
-        // But account for panel height (5%) - canvas should be 95% of screen height
-        const panelHeightPercent = 0.05;
-        canvas.width = window.screen.width;
-        canvas.height = Math.floor(window.screen.height * (1 - panelHeightPercent));
+        // Function to resize canvas to fit full window - menu is overlay on top
+        const resizeCanvas = () => {
+            // Canvas occupies full window - menu is an overlay on top
+            const canvasWidth = window.innerWidth;
+            const canvasHeight = window.innerHeight;
+            
+            // Set canvas internal size to match window size
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
 
-        // Initialize resolution
-        ResolutionManager.setResolutionResizeCoeff(canvas.width);
+            // Set canvas CSS styles explicitly to override CSS class styles
+            canvas.style.width = canvasWidth + 'px';
+            canvas.style.height = canvasHeight + 'px';
+            canvas.style.top = '0px';
+            canvas.style.left = '0px';
+            canvas.style.position = 'absolute';
 
-        // Create renderer
-        const size: Size = { width: canvas.width, height: canvas.height };
-        const renderer = new OnlineGameRenderer(ctx, size);
-        rendererRef.current = renderer;
+            // Initialize resolution AFTER setting canvas size
+            ResolutionManager.setResolutionResizeCoeff(canvas.width);
+            
+            return { width: canvas.width, height: canvas.height };
+        };
+
+        // Initial resize - wait for DOM to be fully rendered
+        requestAnimationFrame(() => {
+            // First resize - set canvas size and ResolutionManager
+            const size = resizeCanvas();
+            
+            // Create renderer with calculated size (ResolutionManager is now configured)
+            const renderer = new OnlineGameRenderer(ctx, size);
+            rendererRef.current = renderer;
+        });
+
+        // Handle window resize
+        const handleResize = () => {
+            const newSize = resizeCanvas();
+            // Recreate renderer with new size (renderer holds canvas reference which needs to be updated)
+            if (rendererRef.current) {
+                // Clear old renderer
+                rendererRef.current.clear();
+                
+                // Recreate renderer with new canvas size
+                rendererRef.current = new OnlineGameRenderer(ctx, newSize);
+                
+                // Restore tank configs from saved ref
+                for (const [tankId, config] of tankConfigsRef.current) {
+                    rendererRef.current.setTankConfig(tankId, config);
+                }
+                
+                // Trigger snapshot update to restore all sprites with new size
+                if (snapshotRef.current) {
+                    rendererRef.current.updateFromSnapshot(snapshotRef.current);
+                }
+            }
+        };
+        
+        window.addEventListener('resize', handleResize);
 
         // Setup tank configs from players (will be updated when snapshot arrives)
         // This effect is handled in handleSnapshot
@@ -108,6 +154,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                             const tank = message.world.tanks?.find((t: any) => t.playerId === player.playerId);
                             if (tank) {
                                 rendererRef.current.setTankConfig(tank.id, player.tankConfig);
+                                // Save config to ref for resize recovery
+                                tankConfigsRef.current.set(tank.id, player.tankConfig);
                             }
                         }
                     }
@@ -231,6 +279,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('resize', handleResize); // Remove resize listener
             clearInterval(actionSendInterval);
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
@@ -344,23 +393,34 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                 pointerEvents: 'none',
                 zIndex: 1
             }} />
-            <canvas ref={canvasRef} className="game-canvas" style={{ position: 'absolute', top: '5%', left: 0, width: '100%', height: '95%', zIndex: 2 }} />
-            <div className="game-ui" style={{ 
+            <canvas 
+                ref={canvasRef} 
+                className="game-canvas" 
+                style={{ 
+                    position: 'absolute', 
+                    left: 0, 
+                    zIndex: 2 
+                }} 
+            />
+            <div ref={menuRef} className="game-ui" style={{ 
                 zIndex: 10000, 
                 position: 'fixed', 
-                top: 0, 
-                left: 0, 
-                right: 0,
-                width: '100vw', 
-                height: '5vh', 
+                top: '10px', 
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'auto', 
+                minWidth: '400px',
+                maxWidth: '90vw',
+                height: 'auto',
                 minHeight: '50px',
                 background: 'linear-gradient(180deg, rgba(20, 20, 30, 0.98) 0%, rgba(10, 10, 15, 0.95) 100%)',
                 backdropFilter: 'blur(10px)',
-                borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '0 15px',
+                padding: '10px 20px',
                 boxSizing: 'border-box',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
             }}>

@@ -231,7 +231,8 @@ export class OnlineGameRenderer {
             }
             
             // Update tank position and angles
-            const centerPoint = new Point(serverTank.x, serverTank.y);
+            // Scale coordinates from server (1920x1080) to current canvas size
+            const centerPoint = new Point(ResolutionManager.resizeX(serverTank.x), ResolutionManager.resizeY(serverTank.y));
             const isIdle = serverTank.isIdle !== undefined ? serverTank.isIdle : false;
             
             // Stop track animation if tank is idle (as in original TankMovementManager.residualMovement)
@@ -268,13 +269,17 @@ export class OnlineGameRenderer {
         // Rotate the relative vector by angle
         const point2RelativeRotatedX = point2RelativeX * cos - point2RelativeY * sin;
         const point2RelativeRotatedY = point2RelativeX * sin + point2RelativeY * cos;
-        // points[2] absolute position
+        // Scale server coordinates to match canvas size
+        const scaledTankX = ResolutionManager.resizeX(serverTank.x);
+        const scaledTankY = ResolutionManager.resizeY(serverTank.y);
+        
+        // points[2] absolute position (using scaled coordinates)
         const point2 = new Point(
-            serverTank.x + point2RelativeRotatedX,
-            serverTank.y + point2RelativeRotatedY
+            scaledTankX + point2RelativeRotatedX,
+            scaledTankY + point2RelativeRotatedY
         );
         // Center is midpoint between points[0] and points[2]
-        const center = calcMidBetweenTwoPoint(new Point(serverTank.x, serverTank.y), point2);
+        const center = calcMidBetweenTwoPoint(new Point(scaledTankX, scaledTankY), point2);
         
         const healthPoint = new Point(
             center.x - healthWidth / 2,
@@ -318,29 +323,25 @@ export class OnlineGameRenderer {
     
     private handleExplosions(explosions: ServerExplosion[]): void {
         // Create explosion animations for each explosion (like original AnimationMaker.playDeathAnimation)
-        if (!explosions || explosions.length === 0) return;
-        
         for (const explosion of explosions) {
-            if (explosion && typeof explosion.x === 'number' && typeof explosion.y === 'number') {
-                const explosionPoint = new Point(explosion.x, explosion.y);
-                const animation = new TankExplosionAnimation(explosionPoint, explosion.angle || 0);
-                this.animationManager.add(animation);
-            }
+            // Scale coordinates from server (1920x1080) to current canvas size
+            const explosionPoint = new Point(ResolutionManager.resizeX(explosion.x), ResolutionManager.resizeY(explosion.y));
+            const animation = new TankExplosionAnimation(explosionPoint, explosion.angle || 0);
+            this.animationManager.add(animation);
         }
     }
     
     private handleGrenadeExplosions(explosions: ServerGrenadeExplosion[]): void {
         // Create grenade explosion animations (like original AnimationMaker.playGrenadeExplosionAnimation)
-        if (!explosions || explosions.length === 0) return;
-        
+        console.log(`[CLIENT] handleGrenadeExplosions: received ${explosions.length} grenade explosions`);
         for (const explosion of explosions) {
-            if (explosion && typeof explosion.x === 'number' && typeof explosion.y === 'number') {
-                const explosionPoint = new Point(explosion.x, explosion.y);
-                const explosionSize = explosion.size || ResolutionManager.GRENADE_EXPLOSION_SIZE;
-                const explosionAngle = explosion.angle || 0;
-                const animation = new GrenadeExplosionAnimation(explosionPoint, explosionAngle, explosionSize);
-                this.animationManager.add(animation);
-            }
+            // Scale coordinates from server (1920x1080) to current canvas size
+            const explosionPoint = new Point(ResolutionManager.resizeX(explosion.x), ResolutionManager.resizeY(explosion.y));
+            const explosionSize = explosion.size || ResolutionManager.GRENADE_EXPLOSION_SIZE;
+            const explosionAngle = explosion.angle || 0;
+            const animation = new GrenadeExplosionAnimation(explosionPoint, explosionAngle, explosionSize);
+            this.animationManager.add(animation);
+            console.log(`[CLIENT] Created grenade explosion animation: x=${explosion.x.toFixed(1)}, y=${explosion.y.toFixed(1)}, size=${explosionSize}, angle=${explosionAngle.toFixed(3)}`);
         }
     }
 
@@ -368,14 +369,10 @@ export class OnlineGameRenderer {
                 this.bullets.set(serverBullet.id, renderableBullet);
                 this.canvas.insert(sprite);
                 console.log(`[CLIENT] Bullet sprite inserted into canvas, totalBullets=${this.bullets.size}`);
-            } else {
-                // Update bullet position
-                const bulletPoint = new Point(serverBullet.x, serverBullet.y);
-                renderableBullet.sprite.updateAfterAction(bulletPoint, serverBullet.angle);
             }
             
-            // Update bullet position
-            const bulletPoint = new Point(serverBullet.x, serverBullet.y);
+            // Update bullet position (scale coordinates from server 1920x1080 to current canvas size)
+            const bulletPoint = new Point(ResolutionManager.resizeX(serverBullet.x), ResolutionManager.resizeY(serverBullet.y));
             renderableBullet.sprite.updateAfterAction(bulletPoint, serverBullet.angle);
         }
     }
@@ -411,7 +408,8 @@ export class OnlineGameRenderer {
             
             // For static walls, set position directly (like in original createWall: sprite.point = point, sprite.angle = angle)
             // Don't use updateAfterAction for static walls - it's only for dynamic walls that move
-            renderableWall.sprite.point = new Point(serverWall.x, serverWall.y);
+            // Scale coordinates from server (1920x1080) to current canvas size
+            renderableWall.sprite.point = new Point(ResolutionManager.resizeX(serverWall.x), ResolutionManager.resizeY(serverWall.y));
             renderableWall.sprite.angle = serverWall.angle || 0;
         }
     }
@@ -433,7 +431,8 @@ export class OnlineGameRenderer {
             
             if (!renderableItem) {
                 let sprite: ISprite;
-                const itemPoint = new Point(serverItem.x, serverItem.y);
+                // Scale coordinates from server (1920x1080) to current canvas size
+                const itemPoint = new Point(ResolutionManager.resizeX(serverItem.x), ResolutionManager.resizeY(serverItem.y));
                 console.log(`[CLIENT] Creating item sprite: id=${serverItem.id}, type=${serverItem.type}`);
                 if (serverItem.type === Bonus.key) {
                     sprite = new KeySprite(itemPoint, 0);
@@ -444,8 +443,8 @@ export class OnlineGameRenderer {
                 this.items.set(serverItem.id, renderableItem);
                 this.canvas.insert(sprite);
             } else {
-                // Update item position
-                const itemPoint = new Point(serverItem.x, serverItem.y);
+                // Update item position (scale coordinates from server 1920x1080 to current canvas size)
+                const itemPoint = new Point(ResolutionManager.resizeX(serverItem.x), ResolutionManager.resizeY(serverItem.y));
                 renderableItem.sprite.point = itemPoint;
                 renderableItem.sprite.angle = 0;
             }
