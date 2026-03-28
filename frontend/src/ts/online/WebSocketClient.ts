@@ -32,6 +32,9 @@ export interface ClientMessage {
     };
 }
 
+/** Порт игрового WebSocket-сервера (совпадает с server PORT по умолчанию). */
+const DEFAULT_GAME_WS_PORT = '3000';
+
 export class WebSocketClient {
     private ws: WebSocket | null = null;
     private url: string;
@@ -41,62 +44,114 @@ export class WebSocketClient {
     private reconnectDelay: number = 1000;
     private isConnecting: boolean = false;
     private wasConnected: boolean = false;
+    /** Один общий промис, если connect() вызвали несколько раз до открытия сокета */
+    private connectAttemptPromise: Promise<void> | null = null;
+    /** Messages sent before the socket is OPEN */
+    private pendingOutgoing: ClientMessage[] = [];
 
-    constructor(url: string = 'ws://10.52.188.253:3000') {
-        this.url = url;
+    /**
+     * @param url — полный ws:// или wss:// URL. Если не задан: тот же host, что у страницы, порт {DEFAULT_GAME_WS_PORT}
+     * (сервер: `process.env.PORT || 3000`).
+     */
+    constructor(url?: string) {
+        this.url = url ?? WebSocketClient.resolveDefaultUrl();
+    }
+
+    private static resolveDefaultUrl(): string {
+        if (typeof window === 'undefined') {
+            return `ws://127.0.0.1:${DEFAULT_GAME_WS_PORT}`;
+        }
+        const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${proto}//${window.location.hostname}:${DEFAULT_GAME_WS_PORT}`;
     }
 
     public connect(): Promise<void> {
-        if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             return Promise.resolve();
         }
+        if (this.connectAttemptPromise) {
+            return this.connectAttemptPromise;
+        }
 
-        return new Promise((resolve, reject) => {
+        this.connectAttemptPromise = new Promise((resolve, reject) => {
+            let settled = false;
+
+            const finishOk = () => {
+                if (settled) return;
+                settled = true;
+                this.isConnecting = false;
+                this.connectAttemptPromise = null;
+                resolve();
+            };
+
+            const finishFail = (message: string) => {
+                if (settled) return;
+                settled = true;
+                this.isConnecting = false;
+                this.connectAttemptPromise = null;
+                this.pendingOutgoing = [];
+                this.ws = null;
+                reject(new Error(message));
+            };
+
             try {
                 this.isConnecting = true;
+                console.log('[WS] Connecting to', this.url);
                 this.ws = new WebSocket(this.url);
 
                 this.ws.onopen = () => {
                     console.log('WebSocket connected');
-                    this.isConnecting = false;
                     this.wasConnected = true;
                     this.reconnectAttempts = 0;
-                    resolve();
+                    this.flushPendingOutgoing();
+                    finishOk();
                 };
 
                 this.ws.onmessage = (event) => {
                     try {
                         const message: ServerMessage = JSON.parse(event.data);
                         this.emit(message.type, message);
-                        // Also emit 'message' for generic listeners
                         this.emit('message', message);
                     } catch (error) {
                         console.error('Error parsing message:', error);
                     }
                 };
 
-                this.ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    this.isConnecting = false;
-                    // Don't reject here - let onclose handle reconnection
+                this.ws.onerror = () => {
+                    console.error('WebSocket error (см. onclose для деталей)');
                 };
 
                 this.ws.onclose = (event) => {
-                    console.log('WebSocket closed', event.code, event.reason);
+                    console.log('WebSocket closed', event.code, event.reason || '');
                     this.isConnecting = false;
-                    const wasConnected = this.wasConnected;
+
+                    if (!settled) {
+                        finishFail(
+                            `Не удалось подключиться к серверу (${this.url}). Запустите сервер игры и проверьте порт ${DEFAULT_GAME_WS_PORT}.`
+                        );
+                        this.emit('error', {
+                            type: 'error',
+                            message: `Сервер недоступен. Убедитесь, что запущен WebSocket на ${this.url}`
+                        });
+                        return;
+                    }
+
+                    const wasOpen = this.wasConnected;
                     this.wasConnected = false;
                     this.ws = null;
-                    // Only attempt reconnect if we were previously connected and it wasn't a normal closure
-                    if (wasConnected && event.code !== 1000) {
+
+                    if (wasOpen && event.code !== 1000) {
                         this.attemptReconnect();
                     }
                 };
             } catch (error) {
                 this.isConnecting = false;
+                this.connectAttemptPromise = null;
                 reject(error);
             }
         });
+
+        return this.connectAttemptPromise;
     }
 
     private attemptReconnect(): void {
@@ -113,11 +168,29 @@ export class WebSocketClient {
         }
     }
 
+    private flushPendingOutgoing(): void {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        while (this.pendingOutgoing.length > 0) {
+            const msg = this.pendingOutgoing.shift()!;
+            this.ws.send(JSON.stringify(msg));
+        }
+    }
+
     public send(message: ClientMessage): void {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(message));
-        } else {
-            console.error('WebSocket is not connected');
+            return;
+        }
+        this.pendingOutgoing.push(message);
+        if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+            this.connect().catch(() => {
+                this.emit('error', {
+                    type: 'error',
+                    message: 'Не удалось подключиться к серверу.'
+                });
+            });
         }
     }
 
@@ -146,6 +219,8 @@ export class WebSocketClient {
     }
 
     public disconnect(): void {
+        this.pendingOutgoing = [];
+        this.connectAttemptPromise = null;
         if (this.ws) {
             this.ws.close();
             this.ws = null;
@@ -155,5 +230,9 @@ export class WebSocketClient {
 
     public isConnected(): boolean {
         return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+    }
+
+    public getServerUrl(): string {
+        return this.url;
     }
 }

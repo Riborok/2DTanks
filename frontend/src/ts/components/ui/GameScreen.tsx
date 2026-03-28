@@ -9,6 +9,20 @@ import { ImagePreloader } from '../../utils/ImagePreloader';
 
 const REQUIRED_KEYS_PER_LEVEL = 1;
 
+const GAME_KEY_CODES = [VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE];
+
+function buildAction(pressedKeys: Set<number>, includeShoot: boolean = false) {
+    return {
+        forward: pressedKeys.has(VK_W),
+        backward: pressedKeys.has(VK_S),
+        turnLeft: pressedKeys.has(VK_A),
+        turnRight: pressedKeys.has(VK_D),
+        turretLeft: pressedKeys.has(VK_Q),
+        turretRight: pressedKeys.has(VK_E),
+        shoot: includeShoot && pressedKeys.has(VK_SPACE)
+    };
+}
+
 interface GameScreenProps {
     wsClient: WebSocketClient;
     myPlayerId: string;
@@ -35,6 +49,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
     const [keysPressed, setKeysPressed] = useState<Set<number>>(new Set());
     const keysPressedRef = useRef<Set<number>>(new Set());
     const shootSentRef = useRef<boolean>(false); // Track if shoot was already sent
+    const touchBridgeRef = useRef<{
+        keyDown: (code: number) => void;
+        keyUp: (code: number) => void;
+        fire: () => void;
+    }>({
+        keyDown: () => {},
+        keyUp: () => {},
+        fire: () => {}
+    });
+    const [useTouchUi, setUseTouchUi] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState<number>(300);
     const [keysCollected, setKeysCollected] = useState<number>(0);
     const [currentLevel, setCurrentLevel] = useState<number>(1);
@@ -67,6 +91,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
             }, []);
 
     useEffect(() => {
+        const mq = window.matchMedia('(max-width: 900px), (pointer: coarse)');
+        const apply = () => setUseTouchUi(mq.matches);
+        apply();
+        mq.addEventListener('change', apply);
+        return () => mq.removeEventListener('change', apply);
+    }, []);
+
+    useEffect(() => {
         if (!canvasRef.current || !imagesLoaded) return;
 
         const canvas = canvasRef.current;
@@ -90,8 +122,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
             canvas.style.left = '0px';
             canvas.style.position = 'absolute';
 
-            // Initialize resolution AFTER setting canvas size
-            ResolutionManager.setResolutionResizeCoeff(canvas.width);
+            // Масштаб: вписать мир 1920×1080 в холст без обрезки (letterbox)
+            ResolutionManager.setViewport(canvas.width, canvas.height);
             
             return { width: canvas.width, height: canvas.height };
         };
@@ -178,78 +210,68 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         wsClient.on('gameEnd', handleGameEnd);
         wsClient.on('error', handleError);
 
-        // Helper function to build action object from pressed keys
-        const buildAction = (pressedKeys: Set<number>, includeShoot: boolean = false) => {
-            return {
-                forward: pressedKeys.has(VK_W),
-                backward: pressedKeys.has(VK_S),
-                turnLeft: pressedKeys.has(VK_A),
-                turnRight: pressedKeys.has(VK_D),
-                turretLeft: pressedKeys.has(VK_Q),
-                turretRight: pressedKeys.has(VK_E),
-                shoot: includeShoot && pressedKeys.has(VK_SPACE)
-            };
-        };
-
-        // Helper function to send action (used when all keys released)
         const sendAction = () => {
             if (snapshotRef.current) {
-                const action = buildAction(keysPressedRef.current);
-                wsClient.send({ type: 'action', action });
+                wsClient.send({ type: 'action', action: buildAction(keysPressedRef.current) });
             }
         };
 
-        // Keyboard handlers
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Only handle game-related keys
-            const gameKeys = [VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE];
-            if (!gameKeys.includes(e.keyCode)) return;
-            
-            // Prevent default behavior for spacebar (page scroll)
-            if (e.keyCode === VK_SPACE) {
-                e.preventDefault();
-            }
-            
+        const applyKeyDown = (code: number) => {
+            if (!GAME_KEY_CODES.includes(code)) return;
             setKeysPressed(prev => {
                 const newSet = new Set(prev);
-                const wasPressed = newSet.has(e.keyCode);
-                newSet.add(e.keyCode);
-                keysPressedRef.current = newSet; // Keep ref in sync
-                
-                // For shoot key, send action immediately on keydown (only once)
-                if (e.keyCode === VK_SPACE && !wasPressed && snapshotRef.current) {
+                const wasPressed = newSet.has(code);
+                newSet.add(code);
+                keysPressedRef.current = newSet;
+                if (code === VK_SPACE && !wasPressed && snapshotRef.current) {
                     shootSentRef.current = true;
-                    const action = buildAction(newSet, true); // Include shoot in action
-                    wsClient.send({ type: 'action', action });
+                    wsClient.send({ type: 'action', action: buildAction(newSet, true) });
                 }
-                
                 return newSet;
             });
         };
 
-        const handleKeyUp = (e: KeyboardEvent) => {
-            // Only handle game-related keys
-            const gameKeys = [VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE];
-            if (!gameKeys.includes(e.keyCode)) return;
-            
-            // Prevent default behavior for spacebar (page scroll)
-            if (e.keyCode === VK_SPACE) {
-                e.preventDefault();
-                shootSentRef.current = false; // Reset shoot flag when space is released
+        const applyKeyUp = (code: number) => {
+            if (!GAME_KEY_CODES.includes(code)) return;
+            if (code === VK_SPACE) {
+                shootSentRef.current = false;
             }
-            
             setKeysPressed(prev => {
                 const newSet = new Set(prev);
-                newSet.delete(e.keyCode);
-                keysPressedRef.current = newSet; // Keep ref in sync
-                
-                // If all keys released, send action with false values to apply residual movement
+                newSet.delete(code);
+                keysPressedRef.current = newSet;
                 if (newSet.size === 0) {
                     sendAction();
                 }
-                
                 return newSet;
             });
+        };
+
+        const applyFirePress = () => {
+            if (!snapshotRef.current) return;
+            wsClient.send({ type: 'action', action: buildAction(keysPressedRef.current, true) });
+        };
+
+        touchBridgeRef.current = {
+            keyDown: applyKeyDown,
+            keyUp: applyKeyUp,
+            fire: applyFirePress
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!GAME_KEY_CODES.includes(e.keyCode)) return;
+            if (e.keyCode === VK_SPACE) {
+                e.preventDefault();
+            }
+            applyKeyDown(e.keyCode);
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (!GAME_KEY_CODES.includes(e.keyCode)) return;
+            if (e.keyCode === VK_SPACE) {
+                e.preventDefault();
+            }
+            applyKeyUp(e.keyCode);
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -299,6 +321,38 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         const secs = Math.floor(Math.max(0, seconds) % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
+
+    const bindTouchKey = (code: number) => ({
+        onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+                /* ignore */
+            }
+            touchBridgeRef.current.keyDown(code);
+        },
+        onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            touchBridgeRef.current.keyUp(code);
+            try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+            } catch {
+                /* ignore */
+            }
+        },
+        onPointerCancel: () => touchBridgeRef.current.keyUp(code),
+        onLostPointerCapture: () => touchBridgeRef.current.keyUp(code)
+    });
+
+    const bindFireTouch = () => ({
+        onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            e.stopPropagation();
+            touchBridgeRef.current.fire();
+        }
+    });
 
     // Show loading screen while images are loading
     if (!imagesLoaded) {
@@ -393,15 +447,54 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                 pointerEvents: 'none',
                 zIndex: 1
             }} />
-            <canvas 
-                ref={canvasRef} 
-                className="game-canvas" 
-                style={{ 
-                    position: 'absolute', 
-                    left: 0, 
-                    zIndex: 2 
-                }} 
+            <canvas
+                ref={canvasRef}
+                className="game-canvas"
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    zIndex: 2,
+                    touchAction: 'none'
+                }}
             />
+            {useTouchUi && (
+                <div className="game-touch-controls" role="toolbar" aria-label="Управление">
+                    <div className="game-touch-controls-inner">
+                        <div className="game-touch-cluster">
+                            <div className="game-touch-row">
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_Q)} aria-label="Башня влево">
+                                    ⟲
+                                </button>
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_W)} aria-label="Вперёд">
+                                    W
+                                </button>
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_E)} aria-label="Башня вправо">
+                                    ⟳
+                                </button>
+                            </div>
+                            <div className="game-touch-row">
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_A)} aria-label="Влево">
+                                    A
+                                </button>
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_S)} aria-label="Назад">
+                                    S
+                                </button>
+                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_D)} aria-label="Вправо">
+                                    D
+                                </button>
+                            </div>
+                        </div>
+                        <div className="game-touch-cluster" style={{ alignSelf: 'center' }}>
+                            <button type="button" className="game-touch-btn game-touch-btn-fire" {...bindFireTouch()} aria-label="Огонь">
+                                ОГОНЬ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div ref={menuRef} className="game-ui" style={{ 
                 zIndex: 10000, 
                 position: 'fixed', 
@@ -409,7 +502,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: 'auto', 
-                minWidth: '400px',
+                minWidth: 'min(400px, 94vw)',
                 maxWidth: '90vw',
                 height: 'auto',
                 minHeight: '50px',

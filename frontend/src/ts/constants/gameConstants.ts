@@ -1,8 +1,13 @@
 import {FieldMap} from "../additionally/type";
 
 export class ResolutionManager {
-    private static resizeWidthCoeff: number = 1;
-    private static readonly DEVELOPING_SCREEN_WIDTH: number = 1920;
+    /** Логическое поле сервера (совпадает с GameWorld на бэкенде) */
+    public static readonly BASE_GAME_WIDTH: number = 1920;
+    public static readonly BASE_GAME_HEIGHT: number = 1080;
+
+    private static uniformScale: number = 1;
+    private static offsetX: number = 0;
+    private static offsetY: number = 0;
 
     // Store original (base) values that never change
     private static readonly baseFieldsX: FieldMap<number | number[]> = {
@@ -71,25 +76,63 @@ export class ResolutionManager {
     public static getTankEntityWidth(num: number): number { return ResolutionManager.HULL_WIDTH[num] + ResolutionManager.TRACK_INDENT }
     public static getTankEntityHeight(num: number): number { return ResolutionManager.HULL_HEIGHT[num] + (ResolutionManager.TRACK_INDENT << 1) }
 
-    public static resizeX(x: number): number { return Math.round(x * ResolutionManager.resizeWidthCoeff) }
-    public static resizeY(y: number): number { return Math.round(y * ResolutionManager.resizeWidthCoeff) }
-    public static setResolutionResizeCoeff(width: number){
-        ResolutionManager.resizeWidthCoeff = width / ResolutionManager.DEVELOPING_SCREEN_WIDTH;
+    /** Масштаб игрового мира на холсте (одинаково по X и Y, без искажений). */
+    public static getUniformScale(): number {
+        return ResolutionManager.uniformScale;
+    }
+
+    public static getOffsetX(): number { return ResolutionManager.offsetX }
+    public static getOffsetY(): number { return ResolutionManager.offsetY }
+
+    /** Размер области 1920×1080 в пикселях холста (после uniform scale). */
+    public static getGameViewportWidthPx(): number {
+        return ResolutionManager.BASE_GAME_WIDTH * ResolutionManager.uniformScale;
+    }
+    public static getGameViewportHeightPx(): number {
+        return ResolutionManager.BASE_GAME_HEIGHT * ResolutionManager.uniformScale;
+    }
+
+    /** Координаты мира сервера → пиксели холста (с учётом letterbox). */
+    public static worldToCanvasX(x: number): number {
+        return Math.round(x * ResolutionManager.uniformScale + ResolutionManager.offsetX);
+    }
+    public static worldToCanvasY(y: number): number {
+        return Math.round(y * ResolutionManager.uniformScale + ResolutionManager.offsetY);
+    }
+
+    /** Длина/размер в единицах мира сервера → пиксели на холсте. */
+    public static scaleWorldLength(len: number): number {
+        return Math.max(1, Math.round(len * ResolutionManager.uniformScale));
+    }
+
+    /**
+     * Вызов при изменении размера холста: вписываем мир 1920×1080 с сохранением пропорций.
+     */
+    public static setViewport(canvasWidth: number, canvasHeight: number): void {
+        const sx = canvasWidth / ResolutionManager.BASE_GAME_WIDTH;
+        const sy = canvasHeight / ResolutionManager.BASE_GAME_HEIGHT;
+        ResolutionManager.uniformScale = Math.min(sx, sy);
+        ResolutionManager.offsetX = (canvasWidth - ResolutionManager.BASE_GAME_WIDTH * ResolutionManager.uniformScale) / 2;
+        ResolutionManager.offsetY = (canvasHeight - ResolutionManager.BASE_GAME_HEIGHT * ResolutionManager.uniformScale) / 2;
         ResolutionManager.resizeConstants();
     }
-    private static resizeConstants(){
-        // Always compute scaled values from base values (not from already-scaled values)
+
+    private static scaleDesignValue(v: number): number {
+        return Math.round(v * ResolutionManager.uniformScale);
+    }
+
+    private static resizeConstants(): void {
         for (const key in ResolutionManager.baseFieldsX) {
             const baseField = ResolutionManager.baseFieldsX[key];
             ResolutionManager.fieldsX[key] = Array.isArray(baseField)
-                ? baseField.map(val => ResolutionManager.resizeX(val))
-                : ResolutionManager.resizeX(baseField);
+                ? baseField.map(val => ResolutionManager.scaleDesignValue(val))
+                : ResolutionManager.scaleDesignValue(baseField);
         }
         for (const key in ResolutionManager.baseFieldsY) {
             const baseField = ResolutionManager.baseFieldsY[key];
             ResolutionManager.fieldsY[key] = Array.isArray(baseField)
-                ? baseField.map(val => ResolutionManager.resizeY(val))
-                : ResolutionManager.resizeY(baseField);
+                ? baseField.map(val => ResolutionManager.scaleDesignValue(val))
+                : ResolutionManager.scaleDesignValue(baseField);
         }
     }
 }

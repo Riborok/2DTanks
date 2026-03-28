@@ -56,6 +56,14 @@ export interface ServerGrenadeExplosion {
     size: number;
 }
 
+/** Non-grenade bullet hit — client plays BulletImpactAnimation */
+export interface ServerBulletImpact {
+    x: number;
+    y: number;
+    angle: number;
+    bulletType: number;
+}
+
 export interface GameWorldSnapshot {
     tanks: ServerTank[];
     bullets: ServerBullet[];
@@ -63,6 +71,7 @@ export interface GameWorldSnapshot {
     items: ServerItem[];
     explosions?: ServerExplosion[]; // Optional: tank explosions from this tick
     grenadeExplosions?: ServerGrenadeExplosion[]; // Optional: grenade explosions from this tick
+    bulletImpacts?: ServerBulletImpact[];
     keysCollected: number;
     currentLevel: number;
     timeElapsed: number;

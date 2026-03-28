@@ -84,6 +84,9 @@ export class Canvas implements ICanvas {
 
         this.drawAdditionalShapes();
 
+        // Letterbox: поля за пределами 1920×1080 — чёрные
+        this._ctx.fillStyle = '#000000';
+        this._ctx.fillRect(0, 0, this._size.width, this._size.height);
         this._ctx.drawImage(this._bufferCanvas, 0, 0);
     }
     private drawAdditionalShapes(){

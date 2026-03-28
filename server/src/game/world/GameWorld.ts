@@ -76,6 +76,9 @@ export class GameWorld {
     // Track grenade explosions for current tick (cleared each update)
     private grenadeExplosionsThisTick: Array<{ x: number; y: number; angle: number; size: number }> = [];
 
+    /** Small bullet hit / impact sparks (non-grenade), for client BulletImpactAnimation */
+    private bulletImpactsThisTick: Array<{ x: number; y: number; angle: number; bulletType: number }> = [];
+
     constructor(attackerConfig: TankConfig, defenderConfig: TankConfig, roomCode: string) {
         this.roomCode = roomCode;
         this.startTime = Date.now();
@@ -443,6 +446,7 @@ export class GameWorld {
         // But for now, we clear them at the start so they're fresh for this tick
         this.explosionsThisTick = [];
         this.grenadeExplosionsThisTick = [];
+        this.bulletImpactsThisTick = [];
         
         const resistanceCoeff = RESISTANCE_COEFFICIENT[this.backgroundMaterial];
         const airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
@@ -475,6 +479,18 @@ export class GameWorld {
         for (const bullet of this.bullets.values()) {
             // Skip idle bullets (as in original: if (!bulletElement.model.isIdle()) this.update(...))
             if (bullet.model.isIdle()) {
+                // Must match grenade handling below: idle grenades still need explosion on client
+                if (bullet.bulletNum === 4) {
+                    const explosionPoint = bullet.model.entity.calcCenter();
+                    const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + getRandomInt(-30, 30);
+                    const explosionAngle = Math.random() * 2 * Math.PI - Math.PI;
+                    this.grenadeExplosionsThisTick.push({
+                        x: explosionPoint.x,
+                        y: explosionPoint.y,
+                        angle: explosionAngle,
+                        size: explosionSize
+                    });
+                }
                 bulletsToRemove.push(bullet.id);
                 console.log(`[GAMEWORLD] Bullet ${bullet.id} marked for removal: isIdle=true (before update)`);
                 continue;
@@ -532,6 +548,15 @@ export class GameWorld {
                         size: explosionSize
                     });
                     console.log(`[GAMEWORLD] Grenade explosion created: bulletNum=${bullet.bulletNum}, x=${explosionPoint.x.toFixed(1)}, y=${explosionPoint.y.toFixed(1)}, size=${explosionSize}, reason=${isIdle ? 'idle' : 'collision'}`);
+                } else if (collisions.length > 0) {
+                    // Impact sparks for non-grenade bullets hitting walls/tanks (client BulletImpactAnimation)
+                    const center = bullet.model.entity.calcCenter();
+                    this.bulletImpactsThisTick.push({
+                        x: center.x,
+                        y: center.y,
+                        angle: bullet.model.entity.angle,
+                        bulletType: bullet.bulletNum
+                    });
                 }
                 
                 bulletsToRemove.push(bullet.id);
@@ -787,6 +812,7 @@ export class GameWorld {
             items: itemSnapshots,
             explosions: this.explosionsThisTick, // Include tank explosions from this tick
             grenadeExplosions: this.grenadeExplosionsThisTick, // Include grenade explosions from this tick
+            bulletImpacts: this.bulletImpactsThisTick,
             keysCollected: this.keysCollected,
             currentLevel: this.currentLevel,
             timeElapsed: (Date.now() - this.startTime) / 1000
