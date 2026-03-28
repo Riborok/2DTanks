@@ -5,14 +5,14 @@ import { RoomCodeGenerator } from '../utils/roomCodeGenerator';
 export class RoomManager {
     private rooms: Map<string, Room> = new Map();
 
-    createRoom(): { code: string; playerId: string } {
+    createRoom(singlePlayerTest = false): { code: string; playerId: string } {
         let code: string;
         do {
             code = RoomCodeGenerator.generate();
         } while (this.rooms.has(code));
 
-        const room = new Room(code);
-        const playerId = room.addPlayer(null); // First player, no WebSocket yet
+        const room = new Room(code, { singlePlayerTest });
+        const playerId = room.addPlayer(null);
         this.rooms.set(code, room);
 
         return { code, playerId };

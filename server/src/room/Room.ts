@@ -21,14 +21,18 @@ export class Room {
     private currentDeltaTime: number = 16.67; // Default to ~60Hz
     private readonly TICK_RATE = 60; // 60 Hz
     private readonly TICK_INTERVAL = 1000 / this.TICK_RATE;
+    private readonly singlePlayerTest: boolean;
+    private readonly maxPlayers: number;
 
-    constructor(code: string) {
+    constructor(code: string, options?: { singlePlayerTest?: boolean }) {
         this.code = code;
+        this.singlePlayerTest = options?.singlePlayerTest === true;
+        this.maxPlayers = this.singlePlayerTest ? 1 : 2;
     }
 
     addPlayer(ws: WebSocket | null): string | null {
-        if (this.players.size >= 2) {
-            return null; // Room is full
+        if (this.players.size >= this.maxPlayers) {
+            return null;
         }
 
         const playerId = `player_${Date.now()}_${Math.random()}`;
@@ -123,7 +127,15 @@ export class Room {
     }
 
     private areAllPlayersReady(): boolean {
-        if (this.players.size < 2) return false;
+        if (this.singlePlayerTest) {
+            if (this.players.size !== 1)
+                return false;
+            const only = [...this.players.values()][0];
+            return only.role === 'attacker' && !!only.tankConfig && only.ready;
+        }
+
+        if (this.players.size < 2)
+            return false;
 
         for (const player of this.players.values()) {
             if (!player.tankConfig || !player.ready) {
@@ -137,20 +149,25 @@ export class Room {
     private startGame(): void {
         const playersArray = Array.from(this.players.values());
         const attacker = playersArray.find(p => p.role === 'attacker');
-        const defender = playersArray.find(p => p.role === 'defender');
 
-        if (!attacker || !defender || !attacker.tankConfig || !defender.tankConfig) {
-            console.log(`[ROOM ${this.code}] Cannot start game - missing players or configs`);
-            return;
+        if (this.singlePlayerTest) {
+            if (!attacker || !attacker.tankConfig) {
+                console.log(`[ROOM ${this.code}] Cannot start solo game - missing attacker config`);
+                return;
+            }
+            console.log(`[ROOM ${this.code}] Starting solo test game for attacker ${attacker.id}`);
+            this.gameWorld = new GameWorld(attacker.tankConfig, attacker.tankConfig, this.code, true);
+            this.gameWorld.setPlayerTankMapping(attacker.id, '');
+        } else {
+            const defender = playersArray.find(p => p.role === 'defender');
+            if (!attacker || !defender || !attacker.tankConfig || !defender.tankConfig) {
+                console.log(`[ROOM ${this.code}] Cannot start game - missing players or configs`);
+                return;
+            }
+            console.log(`[ROOM ${this.code}] Starting game for attacker ${attacker.id} and defender ${defender.id}`);
+            this.gameWorld = new GameWorld(attacker.tankConfig, defender.tankConfig, this.code, false);
+            this.gameWorld.setPlayerTankMapping(attacker.id, defender.id);
         }
-
-        console.log(`[ROOM ${this.code}] Starting game for attacker ${attacker.id} and defender ${defender.id}`);
-
-        // Initialize game world
-        this.gameWorld = new GameWorld(attacker.tankConfig, defender.tankConfig, this.code);
-        
-        // Set player tank mappings
-        this.gameWorld.setPlayerTankMapping(attacker.id, defender.id);
 
         // Notify all players that game is starting
         for (const player of this.players.values()) {
@@ -238,7 +255,8 @@ export class Room {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
                 player.ws.send(JSON.stringify({
                     type: 'roomUpdate',
-                    players: playersArray
+                    players: playersArray,
+                    singlePlayerTest: this.singlePlayerTest
                 }));
             }
         }

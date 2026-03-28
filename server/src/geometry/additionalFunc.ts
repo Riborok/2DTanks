@@ -48,6 +48,19 @@ export function calcTurn(fromAngle: number, toAngle: number): number {
 }
 
 /**
+ * Кратчайшая разница углов (toAngle − fromAngle) в [-π, π].
+ * Для направления движения и тяги — без разрывов у 0/2π и без cos(turn) по углу в [0, 2π).
+ */
+export function shortestAngleDelta(fromAngle: number, toAngle: number): number {
+    let d = toAngle - fromAngle;
+    while (d > Math.PI)
+        d -= 2 * Math.PI;
+    while (d < -Math.PI)
+        d += 2 * Math.PI;
+    return d;
+}
+
+/**
  * Calculates the middle of the segment between two points.
  * @param point1 - The first point of the segment.
  * @param point2 - The second point of the segment.

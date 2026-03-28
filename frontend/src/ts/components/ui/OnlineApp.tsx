@@ -26,6 +26,7 @@ const OnlineApp: React.FC = () => {
     const [error, setError] = useState<string>('');
     const [gameEndReason, setGameEndReason] = useState<{ winner: 'attacker' | 'defender'; reason: string } | null>(null);
     const [myTankConfig, setMyTankConfig] = useState<any>(null);
+    const [singlePlayerRoom, setSinglePlayerRoom] = useState(false);
     
     // Use refs to access latest values in callbacks
     const myPlayerIdRef = useRef<string>('');
@@ -63,6 +64,11 @@ const OnlineApp: React.FC = () => {
 
         wsClient.on('roomUpdate', (message) => {
             console.log('Received roomUpdate:', message);
+            if (message.singlePlayerTest === true) {
+                setSinglePlayerRoom(true);
+            } else if (message.singlePlayerTest === false) {
+                setSinglePlayerRoom(false);
+            }
             if (message.players) {
                 console.log('Updating players:', message.players);
                 // Ensure ready is explicitly set to false if undefined
@@ -116,11 +122,19 @@ const OnlineApp: React.FC = () => {
 
     const handleCreateRoom = () => {
         setError('');
+        setSinglePlayerRoom(false);
         wsClient.send({ type: 'createRoom' });
+    };
+
+    const handleCreateSoloTest = () => {
+        setError('');
+        setSinglePlayerRoom(true);
+        wsClient.send({ type: 'createRoom', singlePlayer: true });
     };
 
     const handleJoinRoom = (code: string) => {
         setError('');
+        setSinglePlayerRoom(false);
         wsClient.send({ type: 'joinRoom', code });
     };
 
@@ -172,6 +186,7 @@ const OnlineApp: React.FC = () => {
         setPlayers([]);
         setError('');
         setGameEndReason(null);
+        setSinglePlayerRoom(false);
         // Reconnect
         wsClient.connect().catch(err => {
             console.error('Failed to reconnect:', err);
@@ -185,6 +200,7 @@ const OnlineApp: React.FC = () => {
             {screen === 'connection' && (
                 <ConnectionScreen
                     onCreateRoom={handleCreateRoom}
+                    onCreateSoloTest={handleCreateSoloTest}
                     onJoinRoom={handleJoinRoom}
                     error={error}
                 />
@@ -204,6 +220,7 @@ const OnlineApp: React.FC = () => {
                     myPlayerId={myPlayerId}
                     myRole={myRole}
                     players={players}
+                    singlePlayerRoom={singlePlayerRoom}
                     onReady={handleReady}
                     onCopyCode={() => {}}
                 />

@@ -4,7 +4,7 @@ import { TankModel, ITankModel } from '../../model/tank/ITankModel';
 import { IBulletModel } from '../../model/bullet/IBulletModel';
 import { TankPartsCreator } from '../../components/tank_parts/TankPartsCreator';
 import { RectangularEntity } from '../../polygon/entity/IEntity';
-import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus } from '../../constants/gameConstants';
+import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS } from '../../constants/gameConstants';
 import { ModelIDTracker } from '../../utils/IDTracker';
 import { EntityManipulator } from '../../polygon/entity/EntityManipulator';
 import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
@@ -46,6 +46,7 @@ export class GameWorld {
     
     // Number of keys to spawn and collect per level
     private static readonly REQUIRED_KEYS_PER_LEVEL: number = 1;
+    private static readonly COLLISION_RESOLVE_ITERATIONS: number = 3;
     
     private tanks: Map<string, ServerTank> = new Map();
     private bullets: Map<number, ServerBullet> = new Map();
@@ -66,6 +67,7 @@ export class GameWorld {
     
     private attackerConfig: TankConfig;
     private defenderConfig: TankConfig;
+    private readonly singlePlayerTest: boolean;
     
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
@@ -79,11 +81,12 @@ export class GameWorld {
     /** Small bullet hit / impact sparks (non-grenade), for client BulletImpactAnimation */
     private bulletImpactsThisTick: Array<{ x: number; y: number; angle: number; bulletType: number }> = [];
 
-    constructor(attackerConfig: TankConfig, defenderConfig: TankConfig, roomCode: string) {
+    constructor(attackerConfig: TankConfig, defenderConfig: TankConfig, roomCode: string, singlePlayerTest = false) {
         this.roomCode = roomCode;
         this.startTime = Date.now();
         this.attackerConfig = attackerConfig;
         this.defenderConfig = defenderConfig;
+        this.singlePlayerTest = singlePlayerTest;
         
         // Initialize collision system with Quadtree
         this.collisionSystem = new Quadtree<IEntity>(0, 0, this.SIZE.width, this.SIZE.height);
@@ -191,47 +194,48 @@ export class GameWorld {
         };
         this.tanks.set(attackerTank.id, attackerTank);
         this.collisionSystem.insert(attackerEntity);
-        
-        // Spawn defender
-        const defenderTankParts = TankPartsCreator.create(
-            this.defenderConfig.hullNum,
-            this.defenderConfig.trackNum,
-            this.defenderConfig.turretNum,
-            this.defenderConfig.weaponNum
-        );
-        
-        const defenderSpawnPoint = this.pointSpawner.getRandomSpawnPoint(
-            ResolutionManager.getTankEntityWidth(this.defenderConfig.hullNum),
-            ResolutionManager.getTankEntityHeight(this.defenderConfig.hullNum),
-            0, SPAWN_GRIDS_LINES_AMOUNT - 1,
-            Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
-        );
-        
-        const defenderEntity = new RectangularEntity(
-            defenderSpawnPoint,
-            ResolutionManager.getTankEntityWidth(this.defenderConfig.hullNum),
-            ResolutionManager.getTankEntityHeight(this.defenderConfig.hullNum),
-            0,
-            defenderTankParts.hull.mass + defenderTankParts.turret.mass + defenderTankParts.weapon.mass,
-            ModelIDTracker.tankId
-        );
-        
-        const defenderModel = new TankModel(defenderTankParts, defenderEntity);
-        const defenderTank: ServerTank = {
-            id: `defender_${Date.now()}`,
-            model: defenderModel,
-            playerId: '', // Will be set when player connects
-            role: 'defender'
-        };
-        this.tanks.set(defenderTank.id, defenderTank);
-        this.collisionSystem.insert(defenderEntity);
+
+        if (!this.singlePlayerTest) {
+            const defenderTankParts = TankPartsCreator.create(
+                this.defenderConfig.hullNum,
+                this.defenderConfig.trackNum,
+                this.defenderConfig.turretNum,
+                this.defenderConfig.weaponNum
+            );
+
+            const defenderSpawnPoint = this.pointSpawner.getRandomSpawnPoint(
+                ResolutionManager.getTankEntityWidth(this.defenderConfig.hullNum),
+                ResolutionManager.getTankEntityHeight(this.defenderConfig.hullNum),
+                0, SPAWN_GRIDS_LINES_AMOUNT - 1,
+                Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2), SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+            );
+
+            const defenderEntity = new RectangularEntity(
+                defenderSpawnPoint,
+                ResolutionManager.getTankEntityWidth(this.defenderConfig.hullNum),
+                ResolutionManager.getTankEntityHeight(this.defenderConfig.hullNum),
+                0,
+                defenderTankParts.hull.mass + defenderTankParts.turret.mass + defenderTankParts.weapon.mass,
+                ModelIDTracker.tankId
+            );
+
+            const defenderModel = new TankModel(defenderTankParts, defenderEntity);
+            const defenderTank: ServerTank = {
+                id: `defender_${Date.now()}`,
+                model: defenderModel,
+                playerId: '',
+                role: 'defender'
+            };
+            this.tanks.set(defenderTank.id, defenderTank);
+            this.collisionSystem.insert(defenderEntity);
+        }
     }
 
     public setPlayerTankMapping(attackerPlayerId: string, defenderPlayerId: string): void {
         for (const tank of this.tanks.values()) {
             if (tank.role === 'attacker') {
                 tank.playerId = attackerPlayerId;
-            } else {
+            } else if (tank.role === 'defender') {
                 tank.playerId = defenderPlayerId;
             }
         }
@@ -310,6 +314,8 @@ export class GameWorld {
                               deltaTime: number): void {
         const resistanceCoeff = RESISTANCE_COEFFICIENT[this.backgroundMaterial];
         const airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
+
+        tank.model.setMovementSurface(this.backgroundMaterial);
         
         // Remove from collision system before movement (as in original TankMovementManager.hullUpdate)
         this.collisionSystem.remove(tank.model.entity);
@@ -332,17 +338,19 @@ export class GameWorld {
             tank.model.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
         }
         
-        // Apply physics movement (as in original TankMovementManager.hullUpdate - after action, before collision)
-        EntityManipulator.movement(tank.model.entity);
-        EntityManipulator.angularMovement(tank.model.entity);
-        
-        // Check and resolve collisions immediately after movement (as in original)
-        const collisions = Array.from(this.collisionSystem.getCollisions(tank.model.entity));
-        for (const collided of collisions) {
-            // Don't resolve collision with self
-            if (collided.id !== tank.model.entity.id) {
+        // Apply physics movement (после сил — сдвиг и поворот с учётом deltaTime относительно эталонного шага)
+        EntityManipulator.movement(tank.model.entity, deltaTime);
+        const hullDeltaAngle = tank.model.entity.angularVelocity * (deltaTime / PHYSICS_REFERENCE_DELTA_MS);
+        EntityManipulator.angularMovement(tank.model.entity, deltaTime);
+        tank.model.syncTurretAfterHullStep(hullDeltaAngle);
+
+        for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
+            const collisions = Array.from(this.collisionSystem.getCollisions(tank.model.entity))
+                .filter(collided => collided.id !== tank.model.entity.id);
+            if (collisions.length === 0)
+                break;
+            for (const collided of collisions)
                 CollisionResolver.resolveCollision(tank.model.entity, collided);
-            }
         }
         
         // Re-insert into collision system (as in original TankMovementManager.hullUpdate)
@@ -504,7 +512,7 @@ export class GameWorld {
                 // Bullet not in system yet, that's fine
             }
             
-            EntityManipulator.movement(bullet.model.entity);
+            EntityManipulator.movement(bullet.model.entity, deltaTime);
             bullet.model.residualMovement(airResistanceCoeff, deltaTime);
             
             // Insert into collision system to check collisions at new position (like in original update method)
@@ -826,8 +834,7 @@ export class GameWorld {
     public checkGameEnd(): { winner: 'attacker' | 'defender'; reason: string } | null {
         const timeElapsed = (Date.now() - this.startTime) / 1000;
         
-        // Time limit reached - defender wins
-        if (timeElapsed >= this.FINISH_TIME / 1000) {
+        if (!this.singlePlayerTest && timeElapsed >= this.FINISH_TIME / 1000) {
             return { winner: 'defender', reason: 'timeLimit' };
         }
 

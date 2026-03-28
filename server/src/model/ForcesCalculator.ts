@@ -1,6 +1,4 @@
-import {GRAVITY_ACCELERATION} from "../constants/gameConstants";
-
-const FRAME_RATE: number = 17;
+import {GRAVITY_ACCELERATION, PHYSICS_REFERENCE_DELTA_MS} from "../constants/gameConstants";
 
 export class LandForcesCalculator {
     private constructor() { }
@@ -10,7 +8,7 @@ export class LandForcesCalculator {
         const frictionForce = resistanceCoeff * mass * GRAVITY_ACCELERATION;
         const airResistanceForce = airResistanceCoeff * speed * speed * lengthwiseArea;
 
-        return ((thrust - frictionForce - airResistanceForce) / mass) * (deltaTime / FRAME_RATE);
+        return ((thrust - frictionForce - airResistanceForce) / mass) * (deltaTime / PHYSICS_REFERENCE_DELTA_MS);
     }
 
     public static calcAngularAcceleration(thrust: number, resistanceCoeff: number, airResistanceCoeff: number,
@@ -28,7 +26,7 @@ export class AirForcesCalculator {
                                    speed: number, mass: number, lengthwiseArea: number): number {
         const airResistanceForce = airResistanceCoeff * speed * speed * lengthwiseArea;
 
-        return ((thrust - airResistanceForce) / mass) * (deltaTime / FRAME_RATE);
+        return ((thrust - airResistanceForce) / mass) * (deltaTime / PHYSICS_REFERENCE_DELTA_MS);
     }
 
     public static calcAngularAcceleration(thrust: number, airResistanceCoeff: number, deltaTime: number,

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 
 interface ConnectionScreenProps {
     onCreateRoom: () => void;
+    /** Создать комнату без защитника — только атакующий, для тестов */
+    onCreateSoloTest?: () => void;
     onJoinRoom: (code: string) => void;
     error?: string;
 }
 
-const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onCreateRoom, onJoinRoom, error }) => {
+const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onCreateRoom, onCreateSoloTest, onJoinRoom, error }) => {
     const [roomCode, setRoomCode] = useState('');
 
     const handleJoin = () => {
@@ -24,6 +26,16 @@ const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onCreateRoom, onJoi
                     <button className="connection-button create-button" onClick={onCreateRoom}>
                         Создать игру
                     </button>
+                    {onCreateSoloTest && (
+                        <button
+                            type="button"
+                            className="connection-button create-button"
+                            onClick={onCreateSoloTest}
+                            style={{ marginTop: '10px', opacity: 0.95 }}
+                        >
+                            Тест: 1 игрок (без защитника)
+                        </button>
+                    )}
                     
                     <div className="join-section">
                         <input

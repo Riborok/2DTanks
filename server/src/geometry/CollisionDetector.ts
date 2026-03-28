@@ -1,4 +1,4 @@
-import {Axis, Point} from "./Point";
+import {Axis, Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionResult} from "../utils/types";
 import {calcMidBetweenTwoPoint} from "./additionalFunc";
@@ -74,10 +74,18 @@ export class CollisionDetector {
             !CollisionDetector.isSmallestOverlapAxisFound(axes2, false, polygon1, polygon2, collisionResultHelp))
             return null;
 
+        const axis = collisionResultHelp.collisionAxis!.clone();
+        const c1 = polygon1.calcCenter();
+        const c2 = polygon2.calcCenter();
+        const from2To1 = VectorUtils.subtract(c1, c2);
+        if (VectorUtils.dotProduct(from2To1, axis) < 0)
+            axis.scale(-1);
+
         return {
             collisionPoint: CollisionDetector.findClosestVertex(polygon1, polygon2,
                 collisionResultHelp.collisionAxis!, collisionResultHelp.isPolygon1Axis),
-            overlap: collisionResultHelp.smallestOverlap
+            overlap: collisionResultHelp.smallestOverlap,
+            normal: new Vector(axis.x, axis.y)
         };
     }
     

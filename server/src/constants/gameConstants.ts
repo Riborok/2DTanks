@@ -2,10 +2,18 @@ export const ANGLE_EPSILON: number = Math.PI / 180;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 export const SHAPE: string[] = ['Rect', 'Square'];
 export const WALL_MASS: number[][] = [[4, 2], [5.5, 2.5], [7, 3]];
-export const RESISTANCE_COEFFICIENT: number[] = [0.55, 0.7, 0.85];
-export const AIR_RESISTANCE_COEFFICIENT: number = 0.0000015;
+export const RESISTANCE_COEFFICIENT: number[] = [0.6, 0.76, 0.9];
+/**
+ * Доля бокового скольжения гусениц по покрытию (не «сила дрифта» в аркадном смысле).
+ * Индекс = backgroundMaterial: 0 трава, 1 грунт, 2 песчаник.
+ * Чем выше — тем слабее выравнивание с корпусом (лёгкий занос); трава > грунт > песчаник.
+ */
+export const TRACK_SLIP_BY_MATERIAL: number[] = [0.08, 0.05, 0.025];
+export const AIR_RESISTANCE_COEFFICIENT: number = 0.0000022;
 export const BULLET_ANIMATION_SIZE_INCREASE_COEFF: number = 5;
 export const GRAVITY_ACCELERATION: number = 0.01;
+/** Делитель в формулах сил и множитель для согласования сдвига/поворота с variable deltaTime (мс) */
+export const PHYSICS_REFERENCE_DELTA_MS: number = 17;
 export const OBSTACLE_WALL_WIDTH_AMOUNT: number = 17;
 export const OBSTACLE_WALL_HEIGHT_AMOUNT: number = 7;
 export const WALL_GRID_COLUMNS_AMOUNT: number = 12;

@@ -1,4 +1,4 @@
-import {Point} from "../geometry/Point";
+import {Point, Vector} from "../geometry/Point";
 import {Axis} from "../geometry/Point";
 
 export type Size = {
@@ -19,9 +19,11 @@ export type TankConfig = {
     weaponNum: number;
 };
 
+/** normal: unit vector from receiving body (polygon2) toward imparting (polygon1); separation pushes imparting along +normal */
 export type CollisionResult = {
     collisionPoint: Point;
     overlap: number;
+    normal: Vector;
 };
 
 export interface IHealth {

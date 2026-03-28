@@ -7,11 +7,11 @@ import {Point, Vector} from "../../geometry/Point";
 import {ANGLE_EPSILON} from "../../constants/gameConstants";
 import {IArmor, IBulletReceiver, IBulletShooter, ILandMovement, MotionData} from "../../utils/types";
 import {PointRotator} from "../../geometry/PointRotator";
-import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
-import {remapValueToRange} from "../../utils/additionalFunc";
+import {shortestAngleDelta} from "../../geometry/additionalFunc";
 import {getTurretWidth} from "../../components/tank_parts/ITurret";
 import {getBarrelLength} from "../../components/tank_parts/IWeapon";
 import {LandForcesCalculator} from "../ForcesCalculator";
+import {TRACK_SLIP_BY_MATERIAL} from "../../constants/gameConstants";
 
 interface ITurretControl {
     get turretAngle(): number;
@@ -20,13 +20,30 @@ interface ITurretControl {
 }
 
 export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletShooter, ITurretControl, IBulletReceiver {
+    /** Повернуть башню на тот же угол, на который за шаг повернулся корпус (ω·dt). */
+    syncTurretAfterHullStep(deltaAngleRadians: number): void;
+    /** Индекс материала уровня (0 трава, 1 грунт, 2 песчаник) — влияет на силу дрифта. */
+    setMovementSurface(materialIndex: number): void;
 }
 
 export class TankModel extends LandModel implements ITankModel {
     private static readonly DEFAULT_BULLET_NUM: number = 4;
-    private static readonly VELOCITY_RECOVERY_COEFF: number = 0.017;
+    /**
+     * Насколько быстро вектор скорости подтягивается к направлению корпуса (гусеницы тянут вдоль корпуса).
+     * Умножается на (1 - k·slip); не путать со старым микроскопическим коэффициентом — там получался «лед».
+     */
+    /** Обычный ход: сильнее тяга скорости к корпусу = меньше дрифт */
+    private static readonly TRACK_ALIGNMENT_STRENGTH: number = 0.178;
+    private static readonly SLIP_ALIGNMENT_REDUCTION: number = 0.48;
+    private static readonly MAX_VELOCITY_ALIGN_STEP: number = 0.2;
+    /** Чем меньше — тем на ходу ближе скорость к корпусу (меньше занос по умолчанию) */
+    private static readonly SPEED_DRIFT_RETENTION: number = 0.14;
+    /** Торможение: во сколько раз слабее выравнивание (больше дрифта) */
+    private static readonly BRAKING_ALIGNMENT_SCALE: number = 0.44;
+    private static readonly BRAKING_ALIGN_CAP: number = 0.18;
 
     private readonly _tankParts: TankParts;
+    private _surfaceMaterialIndex: number = 1;
     private _lastTimeShot: number = 0; // Initialize to 0 so first shot always works
     private _bulletQuantity: number = 0;
     private _bulletNum: number = TankModel.DEFAULT_BULLET_NUM;
@@ -45,6 +62,17 @@ export class TankModel extends LandModel implements ITankModel {
         this._armor = tankParts.hull.armor;
         // Reset _lastTimeShot to 0 so first shot always works
         this._lastTimeShot = 0;
+    }
+
+    /** Без обнуления осей при смене знака — иначе рывки при торможении по диагонали. */
+    protected applyVelocityChange(acceleration: number, angle: number) {
+        this._entity.velocity.addToCoordinates(
+            acceleration * Math.cos(angle),
+            acceleration * Math.sin(angle));
+        if (this._entity.velocity.length < 0.0008) {
+            this._entity.velocity.x = 0;
+            this._entity.velocity.y = 0;
+        }
     }
     
     public takeDamage(bullet: IBulletModel) {
@@ -107,7 +135,17 @@ export class TankModel extends LandModel implements ITankModel {
         this._turretAngle -= this._tankParts.turret.angleSpeed * deltaTime;
     }
     
-    private incTurretAngle(deltaAngle: number) { this._turretAngle += deltaAngle }
+    public syncTurretAfterHullStep(deltaAngleRadians: number) {
+        this._turretAngle += deltaAngleRadians;
+    }
+
+    public setMovementSurface(materialIndex: number) {
+        this._surfaceMaterialIndex = Math.max(0, Math.min(TRACK_SLIP_BY_MATERIAL.length - 1, materialIndex));
+    }
+
+    private getSurfaceSlip(): number {
+        return TRACK_SLIP_BY_MATERIAL[this._surfaceMaterialIndex] ?? 0.1;
+    }
     
     public clockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
@@ -118,7 +156,6 @@ export class TankModel extends LandModel implements ITankModel {
                 entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
 
         this.updateAngularVelocity();
-        this.incTurretAngle(entity.angularVelocity);
     }
     
     public counterclockwiseMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
@@ -130,7 +167,6 @@ export class TankModel extends LandModel implements ITankModel {
                 entity.angularVelocity, entity.mass, entity.lengthwiseArea, entity.radiusLength);
 
         this.updateAngularVelocity();
-        this.incTurretAngle(entity.angularVelocity);
     }
     
     private updateAngularVelocity() {
@@ -140,35 +176,68 @@ export class TankModel extends LandModel implements ITankModel {
         const entity = this._entity;
         const velocity = entity.velocity;
 
-        if (this._isDrift || this._isBraking)
-            this.incAngularVelocity(entity, velocity);
+        if (this._isDrift) {
+            if (!this._isBraking)
+                this.incAngularVelocity(entity, velocity);
+            else
+                this.incAngularVelocityBraking(entity, velocity);
+        }
 
-        if (!this._isBraking)
-            this.decAngularVelocity(entity, velocity);
+        this.decAngularVelocity(entity, velocity);
+        this.clampAngularVelocity();
     }
     
     private incAngularVelocity(entity: IEntity, velocity: Vector) {
         const coeff = this.calcCoeff();
         const speedFactor = 1 + velocity.length / (this._tankParts.track.forwardData.finishSpeed * coeff);
         const massFactor = 1 + entity.mass / (coeff * 10);
-        entity.angularVelocity *= massFactor * speedFactor;
+        const slip = this.getSurfaceSlip();
+        const raw = (speedFactor * massFactor - 1) * slip * 0.14;
+        const boost = 1 + Math.min(0.016, Math.max(0, raw));
+        entity.angularVelocity *= boost;
+    }
+
+    /** При торможении сильнее «разворот» ω в заносе */
+    private incAngularVelocityBraking(entity: IEntity, velocity: Vector) {
+        const coeff = this.calcCoeff();
+        const speedFactor = 1 + velocity.length / (this._tankParts.track.forwardData.finishSpeed * coeff);
+        const massFactor = 1 + entity.mass / (coeff * 10);
+        const slip = this.getSurfaceSlip();
+        const raw = (speedFactor * massFactor - 1) * (0.28 + slip * 0.22);
+        const boost = 1 + Math.min(0.028, Math.max(0, raw));
+        entity.angularVelocity *= boost;
+    }
+
+    private clampAngularVelocity() {
+        const wFin = this._tankParts.track.angularData.finishSpeed;
+        const lim = Math.max(0.038, wFin * 2.25);
+        this._entity.angularVelocity = Math.max(-lim, Math.min(lim, this._entity.angularVelocity));
     }
     
     private calcCoeff(): number {
         let coeff: number = 100;
         if (this._isDrift)
-            coeff -= 25;
+            coeff -= Math.round(4 + 5 * this.getSurfaceSlip());
         if (this._isBraking)
             coeff -= 5;
         return coeff;
     }
     
     private decAngularVelocity(entity: IEntity, velocity: Vector) {
-        const coeff: number = 20;
+        const grip = 1 - this.getSurfaceSlip();
+        let coeff: number = 30 + grip * 14;
+        if (this._isBraking)
+            coeff += 8;
         const speedFactor = 1 - velocity.length / (this._tankParts.track.forwardData.finishSpeed * coeff);
         const massFactor = 1 - entity.mass / (coeff * 10);
-        entity.angularVelocity *= massFactor * speedFactor;
-        velocity.scale(massFactor);
+        let wDamp = massFactor * speedFactor;
+        let vDamp = massFactor;
+        if (this._isBraking) {
+            wDamp = 0.7 * wDamp + 0.3;
+            vDamp = 0.72 * vDamp + 0.28;
+        }
+        entity.angularVelocity *= wDamp;
+        velocity.scale(vDamp);
     }
     
     public forwardMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
@@ -181,45 +250,40 @@ export class TankModel extends LandModel implements ITankModel {
             resistanceCoeff, airResistanceCoeff, deltaTime);
     }
     
-    private movement(data: MotionData, angle: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
+    /**
+     * thrustAngle — направление тяги (вперёд: hull, назад: hull+π).
+     * Торможение: тяга против скорости (скаляр по кратчайшему углу), без квадрантов и −π/2.
+     */
+    private movement(data: MotionData, thrustAngle: number, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         const entity = this._entity;
+        const hullAngle = entity.angle;
         const speed = entity.velocity.length;
-        const velocityAngle = speed === 0 ? angle : entity.velocity.angle;
-        const turn = calcTurn(angle, velocityAngle);
+        const velAngle = speed < 1e-5 ? thrustAngle : entity.velocity.angle;
 
-        this.setBrakingStatus(turn);
+        const dThrustVel = shortestAngleDelta(velAngle, thrustAngle);
+        const dHullVel = shortestAngleDelta(velAngle, hullAngle);
 
-        if (TankModel.isStraightMovement(turn)) {
+        const cosThrustVel = Math.cos(dThrustVel);
+        this._isBraking = speed > 0.035 && cosThrustVel < -0.09;
+
+        const isStraight = Math.abs(dThrustVel) <= ANGLE_EPSILON;
+        const isReverse = Math.abs(Math.abs(dHullVel) - Math.PI) <= ANGLE_EPSILON;
+
+        if (isStraight) {
             this._isDrift = false;
-            this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, velocityAngle);
-        }
-        else {
-            this._isDrift = !TankModel.isReverseMovement(turn);
+            this.handleStraightMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, velAngle);
+        } else {
+            this._isDrift = !isReverse;
             if (this._isDrift) {
-                this.determineDribbleSpeed(turn);
-                this.applyTurn(this.calcShortestTurn(turn));
+                if (this._isBraking)
+                    this.determineDribbleSpeedBraking(dHullVel);
+                else
+                    this.determineDribbleSpeedMild(dHullVel);
+                this.alignVelocityTowardHull(dHullVel);
             }
-            this.handleDriftMovement(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, turn, velocityAngle);
+            if (this._isBraking || speed < data.finishSpeed)
+                this.applyDriftThrust(data, resistanceCoeff, airResistanceCoeff, deltaTime, speed, velAngle, dThrustVel);
         }
-    }
-    
-    private setBrakingStatus(turn: number) {
-        this._isBraking = isAngleInQuadrant2or3(turn);
-    }
-    
-    private calcShortestTurn(turn: number): number {
-        if (this._isBraking)
-            turn = TankModel.adjustTurnForBraking(turn);
-        turn = TankModel.adjustTurnForRecovery(turn);
-        return turn;
-    }
-    
-    private static isStraightMovement(turn: number): boolean {
-        return turn <= ANGLE_EPSILON || 2 * Math.PI - turn <= ANGLE_EPSILON;
-    }
-    
-    private static isReverseMovement(turn: number): boolean {
-        return Math.abs(turn - Math.PI) <= ANGLE_EPSILON;
     }
     
     private handleStraightMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
@@ -234,52 +298,76 @@ export class TankModel extends LandModel implements ITankModel {
         }
     }
     
-    private handleDriftMovement(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
-                                speed: number, turn: number, velocityAngle: number) {
-        if (this._isBraking || speed < data.finishSpeed) {
-            const acceleration = LandForcesCalculator.calcAcceleration(
-                data.force * Math.cos(turn), resistanceCoeff, airResistanceCoeff, deltaTime,
-                speed, this._entity.mass, this._entity.lengthwiseArea);
+    private applyDriftThrust(data: MotionData, resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number,
+                             speed: number, velAngle: number, dThrustVel: number) {
+        const thrustAlongVel = Math.cos(dThrustVel);
+        const acceleration = LandForcesCalculator.calcAcceleration(
+            data.force * thrustAlongVel, resistanceCoeff, airResistanceCoeff, deltaTime,
+            speed, this._entity.mass, this._entity.lengthwiseArea);
 
-            this.applyVelocityChange(acceleration, velocityAngle);
-        }
+        this.applyVelocityChange(acceleration, velAngle);
     }
-    
-    private static adjustTurnForBraking(turn: number): number {
-        return clampAngle(turn - Math.PI / 2);
+
+    /** Подворот вектора скорости к корпусу по кратчайшему углу dHullVel = hull − vel (в [-π,π]). */
+    private alignVelocityTowardHull(dHullVel: number) {
+        const slip = this.getSurfaceSlip();
+        const massNorm = Math.min(Math.max(this._entity.mass / 11, 0.88), 1.12);
+        const finish = this._tankParts.track.forwardData.finishSpeed;
+        const speed = this._entity.velocity.length;
+        const speedRatio = Math.min(1, speed / (finish * 0.36 + 0.32));
+        const speedRetention = 1 - TankModel.SPEED_DRIFT_RETENTION * speedRatio;
+        let k = TankModel.TRACK_ALIGNMENT_STRENGTH
+            * (1 - TankModel.SLIP_ALIGNMENT_REDUCTION * slip)
+            * massNorm
+            * speedRetention;
+        if (this._isBraking)
+            k *= TankModel.BRAKING_ALIGNMENT_SCALE;
+        let step = dHullVel * k;
+        const cap = this._isBraking ? TankModel.BRAKING_ALIGN_CAP : TankModel.MAX_VELOCITY_ALIGN_STEP;
+        if (step > cap)
+            step = cap;
+        else if (step < -cap)
+            step = -cap;
+        PointRotator.rotatePoint(this._entity.velocity, Math.sin(step), Math.cos(step));
     }
-    
-    private static adjustTurnForRecovery(turn: number): number {
-        const oppositeTurn = turn - 2 * Math.PI;
-        return (turn > Math.abs(oppositeTurn)) ? oppositeTurn : turn;
+
+    private determineDribbleSpeedMild(dHullVel: number) {
+        const slip = this.getSurfaceSlip();
+        const minScale = 1 - 0.0026 * (0.35 + slip);
+        const lat = Math.abs(Math.sin(dHullVel));
+        const scalar = minScale + (1 - minScale) * (1 - lat);
+        this._entity.velocity.scale(scalar);
     }
-    
-    private applyTurn(turn: number) {
-        turn *= TankModel.VELOCITY_RECOVERY_COEFF * this._entity.mass;
-        PointRotator.rotatePoint(this._entity.velocity, Math.sin(turn), Math.cos(turn));
-    }
-    
-    private determineDribbleSpeed(turn: number) {
-        const scalar = remapValueToRange(Math.abs(Math.cos(turn)),
-            0, 1, 0.95, 1);
+
+    private determineDribbleSpeedBraking(dHullVel: number) {
+        const slip = this.getSurfaceSlip();
+        const minScale = 1 - 0.008 * (0.5 + slip);
+        const lat = Math.abs(Math.sin(dHullVel));
+        const scalar = minScale + (1 - minScale) * (1 - lat);
         this._entity.velocity.scale(scalar);
     }
     
     public residualMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
-        const turn = calcTurn(this._entity.angle, this._entity.velocity.angle);
-        if (this._isDrift || (!TankModel.isStraightMovement(turn) && !TankModel.isReverseMovement(turn))) {
-            this._isDrift = true;
-            this.determineDribbleSpeed(turn);
-        }
+        const entity = this._entity;
+        const hull = entity.angle;
+        const speed = entity.velocity.length;
+        const velAngle = speed < 1e-5 ? hull : entity.velocity.angle;
+        const dHullVel = shortestAngleDelta(velAngle, hull);
+        const isStraight = Math.abs(dHullVel) <= ANGLE_EPSILON;
+        const isRev = Math.abs(Math.abs(dHullVel) - Math.PI) <= ANGLE_EPSILON;
 
         this._isBraking = false;
+        if (this._isDrift || (!isStraight && !isRev)) {
+            this._isDrift = true;
+            this.determineDribbleSpeedMild(dHullVel);
+        }
+
         super.residualMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
     }
     
     public residualAngularMovement(resistanceCoeff: number, airResistanceCoeff: number, deltaTime: number) {
         this.updateAngularVelocity();
         super.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
-        this.incTurretAngle(this._entity.angularVelocity);
     }
 }
 

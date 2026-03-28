@@ -14,10 +14,12 @@ export interface ServerMessage {
         tankConfig?: any;
         ready?: boolean;
     }>;
+    singlePlayerTest?: boolean;
 }
 
 export interface ClientMessage {
     type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action';
+    singlePlayer?: boolean;
     code?: string;
     data?: any;
     ready?: boolean;

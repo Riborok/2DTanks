@@ -12,6 +12,8 @@ interface LobbyScreenProps {
     myPlayerId: string;
     myRole: 'attacker' | 'defender';
     players: Player[];
+    /** Комната в режиме одного игрока (нет защитника) */
+    singlePlayerRoom?: boolean;
     onReady: () => void;
     onCopyCode: () => void;
 }
@@ -21,12 +23,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     myPlayerId, 
     myRole, 
     players, 
+    singlePlayerRoom = false,
     onReady,
     onCopyCode 
 }) => {
     const myPlayer = players.find(p => p.playerId === myPlayerId);
     const otherPlayer = players.find(p => p.playerId !== myPlayerId);
-    const bothReady = myPlayer?.ready && otherPlayer?.ready;
+    const bothReady = singlePlayerRoom ? myPlayer?.ready === true : myPlayer?.ready && otherPlayer?.ready;
 
     // Debug logs
     console.log('LobbyScreen render:', { myPlayerId, players, myPlayer, otherPlayer });
@@ -39,7 +42,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return (
         <div className="lobby-screen">
             <div className="lobby-container">
-                <h1 className="lobby-title">Ожидание игроков</h1>
+                <h1 className="lobby-title">
+                    {singlePlayerRoom ? 'Режим теста (1 игрок)' : 'Ожидание игроков'}
+                </h1>
                 
                 <div className="room-code-section">
                     <label>Код комнаты:</label>
@@ -90,16 +95,21 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         </div>
                     )}
 
-                    {!otherPlayer && (
+                    {!otherPlayer && !singlePlayerRoom && (
                         <div className="player-status">
                             <h3>Ожидание второго игрока...</h3>
+                        </div>
+                    )}
+                    {singlePlayerRoom && (
+                        <div className="player-status">
+                            <p>Защитник не подключается. Нажмите «Готов», чтобы начать.</p>
                         </div>
                     )}
                 </div>
 
                 {bothReady && (
                     <div className="game-starting">
-                        <p>Оба игрока готовы! Игра начинается...</p>
+                        <p>{singlePlayerRoom ? 'Игра начинается...' : 'Оба игрока готовы! Игра начинается...'}</p>
                     </div>
                 )}
             </div>

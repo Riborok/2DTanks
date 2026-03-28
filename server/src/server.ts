@@ -20,8 +20,9 @@ wss.on('connection', (ws: WebSocket, req) => {
             const data = JSON.parse(message.toString());
             
             if (data.type === 'createRoom') {
-                console.log('[SERVER] Creating new room...');
-                const result = roomManager.createRoom();
+                const singlePlayer = data.singlePlayer === true;
+                console.log(`[SERVER] Creating new room...${singlePlayer ? ' (solo test)' : ''}`);
+                const result = roomManager.createRoom(singlePlayer);
                 roomCode = result.code;
                 console.log(`[SERVER] Room created: ${roomCode}, player: ${result.playerId}`);
                 const room = roomManager.getRoom(result.code);
