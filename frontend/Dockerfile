@@ -12,6 +12,12 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Сборка: API и WS через nginx (:5173), без прямого обращения к :3000 из браузера
+ARG GAME_API_ORIGIN=
+ARG GAME_WS_PATH=/game
+ENV GAME_API_ORIGIN=${GAME_API_ORIGIN}
+ENV GAME_WS_PATH=${GAME_WS_PATH}
+
 # Build the application
 RUN npm run build-prod
 

@@ -15,13 +15,17 @@ RUN npm ci
 # Copy source files
 COPY tsconfig.json ./
 COPY src ./src
+COPY scripts ./scripts
+COPY sql ./sql
 
 # Build TypeScript
 RUN npm run build
 
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Expose WebSocket port
 EXPOSE 3000
 
-# Start server
-CMD ["npm", "start"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 

@@ -11,16 +11,17 @@ import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
 import { PointSpawner } from '../spawn/PointSpawner';
 import { ObstacleCreator, ServerWall } from './ObstacleCreator';
 import { MazeCreator } from './MazeCreator';
-import { getRandomInt } from '../../utils/additionalFunc';
 import { CollisionResolver } from '../../geometry/CollisionResolver';
 import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
+import type { DeathmatchInit, GameWorldEndResult } from './gameWorldEndResult';
+import { SeededRandom } from '../../utils/seededRandom';
 
 interface ServerTank {
     id: string;
     model: ITankModel;
     playerId: string;
-    role: 'attacker' | 'defender';
+    role: 'attacker' | 'defender' | 'fighter';
 }
 
 interface ServerBullet {
@@ -40,7 +41,7 @@ interface ServerItem {
 export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
-    private startTime: number;
+    private elapsedMs: number = 0;
     private readonly FINISH_TIME = 300000; // 300 seconds in milliseconds
     private readonly SIZE: Size = { width: 1920, height: 1080 };
     
@@ -68,7 +69,17 @@ export class GameWorld {
     private attackerConfig: TankConfig;
     private defenderConfig: TankConfig;
     private readonly singlePlayerTest: boolean;
-    
+    /** Два игрока, но без лимита времени (режим тренировки). */
+    private readonly practiceMode: boolean;
+    /** FFA: 2–5 игроков, 60 с, победа по киллам. */
+    private readonly deathmatchMode: boolean;
+    private readonly deathmatchSpec: DeathmatchInit | null;
+    private readonly killCounts = new Map<string, number>();
+    private readonly tankConfigByTankId = new Map<string, TankConfig>();
+    private readonly rng: SeededRandom;
+    private readonly rngSeed: number;
+    private static readonly DEATHMATCH_DURATION_SEC = 60;
+
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
     
@@ -81,21 +92,54 @@ export class GameWorld {
     /** Small bullet hit / impact sparks (non-grenade), for client BulletImpactAnimation */
     private bulletImpactsThisTick: Array<{ x: number; y: number; angle: number; bulletType: number }> = [];
 
-    constructor(attackerConfig: TankConfig, defenderConfig: TankConfig, roomCode: string, singlePlayerTest = false) {
+    constructor(
+        attackerConfig: TankConfig,
+        defenderConfig: TankConfig,
+        roomCode: string,
+        singlePlayerTest = false,
+        practiceMode = false,
+        deathmatch?: DeathmatchInit | null,
+        rngSeed?: number
+    ) {
         this.roomCode = roomCode;
-        this.startTime = Date.now();
         this.attackerConfig = attackerConfig;
         this.defenderConfig = defenderConfig;
         this.singlePlayerTest = singlePlayerTest;
-        
+        this.practiceMode = practiceMode;
+        this.deathmatchSpec = deathmatch ?? null;
+        this.deathmatchMode = Boolean(deathmatch && deathmatch.fighters.length >= 2);
+        this.rngSeed = Number.isFinite(rngSeed) ? (rngSeed as number) >>> 0 : (Date.now() >>> 0);
+        this.rng = new SeededRandom(this.rngSeed);
+        if (this.deathmatchMode && deathmatch) {
+            for (const f of deathmatch.fighters) {
+                this.killCounts.set(f.playerId, 0);
+            }
+        }
+
         // Initialize collision system with Quadtree
         this.collisionSystem = new Quadtree<IEntity>(0, 0, this.SIZE.width, this.SIZE.height);
-        
+
         this.initializeLevel(1);
+    }
+
+    public getSeed(): number {
+        return this.rngSeed;
+    }
+
+    private randomFloat(): number {
+        return this.rng.nextFloat();
+    }
+
+    private randomInt(min: number, max: number): number {
+        return this.rng.nextInt(min, max);
     }
 
     private initializeLevel(level: number): void {
         this.currentLevel = level;
+        if (!this.deathmatchMode) {
+            // Для standard считаем ключи по текущему уровню, а не накопительно между уровнями.
+            this.keysCollected = 0;
+        }
         // Reset bonus box spawn timer when level changes
         this.ammoSpawnTimer = 0;
         this.ammoSpawnInterval = 5000; // Reset to initial interval
@@ -111,7 +155,13 @@ export class GameWorld {
             this.backgroundMaterial = 0;
             this.wallMaterial = 0;
         }
-        
+
+        if (this.deathmatchMode && this.deathmatchSpec) {
+            const s = Math.min(2, Math.max(0, this.deathmatchSpec.surfaceMaterial));
+            this.backgroundMaterial = s;
+            this.wallMaterial = (s + 1) % 3;
+        }
+
         // Create walls
         const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, this.wallMaterial, this.SIZE
@@ -150,7 +200,7 @@ export class GameWorld {
 
     private spawnTanks(): void {
         if (!this.pointSpawner) return;
-        
+
         // Remove existing tanks from collision system if they exist (for level transitions)
         for (const tank of this.tanks.values()) {
             try {
@@ -160,7 +210,48 @@ export class GameWorld {
             }
         }
         this.tanks.clear();
-        
+        this.tankConfigByTankId.clear();
+
+        if (this.deathmatchMode && this.deathmatchSpec) {
+            for (const f of this.deathmatchSpec.fighters) {
+                const cfg = f.config;
+                const tankParts = TankPartsCreator.create(
+                    cfg.hullNum,
+                    cfg.trackNum,
+                    cfg.turretNum,
+                    cfg.weaponNum
+                );
+                const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
+                    ResolutionManager.getTankEntityWidth(cfg.hullNum),
+                    ResolutionManager.getTankEntityHeight(cfg.hullNum),
+                    0,
+                    SPAWN_GRIDS_LINES_AMOUNT - 1,
+                    0,
+                    SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+                );
+                const entity = new RectangularEntity(
+                    spawnPoint,
+                    ResolutionManager.getTankEntityWidth(cfg.hullNum),
+                    ResolutionManager.getTankEntityHeight(cfg.hullNum),
+                    0,
+                    tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass,
+                    ModelIDTracker.tankId
+                );
+                const model = new TankModel(tankParts, entity);
+                const tankId = `fighter_${f.playerId.replace(/[^a-zA-Z0-9_]/g, '_')}_${ModelIDTracker.tankId}`;
+                const fighterTank: ServerTank = {
+                    id: tankId,
+                    model,
+                    playerId: f.playerId,
+                    role: 'fighter'
+                };
+                this.tanks.set(tankId, fighterTank);
+                this.tankConfigByTankId.set(tankId, cfg);
+                this.collisionSystem.insert(entity);
+            }
+            return;
+        }
+
         // Spawn attacker
         const attackerTankParts = TankPartsCreator.create(
             this.attackerConfig.hullNum,
@@ -193,6 +284,7 @@ export class GameWorld {
             role: 'attacker'
         };
         this.tanks.set(attackerTank.id, attackerTank);
+        this.tankConfigByTankId.set(attackerTank.id, this.attackerConfig);
         this.collisionSystem.insert(attackerEntity);
 
         if (!this.singlePlayerTest) {
@@ -227,8 +319,23 @@ export class GameWorld {
                 role: 'defender'
             };
             this.tanks.set(defenderTank.id, defenderTank);
+            this.tankConfigByTankId.set(defenderTank.id, this.defenderConfig);
             this.collisionSystem.insert(defenderEntity);
         }
+    }
+
+    private resolveTankConfig(tank: ServerTank): TankConfig {
+        const fromMap = this.tankConfigByTankId.get(tank.id);
+        if (fromMap) {
+            return fromMap;
+        }
+        if (tank.role === 'attacker') {
+            return this.attackerConfig;
+        }
+        if (tank.role === 'defender') {
+            return this.defenderConfig;
+        }
+        return this.attackerConfig;
     }
 
     public setPlayerTankMapping(attackerPlayerId: string, defenderPlayerId: string): void {
@@ -242,11 +349,14 @@ export class GameWorld {
     }
 
     private spawnKeys(): void {
+        if (this.deathmatchMode) {
+            return;
+        }
         if (!this.pointSpawner) {
             console.log('[GAMEWORLD] spawnKeys: pointSpawner is null, cannot spawn keys');
             return;
         }
-        
+
         console.log(`[GAMEWORLD] spawnKeys: spawning ${GameWorld.REQUIRED_KEYS_PER_LEVEL} keys`);
         for (let i = 0; i < GameWorld.REQUIRED_KEYS_PER_LEVEL; i++) {
             const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
@@ -297,7 +407,6 @@ export class GameWorld {
         // Tanks will be cleared and respawned in spawnTanks()
         
         // Initialize new level (this will create new walls, spawn new tanks and keys)
-        // keysCollected is NOT reset - it persists across levels
         this.initializeLevel(nextLevel);
         
         // Restore player tank mapping after respawn (new tanks have empty playerId)
@@ -343,6 +452,7 @@ export class GameWorld {
         const hullDeltaAngle = tank.model.entity.angularVelocity * (deltaTime / PHYSICS_REFERENCE_DELTA_MS);
         EntityManipulator.angularMovement(tank.model.entity, deltaTime);
         tank.model.syncTurretAfterHullStep(hullDeltaAngle);
+        tank.model.stabilizeVelocityAfterHullStep(deltaTime);
 
         for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
             const collisions = Array.from(this.collisionSystem.getCollisions(tank.model.entity))
@@ -372,10 +482,11 @@ export class GameWorld {
 
         // Determine movement action type (as in original TankHandlingManager)
         let movementActionType: 'forward' | 'backward' | 'residual';
-        if (action.forward && !action.backward) {
-            movementActionType = 'forward';
-        } else if (action.backward && !action.forward) {
+        // При одновременном нажатии отдаём приоритет движению назад (иначе легко получить "залипание" в residual).
+        if (action.backward) {
             movementActionType = 'backward';
+        } else if (action.forward) {
+            movementActionType = 'forward';
         } else {
             movementActionType = 'residual';
         }
@@ -448,6 +559,7 @@ export class GameWorld {
 
     public update(deltaTime: number): void {
         this.tick++;
+        this.elapsedMs += deltaTime;
         
         // Don't clear explosions here - they need to be sent in the snapshot first
         // We'll clear them after getSnapshot() is called, or at the start of next update
@@ -490,8 +602,8 @@ export class GameWorld {
                 // Must match grenade handling below: idle grenades still need explosion on client
                 if (bullet.bulletNum === 4) {
                     const explosionPoint = bullet.model.entity.calcCenter();
-                    const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + getRandomInt(-30, 30);
-                    const explosionAngle = Math.random() * 2 * Math.PI - Math.PI;
+                    const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + this.randomInt(-30, 30);
+                    const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI;
                     this.grenadeExplosionsThisTick.push({
                         x: explosionPoint.x,
                         y: explosionPoint.y,
@@ -547,8 +659,8 @@ export class GameWorld {
                     // Always create grenade explosion for bulletNum === 4, regardless of isExplosiveBullet check
                     // The isExplosiveBullet check may fail but we still want the explosion animation
                     const explosionPoint = bullet.model.entity.calcCenter();
-                    const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + getRandomInt(-30, 30);
-                    const explosionAngle = Math.random() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
+                    const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + this.randomInt(-30, 30);
+                    const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
                     this.grenadeExplosionsThisTick.push({
                         x: explosionPoint.x,
                         y: explosionPoint.y,
@@ -582,17 +694,32 @@ export class GameWorld {
                         if (hitTank) {
                             hitTank.model.takeDamage(bullet.model);
                             if (hitTank.model.isDead()) {
+                                if (this.deathmatchMode) {
+                                    const killerTank = Array.from(this.tanks.values()).find(t => t.id === bullet.sourceId);
+                                    const killerPid = killerTank?.playerId;
+                                    const victimPid = hitTank.playerId;
+                                    if (
+                                        killerPid &&
+                                        victimPid &&
+                                        killerPid !== victimPid
+                                    ) {
+                                        this.killCounts.set(
+                                            killerPid,
+                                            (this.killCounts.get(killerPid) ?? 0) + 1
+                                        );
+                                    }
+                                }
                                 // Add explosion animation info (like original AnimationMaker.playDeathAnimation)
                                 // Note: original uses getRandomInt(-Math.PI, Math.PI) which returns integer angles
                                 // But for smoother animation, we use continuous random angle
                                 const explosionCenter = hitTank.model.entity.calcCenter();
-                                const explosionAngle = Math.random() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
+                                const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
                                 this.explosionsThisTick.push({
                                     x: explosionCenter.x,
                                     y: explosionCenter.y,
                                     angle: explosionAngle
                                 });
-                                
+
                                 // Respawn tank
                                 this.respawnTank(hitTank);
                             }
@@ -630,14 +757,14 @@ export class GameWorld {
             
             // Increase interval for next spawn (like original)
             if (this.ammoSpawnInterval < GameWorld.MAX_AMMO_SPAWN_INTERVAL) {
-                const increaseAmount = Math.floor(Math.random() * (5000 - 1000 + 1)) + 1000; // Random between 1000-5000
+                const increaseAmount = this.randomInt(1000, 5000); // Random between 1000-5000
                 this.ammoSpawnInterval += increaseAmount;
             }
         }
     }
     
     private getRandomBoxType(): Bonus {
-        const res = Math.floor(Math.random() * 100) + 1;
+        const res = this.randomInt(1, 100);
         
         if (res < 40)
             return Bonus.bulMedium;
@@ -695,7 +822,7 @@ export class GameWorld {
                 const hasCollision = CollisionDetector.hasCollision(tank.model.entity, itemRect, tankAxes, itemAxes);
                 
                 if (hasCollision) {
-                    if (item.type === Bonus.key && tank.role === 'attacker') {
+                    if (!this.deathmatchMode && item.type === Bonus.key && tank.role === 'attacker') {
                         this.keysCollected++;
                         itemsToRemove.push(item.id);
                         console.log(`[GAMEWORLD] Key collected by attacker! Total keys: ${this.keysCollected}, current level: ${this.currentLevel}`);
@@ -730,13 +857,23 @@ export class GameWorld {
 
     private respawnTank(tank: ServerTank): void {
         if (!this.pointSpawner) return;
-        
+
         // Remove from collision system before respawn
         this.collisionSystem.remove(tank.model.entity);
-        
-        const config = tank.role === 'attacker' ? this.attackerConfig : this.defenderConfig;
-        const minColumn = tank.role === 'attacker' ? 0 : Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2);
-        const maxColumn = tank.role === 'attacker' ? Math.floor(SPAWN_GRIDS_COLUMNS_AMOUNT / 2) : SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+
+        const config = this.deathmatchMode
+            ? this.tankConfigByTankId.get(tank.id) ?? this.attackerConfig
+            : tank.role === 'attacker'
+              ? this.attackerConfig
+              : this.defenderConfig;
+        let minColumn = tank.role === 'attacker' ? 0 : Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2);
+        let maxColumn = tank.role === 'attacker'
+            ? Math.floor(SPAWN_GRIDS_COLUMNS_AMOUNT / 2)
+            : SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+        if (this.deathmatchMode) {
+            minColumn = 0;
+            maxColumn = SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+        }
         
         const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
             ResolutionManager.getTankEntityWidth(config.hullNum),
@@ -746,7 +883,7 @@ export class GameWorld {
         );
         
         const angles = [0, 1.57, 3.14, 4.71];
-        const angle = angles[getRandomInt(0, 3)];
+        const angle = angles[this.randomInt(0, 3)];
         
         tank.model.entity.adjustPolygon(spawnPoint, 
             ResolutionManager.getTankEntityWidth(config.hullNum),
@@ -766,21 +903,29 @@ export class GameWorld {
     }
 
     public getSnapshot(): any {
-        const tankSnapshots = Array.from(this.tanks.values()).map(tank => ({
-            id: tank.id,
-            playerId: tank.playerId,
-            role: tank.role,
-            // Use points[0] (top-left corner before rotation) as in original TankMovementManager.hullUpdate
-            x: tank.model.entity.points[0].x,
-            y: tank.model.entity.points[0].y,
-            angle: tank.model.entity.angle,
-            turretAngle: tank.model.turretAngle,
-            health: tank.model.health,
-            maxHealth: tank.model.maxHealth,
-            armor: tank.model.armor,
-            maxArmor: tank.model.maxArmor,
-            isIdle: tank.model.isIdle() // Add idle state to determine if track animation should stop
-        }));
+        const tankSnapshots = Array.from(this.tanks.values()).map(tank => {
+            const appearance = this.resolveTankConfig(tank);
+            return {
+                id: tank.id,
+                playerId: tank.playerId,
+                role: tank.role,
+                hullNum: appearance.hullNum,
+                trackNum: appearance.trackNum,
+                turretNum: appearance.turretNum,
+                weaponNum: appearance.weaponNum,
+                color: appearance.color,
+                // Use points[0] (top-left corner before rotation) as in original TankMovementManager.hullUpdate
+                x: tank.model.entity.points[0].x,
+                y: tank.model.entity.points[0].y,
+                angle: tank.model.entity.angle,
+                turretAngle: tank.model.turretAngle,
+                health: tank.model.health,
+                maxHealth: tank.model.maxHealth,
+                armor: tank.model.armor,
+                maxArmor: tank.model.maxArmor,
+                isIdle: tank.model.isIdle() // Add idle state to determine if track animation should stop
+            };
+        });
 
         const bulletSnapshots = Array.from(this.bullets.values()).map(bullet => ({
             id: bullet.id,
@@ -813,7 +958,8 @@ export class GameWorld {
             type: item.type
         }));
 
-        return {
+        const elapsed = this.elapsedMs / 1000;
+        const base: Record<string, unknown> = {
             tanks: tankSnapshots,
             bullets: bulletSnapshots,
             walls: wallSnapshots,
@@ -823,24 +969,63 @@ export class GameWorld {
             bulletImpacts: this.bulletImpactsThisTick,
             keysCollected: this.keysCollected,
             currentLevel: this.currentLevel,
-            timeElapsed: (Date.now() - this.startTime) / 1000
+            timeElapsed: elapsed
         };
+        if (this.deathmatchMode) {
+            base.gameMode = 'deathmatch';
+            base.deathmatchRemainingSec = Math.max(0, GameWorld.DEATHMATCH_DURATION_SEC - elapsed);
+            base.killScores = Object.fromEntries(this.killCounts.entries());
+        } else {
+            base.gameMode = 'standard';
+        }
+        return base;
     }
 
     public getTick(): number {
         return this.tick;
     }
 
-    public checkGameEnd(): { winner: 'attacker' | 'defender'; reason: string } | null {
-        const timeElapsed = (Date.now() - this.startTime) / 1000;
-        
-        if (!this.singlePlayerTest && timeElapsed >= this.FINISH_TIME / 1000) {
-            return { winner: 'defender', reason: 'timeLimit' };
+    public getDeathmatchScoreList(): { playerId: string; kills: number }[] {
+        return Array.from(this.killCounts.entries()).map(([playerId, kills]) => ({ playerId, kills }));
+    }
+
+    public checkGameEnd(): GameWorldEndResult | null {
+        const timeElapsed = this.elapsedMs / 1000;
+
+        if (this.deathmatchMode) {
+            if (timeElapsed < GameWorld.DEATHMATCH_DURATION_SEC) {
+                return null;
+            }
+            const scores = Array.from(this.killCounts.entries()).map(([playerId, kills]) => ({
+                playerId,
+                kills
+            }));
+            let maxK = -1;
+            for (const s of scores) {
+                if (s.kills > maxK) {
+                    maxK = s.kills;
+                }
+            }
+            const winnerPlayerIds =
+                maxK < 0
+                    ? []
+                    : scores.filter((s) => s.kills === maxK).map((s) => s.playerId);
+            return {
+                mode: 'deathmatch',
+                reason: 'deathmatchTimeUp',
+                winnerPlayerIds,
+                scores
+            };
+        }
+
+        const useTimeLimit = !this.singlePlayerTest && !this.practiceMode;
+        if (useTimeLimit && timeElapsed >= this.FINISH_TIME / 1000) {
+            return { mode: 'standard', winner: 'defender', reason: 'timeLimit' };
         }
 
         // Check if attacker collected required keys on level 3 - attacker wins
         if (this.keysCollected >= GameWorld.REQUIRED_KEYS_PER_LEVEL && this.currentLevel === 3) {
-            return { winner: 'attacker', reason: 'keysCollected' };
+            return { mode: 'standard', winner: 'attacker', reason: 'keysCollected' };
         }
 
         return null;

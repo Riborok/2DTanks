@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import OnlineApp from './components/ui/OnlineApp';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
 
-// Initialize React application
 const rootElement = document.getElementById('root');
 if (rootElement) {
     const root = ReactDOM.createRoot(rootElement);
     root.render(
-        <OnlineApp />
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
     );
 }

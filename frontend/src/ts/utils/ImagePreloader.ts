@@ -44,25 +44,25 @@ export class ImagePreloader {
         // Tank hull images (8 hulls x 8 colors = 64)
         for (let hullNum = 0; hullNum < 8; hullNum++) {
             for (let color = 0; color < 8; color++) {
-                imagePaths.push(`src/img/tanks/Hulls/Hull_${hullNum}/Hull_${color}.png`);
+                imagePaths.push(`/src/img/tanks/Hulls/Hull_${hullNum}/Hull_${color}.png`);
             }
         }
 
         // Tank turret images (8 turrets x 8 colors = 64)
         for (let turretNum = 0; turretNum < 8; turretNum++) {
             for (let color = 0; color < 8; color++) {
-                imagePaths.push(`src/img/tanks/Turrets/Turret_${turretNum}/Turret_${color}.png`);
+                imagePaths.push(`/src/img/tanks/Turrets/Turret_${turretNum}/Turret_${color}.png`);
             }
         }
 
         // Weapon images (8 weapons)
         for (let weaponNum = 0; weaponNum < 8; weaponNum++) {
-            imagePaths.push(`src/img/tanks/Weapons/Weapon_${weaponNum}.png`);
+            imagePaths.push(`/src/img/tanks/Weapons/Weapon_${weaponNum}.png`);
         }
 
         // Track images (4 tracks)
         for (let trackNum = 0; trackNum < 4; trackNum++) {
-            imagePaths.push(`src/img/tanks/Tracks/Track_${trackNum}.png`);
+            imagePaths.push(`/src/img/tanks/Tracks/Track_${trackNum}.png`);
         }
 
         // Item images

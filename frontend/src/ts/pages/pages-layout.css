@@ -1,0 +1,153 @@
+.page-home-title {
+    font-size: 1.75rem;
+    margin: 0 0 8px;
+    color: #fff;
+}
+
+.page-home-lead {
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0 0 28px;
+}
+
+.page-home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.page-home-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(20, 20, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.page-home-card:hover {
+    border-color: rgba(0, 206, 201, 0.45);
+    background: rgba(25, 35, 40, 0.9);
+}
+
+.page-home-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #00cec9;
+}
+
+.page-home-card-desc {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.page-play-hub.connection-screen {
+    min-height: calc(100vh - 80px);
+    width: 100%;
+    margin: 0;
+}
+
+.page-play-hub .connection-container {
+    margin: 0 auto;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    margin: -24px 0 28px;
+    font-size: 0.95rem;
+}
+
+.page-stats-title,
+.page-profile-title {
+    font-size: 1.5rem;
+    margin: 0 0 8px;
+    color: #fff;
+}
+
+.page-stats-lead {
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0 0 20px;
+}
+
+.page-stats-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.page-stats-chip {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.page-stats-chip.wins {
+    border-color: rgba(46, 213, 115, 0.45);
+    color: #b8f5c8;
+}
+
+.page-stats-chip.losses {
+    border-color: rgba(255, 99, 99, 0.45);
+    color: #ffc4c4;
+}
+
+.page-stats-chip.total {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.page-stats-empty {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.page-stats-list {
+    max-width: 720px;
+}
+
+.page-profile-card {
+    max-width: 480px;
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba(20, 20, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.page-profile-line {
+    margin: 0 0 8px;
+    color: #fff;
+}
+
+.page-profile-login {
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: normal;
+}
+
+.page-profile .profile-mini-label {
+    margin-top: 4px;
+}
+
+.page-replay-watch.page-message,
+.page-replay-watch.page-loading {
+    padding: 32px 0;
+    text-align: center;
+}
+
+.page-replay-watch .auth-submit {
+    margin-top: 16px;
+}
+
+.page-auth .auth-form {
+    text-align: left;
+}
+
+.page-auth .auth-hint a {
+    color: #00cec9;
+}

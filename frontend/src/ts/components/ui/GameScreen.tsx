@@ -6,6 +6,7 @@ import { Size } from '../../additionally/type';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE } from '../../constants/keyCodes';
 import { ImagePreloader } from '../../utils/ImagePreloader';
+import type { DeathmatchScoreRow } from './GameEndScreen';
 
 const REQUIRED_KEYS_PER_LEVEL = 1;
 
@@ -23,22 +24,68 @@ function buildAction(pressedKeys: Set<number>, includeShoot: boolean = false) {
     };
 }
 
+function normalizeControlKeyCode(e: KeyboardEvent): number | null {
+    switch (e.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+            return VK_W;
+        case 'KeyS':
+        case 'ArrowDown':
+            return VK_S;
+        case 'KeyA':
+        case 'ArrowLeft':
+            return VK_A;
+        case 'KeyD':
+        case 'ArrowRight':
+            return VK_D;
+        case 'KeyQ':
+            return VK_Q;
+        case 'KeyE':
+            return VK_E;
+        case 'Space':
+            return VK_SPACE;
+        default:
+            break;
+    }
+    // Fallback for old browsers / non-standard events.
+    return GAME_KEY_CODES.includes(e.keyCode) ? e.keyCode : null;
+}
+
 interface GameScreenProps {
     wsClient: WebSocketClient;
     myPlayerId: string;
-    myRole: 'attacker' | 'defender';
+    myRole: 'attacker' | 'defender' | 'fighter';
     myTankConfig: any;
     players: Array<{
         playerId: string;
-        role: 'attacker' | 'defender';
+        role: 'attacker' | 'defender' | 'fighter';
         tankConfig?: any;
         ready?: boolean;
     }>;
-    onGameEnd: (winner: 'attacker' | 'defender', reason: string) => void;
+    isDeathmatch?: boolean;
+    onGameEnd: (
+        result:
+            | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string }
+            | {
+                  mode: 'deathmatch';
+                  reason: string;
+                  scores: DeathmatchScoreRow[];
+                  winnerPlayerIds: string[];
+              }
+    ) => void;
     onDisconnect: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, myTankConfig, players, onGameEnd, onDisconnect }) => {
+const GameScreen: React.FC<GameScreenProps> = ({
+    wsClient,
+    myPlayerId,
+    myRole,
+    myTankConfig,
+    players,
+    isDeathmatch = false,
+    onGameEnd,
+    onDisconnect
+}) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<OnlineGameRenderer | null>(null);
     const animationFrameRef = useRef<number | null>(null);
@@ -59,7 +106,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         fire: () => {}
     });
     const [useTouchUi, setUseTouchUi] = useState(false);
-    const [timeRemaining, setTimeRemaining] = useState<number>(300);
+    const [timeRemaining, setTimeRemaining] = useState<number>(isDeathmatch ? 60 : 300);
+    const [myKills, setMyKills] = useState(0);
     const [keysCollected, setKeysCollected] = useState<number>(0);
     const [currentLevel, setCurrentLevel] = useState<number>(1);
     const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
@@ -170,10 +218,23 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         const handleSnapshot = (message: any) => {
             if (message.world) {
                 snapshotRef.current = message.world;
-                
+
                 // Update UI state from snapshot - update always to ensure React re-renders
                 const world = message.world;
-                setTimeRemaining(Math.max(0, 300 - (world.timeElapsed || 0)));
+                const dm = world.gameMode === 'deathmatch' || isDeathmatch;
+                if (dm) {
+                    const rem =
+                        typeof world.deathmatchRemainingSec === 'number'
+                            ? world.deathmatchRemainingSec
+                            : Math.max(0, 60 - (world.timeElapsed || 0));
+                    setTimeRemaining(Math.max(0, rem));
+                    const ks = world.killScores as Record<string, number> | undefined;
+                    if (ks && myPlayerId) {
+                        setMyKills(ks[myPlayerId] ?? 0);
+                    }
+                } else {
+                    setTimeRemaining(Math.max(0, 300 - (world.timeElapsed || 0)));
+                }
                 // Explicitly handle keysCollected - ensure it's a number
                 const keys = typeof world.keysCollected === 'number' ? world.keysCollected : 0;
                 setKeysCollected(keys);
@@ -196,8 +257,33 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         };
 
         const handleGameEnd = (message: any) => {
-            const winner = message.winner === myRole ? 'attacker' : 'defender';
-            onGameEnd(winner, message.reason || 'gameEnd');
+            if (message.deathmatch) {
+                const scores: DeathmatchScoreRow[] = Array.isArray(message.scores)
+                    ? message.scores.map((s: any) => ({
+                          playerId: String(s.playerId),
+                          kills: Number(s.kills) || 0
+                      }))
+                    : [];
+                const winnerPlayerIds: string[] = Array.isArray(message.winnerPlayerIds)
+                    ? message.winnerPlayerIds.map(String)
+                    : [];
+                onGameEnd({
+                    mode: 'deathmatch',
+                    reason: message.reason || 'gameEnd',
+                    scores,
+                    winnerPlayerIds
+                });
+                return;
+            }
+            let winnerRole: 'attacker' | 'defender';
+            if (message.winner === 'attacker' || message.winner === 'defender') {
+                winnerRole = message.winner;
+            } else if (message.reason === 'opponentDisconnected') {
+                winnerRole = myRole === 'defender' ? 'defender' : 'attacker';
+            } else {
+                winnerRole = 'defender';
+            }
+            onGameEnd({ mode: 'standard', winner: winnerRole, reason: message.reason || 'gameEnd' });
         };
 
         const handleError = (message: any) => {
@@ -259,19 +345,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!GAME_KEY_CODES.includes(e.keyCode)) return;
-            if (e.keyCode === VK_SPACE) {
+            const code = normalizeControlKeyCode(e);
+            if (code === null) return;
+            if (code === VK_SPACE) {
                 e.preventDefault();
             }
-            applyKeyDown(e.keyCode);
+            applyKeyDown(code);
         };
 
         const handleKeyUp = (e: KeyboardEvent) => {
-            if (!GAME_KEY_CODES.includes(e.keyCode)) return;
-            if (e.keyCode === VK_SPACE) {
+            const code = normalizeControlKeyCode(e);
+            if (code === null) return;
+            if (code === VK_SPACE) {
                 e.preventDefault();
             }
-            applyKeyUp(e.keyCode);
+            applyKeyUp(code);
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -313,7 +401,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                 rendererRef.current.clear();
             }
         };
-    }, [wsClient, myPlayerId, myRole, myTankConfig, players, onGameEnd, onDisconnect, imagesLoaded]);
+    }, [wsClient, myPlayerId, myRole, myTankConfig, players, isDeathmatch, onGameEnd, onDisconnect, imagesLoaded]);
 
     // Format time as MM:SS
     const formatTime = (seconds: number): string => {
@@ -498,7 +586,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
             <div ref={menuRef} className="game-ui" style={{ 
                 zIndex: 10000, 
                 position: 'fixed', 
-                top: '10px', 
+                top: 'var(--game-hud-top, 10px)', 
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: 'auto', 
@@ -525,40 +613,43 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                     width: '100%', 
                     maxWidth: '100%',
                     flexWrap: 'wrap',
-                    overflow: 'hidden'
+                    overflowX: 'auto',
+                    overflowY: 'visible'
                 }}>
-                    <div className="stat-item" style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        gap: '3px',
-                        padding: '6px 12px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        width: 'auto',
-                        minWidth: '70px',
-                        flexShrink: 1 
-                    }}>
-                        <label style={{ 
-                            fontSize: '10px', 
-                            fontWeight: '600', 
-                            color: 'rgba(255, 255, 255, 0.7)', 
-                            margin: 0,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            whiteSpace: 'nowrap'
-                        }}>Уровень</label>
-                        <span style={{ 
-                            fontSize: '20px', 
-                            fontWeight: 'bold', 
-                            color: '#4CAF50',
-                            fontFamily: 'monospace',
-                            textShadow: '0 0 10px rgba(76, 175, 80, 0.5)',
-                            whiteSpace: 'nowrap'
-                        }}>{currentLevel}</span>
-                    </div>
+                    {!isDeathmatch && (
+                        <div className="stat-item" style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            gap: '3px',
+                            padding: '6px 12px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            width: 'auto',
+                            minWidth: '70px',
+                            flexShrink: 1 
+                        }}>
+                            <label style={{ 
+                                fontSize: '10px', 
+                                fontWeight: '600', 
+                                color: 'rgba(255, 255, 255, 0.7)', 
+                                margin: 0,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                whiteSpace: 'nowrap'
+                            }}>Уровень</label>
+                            <span style={{ 
+                                fontSize: '20px', 
+                                fontWeight: 'bold', 
+                                color: '#4CAF50',
+                                fontFamily: 'monospace',
+                                textShadow: '0 0 10px rgba(76, 175, 80, 0.5)',
+                                whiteSpace: 'nowrap'
+                            }}>{currentLevel}</span>
+                        </div>
+                    )}
                     <div className="stat-item" style={{ 
                         display: 'flex', 
                         flexDirection: 'column', 
@@ -568,7 +659,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                         padding: '6px 14px',
                         background: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: '6px',
-                        border: `1px solid ${timeRemaining <= 60 ? 'rgba(255, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                        border: `1px solid ${timeRemaining <= (isDeathmatch ? 15 : 60) ? 'rgba(255, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
                         width: 'auto',
                         minWidth: '110px',
                         flexShrink: 1 
@@ -581,52 +672,86 @@ const GameScreen: React.FC<GameScreenProps> = ({ wsClient, myPlayerId, myRole, m
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
                             whiteSpace: 'nowrap'
-                        }}>Осталось времени</label>
+                        }}>{isDeathmatch ? 'До конца раунда' : 'Осталось времени'}</label>
                         <span style={{ 
-                            color: timeRemaining <= 60 ? '#ff4444' : '#64B5F6', 
+                            color: timeRemaining <= (isDeathmatch ? 15 : 60) ? '#ff4444' : '#64B5F6', 
                             fontWeight: 'bold',
                             fontSize: '20px',
                             fontFamily: 'monospace',
-                            textShadow: `0 0 10px ${timeRemaining <= 60 ? 'rgba(255, 68, 68, 0.5)' : 'rgba(100, 181, 246, 0.5)'}`,
+                            textShadow: `0 0 10px ${timeRemaining <= (isDeathmatch ? 15 : 60) ? 'rgba(255, 68, 68, 0.5)' : 'rgba(100, 181, 246, 0.5)'}`,
                             whiteSpace: 'nowrap'
                         }}>
                             {formatTime(timeRemaining)}
                         </span>
                     </div>
-                    <div className="stat-item" style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        gap: '3px',
-                        padding: '6px 14px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px',
-                        border: `1px solid ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
-                        width: 'auto',
-                        minWidth: '120px',
-                        flexShrink: 1 
-                    }}>
-                        <label style={{ 
-                            fontSize: '10px', 
-                            fontWeight: '600', 
-                            color: 'rgba(255, 255, 255, 0.7)', 
-                            margin: 0,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            whiteSpace: 'nowrap'
-                        }}>Собрано ключей</label>
-                        <span style={{ 
-                            color: keysCollected >= REQUIRED_KEYS_PER_LEVEL ? '#4CAF50' : '#FFD54F', 
-                            fontWeight: 'bold',
-                            fontSize: '20px',
-                            fontFamily: 'monospace',
-                            textShadow: `0 0 10px ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 213, 79, 0.5)'}`,
-                            whiteSpace: 'nowrap'
+                    {isDeathmatch ? (
+                        <div className="stat-item" style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            gap: '3px',
+                            padding: '6px 14px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255, 193, 7, 0.45)',
+                            width: 'auto',
+                            minWidth: '100px',
+                            flexShrink: 1 
                         }}>
-                            {keysCollected} / {REQUIRED_KEYS_PER_LEVEL}
-                        </span>
-                    </div>
+                            <label style={{ 
+                                fontSize: '10px', 
+                                fontWeight: '600', 
+                                color: 'rgba(255, 255, 255, 0.7)', 
+                                margin: 0,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                whiteSpace: 'nowrap'
+                            }}>Ваши фраги</label>
+                            <span style={{ 
+                                color: '#FFC107', 
+                                fontWeight: 'bold',
+                                fontSize: '20px',
+                                fontFamily: 'monospace',
+                                whiteSpace: 'nowrap'
+                            }}>{myKills}</span>
+                        </div>
+                    ) : (
+                        <div className="stat-item" style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            gap: '3px',
+                            padding: '6px 14px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '6px',
+                            border: `1px solid ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                            width: 'auto',
+                            minWidth: '120px',
+                            flexShrink: 1 
+                        }}>
+                            <label style={{ 
+                                fontSize: '10px', 
+                                fontWeight: '600', 
+                                color: 'rgba(255, 255, 255, 0.7)', 
+                                margin: 0,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                whiteSpace: 'nowrap'
+                            }}>Собрано ключей</label>
+                            <span style={{ 
+                                color: keysCollected >= REQUIRED_KEYS_PER_LEVEL ? '#4CAF50' : '#FFD54F', 
+                                fontWeight: 'bold',
+                                fontSize: '20px',
+                                fontFamily: 'monospace',
+                                textShadow: `0 0 10px ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 213, 79, 0.5)'}`,
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {keysCollected} / {REQUIRED_KEYS_PER_LEVEL}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -18,6 +18,7 @@ import { AnimationManager } from '../game/managers/animation managers/AnimationM
 import { Rectangle } from '../game/processors/shapes/IRectangle';
 import { calcDistance, calcMidBetweenTwoPoint } from '../geometry/additionalFunc';
 import { ServerTank, ServerExplosion, ServerGrenadeExplosion, ServerBulletImpact } from './types';
+import { tankVisualFromSnapshot } from './tankVisualFromSnapshot';
 import { TankExplosionAnimation } from '../sprite/animation/TankExplosionAnimation';
 import { GrenadeExplosionAnimation } from '../sprite/animation/GrenadeExplosionAnimation';
 import { BulletImpactAnimation } from '../sprite/animation/BulletImpactAnimation';
@@ -128,39 +129,35 @@ export class OnlineGameRenderer {
     }
 
     public updateFromSnapshot(snapshot: GameWorldSnapshot): void {
-        // Update background if level changed or if background hasn't been set yet (first snapshot)
-        if (snapshot.currentLevel !== this.currentLevel || this.backgroundMaterial === undefined) {
-            // Material based on level: level 1 = material 1 (Ground), level 2 = material 2 (Sandstone), level 3 = material 0 (Grass)
-            // But server sends: level 1 = backgroundMaterial 1, level 2 = backgroundMaterial 2, level 3 = backgroundMaterial 0
-            // So we use: level - 1, but for level 3 it's 0, so: (level - 1) % 3
-            // Actually, from server code: level 1 -> backgroundMaterial 1, level 2 -> backgroundMaterial 2, level 3 -> backgroundMaterial 0
-            const materialNum = snapshot.currentLevel === 3 ? 0 : snapshot.currentLevel - 1;
+        const snapLevel =
+            typeof snapshot.currentLevel === 'number' && Number.isFinite(snapshot.currentLevel)
+                ? Math.max(1, Math.min(3, Math.floor(snapshot.currentLevel)))
+                : 1;
+        /** Сравнение до смены this.currentLevel — иначе блок стен никогда не срабатывал. */
+        const levelChangedForWalls = snapLevel !== this.currentLevel;
+
+        if (levelChangedForWalls || this.backgroundMaterial === undefined) {
+            const materialNum = snapLevel === 3 ? 0 : snapLevel - 1;
             this.setupBackground(materialNum);
-            this.currentLevel = snapshot.currentLevel;
+            this.currentLevel = snapLevel;
         }
 
-        // Update tanks
-        this.updateTanks(snapshot.tanks);
-        
-        // Update bullets
-        this.updateBullets(snapshot.bullets || []);
-        
-        // Update walls (on first snapshot or when level changes)
-        // Check if level changed - if so, clear old walls and update with new ones
-        if (snapshot.currentLevel !== this.currentLevel) {
-            // Level changed - clear all walls
-            for (const [id, wall] of this.walls.entries()) {
+        this.updateTanks(snapshot.tanks ?? []);
+
+        this.updateBullets(snapshot.bullets ?? []);
+
+        if (levelChangedForWalls) {
+            for (const [, wall] of this.walls.entries()) {
                 this.canvas.removeById(wall.sprite);
             }
             this.walls.clear();
         }
-        // Update walls if we have walls in snapshot (either first time or after level change)
-        if (snapshot.walls.length > 0) {
-            this.updateWalls(snapshot.walls);
+        const walls = snapshot.walls ?? [];
+        if (walls.length > 0) {
+            this.updateWalls(walls);
         }
-        
-        // Update items
-        this.updateItems(snapshot.items || []);
+
+        this.updateItems(snapshot.items ?? []);
         
         // Handle explosions (create animations for new explosions)
         if (snapshot.explosions && snapshot.explosions.length > 0) {
@@ -198,14 +195,7 @@ export class OnlineGameRenderer {
         for (const serverTank of serverTanks) {
             let renderableTank = this.tanks.get(serverTank.id);
             
-            // Get config from stored configs or use defaults
-            const config = this.tankConfigs.get(serverTank.id) || {
-                hullNum: 0,
-                trackNum: 0,
-                turretNum: 0,
-                weaponNum: 0,
-                color: 0
-            };
+            const config = tankVisualFromSnapshot(serverTank as ServerTank, this.tankConfigs.get(serverTank.id));
             
             if (!renderableTank) {
                 // Create new tank sprite

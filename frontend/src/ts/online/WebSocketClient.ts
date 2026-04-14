@@ -2,7 +2,7 @@ export interface ServerMessage {
     type: 'joined' | 'error' | 'snapshot' | 'gameEnd' | 'roomUpdate' | 'gameStart';
     roomId?: string;
     playerId?: string;
-    role?: 'attacker' | 'defender';
+    role?: 'attacker' | 'defender' | 'fighter';
     message?: string;
     tick?: number;
     world?: any;
@@ -10,16 +10,22 @@ export interface ServerMessage {
     winner?: 'attacker' | 'defender';
     players?: Array<{
         playerId: string;
-        role: 'attacker' | 'defender';
+        role: 'attacker' | 'defender' | 'fighter';
         tankConfig?: any;
         ready?: boolean;
+        userId?: string;
+        displayName?: string;
     }>;
     singlePlayerTest?: boolean;
+    practiceMode?: boolean;
+    deathmatchMode?: boolean;
 }
 
 export interface ClientMessage {
     type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action';
     singlePlayer?: boolean;
+    practice?: boolean;
+    deathmatch?: boolean;
     code?: string;
     data?: any;
     ready?: boolean;
@@ -34,12 +40,24 @@ export interface ClientMessage {
     };
 }
 
-/** Порт игрового WebSocket-сервера (совпадает с server PORT по умолчанию). */
-const DEFAULT_GAME_WS_PORT = '3000';
+/** Порт игрового WebSocket-сервера, если не используется __GAME_WS_PATH__. */
+declare const __GAME_WS_PORT__: string | undefined;
+/** Например /game — тот же host, что у страницы (прокси nginx в Docker). */
+declare const __GAME_WS_PATH__: string | undefined;
+
+const DEFAULT_GAME_WS_PORT =
+    typeof __GAME_WS_PORT__ !== 'undefined' ? String(__GAME_WS_PORT__) : '3000';
+
+const WS_PATH =
+    typeof __GAME_WS_PATH__ !== 'undefined' && String(__GAME_WS_PATH__).length > 0
+        ? (String(__GAME_WS_PATH__).startsWith('/') ? String(__GAME_WS_PATH__) : `/${__GAME_WS_PATH__}`)
+        : '';
 
 export class WebSocketClient {
     private ws: WebSocket | null = null;
-    private url: string;
+    /** Базовый URL без query (токен добавляется при подключении). */
+    private readonly baseUrl: string;
+    private readonly getAccessToken: () => string | null;
     private listeners: Map<string, ((data: ServerMessage) => void)[]> = new Map();
     private reconnectAttempts: number = 0;
     private maxReconnectAttempts: number = 5;
@@ -52,18 +70,31 @@ export class WebSocketClient {
     private pendingOutgoing: ClientMessage[] = [];
 
     /**
-     * @param url — полный ws:// или wss:// URL. Если не задан: тот же host, что у страницы, порт {DEFAULT_GAME_WS_PORT}
-     * (сервер: `process.env.PORT || 3000`).
+     * @param url — базовый ws:// или wss:// URL без ?token=
+     * @param getAccessToken — JWT для передачи в query при WebSocket handshake (как в описании к диплому)
      */
-    constructor(url?: string) {
-        this.url = url ?? WebSocketClient.resolveDefaultUrl();
+    constructor(url?: string, getAccessToken?: () => string | null) {
+        this.baseUrl = url ?? WebSocketClient.resolveDefaultUrl();
+        this.getAccessToken = getAccessToken ?? (() => null);
+    }
+
+    private buildConnectUrl(): string {
+        const token = this.getAccessToken();
+        if (!token) {
+            return this.baseUrl;
+        }
+        const sep = this.baseUrl.includes('?') ? '&' : '?';
+        return `${this.baseUrl}${sep}token=${encodeURIComponent(token)}`;
     }
 
     private static resolveDefaultUrl(): string {
         if (typeof window === 'undefined') {
-            return `ws://127.0.0.1:${DEFAULT_GAME_WS_PORT}`;
+            return WS_PATH ? `ws://127.0.0.1:5173${WS_PATH}` : `ws://127.0.0.1:${DEFAULT_GAME_WS_PORT}`;
         }
         const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        if (WS_PATH) {
+            return `${proto}//${window.location.host}${WS_PATH}`;
+        }
         return `${proto}//${window.location.hostname}:${DEFAULT_GAME_WS_PORT}`;
     }
 
@@ -98,8 +129,9 @@ export class WebSocketClient {
 
             try {
                 this.isConnecting = true;
-                console.log('[WS] Connecting to', this.url);
-                this.ws = new WebSocket(this.url);
+                const connectUrl = this.buildConnectUrl();
+                console.log('[WS] Connecting to', connectUrl.replace(/token=[^&]+/, 'token=***'));
+                this.ws = new WebSocket(connectUrl);
 
                 this.ws.onopen = () => {
                     console.log('WebSocket connected');
@@ -128,12 +160,19 @@ export class WebSocketClient {
                     this.isConnecting = false;
 
                     if (!settled) {
+                        if (event.code === 4401) {
+                            const authMsg =
+                                'Требуется войти в аккаунт. Без регистрации или входа игра недоступна.';
+                            finishFail(authMsg);
+                            this.emit('error', { type: 'error', message: authMsg });
+                            return;
+                        }
                         finishFail(
-                            `Не удалось подключиться к серверу (${this.url}). Запустите сервер игры и проверьте порт ${DEFAULT_GAME_WS_PORT}.`
+                            `Не удалось подключиться к серверу (${this.baseUrl.replace(/token=[^&]+/g, 'token=***')}). Проверьте, что backend и nginx запущены.`
                         );
                         this.emit('error', {
                             type: 'error',
-                            message: `Сервер недоступен. Убедитесь, что запущен WebSocket на ${this.url}`
+                            message: `Сервер недоступен. Убедитесь, что запущен WebSocket на ${this.baseUrl}`
                         });
                         return;
                     }
@@ -141,6 +180,14 @@ export class WebSocketClient {
                     const wasOpen = this.wasConnected;
                     this.wasConnected = false;
                     this.ws = null;
+
+                    if (event.code === 4401) {
+                        this.emit('error', {
+                            type: 'error',
+                            message: 'Требуется войти в аккаунт. Без регистрации или входа игра недоступна.'
+                        });
+                        return;
+                    }
 
                     if (wasOpen && event.code !== 1000) {
                         this.attemptReconnect();
@@ -157,6 +204,13 @@ export class WebSocketClient {
     }
 
     private attemptReconnect(): void {
+        if (!this.getAccessToken()) {
+            this.emit('error', {
+                type: 'error',
+                message: 'Нет сессии. Войдите снова, чтобы продолжить.'
+            });
+            return;
+        }
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             setTimeout(() => {
@@ -220,14 +274,36 @@ export class WebSocketClient {
         }
     }
 
-    public disconnect(): void {
+    /** Закрыть сокет без снятия подписок (например, «в меню» с тем же клиентом). */
+    public closeSocket(): void {
         this.pendingOutgoing = [];
         this.connectAttemptPromise = null;
         if (this.ws) {
             this.ws.close();
             this.ws = null;
         }
+    }
+
+    public disconnect(): void {
+        this.closeSocket();
         this.listeners.clear();
+    }
+
+    /**
+     * Переподключение с актуальным токеном (слушатели сохраняются).
+     */
+    public reconnect(): Promise<void> {
+        this.pendingOutgoing = [];
+        this.connectAttemptPromise = null;
+        if (this.ws) {
+            const old = this.ws;
+            old.onclose = null;
+            old.onerror = null;
+            old.onmessage = null;
+            old.close(1000);
+            this.ws = null;
+        }
+        return this.connect();
     }
 
     public isConnected(): boolean {
@@ -235,6 +311,6 @@ export class WebSocketClient {
     }
 
     public getServerUrl(): string {
-        return this.url;
+        return this.baseUrl;
     }
 }

@@ -1,28 +1,82 @@
+import 'dotenv/config';
+import http from 'http';
+import express from 'express';
+import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import { RoomManager } from './room/RoomManager';
+import authRoutes from './routes/authRoutes';
+import gameApiRoutes from './routes/gameApiRoutes';
+import { parseWsUserFromRequest } from './ws/parseWsUser';
+import type { WsAuthUser } from './auth/types';
+import { resolveListenPort } from './serverPort';
 
-const PORT = process.env.PORT || 3000;
+const PORT = resolveListenPort();
 
-const wss = new WebSocketServer({ port: Number(PORT) });
+const app = express();
+app.use(cors({
+    origin: (origin, cb) => {
+        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+            cb(null, true);
+            return;
+        }
+        cb(null, false);
+    },
+    credentials: true
+}));
+app.use(express.json());
+app.use('/api/auth', authRoutes);
+app.use('/api/game', gameApiRoutes);
+
+app.get('/api/health', (_req, res) => {
+    res.json({ ok: true });
+});
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 
-console.log(`Server started on port ${PORT}`);
+server.listen(PORT, () => {
+    console.log(`HTTP + WebSocket on port ${PORT}`);
+    console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+});
 
 wss.on('connection', (ws: WebSocket, req) => {
-    console.log('New client connected from', req.socket.remoteAddress);
-    console.log('WebSocket readyState:', ws.readyState);
-    
+    const wsUser = parseWsUserFromRequest(req);
+
+    if (!wsUser) {
+        try {
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: 'Требуется войти в аккаунт. Откройте игру после регистрации или входа.'
+                })
+            );
+        } catch {
+            /* ignore */
+        }
+        ws.close(4401, 'Authentication required');
+        return;
+    }
+
+    console.log('New client connected from', req.socket.remoteAddress, `(user ${wsUser.login})`);
+
     let playerId: string | null = null;
     let roomCode: string | null = null;
 
     ws.on('message', (message: Buffer) => {
         try {
             const data = JSON.parse(message.toString());
-            
+
             if (data.type === 'createRoom') {
                 const singlePlayer = data.singlePlayer === true;
-                console.log(`[SERVER] Creating new room...${singlePlayer ? ' (solo test)' : ''}`);
-                const result = roomManager.createRoom(singlePlayer);
+                const deathmatch = data.deathmatch === true && !singlePlayer;
+                const practice = data.practice === true && !singlePlayer && !deathmatch;
+                console.log(
+                    `[SERVER] Creating new room...${
+                        singlePlayer ? ' (solo test)' : deathmatch ? ' (deathmatch)' : practice ? ' (practice)' : ''
+                    }`
+                );
+                const result = roomManager.createRoom(singlePlayer, wsUser, practice, deathmatch);
                 roomCode = result.code;
                 console.log(`[SERVER] Room created: ${roomCode}, player: ${result.playerId}`);
                 const room = roomManager.getRoom(result.code);
@@ -33,8 +87,8 @@ wss.on('connection', (ws: WebSocket, req) => {
             } else if (data.type === 'joinRoom') {
                 const code = data.code;
                 console.log(`[SERVER] Player joining room: ${code}`);
-                const result = roomManager.joinRoom(code, ws);
-                
+                const result = roomManager.joinRoom(code, ws, wsUser);
+
                 if (result) {
                     roomCode = code;
                     playerId = result.playerId;
@@ -67,8 +121,8 @@ wss.on('connection', (ws: WebSocket, req) => {
             } else if (data.type === 'action') {
                 if (roomCode && playerId) {
                     const action = data.action || data;
-                    const hasAction = action.forward || action.backward || action.turnLeft || action.turnRight || 
-                                     action.turretLeft || action.turretRight || action.shoot;
+                    const hasAction = action.forward || action.backward || action.turnLeft || action.turnRight ||
+                        action.turretLeft || action.turretRight || action.shoot;
                     if (hasAction) {
                         console.log(`[SERVER] Player ${playerId} in room ${roomCode} sent action:`, JSON.stringify(action));
                     }
@@ -84,7 +138,6 @@ wss.on('connection', (ws: WebSocket, req) => {
         }
     });
 
-    // Send ping to keep connection alive
     const pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
             ws.ping();
@@ -108,9 +161,5 @@ wss.on('connection', (ws: WebSocket, req) => {
         clearInterval(pingInterval);
     });
 
-    ws.on('pong', () => {
-        // Client responded to ping, connection is alive
-    });
+    ws.on('pong', () => { });
 });
-
-

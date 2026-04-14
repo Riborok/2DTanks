@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = (env, options) => {
@@ -51,5 +52,18 @@ module.exports = (env, options) => {
                 ]
                 : [],
         },
+        plugins: [
+            new webpack.DefinePlugin({
+                __GAME_WS_PORT__: JSON.stringify(process.env.GAME_WS_PORT || '3000'),
+                /** Пустая строка: браузер берёт window.location.origin (Docker: nginx :5173 → /api). */
+                __GAME_API_ORIGIN__: JSON.stringify(
+                    process.env.GAME_API_ORIGIN !== undefined
+                        ? process.env.GAME_API_ORIGIN
+                        : 'http://localhost:3000'
+                ),
+                /** Непустое значение, например /game: WebSocket через тот же host (nginx proxy). */
+                __GAME_WS_PATH__: JSON.stringify(process.env.GAME_WS_PATH || ''),
+            }),
+        ],
     };
 };

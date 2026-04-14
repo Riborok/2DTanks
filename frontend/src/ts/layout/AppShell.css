@@ -1,0 +1,152 @@
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%);
+    background-attachment: fixed;
+    color: #e8e8f0;
+    font-family: 'Arial', sans-serif;
+    /**
+     * Панель статистики в игре использует top: var(--game-hud-top, 10px).
+     * Шапка + перенос навигации — запас по вертикали.
+     */
+    --game-hud-top: calc(env(safe-area-inset-top, 0px) + 76px);
+}
+
+.app-shell-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    padding: 12px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(10, 10, 18, 0.85);
+    backdrop-filter: blur(8px);
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+}
+
+.app-shell-brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #00cec9;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.app-shell-brand:hover {
+    color: #55e6e2;
+}
+
+.app-shell-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    flex: 1;
+}
+
+.app-shell-nav .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.app-shell-nav .nav-link:hover {
+    color: #fff;
+}
+
+.app-shell-nav .nav-link.active {
+    color: #00cec9;
+    border-bottom-color: #00cec9;
+}
+
+.app-shell-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.app-shell-user-name {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.app-shell-logout {
+    background: rgba(255, 80, 80, 0.2);
+    border: 1px solid rgba(255, 100, 100, 0.45);
+    color: #ffb4b4;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.app-shell-logout:hover {
+    background: rgba(255, 80, 80, 0.35);
+}
+
+.app-shell-main {
+    flex: 1;
+    min-height: 0;
+    padding: 24px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/**
+ * Реплеи / «История матчей» на этой странице: в OnlineApp заданы 100vw и min-height 100vh.
+ * Внутри shell main уже ниже шапки и с overflow-x: hidden — 100vw даёт горизонтальное обрезание,
+ * а лишняя высота — проблемы с прокруткой. Ограничиваем ширину/высоту контентом.
+ */
+.app-shell .replays-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.play-page-root.app-container) {
+    max-width: none;
+    padding: 0;
+    overflow: visible;
+}
+
+/* HUD игры выше шапки по z-index, позиция по --game-hud-top из .app-shell */
+.app-shell .game-ui {
+    z-index: 10002 !important;
+}
+
+.play-page-root.app-container {
+    width: 100vw;
+    min-height: calc(100vh - 0px);
+    margin: 0;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+}
+
+.page-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+}
+
+.page-loading-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+}

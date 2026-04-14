@@ -1,30 +1,36 @@
 import { WebSocket } from 'ws';
 import { Room } from './Room';
 import { RoomCodeGenerator } from '../utils/roomCodeGenerator';
+import type { WsAuthUser } from '../auth/types';
 
 export class RoomManager {
     private rooms: Map<string, Room> = new Map();
 
-    createRoom(singlePlayerTest = false): { code: string; playerId: string } {
+    createRoom(
+        singlePlayerTest = false,
+        auth: WsAuthUser | null = null,
+        practiceMode = false,
+        deathmatchMode = false
+    ): { code: string; playerId: string } {
         let code: string;
         do {
             code = RoomCodeGenerator.generate();
         } while (this.rooms.has(code));
 
-        const room = new Room(code, { singlePlayerTest });
-        const playerId = room.addPlayer(null);
+        const room = new Room(code, { singlePlayerTest, practiceMode, deathmatchMode });
+        const playerId = room.addPlayer(null, auth);
         this.rooms.set(code, room);
 
         return { code, playerId };
     }
 
-    joinRoom(code: string, ws: WebSocket): { playerId: string } | null {
+    joinRoom(code: string, ws: WebSocket, auth: WsAuthUser | null = null): { playerId: string } | null {
         const room = this.rooms.get(code);
         if (!room) {
             return null;
         }
 
-        const result = room.addPlayer(ws);
+        const result = room.addPlayer(ws, auth);
         if (!result) {
             return null;
         }

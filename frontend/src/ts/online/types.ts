@@ -10,7 +10,7 @@ export interface ServerTank {
     maxHealth: number;
     armor?: number;
     maxArmor?: number;
-    role: 'attacker' | 'defender';
+    role: 'attacker' | 'defender' | 'fighter';
     hullNum: number;
     trackNum: number;
     turretNum: number;
@@ -75,4 +75,7 @@ export interface GameWorldSnapshot {
     keysCollected: number;
     currentLevel: number;
     timeElapsed: number;
+    gameMode?: 'standard' | 'deathmatch';
+    deathmatchRemainingSec?: number;
+    killScores?: Record<string, number>;
 }
