@@ -61,6 +61,9 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             res.status(404).json({ error: 'Действия реплея не найдены' });
             return;
         }
+        const participants = await replayRepo.listParticipantNamesForMatch(pool, meta.match_id);
+        const attackerName = participants.find((p) => p.role === 'attacker')?.display_name ?? 'Attacker';
+        const defenderName = participants.find((p) => p.role === 'defender')?.display_name ?? 'Defender';
         res.json({
             meta: {
                 replayId: meta.replay_id,
@@ -76,7 +79,11 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             },
             startMeta: replayData.startMeta,
             actions: replayData.actions,
-            events: replayData.events ?? []
+            events: replayData.events ?? [],
+            playerNames: {
+                [replayData.startMeta.attackerPlayerId]: attackerName,
+                [replayData.startMeta.defenderPlayerId]: defenderName
+            }
         });
     } catch (e) {
         console.error('[game/replays/playback]', e);

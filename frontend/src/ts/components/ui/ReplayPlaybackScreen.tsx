@@ -18,6 +18,7 @@ interface ReplayPlaybackScreenProps {
     startMeta: ReplayStartMetaDto;
     actions: ReplayActionDto[];
     events?: ReplayEventDto[];
+    playerNames?: Record<string, string>;
     onBack: () => void;
 }
 
@@ -38,6 +39,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     startMeta,
     actions,
     events = [],
+    playerNames = {},
     onBack
 }) => {
     const builtFrames = useMemo(
@@ -145,6 +147,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
 
         const size = resizeCanvas();
         const renderer = new OnlineGameRenderer(ctx, size);
+        renderer.setPlayerLabels(new Map(Object.entries(playerNames)));
         rendererRef.current = renderer;
 
         const initial = (framesRef.current[0]?.world as GameWorldSnapshot | undefined) ?? null;
@@ -161,6 +164,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             const newSize = resizeCanvas();
             rendererRef.current?.clear();
             rendererRef.current = new OnlineGameRenderer(ctx, newSize);
+            rendererRef.current.setPlayerLabels(new Map(Object.entries(playerNames)));
             const snap = snapshotRef.current;
             if (snap) {
                 applyTankConfigs(rendererRef.current, snap);
@@ -230,7 +234,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             rendererRef.current?.clear();
             rendererRef.current = null;
         };
-    }, [frameMs, imagesLoaded, meta.replayId, builtFrames]);
+    }, [frameMs, imagesLoaded, meta.replayId, builtFrames, playerNames]);
 
     if (!builtFrames.length) {
         return (

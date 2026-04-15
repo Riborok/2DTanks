@@ -128,6 +128,7 @@ export async function getReplayPlayback(
     startMeta: ReplayStartMetaDto;
     actions: ReplayActionDto[];
     events: ReplayEventDto[];
+    playerNames: Record<string, string>;
 }> {
     const res = await fetch(`${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/playback`, {
         headers: headers(token)
@@ -137,6 +138,7 @@ export async function getReplayPlayback(
         startMeta?: ReplayStartMetaDto;
         actions?: ReplayActionDto[];
         events?: ReplayEventDto[];
+        playerNames?: Record<string, string>;
         error?: string;
     }>(res);
     if (!res.ok) {
@@ -149,7 +151,8 @@ export async function getReplayPlayback(
         meta: data.meta,
         startMeta: data.startMeta,
         actions: data.actions ?? [],
-        events: data.events ?? []
+        events: data.events ?? [],
+        playerNames: data.playerNames ?? {}
     };
 }
 

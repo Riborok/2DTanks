@@ -236,6 +236,22 @@ export async function getReplayActionsForMatch(pool: Pool, matchId: string): Pro
     };
 }
 
+export type MatchParticipantNameRow = {
+    role: 'attacker' | 'defender' | 'fighter' | 'spectator';
+    display_name: string | null;
+};
+
+export async function listParticipantNamesForMatch(pool: Pool, matchId: string): Promise<MatchParticipantNameRow[]> {
+    const r = await pool.query<MatchParticipantNameRow>(
+        `SELECT mp.role, u.display_name
+         FROM match_participants mp
+         LEFT JOIN users u ON u.user_id = mp.user_id
+         WHERE mp.match_id = $1`,
+        [matchId]
+    );
+    return r.rows;
+}
+
 export async function updateReplayMeta(
     pool: Pool,
     replayId: string,
