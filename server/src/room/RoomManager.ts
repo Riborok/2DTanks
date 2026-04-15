@@ -38,6 +38,20 @@ export class RoomManager {
         return { playerId: result };
     }
 
+    reconnectByUser(ws: WebSocket, auth: WsAuthUser): { code: string; playerId: string } | null {
+        // 1) Priority: active in-game room for exact user.
+        for (const [code, room] of this.rooms.entries()) {
+            if (!room.hasActiveGame() || !room.hasUser(auth.userId)) {
+                continue;
+            }
+            const restored = room.reconnectPlayerByUserId(ws, auth);
+            if (restored) {
+                return { code, playerId: restored.playerId };
+            }
+        }
+        return null;
+    }
+
     setTankConfig(roomCode: string, playerId: string, config: any): { success: boolean; message?: string } {
         const room = this.rooms.get(roomCode);
         if (room) {
@@ -69,6 +83,7 @@ export class RoomManager {
                 // Clean up empty room after delay
                 setTimeout(() => {
                     if (room.isEmpty()) {
+                        room.forceCloseDueToEmpty();
                         this.rooms.delete(roomCode);
                     }
                 }, 30000);

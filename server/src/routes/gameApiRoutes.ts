@@ -136,7 +136,8 @@ router.get('/matches/history', async (req, res) => {
                 startedAt: m.started_at,
                 endedAt: m.ended_at,
                 role: m.participant_role,
-                isWinner: m.is_winner
+                isWinner: m.is_winner,
+                matchStats: Array.isArray(m.match_stats) ? m.match_stats : []
             }))
         });
     } catch (e) {

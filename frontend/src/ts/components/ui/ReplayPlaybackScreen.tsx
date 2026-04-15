@@ -241,9 +241,9 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                         Назад
                     </button>
                 </div>
-                <div className="replays-empty" style={{ padding: '2rem', color: '#ccc' }}>
-                    Для этого матча не сохранены кадры (слишком короткий бой или запись отключена). История матча доступна в
-                    разделе «История матчей». Проверьте, что матч был записан в action-based реплей.
+                <div className="replays-empty replay-playback-empty">
+                    Для этого матча нет данных для восстановления мира по журналу действий. История матча доступна в
+                    разделе «История матчей».
                 </div>
             </div>
         );

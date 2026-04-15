@@ -1,0 +1,18 @@
+:root {
+    --color-bg-950: #0f1115;
+    --color-bg-900: #151922;
+    --color-bg-800: #1c2230;
+    --color-surface-700: #1c2230;
+    --color-surface-600: #232b3b;
+    --color-border-400: #3a455a;
+    --color-border-300: #313b4f;
+    --color-text-100: #f3f5f8;
+    --color-text-200: #dbe1ea;
+    --color-text-300: #aab5c7;
+    --color-accent-cyan: #5b8def;
+    --color-accent-cyan-strong: #4b79d1;
+    --color-accent-green: #63b978;
+    --color-accent-gold: #c3a85b;
+    --color-danger: #ce6573;
+    --color-warning: #c3a85b;
+}

@@ -4,7 +4,7 @@ import PlayHubScreen from '../components/ui/PlayHubScreen';
 import OnlineTankCustomizer from '../components/ui/OnlineTankCustomizer';
 import LobbyScreen from '../components/ui/LobbyScreen';
 import GameScreen from '../components/ui/GameScreen';
-import GameEndScreen, { type DeathmatchScoreRow } from '../components/ui/GameEndScreen';
+import GameEndScreen, { type DeathmatchScoreRow, type PlayerMatchStatsRow } from '../components/ui/GameEndScreen';
 import { useAuth } from '../context/AuthContext';
 
 type PlayScreen = 'hub' | 'tankSelection' | 'lobby' | 'game' | 'gameEnd';
@@ -28,6 +28,16 @@ function enrichDeathmatchScores(
     }));
 }
 
+function enrichMatchStats(
+    stats: PlayerMatchStatsRow[],
+    players: Player[]
+): PlayerMatchStatsRow[] {
+    return stats.map((s) => ({
+        ...s,
+        displayName: players.find((p) => p.playerId === s.playerId)?.displayName
+    }));
+}
+
 const PlayPage: React.FC = () => {
     const { tokenRef, authRestored, accessToken, authUser } = useAuth();
     const [screen, setScreen] = useState<PlayScreen>('hub');
@@ -39,12 +49,18 @@ const PlayPage: React.FC = () => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [error, setError] = useState<string>('');
     const [gameEndReason, setGameEndReason] = useState<
-        | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string }
+        | {
+              mode: 'standard';
+              winner: 'attacker' | 'defender';
+              reason: string;
+              stats: PlayerMatchStatsRow[];
+          }
         | {
               mode: 'deathmatch';
               reason: string;
               scores: DeathmatchScoreRow[];
               winnerPlayerIds: string[];
+              stats: PlayerMatchStatsRow[];
           }
         | null
     >(null);
@@ -210,12 +226,18 @@ const PlayPage: React.FC = () => {
 
     const handleGameEnd = (
         result:
-            | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string }
+            | {
+                  mode: 'standard';
+                  winner: 'attacker' | 'defender';
+                  reason: string;
+                  stats: PlayerMatchStatsRow[];
+              }
             | {
                   mode: 'deathmatch';
                   reason: string;
                   scores: DeathmatchScoreRow[];
                   winnerPlayerIds: string[];
+                  stats: PlayerMatchStatsRow[];
               }
     ) => {
         setGameEndReason(result);
@@ -305,10 +327,12 @@ const PlayPage: React.FC = () => {
                     {...(gameEndReason.mode === 'standard'
                         ? {
                               winner: gameEndReason.winner,
-                              myRole
+                              myRole,
+                              stats: enrichMatchStats(gameEndReason.stats, players)
                           }
                         : {
                               scores: enrichDeathmatchScores(gameEndReason.scores, players),
+                              stats: enrichMatchStats(gameEndReason.stats, players),
                               winnerPlayerIds: gameEndReason.winnerPlayerIds
                           })}
                 />

@@ -12,6 +12,8 @@ export interface IModel extends IHealth {
 }
 
 export abstract class Model implements IModel {
+    private static readonly IDLE_LINEAR_SPEED_EPS = 0.012;
+    private static readonly IDLE_ANGULAR_SPEED_EPS = 0.01;
     protected readonly _entity: IEntity;
     protected _health: number;
     public abstract get maxHealth(): number;
@@ -24,8 +26,17 @@ export abstract class Model implements IModel {
     public get health(): number { return this._health }
     public isDead(): boolean { return this._health <= 0 }
     public get entity(): IEntity { return this._entity }
-    public isIdle(): boolean { return  this._entity.velocity.length === 0 }
-    public isAngularMotionStopped(): boolean { return this._entity.angularVelocity === 0 }
+    public isIdle(): boolean {
+        const e = this._entity;
+        return (
+            Math.abs(e.velocity.x) < Model.IDLE_LINEAR_SPEED_EPS &&
+            Math.abs(e.velocity.y) < Model.IDLE_LINEAR_SPEED_EPS &&
+            Math.abs(e.angularVelocity) < Model.IDLE_ANGULAR_SPEED_EPS
+        );
+    }
+    public isAngularMotionStopped(): boolean {
+        return Math.abs(this._entity.angularVelocity) < Model.IDLE_ANGULAR_SPEED_EPS;
+    }
     
     protected applyVelocityChange(acceleration: number, angle: number) {
         const entity = this._entity;

@@ -1,0 +1,25 @@
+@import './tokens/colors.css';
+@import './tokens/spacing.css';
+@import './tokens/typography.css';
+@import './tokens/radius.css';
+@import './tokens/shadows.css';
+
+@import './foundations/reset.css';
+@import './foundations/base.css';
+@import './foundations/utilities.css';
+
+@import './components/button.css';
+@import './components/card.css';
+@import './components/table.css';
+@import './components/chip.css';
+
+@import '../layout/AppShell.css';
+@import '../pages/pages-layout.css';
+
+@import './pages/play-hub.css';
+@import './pages/auth.css';
+@import './pages/lobby.css';
+@import './pages/game.css';
+@import './pages/game-end.css';
+@import './pages/replays.css';
+@import './pages/tank-customizer.css';

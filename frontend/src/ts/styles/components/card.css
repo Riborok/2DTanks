@@ -1,0 +1,6 @@
+.ui-card {
+    background: var(--color-surface-700);
+    border: 1px solid var(--color-border-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+}

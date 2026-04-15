@@ -42,7 +42,6 @@ const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
                             type="button"
                             className="connection-button secondary-outline"
                             onClick={onCreateDeathmatchRoom}
-                            style={{ marginTop: '10px' }}
                             title="Случайная поверхность, без ролей, победа по фрагам за 60 секунд"
                         >
                             Арена (1 мин, фраги, 2–5 игроков)
@@ -53,7 +52,6 @@ const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
                             type="button"
                             className="connection-button secondary-outline"
                             onClick={onCreatePracticeRoom}
-                            style={{ marginTop: '10px' }}
                             title="Два игрока, без лимита 5 мин и без сохранения в БД"
                         >
                             Тренировка (2 игрока)
@@ -62,9 +60,8 @@ const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
                     {onCreateSoloTest && (
                         <button
                             type="button"
-                            className="connection-button create-button"
+                            className="connection-button create-button solo"
                             onClick={onCreateSoloTest}
-                            style={{ marginTop: '10px', opacity: 0.95 }}
                         >
                             Тест: 1 игрок (без защитника)
                         </button>

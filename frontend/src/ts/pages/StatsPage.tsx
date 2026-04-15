@@ -7,6 +7,7 @@ const StatsPage: React.FC = () => {
     const [matches, setMatches] = useState<MatchHistoryItemDto[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!accessToken) {
@@ -81,6 +82,59 @@ const StatsPage: React.FC = () => {
                                             {m.isWinner ? 'Победа' : 'Поражение'} · {m.endReason ?? '—'} · тиков:{' '}
                                             {m.durationTicks ?? '—'}
                                         </span>
+                                        <button
+                                            type="button"
+                                            className="replays-back-btn"
+                                            onClick={() =>
+                                                setExpandedMatchId((prev) =>
+                                                    prev === m.matchId ? null : m.matchId
+                                                )
+                                            }
+                                        >
+                                            {expandedMatchId === m.matchId
+                                                ? 'Скрыть детализацию'
+                                                : 'Открыть статистику матча'}
+                                        </button>
+                                        {expandedMatchId === m.matchId && m.matchStats.length > 0 && (
+                                            <div className="ui-table-wrap game-end-table-wrap">
+                                                <table className="ui-table game-end-scoreboard-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>K</th>
+                                                            <th>D</th>
+                                                            <th>Урон</th>
+                                                            <th>Получено</th>
+                                                            <th>Выстрелы</th>
+                                                            <th>Попадания</th>
+                                                            <th>Точность</th>
+                                                            <th>Подборы</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {m.matchStats.map((row) => {
+                                                            const accuracy =
+                                                                row.shotsFired > 0
+                                                                    ? (row.shotsHit / row.shotsFired) * 100
+                                                                    : 0;
+                                                            return (
+                                                                <tr key={`${m.matchId}_${row.playerId}`}>
+                                                                    <td>{row.playerId.slice(0, 12)}</td>
+                                                                    <td>{row.kills}</td>
+                                                                    <td>{row.deaths}</td>
+                                                                    <td>{row.damageDealt}</td>
+                                                                    <td>{row.damageTaken}</td>
+                                                                    <td>{row.shotsFired}</td>
+                                                                    <td>{row.shotsHit}</td>
+                                                                    <td>{accuracy.toFixed(1)}%</td>
+                                                                    <td>{row.keyPickups + row.ammoPickups}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
                                     </div>
                                 </li>
                             ))}

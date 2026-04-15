@@ -1,0 +1,22 @@
+.ui-table-wrap {
+    width: 100%;
+    overflow: auto;
+}
+
+.ui-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.ui-table th,
+.ui-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--color-border-300);
+    text-align: center;
+}
+
+.ui-table th:first-child,
+.ui-table td:first-child {
+    text-align: left;
+}

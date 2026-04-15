@@ -1,0 +1,235 @@
+.game-screen {
+    width: 100vw;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background: var(--color-bg-900);
+}
+
+.game-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 2;
+    touch-action: none;
+}
+
+.game-screen-grid-overlay {
+    position: absolute;
+    inset: 0;
+    background: none;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.game-ui-modern {
+    z-index: 10000;
+    position: fixed;
+    top: var(--game-hud-top, 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: min(400px, 94vw);
+    max-width: 90vw;
+    height: auto;
+    min-height: 50px;
+    background: var(--color-surface-700);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    box-shadow: var(--shadow-medium);
+}
+
+.game-stats-modern {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.game-touch-controls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10001;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    background: rgba(8, 10, 16, 0.75);
+}
+
+.game-touch-cluster-fire {
+    align-self: center;
+}
+
+.game-touch-controls-inner {
+    pointer-events: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.game-touch-cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+
+.game-touch-row {
+    display: flex;
+    gap: 6px;
+}
+
+.game-touch-btn {
+    min-width: 50px;
+    min-height: 50px;
+    padding: 0 8px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border-400);
+    background: rgba(35, 35, 50, 0.94);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-touch-btn-fire {
+    min-width: 84px;
+    min-height: 58px;
+    background: rgba(160, 45, 45, 0.92);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.hud-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    min-width: 105px;
+}
+
+.hud-card-level {
+    min-width: 76px;
+}
+
+.hud-card-timer.is-critical {
+    border-color: rgba(255, 100, 120, 0.6);
+}
+
+.hud-card-kills {
+    border-color: rgba(255, 193, 7, 0.45);
+}
+
+.hud-card-keys.is-complete {
+    border-color: rgba(46, 213, 115, 0.55);
+}
+
+.hud-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.hud-value {
+    font-weight: 700;
+    font-size: 20px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    color: #7fc7ff;
+    white-space: nowrap;
+}
+
+.hud-value.is-critical {
+    color: #ff6b81;
+}
+
+.hud-value-level {
+    color: #2ed573;
+}
+
+.hud-value-kills {
+    color: #ffc145;
+}
+
+.hud-value-keys {
+    color: #ffd166;
+}
+
+.hud-value-keys.is-complete {
+    color: #2ed573;
+}
+
+.game-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: var(--color-text-100);
+    background: var(--color-bg-900);
+}
+
+.game-loading-title {
+    font-size: var(--text-xl);
+    margin-bottom: 20px;
+}
+
+.game-loading-sub {
+    font-size: var(--text-md);
+    color: var(--color-text-300);
+}
+
+.game-loading-progress-wrap {
+    width: min(420px, 86vw);
+    margin-bottom: 10px;
+}
+
+.game-loading-progress-track {
+    width: 100%;
+    height: 30px;
+    background-color: #1d2536;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--color-border-400);
+}
+
+.game-loading-progress-fill {
+    height: 100%;
+    background: var(--color-accent-cyan);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+}

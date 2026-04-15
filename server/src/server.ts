@@ -62,6 +62,12 @@ wss.on('connection', (ws: WebSocket, req) => {
 
     let playerId: string | null = null;
     let roomCode: string | null = null;
+    const restored = roomManager.reconnectByUser(ws, wsUser);
+    if (restored) {
+        roomCode = restored.code;
+        playerId = restored.playerId;
+        console.log(`[SERVER] Restored session for user ${wsUser.login} in room ${roomCode} as ${playerId}`);
+    }
 
     ws.on('message', (message: Buffer) => {
         try {

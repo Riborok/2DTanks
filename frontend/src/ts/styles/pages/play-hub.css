@@ -1,0 +1,117 @@
+.connection-screen {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    position: relative;
+}
+
+.connection-screen::before {
+    content: none;
+}
+
+.connection-container {
+    width: min(680px, 96vw);
+    position: relative;
+    z-index: 1;
+    padding: 32px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-300);
+    background: var(--color-surface-700);
+    box-shadow: var(--shadow-medium);
+    backdrop-filter: blur(10px);
+}
+
+.game-title {
+    margin: 0 0 10px;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.05;
+}
+
+.page-play-hub .page-subtitle {
+    margin: 0 0 22px;
+    color: var(--color-text-300);
+    line-height: 1.45;
+}
+
+.connection-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.connection-button {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    color: #fff;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+}
+
+.connection-button:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 2px;
+}
+
+.connection-button.create-button,
+.connection-button.join-button {
+    background: var(--color-accent-cyan);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+.connection-button.secondary-outline {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--color-border-400);
+}
+
+.connection-button.create-button.solo {
+    opacity: 0.95;
+}
+
+.connection-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.connection-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.join-section {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.room-code-input {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-400);
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+    padding: 12px 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    text-align: center;
+    font-size: var(--text-md);
+}
+
+.room-code-input::placeholder {
+    color: var(--color-text-300);
+}
+
+.error-message {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 107, 129, 0.6);
+    color: #ffd3db;
+    background: rgba(255, 107, 129, 0.12);
+}

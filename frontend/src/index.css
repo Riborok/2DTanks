@@ -47,17 +47,12 @@ body {
     background-color: #000000;
     margin: 0;
     padding: 0;
-    overflow: hidden;
 }
 
 html {
     background-color: #000000;
     margin: 0;
     padding: 0;
-}
-
-p {
-    font-family: "Comic Sans MS", sans-serif;
 }
 
 .half-hor-div {
@@ -85,12 +80,6 @@ p {
     display: inline-block;
     vertical-align: top;
     box-sizing: border-box;
-}
-
-button {
-    border: none;
-    cursor: pointer;
-    background: none;
 }
 
 .btn-img {
@@ -123,11 +112,6 @@ button {
 .info-div {
     height: 30%;
     text-align: center;
-}
-
-div p {
-    font-size: 100%;
-    color: #444444;
 }
 
 .view-tank {

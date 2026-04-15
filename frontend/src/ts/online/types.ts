@@ -2,6 +2,7 @@
 
 export interface ServerTank {
     id: string;
+    playerId?: string;
     x: number;
     y: number;
     angle: number;

@@ -13,10 +13,7 @@ import RegisterPage from './pages/RegisterPage';
 import ReplaysPage from './pages/ReplaysPage';
 import ReplayWatchPage from './pages/ReplayWatchPage';
 import StatsPage from './pages/StatsPage';
-import './components/ui/App.css';
-import './components/ui/OnlineApp.css';
-import './layout/AppShell.css';
-import './pages/pages-layout.css';
+import './styles/index.css';
 
 const AppRoutes: React.FC = () => {
     return (

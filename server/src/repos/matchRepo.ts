@@ -73,18 +73,31 @@ export async function finalizeMatch(
         winnerRole: 'attacker' | 'defender';
         endReason: string;
         durationTicks: number;
+        matchStats?: unknown[] | null;
     }
 ): Promise<void> {
+    await pool.query(
+        `ALTER TABLE matches
+         ADD COLUMN IF NOT EXISTS match_stats JSONB`
+    );
     await pool.query(
         `UPDATE matches SET
             match_status = $2,
             winner_role = $3,
             end_reason = $4,
             duration_ticks = $5,
+            match_stats = COALESCE($6::jsonb, match_stats),
             ended_at = NOW(),
             updated_at = NOW()
          WHERE match_id = $1`,
-        [params.matchId, params.status, params.winnerRole, params.endReason, params.durationTicks]
+        [
+            params.matchId,
+            params.status,
+            params.winnerRole,
+            params.endReason,
+            params.durationTicks,
+            params.matchStats ? JSON.stringify(params.matchStats) : null
+        ]
     );
     await pool.query(
         `UPDATE match_participants SET is_winner = (role = $2) WHERE match_id = $1`,

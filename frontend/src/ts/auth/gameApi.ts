@@ -23,6 +23,18 @@ export interface MatchHistoryItemDto {
     endedAt: string | null;
     role: string;
     isWinner: boolean;
+    matchStats: Array<{
+        playerId: string;
+        role: 'attacker' | 'defender' | 'fighter';
+        kills: number;
+        deaths: number;
+        shotsFired: number;
+        shotsHit: number;
+        damageDealt: number;
+        damageTaken: number;
+        keyPickups: number;
+        ammoPickups: number;
+    }>;
 }
 
 export interface ReplayPlaybackMetaDto {

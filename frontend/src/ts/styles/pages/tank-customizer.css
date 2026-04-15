@@ -1,0 +1,194 @@
+.app-container {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 14px;
+}
+
+.tank-customizer {
+    display: flex;
+    gap: 28px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-700);
+    box-shadow: var(--shadow-medium);
+}
+
+.selectors-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(210px, 1fr));
+    gap: 14px;
+}
+
+.tank-part-selector {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    min-height: 176px;
+}
+
+.selector-view {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    gap: 8px;
+    align-items: center;
+}
+
+.part-display {
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.25);
+    height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.part-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.nav-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-400);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.btn-img {
+    width: 18px;
+    height: 18px;
+}
+
+.selector-info {
+    margin-top: 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-200);
+    padding: 7px 8px;
+    text-align: center;
+    font-size: var(--text-sm);
+}
+
+.selector-info p {
+    margin: 0;
+}
+
+.preview-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    min-width: 420px;
+}
+
+.tank-preview {
+    position: relative;
+    width: 500px;
+    height: 360px;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0%, transparent 65%);
+}
+
+.tank-preview img {
+    position: absolute;
+    object-fit: contain;
+}
+
+.track-top-view {
+    top: 85px;
+    left: 120px;
+    width: 260px;
+    height: 44px;
+    z-index: 1;
+}
+
+.track-bottom-view {
+    top: 235px;
+    left: 120px;
+    width: 260px;
+    height: 44px;
+    z-index: 1;
+}
+
+.hull-view {
+    top: 100px;
+    left: 127px;
+    width: 245px;
+    height: 163px;
+    z-index: 2;
+}
+
+.turret-view {
+    top: 130px;
+    left: 190px;
+    width: 120px;
+    height: 106px;
+    z-index: 3;
+}
+
+.weapon-view {
+    top: 165px;
+    left: 300px;
+    width: 118px;
+    height: 36px;
+    z-index: 4;
+}
+
+.color-selector {
+    width: 100%;
+}
+
+.color-list {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.color-item {
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+}
+
+.color-item.color-selected {
+    border-color: var(--color-accent-green);
+    box-shadow: 0 0 0 2px rgba(46, 213, 115, 0.25);
+}
+
+.color-item.color-occupied {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.accept-button {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-400);
+    background: var(--color-accent-cyan);
+    padding: 12px 20px;
+    cursor: pointer;
+}
+
+.accept-button img {
+    width: 34px;
+    height: 34px;
+}
+
+@media (max-width: 1240px) {
+    .tank-customizer {
+        flex-direction: column;
+        align-items: center;
+    }
+}

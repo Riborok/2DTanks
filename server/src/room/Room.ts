@@ -103,6 +103,36 @@ export class Room {
         return playerId;
     }
 
+    reconnectPlayerByUserId(ws: WebSocket, auth: WsAuthUser): { playerId: string; role: PlayerRole | null } | null {
+        for (const player of this.players.values()) {
+            if (player.userId && player.userId === auth.userId) {
+                player.ws = ws;
+                player.displayName = auth.displayName ?? player.displayName;
+                ws.send(
+                    JSON.stringify({
+                        type: 'joined',
+                        roomId: this.code,
+                        playerId: player.id,
+                        role: player.role
+                    })
+                );
+                if (this.gameWorld) {
+                    ws.send(JSON.stringify({ type: 'gameStart' }));
+                    ws.send(
+                        JSON.stringify({
+                            type: 'snapshot',
+                            tick: this.gameWorld.getTick(),
+                            world: this.gameWorld.getSnapshot()
+                        })
+                    );
+                }
+                this.broadcastRoomUpdate();
+                return { playerId: player.id, role: player.role };
+            }
+        }
+        return null;
+    }
+
     updatePlayerWebSocket(playerId: string, ws: WebSocket): void {
         const player = this.players.get(playerId);
         if (player) {
@@ -356,73 +386,7 @@ export class Room {
         if (player && player.ws) {
             player.ws = null;
         }
-
-        if (this.gameWorld && this.deathmatchMode) {
-            const scores = this.gameWorld.getDeathmatchScoreList();
-            for (const p of this.players.values()) {
-                if (p.id !== playerId && p.ws && p.ws.readyState === WebSocket.OPEN) {
-                    p.ws.send(
-                        JSON.stringify({
-                            type: 'gameEnd',
-                            deathmatch: true,
-                            reason: 'playerDisconnected',
-                            winnerPlayerIds: [],
-                            scores
-                        })
-                    );
-                }
-            }
-            if (this.gameLoopInterval) {
-                clearInterval(this.gameLoopInterval);
-                this.gameLoopInterval = null;
-            }
-            this.gameWorld.setReplayEventSink(null);
-            this.gameWorld = null;
-            return;
-        }
-
-        let winnerOnDisconnect: 'attacker' | 'defender' | null = null;
-        if (this.gameWorld && !this.singlePlayerTest) {
-            for (const p of this.players.values()) {
-                if (p.id !== playerId && (p.role === 'attacker' || p.role === 'defender')) {
-                    winnerOnDisconnect = p.role;
-                    break;
-                }
-            }
-        }
-
-        // Notify other player
-        for (const p of this.players.values()) {
-            if (p.id !== playerId && p.ws) {
-                const payload: { type: string; reason: string; winner?: 'attacker' | 'defender' } = {
-                    type: 'gameEnd',
-                    reason: 'opponentDisconnected'
-                };
-                if (winnerOnDisconnect) {
-                    payload.winner = winnerOnDisconnect;
-                }
-                p.ws.send(JSON.stringify(payload));
-            }
-        }
-
-        // Stop game
-        if (this.gameLoopInterval) {
-            clearInterval(this.gameLoopInterval);
-            this.gameLoopInterval = null;
-        }
-
-        if (this.gameWorld && winnerOnDisconnect) {
-            this.persistMatchEnd({
-                matchStatus: 'aborted',
-                winner: winnerOnDisconnect,
-                reason: 'opponentDisconnect'
-            });
-        }
-
-        if (this.gameWorld) {
-            this.gameWorld.setReplayEventSink(null);
-        }
-        this.gameWorld = null;
+        this.broadcastRoomUpdate();
     }
 
     private broadcastRoomUpdate(): void {
@@ -502,7 +466,8 @@ export class Room {
                     status: params.matchStatus,
                     winnerRole: params.winner,
                     endReason: params.reason,
-                    durationTicks: ticks
+                    durationTicks: ticks,
+                    matchStats: this.gameWorld?.getPlayerStatsList() ?? []
                 });
                 if (startMeta) {
                     await replayRepo.saveMatchReplayActions(pool, matchId, {
@@ -540,7 +505,8 @@ export class Room {
                         JSON.stringify({
                             type: 'gameEnd',
                             winner: result.winner,
-                            reason: result.reason
+                            reason: result.reason,
+                            stats: result.stats
                         })
                     );
                 } else {
@@ -550,7 +516,8 @@ export class Room {
                             deathmatch: true,
                             reason: result.reason,
                             winnerPlayerIds: result.winnerPlayerIds,
-                            scores: result.scores
+                            scores: result.scores,
+                            stats: result.stats
                         })
                     );
                 }
@@ -570,6 +537,33 @@ export class Room {
             }
         }
         return true;
+    }
+
+    hasActiveGame(): boolean {
+        return this.gameWorld !== null && this.gameLoopInterval !== null;
+    }
+
+    hasUser(userId: string): boolean {
+        for (const player of this.players.values()) {
+            if (player.userId === userId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    forceCloseDueToEmpty(): void {
+        if (this.gameLoopInterval) {
+            clearInterval(this.gameLoopInterval);
+            this.gameLoopInterval = null;
+        }
+        if (this.gameWorld) {
+            this.gameWorld.setReplayEventSink(null);
+            this.gameWorld = null;
+        }
+        this.replayEvents = [];
+        this.replayStartMeta = null;
+        this.matchId = null;
     }
 }
 

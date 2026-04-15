@@ -6,7 +6,7 @@ import { Size } from '../../additionally/type';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE } from '../../constants/keyCodes';
 import { ImagePreloader } from '../../utils/ImagePreloader';
-import type { DeathmatchScoreRow } from './GameEndScreen';
+import type { DeathmatchScoreRow, PlayerMatchStatsRow } from './GameEndScreen';
 
 const REQUIRED_KEYS_PER_LEVEL = 1;
 
@@ -61,16 +61,23 @@ interface GameScreenProps {
         role: 'attacker' | 'defender' | 'fighter';
         tankConfig?: any;
         ready?: boolean;
+        displayName?: string;
     }>;
     isDeathmatch?: boolean;
     onGameEnd: (
         result:
-            | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string }
+            | {
+                  mode: 'standard';
+                  winner: 'attacker' | 'defender';
+                  reason: string;
+                  stats: PlayerMatchStatsRow[];
+              }
             | {
                   mode: 'deathmatch';
                   reason: string;
                   scores: DeathmatchScoreRow[];
                   winnerPlayerIds: string[];
+                  stats: PlayerMatchStatsRow[];
               }
     ) => void;
     onDisconnect: () => void;
@@ -254,6 +261,13 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 
                 // Update tank configs when snapshot arrives
                 if (rendererRef.current) {
+                    const labels = new Map<string, string>();
+                    for (const player of players) {
+                        if (player.playerId) {
+                            labels.set(player.playerId, player.displayName || player.playerId.slice(0, 12));
+                        }
+                    }
+                    rendererRef.current.setPlayerLabels(labels);
                     for (const player of players) {
                         if (player.tankConfig) {
                             const tank = message.world.tanks?.find((t: any) => t.playerId === player.playerId);
@@ -269,6 +283,23 @@ const GameScreen: React.FC<GameScreenProps> = ({
         };
 
         const handleGameEnd = (message: any) => {
+            const stats: PlayerMatchStatsRow[] = Array.isArray(message.stats)
+                ? message.stats.map((s: any) => ({
+                      playerId: String(s.playerId),
+                      role:
+                          s.role === 'attacker' || s.role === 'defender' || s.role === 'fighter'
+                              ? s.role
+                              : 'fighter',
+                      kills: Number(s.kills) || 0,
+                      deaths: Number(s.deaths) || 0,
+                      shotsFired: Number(s.shotsFired) || 0,
+                      shotsHit: Number(s.shotsHit) || 0,
+                      damageDealt: Number(s.damageDealt) || 0,
+                      damageTaken: Number(s.damageTaken) || 0,
+                      keyPickups: Number(s.keyPickups) || 0,
+                      ammoPickups: Number(s.ammoPickups) || 0
+                  }))
+                : [];
             if (message.deathmatch) {
                 const scores: DeathmatchScoreRow[] = Array.isArray(message.scores)
                     ? message.scores.map((s: any) => ({
@@ -283,7 +314,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
                     mode: 'deathmatch',
                     reason: message.reason || 'gameEnd',
                     scores,
-                    winnerPlayerIds
+                    winnerPlayerIds,
+                    stats
                 });
                 return;
             }
@@ -295,7 +327,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
             } else {
                 winnerRole = 'defender';
             }
-            onGameEnd({ mode: 'standard', winner: winnerRole, reason: message.reason || 'gameEnd' });
+            onGameEnd({
+                mode: 'standard',
+                winner: winnerRole,
+                reason: message.reason || 'gameEnd',
+                stats
+            });
         };
 
         const handleError = (message: any) => {
@@ -462,47 +499,20 @@ const GameScreen: React.FC<GameScreenProps> = ({
         
         return (
             <div className="game-screen">
-                <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    height: '100vh',
-                    backgroundColor: '#1a1a1a',
-                    color: '#ffffff',
-                    fontFamily: 'Arial, sans-serif'
-                }}>
-                    <div style={{ fontSize: '24px', marginBottom: '20px' }}>
+                <div className="game-loading">
+                    <div className="game-loading-title">
                         {loadingStage}
                     </div>
                     {loadingProgress.total > 0 && (
-                        <div style={{ width: '400px', marginBottom: '10px' }}>
-                            <div style={{
-                                width: '100%',
-                                height: '30px',
-                                backgroundColor: '#333',
-                                borderRadius: '15px',
-                                overflow: 'hidden',
-                                border: '2px solid #555'
-                            }}>
-                                <div style={{
-                                    width: `${progressPercent}%`,
-                                    height: '100%',
-                                    backgroundColor: '#4CAF50',
-                                    transition: 'width 0.3s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#fff',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}>
+                        <div className="game-loading-progress-wrap">
+                            <div className="game-loading-progress-track">
+                                <div className="game-loading-progress-fill" style={{ width: `${progressPercent}%` }}>
                                     {progressPercent}%
                                 </div>
                             </div>
                         </div>
                     )}
-                    <div style={{ fontSize: '16px', color: '#aaa' }}>
+                    <div className="game-loading-sub">
                         {loadingProgress.total > 0 
                             ? `${loadingProgress.loaded} / ${loadingProgress.total} изображений`
                             : 'Инициализация...'}
@@ -512,53 +522,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
         );
     }
 
+    const isTimeCritical = timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60);
+    const timerCardClass = isTimeCritical ? 'hud-card hud-card-timer is-critical' : 'hud-card hud-card-timer';
+    const timerValueClass = isTimeCritical ? 'hud-value is-critical' : 'hud-value';
+
     return (
-        <div className="game-screen" style={{ 
-            width: '100vw', 
-            height: '100vh', 
-            position: 'relative', 
-            overflow: 'hidden', 
-            background: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%)',
-            backgroundAttachment: 'fixed'
-        }}>
-            {/* Decorative background pattern */}
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: `
-                    repeating-linear-gradient(
-                        0deg,
-                        transparent,
-                        transparent 2px,
-                        rgba(255, 255, 255, 0.02) 2px,
-                        rgba(255, 255, 255, 0.02) 4px
-                    ),
-                    repeating-linear-gradient(
-                        90deg,
-                        transparent,
-                        transparent 2px,
-                        rgba(255, 255, 255, 0.02) 2px,
-                        rgba(255, 255, 255, 0.02) 4px
-                    )
-                `,
-                pointerEvents: 'none',
-                zIndex: 1
-            }} />
+        <div className="game-screen">
+            <div className="game-screen-grid-overlay" />
             <canvas
                 ref={canvasRef}
                 className="game-canvas"
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    zIndex: 2,
-                    touchAction: 'none'
-                }}
             />
             {useTouchUi && (
                 <div className="game-touch-controls" role="toolbar" aria-label="Управление">
@@ -587,7 +560,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                                 </button>
                             </div>
                         </div>
-                        <div className="game-touch-cluster" style={{ alignSelf: 'center' }}>
+                        <div className="game-touch-cluster game-touch-cluster-fire">
                             <button type="button" className="game-touch-btn game-touch-btn-fire" {...bindFireTouch()} aria-label="Огонь">
                                 ОГОНЬ
                             </button>
@@ -595,182 +568,29 @@ const GameScreen: React.FC<GameScreenProps> = ({
                     </div>
                 </div>
             )}
-            <div ref={menuRef} className="game-ui" style={{ 
-                zIndex: 10000, 
-                position: 'fixed', 
-                top: 'var(--game-hud-top, 10px)', 
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 'auto', 
-                minWidth: 'min(400px, 94vw)',
-                maxWidth: '90vw',
-                height: 'auto',
-                minHeight: '50px',
-                background: 'linear-gradient(180deg, rgba(20, 20, 30, 0.98) 0%, rgba(10, 10, 15, 0.95) 100%)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '12px',
-                border: '2px solid rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '10px 20px',
-                boxSizing: 'border-box',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
-            }}>
-                <div className="game-stats" style={{ 
-                    display: 'flex', 
-                    gap: '15px', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    width: '100%', 
-                    maxWidth: '100%',
-                    flexWrap: 'wrap',
-                    overflowX: 'auto',
-                    overflowY: 'visible'
-                }}>
+            <div ref={menuRef} className="game-ui game-ui-modern">
+                <div className="game-stats game-stats-modern">
                     {!isDeathmatch && (
-                        <div className="stat-item" style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            gap: '3px',
-                            padding: '6px 12px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            width: 'auto',
-                            minWidth: '70px',
-                            flexShrink: 1 
-                        }}>
-                            <label style={{ 
-                                fontSize: '10px', 
-                                fontWeight: '600', 
-                                color: 'rgba(255, 255, 255, 0.7)', 
-                                margin: 0,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                whiteSpace: 'nowrap'
-                            }}>Уровень</label>
-                            <span style={{ 
-                                fontSize: '20px', 
-                                fontWeight: 'bold', 
-                                color: '#4CAF50',
-                                fontFamily: 'monospace',
-                                textShadow: '0 0 10px rgba(76, 175, 80, 0.5)',
-                                whiteSpace: 'nowrap'
-                            }}>{currentLevel}</span>
+                        <div className="hud-card hud-card-level">
+                            <label className="hud-label">Уровень</label>
+                            <span className="hud-value hud-value-level">{currentLevel}</span>
                         </div>
                     )}
-                    <div className="stat-item" style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        gap: '3px',
-                        padding: '6px 14px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px',
-                        border: `1px solid ${
-                            timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
-                                ? 'rgba(255, 68, 68, 0.5)'
-                                : 'rgba(255, 255, 255, 0.1)'
-                        }`,
-                        width: 'auto',
-                        minWidth: '110px',
-                        flexShrink: 1 
-                    }}>
-                        <label style={{ 
-                            fontSize: '10px', 
-                            fontWeight: '600', 
-                            color: 'rgba(255, 255, 255, 0.7)', 
-                            margin: 0,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            whiteSpace: 'nowrap'
-                        }}>{isDeathmatch ? 'До конца раунда' : 'Осталось времени'}</label>
-                        <span style={{ 
-                            color:
-                                timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
-                                    ? '#ff4444'
-                                    : '#64B5F6',
-                            fontWeight: 'bold',
-                            fontSize: '20px',
-                            fontFamily: 'monospace',
-                            textShadow: `0 0 10px ${
-                                timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
-                                    ? 'rgba(255, 68, 68, 0.5)'
-                                    : 'rgba(100, 181, 246, 0.5)'
-                            }`,
-                            whiteSpace: 'nowrap'
-                        }}>
+                    <div className={timerCardClass}>
+                        <label className="hud-label">{isDeathmatch ? 'До конца раунда' : 'Осталось времени'}</label>
+                        <span className={timerValueClass}>
                             {timeRemaining == null ? '—' : formatTime(timeRemaining)}
                         </span>
                     </div>
                     {isDeathmatch ? (
-                        <div className="stat-item" style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            gap: '3px',
-                            padding: '6px 14px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(255, 193, 7, 0.45)',
-                            width: 'auto',
-                            minWidth: '100px',
-                            flexShrink: 1 
-                        }}>
-                            <label style={{ 
-                                fontSize: '10px', 
-                                fontWeight: '600', 
-                                color: 'rgba(255, 255, 255, 0.7)', 
-                                margin: 0,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                whiteSpace: 'nowrap'
-                            }}>Ваши фраги</label>
-                            <span style={{ 
-                                color: '#FFC107', 
-                                fontWeight: 'bold',
-                                fontSize: '20px',
-                                fontFamily: 'monospace',
-                                whiteSpace: 'nowrap'
-                            }}>{myKills}</span>
+                        <div className="hud-card hud-card-kills">
+                            <label className="hud-label">Ваши фраги</label>
+                            <span className="hud-value hud-value-kills">{myKills}</span>
                         </div>
                     ) : (
-                        <div className="stat-item" style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            gap: '3px',
-                            padding: '6px 14px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            borderRadius: '6px',
-                            border: `1px solid ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
-                            width: 'auto',
-                            minWidth: '120px',
-                            flexShrink: 1 
-                        }}>
-                            <label style={{ 
-                                fontSize: '10px', 
-                                fontWeight: '600', 
-                                color: 'rgba(255, 255, 255, 0.7)', 
-                                margin: 0,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                whiteSpace: 'nowrap'
-                            }}>Собрано ключей</label>
-                            <span style={{ 
-                                color: keysCollected >= REQUIRED_KEYS_PER_LEVEL ? '#4CAF50' : '#FFD54F', 
-                                fontWeight: 'bold',
-                                fontSize: '20px',
-                                fontFamily: 'monospace',
-                                textShadow: `0 0 10px ${keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 213, 79, 0.5)'}`,
-                                whiteSpace: 'nowrap'
-                            }}>
+                        <div className={keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'hud-card hud-card-keys is-complete' : 'hud-card hud-card-keys'}>
+                            <label className="hud-label">Собрано ключей</label>
+                            <span className={keysCollected >= REQUIRED_KEYS_PER_LEVEL ? 'hud-value hud-value-keys is-complete' : 'hud-value hud-value-keys'}>
                                 {keysCollected} / {REQUIRED_KEYS_PER_LEVEL}
                             </span>
                         </div>

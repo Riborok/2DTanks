@@ -1,0 +1,35 @@
+.ui-btn {
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.ui-btn:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 2px;
+}
+
+.ui-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ui-btn-primary {
+    background: var(--color-accent-cyan);
+    color: #fff;
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+.ui-btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-border-400);
+    color: var(--color-text-100);
+}
+
+.ui-btn:hover:not(:disabled) {
+    transform: none;
+    filter: brightness(1.06);
+}

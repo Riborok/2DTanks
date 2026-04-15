@@ -68,6 +68,7 @@ export class OnlineGameRenderer {
         weaponNum: number;
         color: number;
     }> = new Map();
+    private playerLabels: Map<string, string> = new Map();
 
     constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this.canvas = new Canvas(ctx, size);
@@ -84,6 +85,10 @@ export class OnlineGameRenderer {
         color: number;
     }): void {
         this.tankConfigs.set(tankId, config);
+    }
+
+    public setPlayerLabels(labels: Map<string, string>): void {
+        this.playerLabels = new Map(labels);
     }
 
     private setupBackground(materialNum: number = 1): void {
@@ -320,6 +325,55 @@ export class OnlineGameRenderer {
             ));
         }
     }
+
+    private drawTankName(serverTank: ServerTank, renderableTank: RenderableTank): void {
+        const playerId = typeof serverTank.playerId === 'string' ? serverTank.playerId : '';
+        if (!playerId) {
+            return;
+        }
+        const label = this.playerLabels.get(playerId) || playerId.slice(0, 12);
+        if (!label) {
+            return;
+        }
+
+        const hullNum = renderableTank.config.hullNum;
+        const tankEntityWidth = ResolutionManager.getTankEntityWidth(hullNum);
+        const tankEntityHeight = ResolutionManager.getTankEntityHeight(hullNum);
+        const sin = Math.sin(serverTank.angle);
+        const cos = Math.cos(serverTank.angle);
+        const point2RelativeX = tankEntityWidth;
+        const point2RelativeY = tankEntityHeight;
+        const point2RelativeRotatedX = point2RelativeX * cos - point2RelativeY * sin;
+        const point2RelativeRotatedY = point2RelativeX * sin + point2RelativeY * cos;
+        const scaledTankX = ResolutionManager.worldToCanvasX(serverTank.x);
+        const scaledTankY = ResolutionManager.worldToCanvasY(serverTank.y);
+        const point2 = new Point(scaledTankX + point2RelativeRotatedX, scaledTankY + point2RelativeRotatedY);
+        const center = calcMidBetweenTwoPoint(new Point(scaledTankX, scaledTankY), point2);
+
+        const ctx = this.canvas.ctx;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.font = '600 13px Inter, Segoe UI, Arial, sans-serif';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = '#f2f6ff';
+        const healthBarTopY = center.y - tankEntityHeight * 1.5;
+        const y = healthBarTopY - ResolutionManager.HEALTH_ARMOR_BAR_INDENT_Y;
+        ctx.strokeText(label, center.x, y);
+        ctx.fillText(label, center.x, y);
+        ctx.restore();
+    }
+
+    private drawTankNamesOnTop(): void {
+        for (const serverTank of this.tanksDataForHealthBars) {
+            const renderableTank = this.tanks.get(serverTank.id);
+            if (!renderableTank) {
+                continue;
+            }
+            this.drawTankName(serverTank, renderableTank);
+        }
+    }
     
     private getHealthColor(health: number, maxHealth: number): string {
         if (health > maxHealth * 0.4)
@@ -479,6 +533,7 @@ export class OnlineGameRenderer {
         this.animationManager.handle(16); // Approximate deltaTime
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
+        this.drawTankNamesOnTop();
     }
 
     public clear(): void {

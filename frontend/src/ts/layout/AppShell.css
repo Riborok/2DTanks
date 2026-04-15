@@ -2,10 +2,9 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 50%, #000000 100%);
-    background-attachment: fixed;
+    background: var(--color-bg-900);
     color: #e8e8f0;
-    font-family: 'Arial', sans-serif;
+    font-family: var(--font-family-base);
     /**
      * Панель статистики в игре использует top: var(--game-hud-top, 10px).
      * Шапка + перенос навигации — запас по вертикали.
@@ -17,11 +16,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px 20px;
-    padding: 12px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(10, 10, 18, 0.85);
-    backdrop-filter: blur(8px);
+    gap: 10px 20px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(176, 195, 230, 0.16);
+    background: var(--color-surface-700);
     position: relative;
     z-index: 5;
     flex-shrink: 0;
@@ -29,14 +27,19 @@
 
 .app-shell-brand {
     font-weight: 700;
-    font-size: 1.15rem;
-    color: #00cec9;
+    font-size: 1.05rem;
+    color: var(--color-text-100);
     text-decoration: none;
-    margin-right: 8px;
+    margin-right: 4px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border-300);
+    background: var(--color-surface-600);
 }
 
 .app-shell-brand:hover {
-    color: #55e6e2;
+    color: var(--color-text-100);
+    border-color: var(--color-border-400);
 }
 
 .app-shell-nav {
@@ -47,20 +50,24 @@
 }
 
 .app-shell-nav .nav-link {
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(228, 239, 255, 0.74);
     text-decoration: none;
-    font-size: 0.95rem;
-    padding: 4px 0;
-    border-bottom: 2px solid transparent;
+    font-size: 0.93rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .app-shell-nav .nav-link:hover {
     color: #fff;
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .app-shell-nav .nav-link.active {
-    color: #00cec9;
-    border-bottom-color: #00cec9;
+    color: #fff;
+    border-color: var(--color-border-400);
+    background: var(--color-surface-600);
 }
 
 .app-shell-user {
@@ -72,28 +79,28 @@
 
 .app-shell-user-name {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(224, 236, 255, 0.9);
 }
 
 .app-shell-logout {
-    background: rgba(255, 80, 80, 0.2);
-    border: 1px solid rgba(255, 100, 100, 0.45);
-    color: #ffb4b4;
-    padding: 6px 12px;
-    border-radius: 8px;
+    background: rgba(255, 107, 129, 0.16);
+    border: 1px solid rgba(255, 107, 129, 0.46);
+    color: #ffc7d1;
+    padding: 8px 12px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 0.85rem;
 }
 
 .app-shell-logout:hover {
-    background: rgba(255, 80, 80, 0.35);
+    background: rgba(255, 107, 129, 0.26);
 }
 
 .app-shell-main {
     flex: 1;
     min-height: 0;
-    padding: 24px;
-    max-width: 1100px;
+    padding: 24px 20px 30px;
+    max-width: 1200px;
     width: 100%;
     margin: 0 auto;
     box-sizing: border-box;
@@ -147,6 +154,6 @@
 }
 
 .page-loading-text {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(235, 243, 255, 0.85);
     font-size: 1.1rem;
 }

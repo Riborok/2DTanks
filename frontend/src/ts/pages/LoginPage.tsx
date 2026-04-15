@@ -36,6 +36,7 @@ const LoginPage: React.FC = () => {
         <div className="page-auth connection-screen">
             <div className="connection-container">
                 <h1 className="game-title">Вход</h1>
+                <p className="auth-lead">Войдите в аккаунт, чтобы продолжить игру и смотреть историю матчей.</p>
                 <form className="auth-form" onSubmit={(e) => void submit(e)}>
                     <input
                         className="auth-input"
@@ -53,7 +54,7 @@ const LoginPage: React.FC = () => {
                         autoComplete="current-password"
                     />
                     {formError && <div className="auth-form-error">{formError}</div>}
-                    <button type="submit" className="auth-submit" disabled={authBusy}>
+                    <button type="submit" className="auth-submit ui-btn ui-btn-primary" disabled={authBusy}>
                         {authBusy ? '…' : 'Войти'}
                     </button>
                     <p className="auth-hint">

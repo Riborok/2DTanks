@@ -5,11 +5,25 @@ export type DeathmatchInit = {
     fighters: { playerId: string; config: TankConfig }[];
 };
 
+export type PlayerMatchStats = {
+    playerId: string;
+    role: 'attacker' | 'defender' | 'fighter';
+    kills: number;
+    deaths: number;
+    shotsFired: number;
+    shotsHit: number;
+    damageDealt: number;
+    damageTaken: number;
+    keyPickups: number;
+    ammoPickups: number;
+};
+
 export type GameWorldEndResult =
-    | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string }
+    | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string; stats: PlayerMatchStats[] }
     | {
           mode: 'deathmatch';
           reason: string;
           winnerPlayerIds: string[];
           scores: { playerId: string; kills: number }[];
+          stats: PlayerMatchStats[];
       };

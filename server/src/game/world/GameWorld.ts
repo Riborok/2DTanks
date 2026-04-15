@@ -14,7 +14,7 @@ import { MazeCreator } from './MazeCreator';
 import { CollisionResolver } from '../../geometry/CollisionResolver';
 import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
-import type { DeathmatchInit, GameWorldEndResult } from './gameWorldEndResult';
+import type { DeathmatchInit, GameWorldEndResult, PlayerMatchStats } from './gameWorldEndResult';
 import { SeededRandom } from '../../utils/seededRandom';
 import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
 import { WallModel } from '../../model/obstacle/IWallModel';
@@ -55,6 +55,8 @@ interface TimedBulletImpactEvent extends TimedExplosionEvent {
     bulletType: number;
 }
 
+interface MutablePlayerMatchStats extends PlayerMatchStats {}
+
 export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
@@ -92,6 +94,7 @@ export class GameWorld {
     private readonly deathmatchMode: boolean;
     private readonly deathmatchSpec: DeathmatchInit | null;
     private readonly killCounts = new Map<string, number>();
+    private readonly playerStats = new Map<string, MutablePlayerMatchStats>();
     private readonly tankConfigByTankId = new Map<string, TankConfig>();
     private readonly rng: SeededRandom;
     private readonly rngSeed: number;
@@ -154,6 +157,38 @@ export class GameWorld {
 
     private randomInt(min: number, max: number): number {
         return this.rng.nextInt(min, max);
+    }
+
+    private ensurePlayerStats(playerId: string, role: 'attacker' | 'defender' | 'fighter'): MutablePlayerMatchStats {
+        const existing = this.playerStats.get(playerId);
+        if (existing) {
+            return existing;
+        }
+        const created: MutablePlayerMatchStats = {
+            playerId,
+            role,
+            kills: 0,
+            deaths: 0,
+            shotsFired: 0,
+            shotsHit: 0,
+            damageDealt: 0,
+            damageTaken: 0,
+            keyPickups: 0,
+            ammoPickups: 0
+        };
+        this.playerStats.set(playerId, created);
+        return created;
+    }
+
+    private buildPlayerStatsList(): PlayerMatchStats[] {
+        for (const tank of this.tanks.values()) {
+            if (tank.playerId) {
+                this.ensurePlayerStats(tank.playerId, tank.role);
+            }
+        }
+        return Array.from(this.playerStats.values())
+            .map((s) => ({ ...s }))
+            .sort((a, b) => b.kills - a.kills || b.damageDealt - a.damageDealt);
     }
 
     private pushExplosion(x: number, y: number, angle: number): void {
@@ -384,8 +419,14 @@ export class GameWorld {
         for (const tank of this.tanks.values()) {
             if (tank.role === 'attacker') {
                 tank.playerId = attackerPlayerId;
+                if (attackerPlayerId) {
+                    this.ensurePlayerStats(attackerPlayerId, 'attacker');
+                }
             } else if (tank.role === 'defender') {
                 tank.playerId = defenderPlayerId;
+                if (defenderPlayerId) {
+                    this.ensurePlayerStats(defenderPlayerId, 'defender');
+                }
             }
         }
     }
@@ -577,6 +618,9 @@ export class GameWorld {
                 
                 // Only create bullet if no immediate collision with other objects
                 if (validCollisions.length === 0) {
+                    if (tank.playerId) {
+                        this.ensurePlayerStats(tank.playerId, tank.role).shotsFired += 1;
+                    }
                     const serverBullet: ServerBullet = {
                         id: bullet.entity.id,
                         model: bullet,
@@ -588,6 +632,9 @@ export class GameWorld {
                     // Wait until first update, like in original (bullet is inserted in update method after movement)
                     console.log(`[GAMEWORLD] Bullet created: id=${serverBullet.id}, bulletNum=${serverBullet.bulletNum}, x=${bullet.entity.points[0].x.toFixed(1)}, y=${bullet.entity.points[0].y.toFixed(1)}, angle=${bullet.entity.angle.toFixed(3)}, totalBullets=${this.bullets.size}`);
                 } else {
+                    if (tank.playerId) {
+                        this.ensurePlayerStats(tank.playerId, tank.role).shotsFired += 1;
+                    }
                     const impactPoint = bullet.entity.calcCenter();
                     if (tank.model.bulletNum === 4) {
                         const explosionSize =
@@ -754,6 +801,7 @@ export class GameWorld {
                 
                 // Handle bullet hits (only if collision occurred)
                 if (collisions.length > 0) {
+                    let countedHitForSource = false;
                     
                     for (const collided of collisions) {
                         // Skip collision with source tank - find source tank entity
@@ -763,8 +811,30 @@ export class GameWorld {
                         // Check if hit a tank
                         const hitTank = Array.from(this.tanks.values()).find(t => t.model.entity.id === collided.id);
                         if (hitTank) {
+                            const hpBefore = hitTank.model.health + hitTank.model.armor;
                             hitTank.model.takeDamage(bullet.model);
+                            const hpAfter = hitTank.model.health + hitTank.model.armor;
+                            const dealt = Math.max(0, hpBefore - hpAfter);
+                            if (dealt > 0) {
+                                if (sourceTank?.playerId) {
+                                    const srcStats = this.ensurePlayerStats(sourceTank.playerId, sourceTank.role);
+                                    srcStats.damageDealt += dealt;
+                                    if (!countedHitForSource) {
+                                        srcStats.shotsHit += 1;
+                                        countedHitForSource = true;
+                                    }
+                                }
+                                if (hitTank.playerId) {
+                                    this.ensurePlayerStats(hitTank.playerId, hitTank.role).damageTaken += dealt;
+                                }
+                            }
                             if (hitTank.model.isDead()) {
+                                if (hitTank.playerId) {
+                                    this.ensurePlayerStats(hitTank.playerId, hitTank.role).deaths += 1;
+                                }
+                                if (sourceTank?.playerId && sourceTank.playerId !== hitTank.playerId) {
+                                    this.ensurePlayerStats(sourceTank.playerId, sourceTank.role).kills += 1;
+                                }
                                 if (this.deathmatchMode) {
                                     const killerTank = Array.from(this.tanks.values()).find(t => t.id === bullet.sourceId);
                                     const killerPid = killerTank?.playerId;
@@ -908,6 +978,9 @@ export class GameWorld {
                 if (hasCollision) {
                     if (!this.deathmatchMode && item.type === Bonus.key && tank.role === 'attacker') {
                         this.keysCollected++;
+                        if (tank.playerId) {
+                            this.ensurePlayerStats(tank.playerId, tank.role).keyPickups += 1;
+                        }
                         itemsToRemove.push(item.id);
                         console.log(`[GAMEWORLD] Key collected by attacker! Total keys: ${this.keysCollected}, current level: ${this.currentLevel}`);
                         
@@ -928,6 +1001,9 @@ export class GameWorld {
                             bulletNum = 3; // Sniper bullet number
                         }
                         tank.model.takeBullet(bulletNum);
+                        if (tank.playerId) {
+                            this.ensurePlayerStats(tank.playerId, tank.role).ammoPickups += 1;
+                        }
                         itemsToRemove.push(item.id);
                     }
                 }
@@ -1271,6 +1347,10 @@ export class GameWorld {
         return Array.from(this.killCounts.entries()).map(([playerId, kills]) => ({ playerId, kills }));
     }
 
+    public getPlayerStatsList(): PlayerMatchStats[] {
+        return this.buildPlayerStatsList();
+    }
+
     public checkGameEnd(): GameWorldEndResult | null {
         const timeElapsed = this.elapsedMs / 1000;
 
@@ -1296,18 +1376,24 @@ export class GameWorld {
                 mode: 'deathmatch',
                 reason: 'deathmatchTimeUp',
                 winnerPlayerIds,
-                scores
+                scores,
+                stats: this.buildPlayerStatsList()
             };
         }
 
         const useTimeLimit = !this.singlePlayerTest && !this.practiceMode;
         if (useTimeLimit && timeElapsed >= this.FINISH_TIME / 1000) {
-            return { mode: 'standard', winner: 'defender', reason: 'timeLimit' };
+            return { mode: 'standard', winner: 'defender', reason: 'timeLimit', stats: this.buildPlayerStatsList() };
         }
 
         // Check if attacker collected required keys on level 3 - attacker wins
         if (this.keysCollected >= GameWorld.REQUIRED_KEYS_PER_LEVEL && this.currentLevel === 3) {
-            return { mode: 'standard', winner: 'attacker', reason: 'keysCollected' };
+            return {
+                mode: 'standard',
+                winner: 'attacker',
+                reason: 'keysCollected',
+                stats: this.buildPlayerStatsList()
+            };
         }
 
         return null;

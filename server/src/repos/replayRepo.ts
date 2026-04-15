@@ -272,12 +272,13 @@ export type MatchHistoryRow = {
     ended_at: Date | null;
     participant_role: string;
     is_winner: boolean;
+    match_stats: unknown[] | null;
 };
 
 export async function listMatchHistoryForUser(pool: Pool, userId: string, limit = 50): Promise<MatchHistoryRow[]> {
     const r = await pool.query<MatchHistoryRow>(
         `SELECT m.match_id, m.room_code, m.match_status, m.winner_role, m.end_reason, m.duration_ticks,
-                m.started_at, m.ended_at, mp.role AS participant_role, mp.is_winner
+                m.started_at, m.ended_at, mp.role AS participant_role, mp.is_winner, m.match_stats
          FROM match_participants mp
          INNER JOIN matches m ON m.match_id = mp.match_id
          WHERE mp.user_id = $1

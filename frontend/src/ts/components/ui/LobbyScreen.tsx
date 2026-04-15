@@ -44,9 +44,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             players.every((p) => p.ready === true && p.tankConfig)
           : Boolean(myPlayer?.ready && otherPlayer?.ready);
 
-    // Debug logs
-    console.log('LobbyScreen render:', { myPlayerId, players, myPlayer, otherPlayer });
-
     const handleCopyCode = () => {
         navigator.clipboard.writeText(roomId);
         onCopyCode();
@@ -65,7 +62,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                             : 'Ожидание игроков'}
                 </h1>
                 {deathmatchRoom && (
-                    <p className="lobby-deathmatch-hint" style={{ color: 'rgba(255,255,255,0.75)', marginTop: 8 }}>
+                    <p className="lobby-deathmatch-hint">
                         В комнате {players.length} / 5. Нужно от 2 до 5 участников; все нажимают «Готов» — старт.
                         Поверхность карты случайная.
                     </p>
@@ -101,20 +98,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                                         : 'Ожидание готовности'
                         }</p>
                         {myPlayer?.ready !== true && myPlayer?.tankConfig && (
-                            <button 
-                                className="ready-button" 
-                                onClick={onReady}
-                                style={{
-                                    padding: '10px 30px',
-                                    fontSize: '18px',
-                                    backgroundColor: '#4CAF50',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer',
-                                    marginTop: '10px'
-                                }}
-                            >
+                            <button className="ready-button ready-button-prominent" onClick={onReady}>
                                 Готов
                             </button>
                         )}

@@ -1,0 +1,17 @@
+.u-text-muted {
+    color: var(--color-text-300);
+}
+
+.u-glass-card {
+    background: var(--color-surface-700);
+    border: 1px solid var(--color-border-300);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-medium);
+    backdrop-filter: blur(10px);
+}
+
+.u-page-shell {
+    width: 100vw;
+    min-height: 100vh;
+    padding: var(--space-8) var(--space-4);
+}

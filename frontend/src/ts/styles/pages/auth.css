@@ -1,0 +1,81 @@
+.page-auth {
+    min-height: 100vh;
+    padding: 24px 14px;
+}
+
+.page-auth .connection-container {
+    width: min(460px, 96vw);
+    padding: 28px;
+}
+
+.page-auth .game-title {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 42px);
+    letter-spacing: 0.01em;
+}
+
+.auth-lead {
+    margin: 10px 0 0;
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.auth-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.auth-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-400);
+    background: var(--color-surface-600);
+    color: var(--color-text-100);
+    font-size: var(--text-md);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.auth-input::placeholder {
+    color: var(--color-text-400);
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--color-accent-cyan);
+    box-shadow: 0 0 0 3px rgba(78, 126, 135, 0.2);
+    background: var(--color-surface-700);
+}
+
+.auth-form-error {
+    border: 1px solid rgba(208, 102, 102, 0.45);
+    border-radius: var(--radius-sm);
+    background: rgba(208, 102, 102, 0.14);
+    color: #f8c4c4;
+    padding: 8px 10px;
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.auth-hint {
+    margin: 6px 0 0;
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+}
+
+.auth-hint a {
+    color: var(--color-accent-cyan);
+    text-decoration: none;
+}
+
+.auth-hint a:hover {
+    text-decoration: underline;
+}
