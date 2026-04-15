@@ -40,6 +40,21 @@ interface ServerItem {
     type: Bonus;
 }
 
+interface TimedExplosionEvent {
+    tick: number;
+    x: number;
+    y: number;
+    angle: number;
+}
+
+interface TimedGrenadeExplosionEvent extends TimedExplosionEvent {
+    size: number;
+}
+
+interface TimedBulletImpactEvent extends TimedExplosionEvent {
+    bulletType: number;
+}
+
 export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
@@ -85,14 +100,14 @@ export class GameWorld {
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
     
-    // Track tank explosions for current tick (cleared each update)
-    private explosionsThisTick: Array<{ x: number; y: number; angle: number }> = [];
-    
-    // Track grenade explosions for current tick (cleared each update)
-    private grenadeExplosionsThisTick: Array<{ x: number; y: number; angle: number; size: number }> = [];
-
-    /** Small bullet hit / impact sparks (non-grenade), for client BulletImpactAnimation */
-    private bulletImpactsThisTick: Array<{ x: number; y: number; angle: number; bulletType: number }> = [];
+    /**
+     * Эффекты держим несколько тиков, чтобы не терялись при пропуске одного snapshot на клиенте.
+     * Клиент может перезаписать буфер последним снапшотом до рендера предыдущего.
+     */
+    private static readonly EFFECT_RETENTION_TICKS = 2;
+    private explosionsRecent: TimedExplosionEvent[] = [];
+    private grenadeExplosionsRecent: TimedGrenadeExplosionEvent[] = [];
+    private bulletImpactsRecent: TimedBulletImpactEvent[] = [];
 
     private levelSpawnOrigin: Point | null = null;
     private replayEventSink: ((e: ReplayEvent) => void) | null = null;
@@ -139,6 +154,25 @@ export class GameWorld {
 
     private randomInt(min: number, max: number): number {
         return this.rng.nextInt(min, max);
+    }
+
+    private pushExplosion(x: number, y: number, angle: number): void {
+        this.explosionsRecent.push({ tick: this.tick, x, y, angle });
+    }
+
+    private pushGrenadeExplosion(x: number, y: number, angle: number, size: number): void {
+        this.grenadeExplosionsRecent.push({ tick: this.tick, x, y, angle, size });
+    }
+
+    private pushBulletImpact(x: number, y: number, angle: number, bulletType: number): void {
+        this.bulletImpactsRecent.push({ tick: this.tick, x, y, angle, bulletType });
+    }
+
+    private pruneRecentEffects(): void {
+        const minTick = Math.max(0, this.tick - GameWorld.EFFECT_RETENTION_TICKS + 1);
+        this.explosionsRecent = this.explosionsRecent.filter((e) => e.tick >= minTick);
+        this.grenadeExplosionsRecent = this.grenadeExplosionsRecent.filter((e) => e.tick >= minTick);
+        this.bulletImpactsRecent = this.bulletImpactsRecent.filter((e) => e.tick >= minTick);
     }
 
     private initializeLevel(level: number): void {
@@ -554,6 +588,25 @@ export class GameWorld {
                     // Wait until first update, like in original (bullet is inserted in update method after movement)
                     console.log(`[GAMEWORLD] Bullet created: id=${serverBullet.id}, bulletNum=${serverBullet.bulletNum}, x=${bullet.entity.points[0].x.toFixed(1)}, y=${bullet.entity.points[0].y.toFixed(1)}, angle=${bullet.entity.angle.toFixed(3)}, totalBullets=${this.bullets.size}`);
                 } else {
+                    const impactPoint = bullet.entity.calcCenter();
+                    if (tank.model.bulletNum === 4) {
+                        const explosionSize =
+                            ResolutionManager.GRENADE_EXPLOSION_SIZE + this.randomInt(-30, 30);
+                        const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI;
+                        this.pushGrenadeExplosion(
+                            impactPoint.x,
+                            impactPoint.y,
+                            explosionAngle,
+                            explosionSize
+                        );
+                    } else {
+                        this.pushBulletImpact(
+                            impactPoint.x,
+                            impactPoint.y,
+                            bullet.entity.angle,
+                            tank.model.bulletNum
+                        );
+                    }
                     const collisionIds = validCollisions.map(c => {
                         const tank = Array.from(this.tanks.values()).find(t => t.model.entity.id === c.id);
                         const wall = this.walls.find(w => w.model.entity.id === c.id);
@@ -571,12 +624,7 @@ export class GameWorld {
         this.tick++;
         this.elapsedMs += deltaTime;
         
-        // Don't clear explosions here - they need to be sent in the snapshot first
-        // We'll clear them after getSnapshot() is called, or at the start of next update
-        // But for now, we clear them at the start so they're fresh for this tick
-        this.explosionsThisTick = [];
-        this.grenadeExplosionsThisTick = [];
-        this.bulletImpactsThisTick = [];
+        this.pruneRecentEffects();
         
         const resistanceCoeff = RESISTANCE_COEFFICIENT[this.backgroundMaterial];
         const airResistanceCoeff = AIR_RESISTANCE_COEFFICIENT;
@@ -614,12 +662,12 @@ export class GameWorld {
                     const explosionPoint = bullet.model.entity.calcCenter();
                     const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + this.randomInt(-30, 30);
                     const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI;
-                    this.grenadeExplosionsThisTick.push({
-                        x: explosionPoint.x,
-                        y: explosionPoint.y,
-                        angle: explosionAngle,
-                        size: explosionSize
-                    });
+                    this.pushGrenadeExplosion(
+                        explosionPoint.x,
+                        explosionPoint.y,
+                        explosionAngle,
+                        explosionSize
+                    );
                 }
                 bulletsToRemove.push(bullet.id);
                 console.log(`[GAMEWORLD] Bullet ${bullet.id} marked for removal: isIdle=true (before update)`);
@@ -634,18 +682,31 @@ export class GameWorld {
                 // Bullet not in system yet, that's fine
             }
             
-            EntityManipulator.movement(bullet.model.entity, deltaTime);
-            bullet.model.residualMovement(airResistanceCoeff, deltaTime);
-            
-            // Insert into collision system to check collisions at new position (like in original update method)
-            this.collisionSystem.insert(bullet.model.entity);
-            
-            // Check if bullet should be removed (similar to hasResidualMovement: !isIdle)
-            // Bullet is removed if it's idle (velocity = 0) OR if it collided
-            const isIdle = bullet.model.isIdle();
-            const allCollisions = Array.from(this.collisionSystem.getCollisions(bullet.model.entity));
-            // Filter out self-collision (getCollisions may include the entity itself if it's in the system)
-            const collisions = allCollisions.filter(collided => collided.id !== bullet.model.entity.id);
+            // Anti-tunneling: move bullet in substeps and check collisions on each substep.
+            const maxBulletStepMs = 6;
+            const bulletStepCount = Math.max(1, Math.ceil(deltaTime / maxBulletStepMs));
+            const bulletStepDelta = deltaTime / bulletStepCount;
+
+            let isIdle = false;
+            let collisions: IEntity[] = [];
+            for (let step = 0; step < bulletStepCount; step++) {
+                EntityManipulator.movement(bullet.model.entity, bulletStepDelta);
+                bullet.model.residualMovement(airResistanceCoeff, bulletStepDelta);
+
+                this.collisionSystem.insert(bullet.model.entity);
+                isIdle = bullet.model.isIdle();
+                const allCollisions = Array.from(this.collisionSystem.getCollisions(bullet.model.entity));
+                collisions = allCollisions.filter(collided => collided.id !== bullet.model.entity.id);
+
+                if (isIdle || collisions.length > 0) {
+                    break;
+                }
+
+                // Keep quadtree clean between substeps; entity is re-inserted on the next substep.
+                if (step < bulletStepCount - 1) {
+                    this.collisionSystem.remove(bullet.model.entity);
+                }
+            }
             
             if (isIdle || collisions.length > 0) {
                 if (isIdle) {
@@ -671,22 +732,22 @@ export class GameWorld {
                     const explosionPoint = bullet.model.entity.calcCenter();
                     const explosionSize = ResolutionManager.GRENADE_EXPLOSION_SIZE + this.randomInt(-30, 30);
                     const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
-                    this.grenadeExplosionsThisTick.push({
-                        x: explosionPoint.x,
-                        y: explosionPoint.y,
-                        angle: explosionAngle,
-                        size: explosionSize
-                    });
+                    this.pushGrenadeExplosion(
+                        explosionPoint.x,
+                        explosionPoint.y,
+                        explosionAngle,
+                        explosionSize
+                    );
                     console.log(`[GAMEWORLD] Grenade explosion created: bulletNum=${bullet.bulletNum}, x=${explosionPoint.x.toFixed(1)}, y=${explosionPoint.y.toFixed(1)}, size=${explosionSize}, reason=${isIdle ? 'idle' : 'collision'}`);
                 } else if (collisions.length > 0) {
                     // Impact sparks for non-grenade bullets hitting walls/tanks (client BulletImpactAnimation)
                     const center = bullet.model.entity.calcCenter();
-                    this.bulletImpactsThisTick.push({
-                        x: center.x,
-                        y: center.y,
-                        angle: bullet.model.entity.angle,
-                        bulletType: bullet.bulletNum
-                    });
+                    this.pushBulletImpact(
+                        center.x,
+                        center.y,
+                        bullet.model.entity.angle,
+                        bullet.bulletNum
+                    );
                 }
                 
                 bulletsToRemove.push(bullet.id);
@@ -724,11 +785,7 @@ export class GameWorld {
                                 // But for smoother animation, we use continuous random angle
                                 const explosionCenter = hitTank.model.entity.calcCenter();
                                 const explosionAngle = this.randomFloat() * 2 * Math.PI - Math.PI; // Random angle between -PI and PI
-                                this.explosionsThisTick.push({
-                                    x: explosionCenter.x,
-                                    y: explosionCenter.y,
-                                    angle: explosionAngle
-                                });
+                                this.pushExplosion(explosionCenter.x, explosionCenter.y, explosionAngle);
 
                                 // Respawn tank
                                 this.respawnTank(hitTank);
@@ -1176,9 +1233,19 @@ export class GameWorld {
             bullets: bulletSnapshots,
             walls: wallSnapshots,
             items: itemSnapshots,
-            explosions: this.explosionsThisTick, // Include tank explosions from this tick
-            grenadeExplosions: this.grenadeExplosionsThisTick, // Include grenade explosions from this tick
-            bulletImpacts: this.bulletImpactsThisTick,
+            explosions: this.explosionsRecent.map(({ x, y, angle }) => ({ x, y, angle })),
+            grenadeExplosions: this.grenadeExplosionsRecent.map(({ x, y, angle, size }) => ({
+                x,
+                y,
+                angle,
+                size
+            })),
+            bulletImpacts: this.bulletImpactsRecent.map(({ x, y, angle, bulletType }) => ({
+                x,
+                y,
+                angle,
+                bulletType
+            })),
             keysCollected: this.keysCollected,
             currentLevel: this.currentLevel,
             timeElapsed: elapsed

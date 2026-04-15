@@ -11,8 +11,8 @@ import { replayEventsToActionRows } from '../../repos/replayRepo';
 export type ReplayFrame = { tick: number; world: unknown };
 
 const FALLBACK_TICK_RATE = 60;
-/** Редкие снимки только для отрисовки реплея; логика матча — из журнала событий + симуляция. */
-const SNAPSHOT_STEP_TICKS = 20;
+/** Снимок на каждый тик, чтобы replay-визуал (включая гусеницы) совпадал с live-игрой. */
+const SNAPSHOT_STEP_TICKS = 1;
 
 function isWorldInit(e: ReplayEvent): e is ReplayWorldInitEvent {
     return e.kind === 'world_init';

@@ -15,9 +15,38 @@ function lerpAngle(a: number, b: number, t: number): number {
     return a + d * t;
 }
 
+function normalizeAngleDelta(delta: number): number {
+    let d = delta;
+    while (d > Math.PI) {
+        d -= 2 * Math.PI;
+    }
+    while (d < -Math.PI) {
+        d += 2 * Math.PI;
+    }
+    return d;
+}
+
+function resolveReplayTankIdle(prev: ServerTank | undefined, next: ServerTank): boolean {
+    if (!prev) {
+        return typeof next.isIdle === 'boolean' ? next.isIdle : true;
+    }
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const distSq = dx * dx + dy * dy;
+    const angleDelta = Math.abs(normalizeAngleDelta(next.angle - prev.angle));
+
+    // В реплее считаем "стоит", если за тик почти нет смещения/поворота.
+    // Это стабильнее, чем серверный isIdle===velocity.length===0.
+    const idleByKinematics = distSq < 0.01 && angleDelta < 0.0035;
+    if (idleByKinematics) {
+        return true;
+    }
+    return typeof next.isIdle === 'boolean' ? next.isIdle : false;
+}
+
 function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): ServerTank {
     if (!prev) {
-        return next;
+        return { ...next, isIdle: resolveReplayTankIdle(undefined, next) };
     }
     return {
         ...next,
@@ -29,7 +58,7 @@ function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): Se
         maxHealth: next.maxHealth,
         armor: next.armor,
         maxArmor: next.maxArmor,
-        isIdle: next.isIdle
+        isIdle: resolveReplayTankIdle(prev, next)
     };
 }
 

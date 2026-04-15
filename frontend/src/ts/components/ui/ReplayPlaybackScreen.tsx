@@ -31,7 +31,7 @@ function applyTankConfigs(renderer: OnlineGameRenderer, world: GameWorldSnapshot
 }
 
 /** Должен совпадать с SNAPSHOT_STEP_TICKS в server/src/game/world/replaySimulator.ts */
-const STORED_FRAME_STEP_TICKS = 20;
+const STORED_FRAME_STEP_TICKS = 1;
 
 const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     meta,
