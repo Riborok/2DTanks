@@ -53,6 +53,8 @@ interface RenderableItem {
 export class OnlineGameRenderer {
     private canvas: Canvas;
     private animationManager: AnimationManager;
+    /** Данные танков для полос HP/брони каждый кадр (updateFromSnapshot обновляет). */
+    private tanksDataForHealthBars: ServerTank[] = [];
     private tanks: Map<string, RenderableTank> = new Map();
     private bullets: Map<number, RenderableBullet> = new Map();
     private walls: Map<number, RenderableWall> = new Map();
@@ -240,9 +242,17 @@ export class OnlineGameRenderer {
             }
             
             renderableTank.sprite.updateAfterAction(centerPoint, serverTank.angle, serverTank.turretAngle, isIdle);
-            
-            // Draw health and armor bars (as in original HealthBarManager.drawBar)
-            this.drawHealthAndArmorBars(serverTank, renderableTank);
+        }
+        this.tanksDataForHealthBars =
+            serverTanks.length > 0 ? serverTanks.map((t) => ({ ...(t as ServerTank) } as ServerTank)) : [];
+    }
+
+    private drawHealthOverlaysFromLastSnapshot(): void {
+        for (const serverTank of this.tanksDataForHealthBars) {
+            const renderableTank = this.tanks.get(serverTank.id);
+            if (renderableTank) {
+                this.drawHealthAndArmorBars(serverTank, renderableTank);
+            }
         }
     }
     
@@ -467,11 +477,13 @@ export class OnlineGameRenderer {
     public render(): void {
         // Update animations (for drift smoke)
         this.animationManager.handle(16); // Approximate deltaTime
+        this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
     }
 
     public clear(): void {
         this.canvas.clear();
+        this.tanksDataForHealthBars = [];
         this.tanks.clear();
         this.bullets.clear();
         this.walls.clear();

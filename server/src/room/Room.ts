@@ -36,8 +36,8 @@ export class Room {
     private readonly deathmatchMode: boolean;
     private readonly maxPlayers: number;
     private matchId: string | null = null;
-    /** Действия для action-based реплея (сохраняются в match_replay_actions). */
-    private replayActions: replayRepo.ReplayActionEvent[] = [];
+    /** Журнал реплея: world_init, item_spawn, player_input (сохраняется в match_replay_actions.events). */
+    private replayEvents: replayRepo.ReplayEvent[] = [];
     private replayStartMeta: replayRepo.ReplayStartMeta | null = null;
     private replayRngSeed: number = 0;
     private static readonly REPLAY_MAX_ACTIONS = 20000;
@@ -199,7 +199,7 @@ export class Room {
 
     private async startGameAsync(): Promise<void> {
         this.matchId = null;
-        this.replayActions = [];
+        this.replayEvents = [];
         this.replayStartMeta = null;
         this.replayRngSeed = (Date.now() ^ getRandomInt(1, 2 ** 30 - 1)) >>> 0;
         const playersArray = Array.from(this.players.values());
@@ -284,6 +284,16 @@ export class Room {
             }
         }
 
+        if (this.matchId && this.replayStartMeta && this.gameWorld) {
+            this.replayEvents = [];
+            this.gameWorld.setReplayEventSink((ev) => {
+                if (this.replayEvents.length < Room.REPLAY_MAX_ACTIONS) {
+                    this.replayEvents.push(ev);
+                }
+            });
+            this.gameWorld.pushReplayWorldInitEvent();
+        }
+
         // Notify all players that game is starting
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
@@ -326,9 +336,10 @@ export class Room {
             if (
                 this.matchId &&
                 this.replayStartMeta &&
-                this.replayActions.length < Room.REPLAY_MAX_ACTIONS
+                this.replayEvents.length < Room.REPLAY_MAX_ACTIONS
             ) {
-                this.replayActions.push({
+                this.replayEvents.push({
+                    kind: 'player_input',
                     tick: this.gameWorld.getTick(),
                     playerId,
                     action
@@ -365,6 +376,7 @@ export class Room {
                 clearInterval(this.gameLoopInterval);
                 this.gameLoopInterval = null;
             }
+            this.gameWorld.setReplayEventSink(null);
             this.gameWorld = null;
             return;
         }
@@ -407,6 +419,9 @@ export class Room {
             });
         }
 
+        if (this.gameWorld) {
+            this.gameWorld.setReplayEventSink(null);
+        }
         this.gameWorld = null;
     }
 
@@ -467,9 +482,10 @@ export class Room {
     }): void {
         const matchId = this.matchId;
         const ticks = this.gameWorld?.getTick() ?? 0;
-        const actions = [...this.replayActions];
+        const events = [...this.replayEvents];
+        const actions = replayRepo.replayEventsToActionRows(events);
         const startMeta = this.replayStartMeta;
-        this.replayActions = [];
+        this.replayEvents = [];
         this.replayStartMeta = null;
         this.matchId = null;
         if (!matchId) {
@@ -492,7 +508,8 @@ export class Room {
                     await replayRepo.saveMatchReplayActions(pool, matchId, {
                         startMeta,
                         actions,
-                        durationTicks: ticks
+                        durationTicks: ticks,
+                        events
                     });
                 }
                 await replayRepo.createReplaysForParticipants(pool, matchId);
@@ -540,6 +557,9 @@ export class Room {
             }
         }
 
+        if (this.gameWorld) {
+            this.gameWorld.setReplayEventSink(null);
+        }
         this.gameWorld = null;
     }
 

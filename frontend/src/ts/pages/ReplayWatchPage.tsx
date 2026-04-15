@@ -75,7 +75,7 @@ const ReplayWatchPage: React.FC = () => {
             meta={playback.meta}
             startMeta={playback.startMeta}
             actions={playback.actions}
-            frames={playback.frames}
+            events={playback.events}
             onBack={() => navigate('/replays')}
         />
     );

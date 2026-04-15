@@ -13,6 +13,41 @@ export type ReplayAction = {
 
 export type ReplayActionEvent = { tick: number; playerId: string; action: ReplayAction };
 
+/** Снимок мира + вспомогательные поля для восстановления спавнера и таймеров бонусов. */
+export type ReplayWorldInitEvent = {
+    kind: 'world_init';
+    tick: number;
+    world: unknown;
+    spawnOrigin: { x: number; y: number };
+    aux?: { elapsedMs: number; ammoSpawnTimer: number; ammoSpawnInterval: number };
+};
+
+export type ReplayItemSpawnEvent = {
+    kind: 'item_spawn';
+    tick: number;
+    id: number;
+    x: number;
+    y: number;
+    type: number;
+};
+
+export type ReplayPlayerInputEvent = {
+    kind: 'player_input';
+    tick: number;
+    playerId: string;
+    action: ReplayAction;
+};
+
+export type ReplayEvent = ReplayWorldInitEvent | ReplayItemSpawnEvent | ReplayPlayerInputEvent;
+
+export function isReplayPlayerInput(e: ReplayEvent): e is ReplayPlayerInputEvent {
+    return e.kind === 'player_input';
+}
+
+export function replayEventsToActionRows(events: ReplayEvent[]): ReplayActionEvent[] {
+    return events.filter(isReplayPlayerInput).map((e) => ({ tick: e.tick, playerId: e.playerId, action: e.action }));
+}
+
 export type ReplayStartMeta = {
     mode: 'standard';
     tickRate: number;
@@ -27,6 +62,7 @@ export type ReplayActionsRow = {
     startMeta: ReplayStartMeta;
     actions: ReplayActionEvent[];
     durationTicks: number | null;
+    events: ReplayEvent[] | null;
 };
 
 async function ensureReplayActionsTable(pool: Pool): Promise<void> {
@@ -43,23 +79,35 @@ async function ensureReplayActionsTable(pool: Pool): Promise<void> {
         `CREATE INDEX IF NOT EXISTS idx_match_replay_actions_created_at
          ON match_replay_actions(created_at DESC)`
     );
+    await pool.query(
+        `ALTER TABLE match_replay_actions
+         ADD COLUMN IF NOT EXISTS events JSONB`
+    );
 }
 
 export async function saveMatchReplayActions(
     pool: Pool,
     matchId: string,
-    payload: { startMeta: ReplayStartMeta; actions: ReplayActionEvent[]; durationTicks: number }
+    payload: {
+        startMeta: ReplayStartMeta;
+        actions: ReplayActionEvent[];
+        durationTicks: number;
+        events?: ReplayEvent[] | null;
+    }
 ): Promise<void> {
     await ensureReplayActionsTable(pool);
+    const eventsJson =
+        payload.events !== undefined && payload.events !== null ? JSON.stringify(payload.events) : null;
     await pool.query(
-        `INSERT INTO match_replay_actions (match_id, start_meta, actions, duration_ticks)
-         VALUES ($1, $2::jsonb, $3::jsonb, $4)
+        `INSERT INTO match_replay_actions (match_id, start_meta, actions, duration_ticks, events)
+         VALUES ($1, $2::jsonb, $3::jsonb, $4, $5::jsonb)
          ON CONFLICT (match_id) DO UPDATE SET
              start_meta = EXCLUDED.start_meta,
              actions = EXCLUDED.actions,
              duration_ticks = EXCLUDED.duration_ticks,
+             events = EXCLUDED.events,
              created_at = NOW()`,
-        [matchId, JSON.stringify(payload.startMeta), JSON.stringify(payload.actions), payload.durationTicks]
+        [matchId, JSON.stringify(payload.startMeta), JSON.stringify(payload.actions), payload.durationTicks, eventsJson]
     );
 }
 
@@ -168,8 +216,9 @@ export async function getReplayActionsForMatch(pool: Pool, matchId: string): Pro
         start_meta: ReplayStartMeta;
         actions: ReplayActionEvent[];
         duration_ticks: number | null;
+        events: ReplayEvent[] | null;
     }>(
-        `SELECT start_meta, actions, duration_ticks
+        `SELECT start_meta, actions, duration_ticks, events
          FROM match_replay_actions WHERE match_id = $1 LIMIT 1`,
         [matchId]
     );
@@ -177,10 +226,13 @@ export async function getReplayActionsForMatch(pool: Pool, matchId: string): Pro
     if (!row || !row.start_meta || !Array.isArray(row.actions)) {
         return null;
     }
+    const events = Array.isArray(row.events) && row.events.length > 0 ? row.events : null;
+    const actions = events ? replayEventsToActionRows(events) : row.actions;
     return {
         startMeta: row.start_meta,
-        actions: row.actions,
-        durationTicks: row.duration_ticks
+        actions,
+        durationTicks: row.duration_ticks,
+        events
     };
 }
 

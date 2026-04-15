@@ -19,7 +19,7 @@ const scalingCoeff: number = 3.75;
 export class RectangularEntity implements IEntity {
     private static readonly scalingCoeff = (1 / 12) * scalingCoeff;
 
-    private _points: Point[];
+    private _points!: Point[];
     private readonly _mass: number;
     private readonly _id: number;
     private _angularVelocity: number = 0;

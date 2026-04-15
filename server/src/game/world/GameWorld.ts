@@ -16,6 +16,8 @@ import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
 import type { DeathmatchInit, GameWorldEndResult } from './gameWorldEndResult';
 import { SeededRandom } from '../../utils/seededRandom';
+import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
+import { WallModel } from '../../model/obstacle/IWallModel';
 
 interface ServerTank {
     id: string;
@@ -42,7 +44,7 @@ export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
     private elapsedMs: number = 0;
-    private readonly FINISH_TIME = 300000; // 300 seconds in milliseconds
+    private readonly FINISH_TIME = 1 * 60 * 1000; // 300 seconds in milliseconds
     private readonly SIZE: Size = { width: 1920, height: 1080 };
     
     // Number of keys to spawn and collect per level
@@ -91,6 +93,11 @@ export class GameWorld {
 
     /** Small bullet hit / impact sparks (non-grenade), for client BulletImpactAnimation */
     private bulletImpactsThisTick: Array<{ x: number; y: number; angle: number; bulletType: number }> = [];
+
+    private levelSpawnOrigin: Point | null = null;
+    private replayEventSink: ((e: ReplayEvent) => void) | null = null;
+    private replayPlaybackSuppressRandomBonusSpawns: boolean = false;
+    private replayItemSpawnsByTick: Map<number, ReplayItemSpawnEvent[]> = new Map();
 
     constructor(
         attackerConfig: TankConfig,
@@ -166,6 +173,7 @@ export class GameWorld {
         const { wallsArray, point } = ObstacleCreator.createWallsAroundPerimeter(
             OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, this.wallMaterial, this.SIZE
         );
+        this.levelSpawnOrigin = point.clone();
         this.walls = wallsArray;
         
         // Add walls to collision system
@@ -374,6 +382,7 @@ export class GameWorld {
             };
             this.items.set(item.id, item);
             console.log(`[GAMEWORLD] spawnKeys: created key item id=${item.id}, x=${item.x.toFixed(1)}, y=${item.y.toFixed(1)}, type=${item.type}, totalItems=${this.items.size}`);
+            this.emitReplayItemSpawn(item.id, item.x, item.y, item.type, this.tick);
         }
     }
     
@@ -416,6 +425,7 @@ export class GameWorld {
         }
         
         console.log(`[GAMEWORLD] advanceToNextLevel: level ${nextLevel} initialized, keysCollected=${this.keysCollected}`);
+        this.pushReplayWorldInitEvent();
     }
 
     private applyTankMovement(tank: ServerTank, actionType: 'forward' | 'backward' | 'residual', 
@@ -745,6 +755,19 @@ export class GameWorld {
         
         // Spawn bonus boxes periodically (like BonusSpawnManager.handle)
         this.updateBonusBoxSpawning(deltaTime);
+
+        if (this.replayPlaybackSuppressRandomBonusSpawns) {
+            for (const ev of this.replayItemSpawnsByTick.get(this.tick) ?? []) {
+                if (!this.items.has(ev.id)) {
+                    this.items.set(ev.id, {
+                        id: ev.id,
+                        x: ev.x,
+                        y: ev.y,
+                        type: ev.type as Bonus
+                    });
+                }
+            }
+        }
     }
     
     private updateBonusBoxSpawning(deltaTime: number): void {
@@ -777,6 +800,9 @@ export class GameWorld {
     }
     
     private spawnRandomBox(): void {
+        if (this.replayPlaybackSuppressRandomBonusSpawns) {
+            return;
+        }
         if (!this.pointSpawner) {
             return;
         }
@@ -800,6 +826,7 @@ export class GameWorld {
         };
         this.items.set(item.id, item);
         console.log(`[GAMEWORLD] spawnRandomBox: created box item id=${item.id}, x=${item.x.toFixed(1)}, y=${item.y.toFixed(1)}, type=${item.type}, totalItems=${this.items.size}`);
+        this.emitReplayItemSpawn(item.id, item.x, item.y, item.type, this.tick);
     }
 
     private checkItemCollisions(): void {
@@ -902,6 +929,191 @@ export class GameWorld {
         this.collisionSystem.insert(tank.model.entity);
     }
 
+    public setReplayEventSink(cb: ((e: ReplayEvent) => void) | null): void {
+        this.replayEventSink = cb;
+    }
+
+    public pushReplayWorldInitEvent(): void {
+        if (!this.replayEventSink || !this.levelSpawnOrigin) {
+            return;
+        }
+        this.replayEventSink({
+            kind: 'world_init',
+            tick: this.tick,
+            world: this.getSnapshot(),
+            spawnOrigin: { x: this.levelSpawnOrigin.x, y: this.levelSpawnOrigin.y },
+            aux: {
+                elapsedMs: this.elapsedMs,
+                ammoSpawnTimer: this.ammoSpawnTimer,
+                ammoSpawnInterval: this.ammoSpawnInterval
+            }
+        });
+    }
+
+    private emitReplayItemSpawn(id: number, x: number, y: number, type: Bonus, tick: number): void {
+        if (!this.replayEventSink) {
+            return;
+        }
+        this.replayEventSink({ kind: 'item_spawn', tick, id, x, y, type });
+    }
+
+    public configureReplayPlaybackFromEvents(
+        spawnsByTick: Map<number, ReplayItemSpawnEvent[]>,
+        suppressRandomSpawns: boolean
+    ): void {
+        this.replayItemSpawnsByTick = new Map(spawnsByTick);
+        this.replayPlaybackSuppressRandomBonusSpawns = suppressRandomSpawns;
+    }
+
+    /**
+     * Восстановить мир из записанного world_init (реплей по журналу событий).
+     */
+    public applyReplayWorldInitForPlayback(ev: ReplayWorldInitEvent, attackerPlayerId: string, defenderPlayerId: string): void {
+        const snap = ev.world as Record<string, unknown>;
+        for (const bullet of this.bullets.values()) {
+            try {
+                this.collisionSystem.remove(bullet.model.entity);
+            } catch {
+                /* ignore */
+            }
+        }
+        this.bullets.clear();
+        for (const tank of this.tanks.values()) {
+            try {
+                this.collisionSystem.remove(tank.model.entity);
+            } catch {
+                /* ignore */
+            }
+        }
+        this.tanks.clear();
+        this.tankConfigByTankId.clear();
+        this.items.clear();
+        for (const wall of this.walls) {
+            try {
+                this.collisionSystem.remove(wall.model.entity);
+            } catch {
+                /* ignore */
+            }
+        }
+        this.walls = [];
+        this.collisionSystem = new Quadtree(0, 0, this.SIZE.width, this.SIZE.height);
+
+        const wallSnaps = (snap.walls as Array<Record<string, number>>) ?? [];
+        const idsForReseed: number[] = [];
+        for (const w of wallSnaps) {
+            const shapeNum = Math.min(Math.max(Math.floor(w.shapeNum ?? 0), 0), ResolutionManager.WALL_WIDTH.length - 1);
+            const materialNum = Math.min(Math.max(Math.floor(w.materialNum ?? 0), 0), 2);
+            const wid = Math.floor(w.id ?? 0);
+            const entity = new RectangularEntity(
+                new Point(w.x, w.y),
+                ResolutionManager.WALL_WIDTH[shapeNum],
+                ResolutionManager.WALL_HEIGHT[shapeNum],
+                w.angle ?? 0,
+                Infinity,
+                wid
+            );
+            const model = new WallModel(entity);
+            idsForReseed.push(wid);
+            this.walls.push(new ServerWall(model, materialNum, shapeNum, new Point(w.x, w.y)));
+            this.collisionSystem.insert(entity);
+        }
+
+        const itemSnaps = (snap.items as Array<{ id: number; x: number; y: number; type: number }>) ?? [];
+        for (const it of itemSnaps) {
+            idsForReseed.push(it.id);
+            this.items.set(it.id, {
+                id: it.id,
+                x: it.x,
+                y: it.y,
+                type: it.type as Bonus
+            });
+        }
+
+        ModelIDTracker.reseedCountersFromMaxEntityIds(idsForReseed);
+
+        const tankSnaps = (snap.tanks as Array<Record<string, unknown>>) ?? [];
+        for (const st of tankSnaps) {
+            const hullNum = Math.floor(Number(st.hullNum) || 0);
+            const trackNum = Math.floor(Number(st.trackNum) || 0);
+            const turretNum = Math.floor(Number(st.turretNum) || 0);
+            const weaponNum = Math.floor(Number(st.weaponNum) || 0);
+            const color = Math.floor(Number(st.color) || 0);
+            const cfg: TankConfig = { hullNum, trackNum, turretNum, weaponNum, color };
+            const tankParts = TankPartsCreator.create(hullNum, trackNum, turretNum, weaponNum);
+            const entity = new RectangularEntity(
+                new Point(Number(st.x) || 0, Number(st.y) || 0),
+                ResolutionManager.getTankEntityWidth(hullNum),
+                ResolutionManager.getTankEntityHeight(hullNum),
+                Number(st.angle) || 0,
+                tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass,
+                ModelIDTracker.tankId
+            );
+            entity.velocity.x = 0;
+            entity.velocity.y = 0;
+            entity.angularVelocity = 0;
+            const model = new TankModel(tankParts, entity);
+            const role = st.role as 'attacker' | 'defender' | 'fighter';
+            const tankId = String(st.id ?? `tank_${entity.id}`);
+            const tank: ServerTank = {
+                id: tankId,
+                model,
+                playerId: String(st.playerId ?? ''),
+                role
+            };
+            const mAny = model as unknown as Record<string, number>;
+            const maxH = model.maxHealth;
+            const h = Math.floor(Number(st.health));
+            if (Number.isFinite(h) && h >= 0) {
+                mAny._health = Math.min(h, maxH);
+            }
+            const maxA = model.maxArmor;
+            const ar = Math.floor(Number(st.armor));
+            if (Number.isFinite(ar) && ar >= 0) {
+                mAny._armor = Math.min(ar, maxA);
+            }
+            mAny._turretAngle =
+                typeof st.turretAngle === 'number' && Number.isFinite(st.turretAngle)
+                    ? (st.turretAngle as number)
+                    : entity.angle;
+            this.tanks.set(tankId, tank);
+            this.tankConfigByTankId.set(tankId, cfg);
+            this.collisionSystem.insert(entity);
+        }
+
+        this.currentLevel =
+            typeof snap.currentLevel === 'number' && Number.isFinite(snap.currentLevel)
+                ? Math.max(1, Math.min(3, Math.floor(snap.currentLevel as number)))
+                : 1;
+        this.keysCollected = Math.floor(Number(snap.keysCollected) || 0);
+
+        const level = this.currentLevel;
+        if (level === 1) {
+            this.backgroundMaterial = 1;
+            this.wallMaterial = 2;
+        } else if (level === 2) {
+            this.backgroundMaterial = 2;
+            this.wallMaterial = 1;
+        } else {
+            this.backgroundMaterial = 0;
+            this.wallMaterial = 0;
+        }
+
+        const origin = new Point(ev.spawnOrigin.x, ev.spawnOrigin.y);
+        this.levelSpawnOrigin = origin.clone();
+        this.pointSpawner = new PointSpawner(origin, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
+
+        if (ev.aux) {
+            this.elapsedMs = ev.aux.elapsedMs;
+            this.ammoSpawnTimer = ev.aux.ammoSpawnTimer;
+            this.ammoSpawnInterval = ev.aux.ammoSpawnInterval;
+        } else {
+            this.elapsedMs = (Number(snap.timeElapsed) || 0) * 1000;
+        }
+
+        this.tick = Math.max(0, Math.floor(ev.tick));
+        this.setPlayerTankMapping(attackerPlayerId, defenderPlayerId);
+    }
+
     public getSnapshot(): any {
         const tankSnapshots = Array.from(this.tanks.values()).map(tank => {
             const appearance = this.resolveTankConfig(tank);
@@ -973,10 +1185,13 @@ export class GameWorld {
         };
         if (this.deathmatchMode) {
             base.gameMode = 'deathmatch';
+            base.deathmatchDurationSec = GameWorld.DEATHMATCH_DURATION_SEC;
             base.deathmatchRemainingSec = Math.max(0, GameWorld.DEATHMATCH_DURATION_SEC - elapsed);
             base.killScores = Object.fromEntries(this.killCounts.entries());
         } else {
             base.gameMode = 'standard';
+            const useStandardTimeLimit = !this.singlePlayerTest && !this.practiceMode;
+            base.standardTimeLimitSec = useStandardTimeLimit ? this.FINISH_TIME / 1000 : null;
         }
         return base;
     }

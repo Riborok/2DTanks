@@ -2,8 +2,6 @@ import { Router, type Response } from 'express';
 import { getPool } from '../db/pool';
 import { requireBearerAuth } from '../auth/httpAuth';
 import * as replayRepo from '../repos/replayRepo';
-import { buildReplayFramesFromActions } from '../game/world/replaySimulator';
-
 const router = Router();
 router.use(requireBearerAuth);
 
@@ -63,7 +61,6 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             res.status(404).json({ error: 'Действия реплея не найдены' });
             return;
         }
-        const frames = buildReplayFramesFromActions(replayData);
         res.json({
             meta: {
                 replayId: meta.replay_id,
@@ -79,7 +76,7 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             },
             startMeta: replayData.startMeta,
             actions: replayData.actions,
-            frames
+            events: replayData.events ?? []
         });
     } catch (e) {
         console.error('[game/replays/playback]', e);

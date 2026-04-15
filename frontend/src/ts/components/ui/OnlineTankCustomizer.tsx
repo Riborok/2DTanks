@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import TankPartSelector from './TankPartSelector';
 import TankPreview from './TankPreview';
 import ColorSelector from './ColorSelector';
@@ -34,7 +34,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
     });
 
     // Вычисляем занятые цвета из списка игроков (кроме текущего игрока)
-    const getOccupiedColors = (): number[] => {
+    const occupiedColorList = useMemo((): number[] => {
         if (occupiedColors) {
             return occupiedColors;
         }
@@ -44,7 +44,21 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
         return players
             .filter(p => p.playerId !== myPlayerId && p.tankConfig?.color !== undefined)
             .map(p => p.tankConfig!.color);
-    };
+    }, [occupiedColors, players, myPlayerId]);
+
+    useEffect(() => {
+        if (!occupiedColorList.includes(config.colorIndex)) {
+            return;
+        }
+        const totalColors = 4;
+        for (let step = 1; step <= totalColors; step += 1) {
+            const candidate = (config.colorIndex + step) % totalColors;
+            if (!occupiedColorList.includes(candidate)) {
+                setConfig(prev => ({ ...prev, colorIndex: candidate }));
+                return;
+            }
+        }
+    }, [occupiedColorList, config.colorIndex]);
 
     const updateConfig = (key: keyof TankConfig, value: number) => {
         setConfig(prev => ({ ...prev, [key]: value }));
@@ -100,7 +114,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                 <ColorSelector
                     currentIndex={config.colorIndex}
                     onChange={(index) => updateConfig('colorIndex', index)}
-                    occupiedColors={getOccupiedColors()}
+                    occupiedColors={occupiedColorList}
                 />
                 <button className="accept-button" onClick={handleAccept}>
                     <img src="/src/img/GUI/ok.png" alt="Accept" />

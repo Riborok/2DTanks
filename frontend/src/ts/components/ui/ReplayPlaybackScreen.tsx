@@ -4,13 +4,20 @@ import type { GameWorldSnapshot, ServerTank } from '../../online/types';
 import { tankVisualFromSnapshot } from '../../online/tankVisualFromSnapshot';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { ImagePreloader } from '../../utils/ImagePreloader';
-import type { ReplayActionDto, ReplayFrameDto, ReplayPlaybackMetaDto, ReplayStartMetaDto } from '../../auth/gameApi';
+import type {
+    ReplayActionDto,
+    ReplayEventDto,
+    ReplayPlaybackMetaDto,
+    ReplayStartMetaDto
+} from '../../auth/gameApi';
+import { interpolateReplaySnapshots } from '../../online/replayInterpolation';
+import { buildReplayFramesClient } from '../../replay/buildReplayFramesClient';
 
 interface ReplayPlaybackScreenProps {
     meta: ReplayPlaybackMetaDto;
     startMeta: ReplayStartMetaDto;
     actions: ReplayActionDto[];
-    frames: ReplayFrameDto[];
+    events?: ReplayEventDto[];
     onBack: () => void;
 }
 
@@ -23,19 +30,39 @@ function applyTankConfigs(renderer: OnlineGameRenderer, world: GameWorldSnapshot
     }
 }
 
+/** Должен совпадать с SNAPSHOT_STEP_TICKS в server/src/game/world/replaySimulator.ts */
 const STORED_FRAME_STEP_TICKS = 20;
 
-const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, startMeta, actions, frames, onBack }) => {
+const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
+    meta,
+    startMeta,
+    actions,
+    events = [],
+    onBack
+}) => {
+    const builtFrames = useMemo(
+        () =>
+            buildReplayFramesClient({
+                startMeta,
+                actions,
+                events,
+                durationTicks: meta.durationTicks
+            }),
+        [meta.replayId, meta.durationTicks, startMeta, actions, events]
+    );
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<OnlineGameRenderer | null>(null);
     const snapshotRef = useRef<GameWorldSnapshot | null>(null);
-    const framesRef = useRef(frames);
-    framesRef.current = frames;
+    const framesRef = useRef(builtFrames);
+    framesRef.current = builtFrames;
 
     const playingRef = useRef(true);
     const replayPositionFrameRef = useRef(0);
     const lastRafTimeRef = useRef(0);
     const lastDisplayFrameRef = useRef(-1);
+    /** Последний индекс ключевого кадра — чтобы взрывы/импакты сработали один раз на кадр записи. */
+    const replayKeyframeIdxRef = useRef(-1);
 
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const [playing, setPlaying] = useState(true);
@@ -47,6 +74,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
     }, [startMeta.tickRate]);
 
     const totalReplayActions = actions.length;
+    const totalReplayEvents = events.length;
 
     useEffect(() => {
         playingRef.current = playing;
@@ -65,6 +93,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
         replayPositionFrameRef.current = 0;
         lastRafTimeRef.current = 0;
         lastDisplayFrameRef.current = -1;
+        replayKeyframeIdxRef.current = -1;
         setDisplayFrame(0);
         setPlaying(true);
         playingRef.current = true;
@@ -87,6 +116,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
             0,
             Math.min(span, replayPositionFrameRef.current + delta)
         );
+        replayKeyframeIdxRef.current = -1;
         bumpDisplayFromPosition();
     }, [bumpDisplayFromPosition]);
 
@@ -122,6 +152,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
             applyTankConfigs(renderer, initial);
             snapshotRef.current = initial;
             lastDisplayFrameRef.current = 0;
+            replayKeyframeIdxRef.current = 0;
+            renderer.updateFromSnapshot(initial);
             setDisplayFrame(0);
         }
 
@@ -157,18 +189,35 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
             }
 
             if (flist.length > 0) {
-                const idx = Math.max(0, Math.min(flist.length - 1, Math.floor(replayPositionFrameRef.current)));
-                snapshotRef.current = flist[idx].world as GameWorldSnapshot;
+                const spanIdx = Math.max(0, flist.length - 1);
+                const idx = Math.max(0, Math.min(spanIdx, Math.floor(replayPositionFrameRef.current)));
+                const alpha = replayPositionFrameRef.current - idx;
+                const wA = flist[idx].world as GameWorldSnapshot;
+                const wB = flist[Math.min(idx + 1, spanIdx)].world as GameWorldSnapshot;
+                const merged = interpolateReplaySnapshots(wA, wB, alpha);
+
+                if (idx !== replayKeyframeIdxRef.current) {
+                    replayKeyframeIdxRef.current = idx;
+                    const landed = flist[idx].world as GameWorldSnapshot;
+                    merged.explosions = landed.explosions ? [...landed.explosions] : [];
+                    merged.grenadeExplosions = landed.grenadeExplosions ? [...landed.grenadeExplosions] : [];
+                    merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
+                }
+
+                snapshotRef.current = merged;
                 if (idx !== lastDisplayFrameRef.current) {
                     lastDisplayFrameRef.current = idx;
                     setDisplayFrame(idx);
                 }
+                if (rendererRef.current) {
+                    rendererRef.current.updateFromSnapshot(merged);
+                }
             } else {
                 snapshotRef.current = null;
+                replayKeyframeIdxRef.current = -1;
             }
 
             if (rendererRef.current && snapshotRef.current) {
-                rendererRef.current.updateFromSnapshot(snapshotRef.current);
                 rendererRef.current.render();
             }
             raf = requestAnimationFrame(loop);
@@ -181,9 +230,9 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
             rendererRef.current?.clear();
             rendererRef.current = null;
         };
-    }, [frameMs, imagesLoaded, meta.replayId]);
+    }, [frameMs, imagesLoaded, meta.replayId, builtFrames]);
 
-    if (!frames.length) {
+    if (!builtFrames.length) {
         return (
             <div className="replay-playback-screen">
                 <div className="replay-playback-hud">
@@ -200,8 +249,10 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
         );
     }
 
-    const snap = frames[Math.min(displayFrame, frames.length - 1)]?.world as GameWorldSnapshot | undefined;
-    const tickLabel = frames[Math.min(displayFrame, frames.length - 1)]?.tick;
+    const snap = builtFrames[Math.min(displayFrame, builtFrames.length - 1)]?.world as
+        | GameWorldSnapshot
+        | undefined;
+    const tickLabel = builtFrames[Math.min(displayFrame, builtFrames.length - 1)]?.tick;
 
     return (
         <div className="replay-playback-screen">
@@ -210,7 +261,9 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({ meta, start
                 <div className="replay-playback-info">
                     <strong>{meta.title}</strong>
                     <span>
-                        Кадр {displayFrame + 1}/{frames.length} · тик {tickLabel ?? '—'} · действий: {totalReplayActions}
+                        Кадр {displayFrame + 1}/{builtFrames.length} · тик {tickLabel ?? '—'} · событий:{' '}
+                        {totalReplayEvents} ·
+                        вводов: {totalReplayActions}
                     </span>
                 </div>
                 <div className="replay-playback-controls">

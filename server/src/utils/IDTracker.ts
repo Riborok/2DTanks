@@ -109,4 +109,32 @@ export class ModelIDTracker {
         ModelIDTracker.checkForMaxValue(ModelIDTracker.OTHER_ID);
         return ++ModelIDTracker.OTHER_ID * ModelIDTracker.TYPE_DIVIDER + ModelIDTracker.OTHER_TYPE;
     }
+
+    /** После загрузки снимка в реплей: счётчики не должны выдавать уже занятые id. */
+    public static reseedCountersFromMaxEntityIds(ids: number[]): void {
+        let maxWall = 0;
+        let maxTank = 0;
+        let maxBullet = 0;
+        let maxCollectible = 0;
+        for (const id of ids) {
+            if (!Number.isFinite(id)) {
+                continue;
+            }
+            const n = Math.floor(id / ModelIDTracker.TYPE_DIVIDER);
+            const t = id % ModelIDTracker.TYPE_DIVIDER;
+            if (t === ModelIDTracker.WALL_TYPE) {
+                maxWall = Math.max(maxWall, n);
+            } else if (t === ModelIDTracker.TANK_TYPE) {
+                maxTank = Math.max(maxTank, n);
+            } else if (t === ModelIDTracker.BULLET_TYPE) {
+                maxBullet = Math.max(maxBullet, n);
+            } else if (t === ModelIDTracker.COLLECTIBLE_ITEM_TYPE) {
+                maxCollectible = Math.max(maxCollectible, n);
+            }
+        }
+        ModelIDTracker.WALL_ID = maxWall;
+        ModelIDTracker.TANK_ID = maxTank;
+        ModelIDTracker.BULLET_ID = maxBullet;
+        ModelIDTracker.COLLECTIBLE_ITEM_ID = maxCollectible;
+    }
 }

@@ -32,7 +32,10 @@ module.exports = (env, options) => {
                 {
                     test: /\.tsx?$/,
                     use: 'ts-loader',
-                    include: [path.resolve(__dirname, 'src/ts')],
+                    include: [
+                        path.resolve(__dirname, 'src/ts'),
+                        path.resolve(__dirname, '../server/src'),
+                    ],
                 },
                 {
                     test: /\.css$/,

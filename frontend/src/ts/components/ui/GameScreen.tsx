@@ -106,7 +106,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
         fire: () => {}
     });
     const [useTouchUi, setUseTouchUi] = useState(false);
-    const [timeRemaining, setTimeRemaining] = useState<number>(isDeathmatch ? 60 : 300);
+    /** null: нет лимита (практика/соло) или ещё не пришёл снимок; иначе секунды до конца */
+    const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
     const [myKills, setMyKills] = useState(0);
     const [keysCollected, setKeysCollected] = useState<number>(0);
     const [currentLevel, setCurrentLevel] = useState<number>(1);
@@ -223,17 +224,28 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 const world = message.world;
                 const dm = world.gameMode === 'deathmatch' || isDeathmatch;
                 if (dm) {
+                    const dur =
+                        typeof world.deathmatchDurationSec === 'number' && world.deathmatchDurationSec > 0
+                            ? world.deathmatchDurationSec
+                            : 60;
                     const rem =
                         typeof world.deathmatchRemainingSec === 'number'
                             ? world.deathmatchRemainingSec
-                            : Math.max(0, 60 - (world.timeElapsed || 0));
+                            : Math.max(0, dur - (world.timeElapsed || 0));
                     setTimeRemaining(Math.max(0, rem));
                     const ks = world.killScores as Record<string, number> | undefined;
                     if (ks && myPlayerId) {
                         setMyKills(ks[myPlayerId] ?? 0);
                     }
                 } else {
-                    setTimeRemaining(Math.max(0, 300 - (world.timeElapsed || 0)));
+                    const lim = world.standardTimeLimitSec;
+                    if (lim === null) {
+                        setTimeRemaining(null);
+                    } else if (typeof lim === 'number' && Number.isFinite(lim)) {
+                        setTimeRemaining(Math.max(0, lim - (world.timeElapsed || 0)));
+                    } else {
+                        setTimeRemaining(Math.max(0, 300 - (world.timeElapsed || 0)));
+                    }
                 }
                 // Explicitly handle keysCollected - ensure it's a number
                 const keys = typeof world.keysCollected === 'number' ? world.keysCollected : 0;
@@ -659,7 +671,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
                         padding: '6px 14px',
                         background: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: '6px',
-                        border: `1px solid ${timeRemaining <= (isDeathmatch ? 15 : 60) ? 'rgba(255, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                        border: `1px solid ${
+                            timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
+                                ? 'rgba(255, 68, 68, 0.5)'
+                                : 'rgba(255, 255, 255, 0.1)'
+                        }`,
                         width: 'auto',
                         minWidth: '110px',
                         flexShrink: 1 
@@ -674,14 +690,21 @@ const GameScreen: React.FC<GameScreenProps> = ({
                             whiteSpace: 'nowrap'
                         }}>{isDeathmatch ? 'До конца раунда' : 'Осталось времени'}</label>
                         <span style={{ 
-                            color: timeRemaining <= (isDeathmatch ? 15 : 60) ? '#ff4444' : '#64B5F6', 
+                            color:
+                                timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
+                                    ? '#ff4444'
+                                    : '#64B5F6',
                             fontWeight: 'bold',
                             fontSize: '20px',
                             fontFamily: 'monospace',
-                            textShadow: `0 0 10px ${timeRemaining <= (isDeathmatch ? 15 : 60) ? 'rgba(255, 68, 68, 0.5)' : 'rgba(100, 181, 246, 0.5)'}`,
+                            textShadow: `0 0 10px ${
+                                timeRemaining != null && timeRemaining <= (isDeathmatch ? 15 : 60)
+                                    ? 'rgba(255, 68, 68, 0.5)'
+                                    : 'rgba(100, 181, 246, 0.5)'
+                            }`,
                             whiteSpace: 'nowrap'
                         }}>
-                            {formatTime(timeRemaining)}
+                            {timeRemaining == null ? '—' : formatTime(timeRemaining)}
                         </span>
                     </div>
                     {isDeathmatch ? (

@@ -76,6 +76,10 @@ export interface GameWorldSnapshot {
     currentLevel: number;
     timeElapsed: number;
     gameMode?: 'standard' | 'deathmatch';
+    /** Длина раунда FFA (сек), с сервера — для UI без захардкоженного 60 */
+    deathmatchDurationSec?: number;
     deathmatchRemainingSec?: number;
+    /** Лимит матча с ключами (сек) или null в практике/соло — с сервера */
+    standardTimeLimitSec?: number | null;
     killScores?: Record<string, number>;
 }

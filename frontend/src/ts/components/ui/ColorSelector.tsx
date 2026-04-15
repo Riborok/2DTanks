@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 interface ColorSelectorProps {
     currentIndex: number;
@@ -14,9 +14,25 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({ currentIndex, onChange, o
         '#4e7b76',
     ];
 
+    const findNextAvailableColor = (startIndex: number): number => {
+        const total = colors.length;
+        for (let step = 1; step <= total; step += 1) {
+            const candidate = (startIndex + step) % total;
+            if (!occupiedColors.includes(candidate)) {
+                return candidate;
+            }
+        }
+        return startIndex;
+    };
+
     const handleColorClick = (index: number) => {
         if (!occupiedColors.includes(index)) {
             onChange(index);
+            return;
+        }
+        const fallback = findNextAvailableColor(index);
+        if (fallback !== index) {
+            onChange(fallback);
         }
     };
 

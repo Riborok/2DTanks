@@ -57,6 +57,18 @@ export interface ReplayActionDto {
     };
 }
 
+/** События реплея (серверный журнал). */
+export type ReplayEventDto =
+    | {
+          kind: 'world_init';
+          tick: number;
+          world: unknown;
+          spawnOrigin: { x: number; y: number };
+          aux?: { elapsedMs: number; ammoSpawnTimer: number; ammoSpawnInterval: number };
+      }
+    | { kind: 'item_spawn'; tick: number; id: number; x: number; y: number; type: number }
+    | { kind: 'player_input'; tick: number; playerId: string; action: ReplayActionDto['action'] };
+
 export interface ReplayStartMetaDto {
     mode: 'standard';
     tickRate: number;
@@ -103,7 +115,7 @@ export async function getReplayPlayback(
     meta: ReplayPlaybackMetaDto;
     startMeta: ReplayStartMetaDto;
     actions: ReplayActionDto[];
-    frames: ReplayFrameDto[];
+    events: ReplayEventDto[];
 }> {
     const res = await fetch(`${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/playback`, {
         headers: headers(token)
@@ -112,7 +124,7 @@ export async function getReplayPlayback(
         meta?: ReplayPlaybackMetaDto;
         startMeta?: ReplayStartMetaDto;
         actions?: ReplayActionDto[];
-        frames?: ReplayFrameDto[];
+        events?: ReplayEventDto[];
         error?: string;
     }>(res);
     if (!res.ok) {
@@ -125,7 +137,7 @@ export async function getReplayPlayback(
         meta: data.meta,
         startMeta: data.startMeta,
         actions: data.actions ?? [],
-        frames: data.frames ?? []
+        events: data.events ?? []
     };
 }
 
