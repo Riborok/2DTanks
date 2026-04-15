@@ -137,6 +137,9 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                 )}
                 {sortedStats.length > 0 && showFullStats && renderStatsTable()}
                 <div className="game-end-actions">
+                    <button type="button" className="game-end-primary-btn" onClick={onBackToMenu}>
+                        Вернуться в меню
+                    </button>
                     {sortedStats.length > 0 && (
                         <button
                             type="button"
@@ -146,9 +149,6 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                             {showFullStats ? 'Скрыть полную статистику' : 'Показать полную статистику матча'}
                         </button>
                     )}
-                    <button type="button" onClick={onBackToMenu}>
-                        Вернуться в меню
-                    </button>
                 </div>
             </div>
         );
@@ -184,6 +184,9 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
             )}
             {sortedStats.length > 0 && showFullStats && renderStatsTable()}
             <div className="game-end-actions">
+                <button type="button" className="game-end-primary-btn" onClick={onBackToMenu}>
+                    Вернуться в меню
+                </button>
                 {sortedStats.length > 0 && (
                     <button
                         type="button"
@@ -193,9 +196,6 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                         {showFullStats ? 'Скрыть полную статистику' : 'Показать полную статистику матча'}
                     </button>
                 )}
-                <button type="button" onClick={onBackToMenu}>
-                    Вернуться в меню
-                </button>
             </div>
         </div>
     );

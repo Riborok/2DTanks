@@ -7,7 +7,6 @@ const StatsPage: React.FC = () => {
     const [matches, setMatches] = useState<MatchHistoryItemDto[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!accessToken) {
@@ -50,7 +49,74 @@ const StatsPage: React.FC = () => {
         return { wins: w, losses: l };
     }, [matches]);
 
-    const recent = useMemo(() => matches.slice(0, 15), [matches]);
+    const totals = useMemo(() => {
+        const acc = {
+            shots: 0,
+            hits: 0,
+            damageDealt: 0,
+            damageTaken: 0,
+            kills: 0,
+            deaths: 0,
+            pickups: 0
+        };
+        for (const m of matches) {
+            for (const s of m.matchStats) {
+                acc.shots += Number(s.shotsFired) || 0;
+                acc.hits += Number(s.shotsHit) || 0;
+                acc.damageDealt += Number(s.damageDealt) || 0;
+                acc.damageTaken += Number(s.damageTaken) || 0;
+                acc.kills += Number(s.kills) || 0;
+                acc.deaths += Number(s.deaths) || 0;
+                acc.pickups += (Number(s.keyPickups) || 0) + (Number(s.ammoPickups) || 0);
+            }
+        }
+        return acc;
+    }, [matches]);
+
+    const accuracy = useMemo(() => {
+        if (totals.shots <= 0) {
+            return 0;
+        }
+        return (totals.hits / totals.shots) * 100;
+    }, [totals.hits, totals.shots]);
+
+    const avgDamagePerMatch = useMemo(() => {
+        if (matches.length === 0) {
+            return 0;
+        }
+        return totals.damageDealt / matches.length;
+    }, [matches.length, totals.damageDealt]);
+
+    const winRate = useMemo(() => {
+        const total = wins + losses;
+        if (total === 0) {
+            return 0;
+        }
+        return (wins / total) * 100;
+    }, [wins, losses]);
+
+    const lastTenWinRate = useMemo(() => {
+        const last = matches.slice(0, 10);
+        if (last.length === 0) {
+            return 0;
+        }
+        const w = last.filter((m) => m.isWinner).length;
+        return (w / last.length) * 100;
+    }, [matches]);
+
+    const bestDamageMatch = useMemo(() => {
+        let best: { roomCode: string; damage: number } | null = null;
+        for (const m of matches) {
+            const matchDamage = m.matchStats.reduce((sum, s) => sum + (Number(s.damageDealt) || 0), 0);
+            if (!best || matchDamage > best.damage) {
+                best = {
+                    roomCode: m.roomCode ?? 'Матч',
+                    damage: matchDamage
+                };
+            }
+        }
+        return best;
+    }, [matches]);
 
     return (
         <div className="page-stats">
@@ -62,83 +128,59 @@ const StatsPage: React.FC = () => {
 
             {!loading && !error && (
                 <>
-                    <div className="page-stats-summary">
+                    <div className="page-stats-summary page-stats-summary-grid">
                         <div className="page-stats-chip wins">Побед: {wins}</div>
                         <div className="page-stats-chip losses">Поражений: {losses}</div>
-                        <div className="page-stats-chip total">Всего: {matches.length}</div>
+                        <div className="page-stats-chip total">Винрейт: {winRate.toFixed(1)}%</div>
+                        <div className="page-stats-chip total">Точность: {accuracy.toFixed(1)}%</div>
+                        <div className="page-stats-chip total">Матчей: {matches.length}</div>
                     </div>
 
                     {matches.length === 0 ? (
                         <p className="page-stats-empty">Пока нет завершённых матчей в базе для вашего аккаунта.</p>
                     ) : (
-                        <ul className="replays-list page-stats-list">
-                            {recent.map((m) => (
-                                <li key={m.matchId} className="replays-item">
-                                    <div className="replays-item-main">
-                                        <strong>
-                                            {m.roomCode ? `Комната ${m.roomCode}` : 'Матч'} — роль: {m.role}
-                                        </strong>
-                                        <span className="replays-meta">
-                                            {m.isWinner ? 'Победа' : 'Поражение'} · {m.endReason ?? '—'} · тиков:{' '}
-                                            {m.durationTicks ?? '—'}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            className="replays-back-btn"
-                                            onClick={() =>
-                                                setExpandedMatchId((prev) =>
-                                                    prev === m.matchId ? null : m.matchId
-                                                )
-                                            }
-                                        >
-                                            {expandedMatchId === m.matchId
-                                                ? 'Скрыть детализацию'
-                                                : 'Открыть статистику матча'}
-                                        </button>
-                                        {expandedMatchId === m.matchId && m.matchStats.length > 0 && (
-                                            <div className="ui-table-wrap game-end-table-wrap">
-                                                <table className="ui-table game-end-scoreboard-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Игрок</th>
-                                                            <th>K</th>
-                                                            <th>D</th>
-                                                            <th>Урон</th>
-                                                            <th>Получено</th>
-                                                            <th>Выстрелы</th>
-                                                            <th>Попадания</th>
-                                                            <th>Точность</th>
-                                                            <th>Подборы</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {m.matchStats.map((row) => {
-                                                            const accuracy =
-                                                                row.shotsFired > 0
-                                                                    ? (row.shotsHit / row.shotsFired) * 100
-                                                                    : 0;
-                                                            return (
-                                                                <tr key={`${m.matchId}_${row.playerId}`}>
-                                                                    <td>{row.playerId.slice(0, 12)}</td>
-                                                                    <td>{row.kills}</td>
-                                                                    <td>{row.deaths}</td>
-                                                                    <td>{row.damageDealt}</td>
-                                                                    <td>{row.damageTaken}</td>
-                                                                    <td>{row.shotsFired}</td>
-                                                                    <td>{row.shotsHit}</td>
-                                                                    <td>{accuracy.toFixed(1)}%</td>
-                                                                    <td>{row.keyPickups + row.ammoPickups}</td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <div className="page-stats-analytics-grid">
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">Средний урон за матч</div>
+                                <div className="page-stats-analytics-value">{avgDamagePerMatch.toFixed(0)}</div>
+                            </div>
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">Последние 10 матчей</div>
+                                <div className="page-stats-analytics-value">{lastTenWinRate.toFixed(1)}% побед</div>
+                            </div>
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">K / D</div>
+                                <div className="page-stats-analytics-value">
+                                    {totals.kills} / {totals.deaths}
+                                </div>
+                            </div>
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">Суммарный урон</div>
+                                <div className="page-stats-analytics-value">{totals.damageDealt}</div>
+                            </div>
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">Полученный урон</div>
+                                <div className="page-stats-analytics-value">{totals.damageTaken}</div>
+                            </div>
+                            <div className="page-stats-analytics-card">
+                                <div className="page-stats-analytics-label">Подборы бонусов</div>
+                                <div className="page-stats-analytics-value">{totals.pickups}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {matches.length > 0 && (
+                        <div className="page-stats-insights">
+                            <p>
+                                Лучший матч по нанесенному урону:{' '}
+                                <strong>
+                                    {bestDamageMatch?.roomCode ?? '—'} ({bestDamageMatch?.damage ?? 0})
+                                </strong>
+                            </p>
+                            <p className="page-stats-note">
+                                Детали по каждому матчу смотри в разделе <strong>«Реплеи и история»</strong>.
+                            </p>
+                        </div>
                     )}
                 </>
             )}

@@ -13,7 +13,7 @@
 }
 
 .connection-container {
-    width: min(680px, 96vw);
+    width: min(1080px, 96vw);
     position: relative;
     z-index: 1;
     padding: 32px;
@@ -22,6 +22,103 @@
     background: var(--color-surface-700);
     box-shadow: var(--shadow-medium);
     backdrop-filter: blur(10px);
+}
+
+.playhub-header {
+    margin-bottom: 18px;
+}
+
+.playhub-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 14px;
+}
+
+.playhub-main,
+.playhub-side {
+    display: grid;
+    gap: 12px;
+}
+
+.playhub-quick-start {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.playhub-primary-cta {
+    min-height: 56px;
+    font-size: 1.05rem;
+}
+
+.playhub-quick-hint {
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+}
+
+.playhub-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.playhub-mode-card {
+    text-align: left;
+    min-height: 88px;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    padding: 12px 14px;
+}
+
+.playhub-mode-card strong {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+}
+
+.playhub-mode-card span {
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+}
+
+.playhub-join-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+}
+
+.playhub-join-title {
+    margin-bottom: 8px;
+    color: var(--color-text-200);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+}
+
+.playhub-side-note {
+    margin: 8px 0 0;
+    color: var(--color-text-300);
+    font-size: var(--text-xs);
+}
+
+.playhub-tips-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+}
+
+.playhub-tips-card h3 {
+    margin: 0 0 8px;
+    font-size: var(--text-sm);
+}
+
+.playhub-tips-card p {
+    margin: 0;
+    color: var(--color-text-300);
+    line-height: 1.45;
+    font-size: var(--text-sm);
 }
 
 .game-title {
@@ -114,4 +211,14 @@
     border: 1px solid rgba(255, 107, 129, 0.6);
     color: #ffd3db;
     background: rgba(255, 107, 129, 0.12);
+}
+
+@media (max-width: 760px) {
+    .playhub-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .playhub-mode-grid {
+        grid-template-columns: 1fr;
+    }
 }

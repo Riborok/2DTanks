@@ -68,18 +68,29 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </p>
                 )}
                 
-                <div className="room-code-section">
-                    <label>Код комнаты:</label>
-                    <div className="room-code-display">
-                        <span className="room-code">{roomId}</span>
-                        <button className="copy-button" onClick={handleCopyCode}>
-                            Копировать
-                        </button>
+                <div className="lobby-topbar">
+                    <div className="room-code-section">
+                        <label>Код комнаты:</label>
+                        <div className="room-code-display">
+                            <span className="room-code">{roomId}</span>
+                            <button className="copy-button" onClick={handleCopyCode}>
+                                Копировать
+                            </button>
+                        </div>
                     </div>
+                    <div className="lobby-mode-chip">
+                        {singlePlayerRoom
+                            ? 'Соло'
+                            : deathmatchRoom
+                              ? 'Арена'
+                              : practiceRoom
+                                ? 'Тренировка'
+                                : 'Классика'}
+                </div>
                 </div>
 
-                <div className="players-status">
-                    <div className="player-status">
+                <div className="players-status players-status-grid">
+                    <div className="player-status player-status-self">
                         <h3>
                             Вы{myPlayer?.displayName ? ` — ${myPlayer.displayName}` : ''}:{' '}
                             {myRole === 'fighter'
@@ -97,11 +108,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                                         ? 'Готов' 
                                         : 'Ожидание готовности'
                         }</p>
-                        {myPlayer?.ready !== true && myPlayer?.tankConfig && (
-                            <button className="ready-button ready-button-prominent" onClick={onReady}>
-                                Готов
-                            </button>
-                        )}
+                        <div className="lobby-self-actions">
+                            {myPlayer?.ready !== true && myPlayer?.tankConfig ? (
+                                <button className="ready-button ready-button-prominent" onClick={onReady}>
+                                    Готов
+                                </button>
+                            ) : myPlayer?.ready ? (
+                                <span className="lobby-ready-pill">Вы готовы</span>
+                            ) : null}
+                        </div>
                     </div>
 
                     {deathmatchRoom

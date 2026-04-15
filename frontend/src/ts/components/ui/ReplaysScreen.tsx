@@ -21,6 +21,8 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+    const replaysCount = replays.length;
+    const matchesCount = matches.length;
 
     useEffect(() => {
         let cancelled = false;
@@ -58,11 +60,33 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
     return (
         <div className="replays-screen">
             <div className="replays-panel">
-                <h1 className="game-title">Реплеи и история</h1>
-                <p className="replays-sub">
-                    Записи создаются после завершённых матчей (тип «standard»). Просмотр строится по журналу действий и
-                    событий матча.
-                </p>
+                <div className="replays-header">
+                    <div>
+                        <h1 className="game-title">Реплеи и история</h1>
+                        <p className="replays-sub">
+                            Записи создаются после завершённых матчей (тип «standard»). Просмотр строится по журналу
+                            действий и событий матча.
+                        </p>
+                    </div>
+                    <button type="button" className="replays-back-btn replays-top-back-btn" onClick={onBack}>
+                        На главную
+                    </button>
+                </div>
+
+                <div className="replays-kpi-grid">
+                    <div className="replays-kpi-card">
+                        <div className="replays-kpi-label">Доступные реплеи</div>
+                        <div className="replays-kpi-value">{replaysCount}</div>
+                    </div>
+                    <div className="replays-kpi-card">
+                        <div className="replays-kpi-label">Матчей в истории</div>
+                        <div className="replays-kpi-value">{matchesCount}</div>
+                    </div>
+                    <div className="replays-kpi-card">
+                        <div className="replays-kpi-label">Текущий раздел</div>
+                        <div className="replays-kpi-value">{tab === 'replays' ? 'Реплеи' : 'История'}</div>
+                    </div>
+                </div>
 
                 <div className="replays-tabs">
                     <button
@@ -85,10 +109,10 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                 {error && <div className="auth-form-error">{error}</div>}
 
                 {!loading && tab === 'replays' && (
-                    <ul className="replays-list">
+                    <ul className="replays-list replays-cards-list">
                         {replays.length === 0 && <li className="replays-empty">Пока нет записей. Сыграйте матч до конца.</li>}
                         {replays.map((r) => (
-                            <li key={r.replayId} className="replays-item">
+                            <li key={r.replayId} className="replays-item replays-item-card">
                                 <div className="replays-item-main">
                                     <strong>{r.title}</strong>
                                     <span className="replays-meta">
@@ -114,12 +138,12 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                 )}
 
                 {!loading && tab === 'history' && (
-                    <ul className="replays-list">
+                    <ul className="replays-list replays-cards-list">
                         {matches.length === 0 && (
                             <li className="replays-empty">Матчей в базе для вашего аккаунта пока нет.</li>
                         )}
                         {matches.map((m) => (
-                            <li key={m.matchId} className="replays-item">
+                            <li key={m.matchId} className="replays-item replays-item-card">
                                 <div className="replays-item-main">
                                     <strong>
                                         {m.roomCode ? `Комната ${m.roomCode}` : 'Матч'} — роль: {m.role}
@@ -187,7 +211,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                     </ul>
                 )}
 
-                <button type="button" className="replays-back-btn" onClick={onBack}>
+                <button type="button" className="replays-back-btn replays-bottom-back-btn" onClick={onBack}>
                     ← На главную
                 </button>
             </div>
