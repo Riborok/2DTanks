@@ -277,6 +277,50 @@ export async function updateReplayMeta(
     return (r.rowCount ?? 0) > 0;
 }
 
+/** Дополняет строки match_stats именами из участников матча (для записей без displayName). */
+export async function enrichMatchStatsDisplayNames(
+    pool: Pool,
+    matchId: string,
+    stats: unknown[]
+): Promise<unknown[]> {
+    if (!Array.isArray(stats) || stats.length === 0) {
+        return stats;
+    }
+    const r = await pool.query<{ role: string; display_name: string | null }>(
+        `SELECT mp.role, u.display_name
+         FROM match_participants mp
+         LEFT JOIN users u ON u.user_id = mp.user_id
+         WHERE mp.match_id = $1 AND mp.role IN ('attacker', 'defender')`,
+        [matchId]
+    );
+    const byRole = new Map<string, string>();
+    for (const row of r.rows) {
+        const name = row.display_name?.trim();
+        if (name) {
+            byRole.set(row.role, name);
+        }
+    }
+    return stats.map((raw) => {
+        if (!raw || typeof raw !== 'object') {
+            return raw;
+        }
+        const o = raw as Record<string, unknown>;
+        const existing =
+            typeof o.displayName === 'string' && o.displayName.trim().length > 0
+                ? o.displayName.trim()
+                : null;
+        if (existing) {
+            return raw;
+        }
+        const role = typeof o.role === 'string' ? o.role : '';
+        const fromDb = role ? byRole.get(role) : undefined;
+        if (fromDb) {
+            return { ...o, displayName: fromDb };
+        }
+        return raw;
+    });
+}
+
 export type MatchHistoryRow = {
     match_id: string;
     room_code: string | null;

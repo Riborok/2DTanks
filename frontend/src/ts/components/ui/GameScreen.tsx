@@ -81,6 +81,7 @@ interface GameScreenProps {
               }
     ) => void;
     onDisconnect: () => void;
+    onLeaveGame: () => void;
 }
 
 const GameScreen: React.FC<GameScreenProps> = ({
@@ -91,7 +92,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
     players,
     isDeathmatch = false,
     onGameEnd,
-    onDisconnect
+    onDisconnect,
+    onLeaveGame
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<OnlineGameRenderer | null>(null);
@@ -595,6 +597,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
                             </span>
                         </div>
                     )}
+                    <div className="hud-card hud-card-exit">
+                        <button type="button" className="replays-back-btn" onClick={onLeaveGame}>
+                            Выйти из матча
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

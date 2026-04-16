@@ -37,6 +37,17 @@ export interface ServerWall {
     shapeNum: number; // 0=Rect, 1=Square
 }
 
+export interface ServerCrate {
+    id: number;
+    x: number;
+    y: number;
+    angle: number;
+    materialNum: number;
+    shapeNum: number;
+    hp: number;
+    maxHp: number;
+}
+
 export interface ServerItem {
     id: number;
     x: number;
@@ -69,6 +80,7 @@ export interface GameWorldSnapshot {
     tanks: ServerTank[];
     bullets: ServerBullet[];
     walls: ServerWall[];
+    crates?: ServerCrate[];
     items: ServerItem[];
     explosions?: ServerExplosion[]; // Optional: tank explosions from this tick
     grenadeExplosions?: ServerGrenadeExplosion[]; // Optional: grenade explosions from this tick

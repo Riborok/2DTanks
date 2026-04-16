@@ -103,6 +103,7 @@ export function interpolateReplaySnapshots(
         tanks,
         bullets,
         walls: to.walls,
+        crates: to.crates,
         items: to.items,
         keysCollected: to.keysCollected,
         currentLevel: to.currentLevel,

@@ -1,5 +1,5 @@
 export interface ServerMessage {
-    type: 'joined' | 'error' | 'snapshot' | 'gameEnd' | 'roomUpdate' | 'gameStart';
+    type: 'joined' | 'error' | 'snapshot' | 'gameEnd' | 'roomUpdate' | 'gameStart' | 'leftGame';
     roomId?: string;
     playerId?: string;
     role?: 'attacker' | 'defender' | 'fighter';
@@ -22,7 +22,7 @@ export interface ServerMessage {
 }
 
 export interface ClientMessage {
-    type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action';
+    type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action' | 'leaveGame';
     singlePlayer?: boolean;
     practice?: boolean;
     deathmatch?: boolean;

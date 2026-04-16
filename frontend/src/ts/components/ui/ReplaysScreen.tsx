@@ -8,6 +8,26 @@ import {
 
 type Tab = 'replays' | 'history';
 
+function matchHistoryPlayerLabel(row: {
+    displayName?: string | null;
+    playerId: string;
+    role: string;
+}): string {
+    const name = row.displayName?.trim();
+    if (name) {
+        return name;
+    }
+    const roleRu =
+        row.role === 'attacker'
+            ? 'Атакующий'
+            : row.role === 'defender'
+              ? 'Защитник'
+              : row.role === 'fighter'
+                ? 'Боец'
+                : row.role;
+    return `${roleRu} · ${row.playerId.slice(0, 10)}…`;
+}
+
 interface ReplaysScreenProps {
     accessToken: string;
     onBack: () => void;
@@ -189,7 +209,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                                                                 : 0;
                                                         return (
                                                             <tr key={`${m.matchId}_${row.playerId}`}>
-                                                                <td>{row.playerId.slice(0, 12)}</td>
+                                                                <td>{matchHistoryPlayerLabel(row)}</td>
                                                                 <td>{row.kills}</td>
                                                                 <td>{row.deaths}</td>
                                                                 <td>{row.damageDealt}</td>

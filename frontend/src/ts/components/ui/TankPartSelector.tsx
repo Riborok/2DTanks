@@ -36,26 +36,25 @@ const TankPartSelector: React.FC<TankPartSelectorProps> = ({
         }
     };
 
-    const getInfo = () => {
-        // Здесь можно добавить детальную информацию о каждой части
-        return `${title} ${currentIndex}`;
-    };
+    const variantLabel = `${currentIndex + 1} / ${maxIndex + 1}`;
 
     return (
         <div className="tank-part-selector">
+            <p className="tank-part-selector__label">{title}</p>
             <div className="selector-view">
-                <button className="nav-button" onClick={handlePrev}>
-                    <img src="/src/img/GUI/prev.png" alt="Prev" className="btn-img" />
+                <button type="button" className="nav-button" onClick={handlePrev} aria-label="Предыдущий вариант">
+                    <img src="/src/img/GUI/prev.png" alt="" className="btn-img" />
                 </button>
                 <div className="part-display">
-                    <img src={getImagePath()} alt={title} className={`part-img ${type}`} />
+                    <img src={getImagePath()} alt="" className={`part-img ${type}`} />
                 </div>
-                <button className="nav-button" onClick={handleNext}>
-                    <img src="/src/img/GUI/next.png" alt="Next" className="btn-img" />
+                <button type="button" className="nav-button" onClick={handleNext} aria-label="Следующий вариант">
+                    <img src="/src/img/GUI/next.png" alt="" className="btn-img" />
                 </button>
             </div>
-            <div className="selector-info">
-                <p>{getInfo()}</p>
+            <div className="selector-info" aria-live="polite">
+                <span className="tank-part-selector__variant">{variantLabel}</span>
+                <span className="tank-part-selector__variant-hint">вариант</span>
             </div>
         </div>
     );

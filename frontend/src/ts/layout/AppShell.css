@@ -5,6 +5,8 @@
     background: var(--color-bg-900);
     color: #e8e8f0;
     font-family: var(--font-family-base);
+    /** Запас под шапку (перенос строк навигации) + safe-area */
+    --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 112px);
     /**
      * Панель статистики в игре использует top: var(--game-hud-top, 10px).
      * Шапка + перенос навигации — запас по вертикали.
@@ -127,7 +129,12 @@
 .app-shell-main:has(.play-page-root.app-container) {
     max-width: none;
     padding: 0;
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* HUD игры выше шапки по z-index, позиция по --game-hud-top из .app-shell */
@@ -136,14 +143,34 @@
 }
 
 .play-page-root.app-container {
-    width: 100vw;
-    min-height: calc(100vh - 0px);
+    width: 100%;
+    max-width: 100%;
     margin: 0;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
+    box-sizing: border-box;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 0;
+}
+
+/* Выбор танка: ровно остаток окна под шапкой, без «вылезания» за экран */
+.play-page-root.app-container:has(.tank-customizer) {
+    flex: 1;
+    min-height: 0;
+    align-self: stretch;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: calc(100dvh - var(--app-shell-play-chrome));
+    max-height: calc(100dvh - var(--app-shell-play-chrome));
+    overflow: hidden;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Один скролл внутри кастомайзера, а не у всего main */
+.app-shell-main:has(.play-page-root.app-container:has(.tank-customizer)) {
+    overflow-y: hidden;
 }
 
 .page-loading {

@@ -134,6 +134,17 @@ wss.on('connection', (ws: WebSocket, req) => {
                     }
                     roomManager.handlePlayerAction(roomCode, playerId, action);
                 }
+            } else if (data.type === 'leaveGame') {
+                if (roomCode && playerId) {
+                    roomManager.leaveRoom(roomCode, playerId);
+                    roomCode = null;
+                    playerId = null;
+                    ws.send(
+                        JSON.stringify({
+                            type: 'leftGame'
+                        })
+                    );
+                }
             }
         } catch (error) {
             console.error('Error processing message:', error);

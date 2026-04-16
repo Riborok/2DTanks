@@ -7,11 +7,12 @@ export interface IHull extends IComponent{
     armorStrength: number;
 }
 
+/** Корпуса 0–7: от лёгкого разведчика до тяжёлого; масса влияет на инерцию, armorStrength — на поглощение урона. */
 export class HullModel0 implements IHull {
     private static readonly HEALTH: number = 100;
     private static readonly ARMOR: number = 1;
-    private static readonly MASS: number = 0.8;
-    private static readonly ARMOR_STRENGTH: number = 20;
+    private static readonly MASS: number = 0.82;
+    private static readonly ARMOR_STRENGTH: number = 22;
     private static readonly NUM: number = 0;
 
     public health: number = HullModel0.HEALTH;
@@ -22,10 +23,10 @@ export class HullModel0 implements IHull {
 }
 
 export class HullModel1 implements IHull {
-    private static readonly HEALTH: number = 90;
-    private static readonly ARMOR: number = 1.1;
-    private static readonly MASS: number = 0.8;
-    private static readonly ARMOR_STRENGTH: number = 25;
+    private static readonly HEALTH: number = 92;
+    private static readonly ARMOR: number = 1.12;
+    private static readonly MASS: number = 0.78;
+    private static readonly ARMOR_STRENGTH: number = 24;
     private static readonly NUM: number = 1;
 
     public health: number = HullModel1.HEALTH;
@@ -36,10 +37,10 @@ export class HullModel1 implements IHull {
 }
 
 export class HullModel2 implements IHull {
-    private static readonly HEALTH: number = 150;
-    private static readonly ARMOR: number = 1;
-    private static readonly MASS: number = 1.3;
-    private static readonly ARMOR_STRENGTH: number = 20;
+    private static readonly HEALTH: number = 135;
+    private static readonly ARMOR: number = 1.05;
+    private static readonly MASS: number = 1.22;
+    private static readonly ARMOR_STRENGTH: number = 21;
     private static readonly NUM: number = 2;
 
     public health: number = HullModel2.HEALTH;
@@ -50,10 +51,10 @@ export class HullModel2 implements IHull {
 }
 
 export class HullModel3 implements IHull {
-    private static readonly HEALTH: number = 100;
-    private static readonly ARMOR: number = 1.5;
-    private static readonly MASS: number = 1.3;
-    private static readonly ARMOR_STRENGTH: number = 30;
+    private static readonly HEALTH: number = 108;
+    private static readonly ARMOR: number = 1.32;
+    private static readonly MASS: number = 1.12;
+    private static readonly ARMOR_STRENGTH: number = 26;
     private static readonly NUM: number = 3;
 
     public health: number = HullModel3.HEALTH;
@@ -65,9 +66,9 @@ export class HullModel3 implements IHull {
 
 export class HullModel4 implements IHull {
     private static readonly HEALTH: number = 90;
-    private static readonly ARMOR: number = 0.9;
-    private static readonly MASS: number = 0.7;
-    private static readonly ARMOR_STRENGTH: number = 18;
+    private static readonly ARMOR: number = 0.88;
+    private static readonly MASS: number = 0.62;
+    private static readonly ARMOR_STRENGTH: number = 19;
     private static readonly NUM: number = 4;
 
     public health: number = HullModel4.HEALTH;
@@ -78,10 +79,10 @@ export class HullModel4 implements IHull {
 }
 
 export class HullModel5 implements IHull {
-    private static readonly HEALTH: number = 110;
-    private static readonly ARMOR: number = 0.5;
-    private static readonly MASS: number = 0.7;
-    private static readonly ARMOR_STRENGTH: number = 20;
+    private static readonly HEALTH: number = 96;
+    private static readonly ARMOR: number = 0.72;
+    private static readonly MASS: number = 0.68;
+    private static readonly ARMOR_STRENGTH: number = 21;
     private static readonly NUM: number = 5;
 
     public health: number = HullModel5.HEALTH;
@@ -92,10 +93,10 @@ export class HullModel5 implements IHull {
 }
 
 export class HullModel6 implements IHull {
-    private static readonly HEALTH: number = 100;
-    private static readonly ARMOR: number = 0.6;
-    private static readonly MASS: number = 0.75;
-    private static readonly ARMOR_STRENGTH: number = 22;
+    private static readonly HEALTH: number = 102;
+    private static readonly ARMOR: number = 0.82;
+    private static readonly MASS: number = 0.78;
+    private static readonly ARMOR_STRENGTH: number = 23;
     private static readonly NUM: number = 6;
 
     public health: number = HullModel6.HEALTH;
@@ -106,10 +107,10 @@ export class HullModel6 implements IHull {
 }
 
 export class HullModel7 implements IHull {
-    private static readonly HEALTH: number = 85;
-    private static readonly ARMOR: number = 0.6;
-    private static readonly MASS: number = 0.3;
-    private static readonly ARMOR_STRENGTH: number = 25;
+    private static readonly HEALTH: number = 84;
+    private static readonly ARMOR: number = 0.58;
+    private static readonly MASS: number = 0.52;
+    private static readonly ARMOR_STRENGTH: number = 22;
     private static readonly NUM: number = 7;
 
     public health: number = HullModel7.HEALTH;

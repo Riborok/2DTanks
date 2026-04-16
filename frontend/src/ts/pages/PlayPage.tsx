@@ -274,6 +274,23 @@ const PlayPage: React.FC = () => {
         }
     };
 
+    const handleLeaveGame = () => {
+        wsClient.send({ type: 'leaveGame' });
+        wsClient.closeSocket();
+        setScreen('hub');
+        screenRef.current = 'hub';
+        setRoomId('');
+        setMyPlayerId('');
+        myPlayerIdRef.current = '';
+        setMyRole('attacker');
+        setPlayers([]);
+        setError('');
+        setGameEndReason(null);
+        setSinglePlayerRoom(false);
+        setPracticeRoom(false);
+        setDeathmatchRoom(false);
+    };
+
     return (
         <div className={`play-page-root ${screen === 'hub' ? '' : 'app-container'}`}>
             {screen === 'hub' && (
@@ -315,6 +332,7 @@ const PlayPage: React.FC = () => {
                     isDeathmatch={deathmatchRoom}
                     onGameEnd={handleGameEnd}
                     onDisconnect={handleDisconnect}
+                    onLeaveGame={handleLeaveGame}
                 />
             )}
 

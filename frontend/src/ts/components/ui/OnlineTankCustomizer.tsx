@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import TankPartSelector from './TankPartSelector';
 import TankPreview from './TankPreview';
 import ColorSelector from './ColorSelector';
+import TankSetStats from './TankSetStats';
 
 interface TankConfig {
     hullIndex: number;
@@ -78,48 +79,91 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
 
     return (
         <div className="tank-customizer">
-            <div className="selectors-panel">
-                <TankPartSelector
-                    title="Корпус"
-                    type="hull"
-                    currentIndex={config.hullIndex}
-                    maxIndex={7}
-                    onChange={(index) => updateConfig('hullIndex', index)}
-                />
-                <TankPartSelector
-                    title="Гусеницы"
-                    type="track"
-                    currentIndex={config.trackIndex}
-                    maxIndex={3}
-                    onChange={(index) => updateConfig('trackIndex', index)}
-                />
-                <TankPartSelector
-                    title="Башня"
-                    type="turret"
-                    currentIndex={config.turretIndex}
-                    maxIndex={7}
-                    onChange={(index) => updateConfig('turretIndex', index)}
-                />
-                <TankPartSelector
-                    title="Оружие"
-                    type="weapon"
-                    currentIndex={config.weaponIndex}
-                    maxIndex={7}
-                    onChange={(index) => updateConfig('weaponIndex', index)}
-                />
-            </div>
+            <header className="tank-customizer__topbar">
+                <div className="tank-customizer__topbar-main">
+                    <p className="tank-customizer__eyebrow">Подготовка к бою</p>
+                    <h1 className="tank-customizer__page-title">Сборка танка</h1>
+                </div>
+                <p className="tank-customizer__topbar-lede">
+                    Выберите модули и свободную окраску. Занятые цвета других игроков недоступны.
+                </p>
+            </header>
+            <div className="tank-customizer__body">
+                <div className="tank-customizer__grid">
+                    <aside className="tank-customizer__parts">
+                        <header className="tank-customizer__parts-header">
+                            <h2 className="tank-customizer__panel-title">Модули</h2>
+                            <p className="tank-customizer__lede">Корпус, ходовая, башня и орудие.</p>
+                        </header>
+                        <div className="selectors-panel">
+                            <TankPartSelector
+                                title="Корпус"
+                                type="hull"
+                                currentIndex={config.hullIndex}
+                                maxIndex={7}
+                                onChange={(index) => updateConfig('hullIndex', index)}
+                            />
+                            <TankPartSelector
+                                title="Гусеницы"
+                                type="track"
+                                currentIndex={config.trackIndex}
+                                maxIndex={3}
+                                onChange={(index) => updateConfig('trackIndex', index)}
+                            />
+                            <TankPartSelector
+                                title="Башня"
+                                type="turret"
+                                currentIndex={config.turretIndex}
+                                maxIndex={7}
+                                onChange={(index) => updateConfig('turretIndex', index)}
+                            />
+                            <TankPartSelector
+                                title="Оружие"
+                                type="weapon"
+                                currentIndex={config.weaponIndex}
+                                maxIndex={7}
+                                onChange={(index) => updateConfig('weaponIndex', index)}
+                            />
+                        </div>
+                    </aside>
 
-            <div className="preview-panel">
-                <TankPreview config={config} />
-                <ColorSelector
-                    currentIndex={config.colorIndex}
-                    onChange={(index) => updateConfig('colorIndex', index)}
-                    occupiedColors={occupiedColorList}
-                />
-                <button className="accept-button" onClick={handleAccept}>
-                    <img src="/src/img/GUI/ok.png" alt="Accept" />
-                </button>
+                    <section className="tank-customizer__stage">
+                        <header className="tank-customizer__stage-header">
+                            <h2 className="tank-customizer__panel-title">Обзор и параметры</h2>
+                            <p className="tank-customizer__lede tank-customizer__lede--muted">
+                                Превью и расчёт характеристик для выбранного сета.
+                            </p>
+                        </header>
+                        <div className="tank-customizer__preview-shell">
+                            <div className="tank-customizer__preview-frame">
+                                <div className="tank-customizer__preview-scale">
+                                    <TankPreview config={config} />
+                                </div>
+                            </div>
+                        </div>
+                        <TankSetStats
+                            hullIndex={config.hullIndex}
+                            trackIndex={config.trackIndex}
+                            turretIndex={config.turretIndex}
+                            weaponIndex={config.weaponIndex}
+                        />
+                    </section>
+                </div>
             </div>
+            <footer className="tank-customizer__footer">
+                <div className="tank-customizer__footer-colors">
+                    <span className="tank-customizer__palette-label">Окраска</span>
+                    <ColorSelector
+                        currentIndex={config.colorIndex}
+                        onChange={(index) => updateConfig('colorIndex', index)}
+                        occupiedColors={occupiedColorList}
+                    />
+                </div>
+                <button type="button" className="tank-customizer__cta" onClick={handleAccept}>
+                    <span>Подтвердить</span>
+                    <img src="/src/img/GUI/ok.png" alt="" className="tank-customizer__cta-icon" />
+                </button>
+            </footer>
         </div>
     );
 };

@@ -132,8 +132,8 @@ router.get('/matches/history', async (req, res) => {
     const pool = getPool()!;
     try {
         const rows = await replayRepo.listMatchHistoryForUser(pool, req.auth!.sub);
-        res.json({
-            matches: rows.map((m) => ({
+        const matches = await Promise.all(
+            rows.map(async (m) => ({
                 matchId: m.match_id,
                 roomCode: m.room_code,
                 matchStatus: m.match_status,
@@ -144,9 +144,14 @@ router.get('/matches/history', async (req, res) => {
                 endedAt: m.ended_at,
                 role: m.participant_role,
                 isWinner: m.is_winner,
-                matchStats: Array.isArray(m.match_stats) ? m.match_stats : []
+                matchStats: await replayRepo.enrichMatchStatsDisplayNames(
+                    pool,
+                    m.match_id,
+                    Array.isArray(m.match_stats) ? m.match_stats : []
+                )
             }))
-        });
+        );
+        res.json({ matches });
     } catch (e) {
         console.error('[game/matches/history]', e);
         res.status(500).json({ error: 'Ошибка истории матчей' });

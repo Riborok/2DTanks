@@ -8,6 +8,7 @@ import { TankPartsCreator } from '../components/tank parts/TankPartsCreator';
 import { ResolutionManager, Bonus, HEALTH_BAR_WIDTH_COEFF, HEALTH_BAR_HIGH_HP_COLOR, HEALTH_BAR_MEDIUM_HP_COLOR, HEALTH_BAR_LOW_HP_COLOR, ARMOR_BAR_COLOR, BULLET_ANIMATION_SIZE_INCREASE_COEFF } from '../constants/gameConstants';
 import { BulletSprite } from '../sprite/bullet/BulletSprite';
 import { WallSprite } from '../sprite/obstacles/WallSprite';
+import { DestructibleCrateSprite } from '../sprite/obstacles/DestructibleCrateSprite';
 import { ISprite } from '../sprite/ISprite';
 import { KeySprite } from '../sprite/collectable/KeySprite';
 import { BoxSprite } from '../sprite/collectable/BoxSprite';
@@ -17,7 +18,7 @@ import { DecorCreator } from '../game/creators/IDecorCreator';
 import { AnimationManager } from '../game/managers/animation managers/AnimationManager';
 import { Rectangle } from '../game/processors/shapes/IRectangle';
 import { calcDistance, calcMidBetweenTwoPoint } from '../geometry/additionalFunc';
-import { ServerTank, ServerExplosion, ServerGrenadeExplosion, ServerBulletImpact } from './types';
+import { ServerTank, ServerExplosion, ServerGrenadeExplosion, ServerBulletImpact, ServerCrate } from './types';
 import { tankVisualFromSnapshot } from './tankVisualFromSnapshot';
 import { TankExplosionAnimation } from '../sprite/animation/TankExplosionAnimation';
 import { GrenadeExplosionAnimation } from '../sprite/animation/GrenadeExplosionAnimation';
@@ -45,6 +46,11 @@ interface RenderableWall {
     sprite: WallSprite;
 }
 
+interface RenderableCrate {
+    id: number;
+    sprite: ISprite;
+}
+
 interface RenderableItem {
     id: number;
     sprite: ISprite;
@@ -58,6 +64,7 @@ export class OnlineGameRenderer {
     private tanks: Map<string, RenderableTank> = new Map();
     private bullets: Map<number, RenderableBullet> = new Map();
     private walls: Map<number, RenderableWall> = new Map();
+    private crates: Map<number, RenderableCrate> = new Map();
     private items: Map<number, RenderableItem> = new Map();
     private backgroundMaterial: number | undefined = undefined; // Track current background material
     private currentLevel: number = 1;
@@ -163,6 +170,7 @@ export class OnlineGameRenderer {
         if (walls.length > 0) {
             this.updateWalls(walls);
         }
+        this.updateCrates((snapshot.crates ?? []) as ServerCrate[]);
 
         this.updateItems(snapshot.items ?? []);
         
@@ -491,6 +499,30 @@ export class OnlineGameRenderer {
         }
     }
 
+    private updateCrates(serverCrates: ServerCrate[]): void {
+        const currentIds = new Set(serverCrates.map((c) => c.id));
+        for (const [id, crate] of this.crates.entries()) {
+            if (!currentIds.has(id)) {
+                this.canvas.removeById(crate.sprite);
+                this.crates.delete(id);
+            }
+        }
+        for (const serverCrate of serverCrates) {
+            let renderableCrate = this.crates.get(serverCrate.id);
+            if (!renderableCrate) {
+                const sprite = new DestructibleCrateSprite();
+                renderableCrate = { id: serverCrate.id, sprite };
+                this.crates.set(serverCrate.id, renderableCrate);
+                this.canvas.insert(sprite);
+            }
+            renderableCrate.sprite.point = new Point(
+                ResolutionManager.worldToCanvasX(serverCrate.x),
+                ResolutionManager.worldToCanvasY(serverCrate.y)
+            );
+            renderableCrate.sprite.angle = serverCrate.angle || 0;
+        }
+    }
+
     private updateItems(serverItems: any[]): void {
         const currentItemIds = new Set(serverItems.map(i => i.id));
         
@@ -542,6 +574,7 @@ export class OnlineGameRenderer {
         this.tanks.clear();
         this.bullets.clear();
         this.walls.clear();
+        this.crates.clear();
         this.items.clear();
         this.backgroundMaterial = 1; // Reset to default
     }

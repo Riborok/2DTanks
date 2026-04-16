@@ -11,9 +11,10 @@ export function getTurretWidth(turret: ITurret): number {
     return ResolutionManager.TURRET_WIDTH[turret.num];
 }
 
+/** Башни: быстрый разворот ↔ меньше боезапаса в «обойме» логики; тяжёлая башня медленнее, но вместительнее. */
 export class TurretModel0 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0006;
-    private static readonly MASS: number = 0.25;
+    private static readonly ANGLE_SPEED: number = 0.00055;
+    private static readonly MASS: number = 0.22;
     private static readonly BULLET_CAPACITY: number = 3;
     private static readonly NUM: number = 0;
     public angleSpeed: number = TurretModel0.ANGLE_SPEED;
@@ -23,8 +24,8 @@ export class TurretModel0 implements ITurret{
 }
 
 export class TurretModel1 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.001;
-    private static readonly MASS: number = 0.15;
+    private static readonly ANGLE_SPEED: number = 0.0009;
+    private static readonly MASS: number = 0.16;
     private static readonly BULLET_CAPACITY: number = 2;
     private static readonly NUM: number = 1;
     public angleSpeed: number = TurretModel1.ANGLE_SPEED;
@@ -34,8 +35,8 @@ export class TurretModel1 implements ITurret{
 }
 
 export class TurretModel2 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0004;
-    private static readonly MASS: number = 0.3;
+    private static readonly ANGLE_SPEED: number = 0.00038;
+    private static readonly MASS: number = 0.32;
     private static readonly BULLET_CAPACITY: number = 5;
     private static readonly NUM: number = 2;
     public angleSpeed: number = TurretModel2.ANGLE_SPEED;
@@ -45,8 +46,8 @@ export class TurretModel2 implements ITurret{
 }
 
 export class TurretModel3 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0008;
-    private static readonly MASS: number = 0.3;
+    private static readonly ANGLE_SPEED: number = 0.00062;
+    private static readonly MASS: number = 0.27;
     private static readonly BULLET_CAPACITY: number = 3;
     private static readonly NUM: number = 3;
     public angleSpeed: number = TurretModel3.ANGLE_SPEED;
@@ -56,8 +57,8 @@ export class TurretModel3 implements ITurret{
 }
 
 export class TurretModel4 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0005;
-    private static readonly MASS: number = 0.27;
+    private static readonly ANGLE_SPEED: number = 0.00048;
+    private static readonly MASS: number = 0.26;
     private static readonly BULLET_CAPACITY: number = 4;
     private static readonly NUM: number = 4;
     public angleSpeed: number = TurretModel4.ANGLE_SPEED;
@@ -67,9 +68,9 @@ export class TurretModel4 implements ITurret{
 }
 
 export class TurretModel5 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0003;
-    private static readonly MASS: number = 0.4;
-    private static readonly BULLET_CAPACITY: number = 6;
+    private static readonly ANGLE_SPEED: number = 0.00032;
+    private static readonly MASS: number = 0.36;
+    private static readonly BULLET_CAPACITY: number = 5;
     private static readonly NUM: number = 5;
     public angleSpeed: number = TurretModel5.ANGLE_SPEED;
     public mass: number = TurretModel5.MASS;
@@ -78,9 +79,9 @@ export class TurretModel5 implements ITurret{
 }
 
 export class TurretModel6 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.00045;
-    private static readonly MASS: number = 0.32;
-    private static readonly BULLET_CAPACITY: number = 5;
+    private static readonly ANGLE_SPEED: number = 0.00044;
+    private static readonly MASS: number = 0.3;
+    private static readonly BULLET_CAPACITY: number = 4;
     private static readonly NUM: number = 6;
     public angleSpeed: number = TurretModel6.ANGLE_SPEED;
     public mass: number = TurretModel6.MASS;
@@ -89,8 +90,8 @@ export class TurretModel6 implements ITurret{
 }
 
 export class TurretModel7 implements ITurret{
-    private static readonly ANGLE_SPEED: number = 0.0008;
-    private static readonly MASS: number = 0.35;
+    private static readonly ANGLE_SPEED: number = 0.00075;
+    private static readonly MASS: number = 0.28;
     private static readonly BULLET_CAPACITY: number = 4;
     private static readonly NUM: number = 7;
     public angleSpeed: number = TurretModel7.ANGLE_SPEED;
@@ -98,5 +99,4 @@ export class TurretModel7 implements ITurret{
     public bulletCapacity: number = TurretModel7.BULLET_CAPACITY;
     public get num(): number { return TurretModel7.NUM }
 }
-
 

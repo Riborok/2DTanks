@@ -91,6 +91,17 @@ export class RoomManager {
         }
     }
 
+    leaveRoom(roomCode: string, playerId: string): void {
+        const room = this.rooms.get(roomCode);
+        if (!room) {
+            return;
+        }
+        room.leavePlayer(playerId);
+        if (room.isEmpty()) {
+            this.rooms.delete(roomCode);
+        }
+    }
+
     getRoom(code: string): Room | undefined {
         return this.rooms.get(code);
     }

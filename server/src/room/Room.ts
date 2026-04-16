@@ -6,7 +6,7 @@ import { getPool } from '../db/pool';
 import * as matchRepo from '../repos/matchRepo';
 import * as replayRepo from '../repos/replayRepo';
 import { getRandomInt } from '../utils/additionalFunc';
-import type { GameWorldEndResult } from '../game/world/gameWorldEndResult';
+import type { GameWorldEndResult, PlayerMatchStats } from '../game/world/gameWorldEndResult';
 
 type PlayerRole = 'attacker' | 'defender' | 'fighter';
 
@@ -389,6 +389,19 @@ export class Room {
         this.broadcastRoomUpdate();
     }
 
+    leavePlayer(playerId: string): void {
+        const player = this.players.get(playerId);
+        if (!player) {
+            return;
+        }
+        player.ws = null;
+        this.players.delete(playerId);
+        this.broadcastRoomUpdate();
+        if (this.players.size === 0) {
+            this.forceCloseDueToEmpty();
+        }
+    }
+
     private broadcastRoomUpdate(): void {
         const playersArray = Array.from(this.players.values()).map(player => ({
             playerId: player.id,
@@ -461,13 +474,24 @@ export class Room {
         }
         void (async () => {
             try {
+                const rawStats: PlayerMatchStats[] = this.gameWorld?.getPlayerStatsList() ?? [];
+                const displayByPlayerId = new Map(
+                    [...this.players.values()].map((p) => [
+                        p.id,
+                        p.displayName && p.displayName.trim() ? p.displayName.trim() : null
+                    ])
+                );
+                const matchStats: PlayerMatchStats[] = rawStats.map((row) => ({
+                    ...row,
+                    displayName: displayByPlayerId.get(row.playerId) ?? row.displayName ?? null
+                }));
                 await matchRepo.finalizeMatch(pool, {
                     matchId,
                     status: params.matchStatus,
                     winnerRole: params.winner,
                     endReason: params.reason,
                     durationTicks: ticks,
-                    matchStats: this.gameWorld?.getPlayerStatsList() ?? []
+                    matchStats
                 });
                 if (startMeta) {
                     await replayRepo.saveMatchReplayActions(pool, matchId, {

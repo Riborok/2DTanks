@@ -4,7 +4,7 @@ import { TankModel, ITankModel } from '../../model/tank/ITankModel';
 import { IBulletModel } from '../../model/bullet/IBulletModel';
 import { TankPartsCreator } from '../../components/tank_parts/TankPartsCreator';
 import { RectangularEntity } from '../../polygon/entity/IEntity';
-import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS } from '../../constants/gameConstants';
+import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS } from '../../constants/gameConstants';
 import { ModelIDTracker } from '../../utils/IDTracker';
 import { EntityManipulator } from '../../polygon/entity/EntityManipulator';
 import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
@@ -40,6 +40,15 @@ interface ServerItem {
     type: Bonus;
 }
 
+interface ServerCrate {
+    id: number;
+    model: WallModel;
+    materialNum: number;
+    shapeNum: number;
+    hp: number;
+    maxHp: number;
+}
+
 interface TimedExplosionEvent {
     tick: number;
     x: number;
@@ -67,10 +76,43 @@ export class GameWorld {
     // Number of keys to spawn and collect per level
     private static readonly REQUIRED_KEYS_PER_LEVEL: number = 1;
     private static readonly COLLISION_RESOLVE_ITERATIONS: number = 3;
+    private static readonly DESTRUCTIBLE_CRATE_COUNT: number = 6;
+    private static readonly DESTRUCTIBLE_CRATE_MAX_HP: number = 90;
+    private static readonly DESTRUCTIBLE_CRATE_SPAWN_TRIES: number = 30;
+    private static readonly ARENA_DESTRUCTIBLE_CRATE_COUNT: number = 10;
+    /** Ячейки сетки спавна, где стоят статичные блоки арены (те же координаты, что в createDeathmatchArenaWalls). */
+    private static readonly DEATHMATCH_ARENA_WALL_GRID: ReadonlyArray<{ line: number; col: number }> = [
+        { line: 0, col: 2 },
+        { line: 0, col: 8 },
+        { line: 2, col: 2 },
+        { line: 2, col: 8 },
+        { line: 4, col: 2 },
+        { line: 4, col: 8 },
+        { line: 1, col: 5 },
+        { line: 3, col: 5 }
+    ];
+
+    /** Ячейки сетки, куда нельзя ставить ящики: колонны 110×55 задевают соседние клетки. */
+    private static deathmatchCrateSpawnBannedCells(): Set<string> {
+        const banned = new Set<string>();
+        for (const { line, col } of GameWorld.DEATHMATCH_ARENA_WALL_GRID) {
+            for (let dl = -1; dl <= 1; dl++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const l = line + dl;
+                    const c = col + dc;
+                    if (l >= 0 && l < SPAWN_GRIDS_LINES_AMOUNT && c >= 0 && c < SPAWN_GRIDS_COLUMNS_AMOUNT) {
+                        banned.add(`${l},${c}`);
+                    }
+                }
+            }
+        }
+        return banned;
+    }
     
     private tanks: Map<string, ServerTank> = new Map();
     private bullets: Map<number, ServerBullet> = new Map();
     private walls: ServerWall[] = [];
+    private crates: Map<number, ServerCrate> = new Map();
     private items: Map<number, ServerItem> = new Map();
     private collisionSystem: ICollisionSystem<IEntity>;
     
@@ -212,6 +254,7 @@ export class GameWorld {
 
     private initializeLevel(level: number): void {
         this.currentLevel = level;
+        this.crates.clear();
         if (!this.deathmatchMode) {
             // Для standard считаем ключи по текущему уровню, а не накопительно между уровнями.
             this.keysCollected = 0;
@@ -253,26 +296,110 @@ export class GameWorld {
         // Create point spawner
         this.pointSpawner = new PointSpawner(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
         
-        // Create maze walls
-        let mazeWalls: ServerWall[] = [];
-        if (level === 1) {
-            mazeWalls = MazeCreator.createMazeLvl1(this.wallMaterial, point);
-        } else if (level === 2) {
-            mazeWalls = MazeCreator.createMazeLvl2(this.wallMaterial, point);
-        } else {
-            mazeWalls = MazeCreator.createMazeLvl3(this.wallMaterial, point);
-        }
-        
-        for (const wall of mazeWalls) {
+        const mapWalls: ServerWall[] = this.deathmatchMode
+            ? this.createDeathmatchArenaWalls(point)
+            : level === 1
+              ? MazeCreator.createMazeLvl1(this.wallMaterial, point)
+              : level === 2
+                ? MazeCreator.createMazeLvl2(this.wallMaterial, point)
+                : MazeCreator.createMazeLvl3(this.wallMaterial, point);
+
+        for (const wall of mapWalls) {
+            const wid = wall.model.entity.id;
+            const hits = Array.from(this.collisionSystem.getCollisions(wall.model.entity)).filter((c) => c.id !== wid);
+            if (hits.length > 0) {
+                continue;
+            }
             this.collisionSystem.insert(wall.model.entity);
+            this.walls.push(wall);
         }
-        this.walls.push(...mazeWalls);
         
         // Spawn tanks
         this.spawnTanks();
         
         // Spawn keys
         this.spawnKeys();
+        if (this.deathmatchMode) {
+            this.spawnDestructibleCrates(GameWorld.ARENA_DESTRUCTIBLE_CRATE_COUNT);
+        }
+    }
+
+    private createDeathmatchArenaWalls(_origin: Point): ServerWall[] {
+        const ps = this.pointSpawner;
+        if (!ps) {
+            return [];
+        }
+        const w = ResolutionManager.WALL_WIDTH[0];
+        const h = ResolutionManager.WALL_HEIGHT[0];
+        const result: ServerWall[] = [];
+        for (const cell of GameWorld.DEATHMATCH_ARENA_WALL_GRID) {
+            const topLeft = ps.getSpawnPoint(w, h, cell.line, cell.col);
+            result.push(ObstacleCreator.createWall(topLeft, 0, this.wallMaterial, 0, false));
+        }
+        return result;
+    }
+
+    private getDeathmatchSpawnCellBanned(): Set<string> | null {
+        return this.deathmatchMode ? GameWorld.deathmatchCrateSpawnBannedCells() : null;
+    }
+
+    private buildSpawnGridSlots(cellBanned: Set<string> | null): Array<{ line: number; col: number }> {
+        const slots: Array<{ line: number; col: number }> = [];
+        for (let line = 0; line < SPAWN_GRIDS_LINES_AMOUNT; line++) {
+            for (let col = 0; col < SPAWN_GRIDS_COLUMNS_AMOUNT; col++) {
+                if (cellBanned?.has(`${line},${col}`)) {
+                    continue;
+                }
+                slots.push({ line, col });
+            }
+        }
+        return slots;
+    }
+
+    private shuffleSpawnSlots(slots: Array<{ line: number; col: number }>): void {
+        for (let i = slots.length - 1; i > 0; i--) {
+            const j = this.randomInt(0, i);
+            const t = slots[i]!;
+            slots[i] = slots[j]!;
+            slots[j] = t;
+        }
+    }
+
+    private spawnDestructibleCrates(count: number): void {
+        if (!this.pointSpawner) {
+            return;
+        }
+        this.crates.clear();
+        const cw = ResolutionManager.WALL_WIDTH[1];
+        const ch = ResolutionManager.WALL_HEIGHT[1];
+        const slots = this.buildSpawnGridSlots(this.getDeathmatchSpawnCellBanned());
+        this.shuffleSpawnSlots(slots);
+        let placed = 0;
+        for (const { line, col } of slots) {
+            if (placed >= count) {
+                break;
+            }
+            const spawnPoint = this.pointSpawner.getSpawnPoint(cw, ch, line, col);
+            const angle = this.randomInt(0, 3) * (Math.PI / 2);
+            const wallLike = ObstacleCreator.createWall(spawnPoint, angle, this.wallMaterial, 1, true);
+            const collisions = Array.from(this.collisionSystem.getCollisions(wallLike.model.entity)).filter(
+                (c) => c.id !== wallLike.model.entity.id
+            );
+            if (collisions.length > 0) {
+                continue;
+            }
+            const crate: ServerCrate = {
+                id: wallLike.model.entity.id,
+                model: wallLike.model,
+                materialNum: this.wallMaterial,
+                shapeNum: 1,
+                hp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP,
+                maxHp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP
+            };
+            this.crates.set(crate.id, crate);
+            this.collisionSystem.insert(crate.model.entity);
+            placed++;
+        }
     }
 
     private spawnTanks(): void {
@@ -298,24 +425,46 @@ export class GameWorld {
                     cfg.turretNum,
                     cfg.weaponNum
                 );
-                const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
-                    ResolutionManager.getTankEntityWidth(cfg.hullNum),
-                    ResolutionManager.getTankEntityHeight(cfg.hullNum),
-                    0,
-                    SPAWN_GRIDS_LINES_AMOUNT - 1,
-                    0,
-                    SPAWN_GRIDS_COLUMNS_AMOUNT - 1
-                );
-                const entity = new RectangularEntity(
-                    spawnPoint,
-                    ResolutionManager.getTankEntityWidth(cfg.hullNum),
-                    ResolutionManager.getTankEntityHeight(cfg.hullNum),
-                    0,
-                    tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass,
-                    ModelIDTracker.tankId
-                );
+                const tw = ResolutionManager.getTankEntityWidth(cfg.hullNum);
+                const th = ResolutionManager.getTankEntityHeight(cfg.hullNum);
+                const mass = tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass;
+                let entity: RectangularEntity | null = null;
+                for (let attempt = 0; attempt < GameWorld.DESTRUCTIBLE_CRATE_SPAWN_TRIES; attempt++) {
+                    const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
+                        tw,
+                        th,
+                        0,
+                        SPAWN_GRIDS_LINES_AMOUNT - 1,
+                        0,
+                        SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+                    );
+                    const candidate = new RectangularEntity(spawnPoint, tw, th, 0, mass, ModelIDTracker.tankId);
+                    const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
+                    if (hits.length > 0) {
+                        continue;
+                    }
+                    entity = candidate;
+                    break;
+                }
+                if (!entity) {
+                    outer: for (let line = 0; line < SPAWN_GRIDS_LINES_AMOUNT; line++) {
+                        for (let col = 0; col < SPAWN_GRIDS_COLUMNS_AMOUNT; col++) {
+                            const fallbackPt = this.pointSpawner.getSpawnPoint(tw, th, line, col);
+                            const candidate = new RectangularEntity(fallbackPt, tw, th, 0, mass, ModelIDTracker.tankId);
+                            const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
+                            if (hits.length === 0) {
+                                entity = candidate;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+                if (!entity) {
+                    const last = this.pointSpawner.getSpawnPoint(tw, th, 0, 0);
+                    entity = new RectangularEntity(last, tw, th, 0, mass, ModelIDTracker.tankId);
+                }
                 const model = new TankModel(tankParts, entity);
-                const tankId = `fighter_${f.playerId.replace(/[^a-zA-Z0-9_]/g, '_')}_${ModelIDTracker.tankId}`;
+                const tankId = `fighter_${f.playerId.replace(/[^a-zA-Z0-9_]/g, '_')}_${entity.id}`;
                 const fighterTank: ServerTank = {
                     id: tankId,
                     model,
@@ -483,6 +632,10 @@ export class GameWorld {
             this.collisionSystem.remove(wall.model.entity);
         }
         this.walls = [];
+        for (const crate of this.crates.values()) {
+            this.collisionSystem.remove(crate.model.entity);
+        }
+        this.crates.clear();
         
         // Remove tanks from collision system before respawn
         for (const tank of this.tanks.values()) {
@@ -699,6 +852,30 @@ export class GameWorld {
         // Reset the set for the next tick
         this.tanksWithActionsThisTick.clear();
 
+        for (const crate of this.crates.values()) {
+            try {
+                this.collisionSystem.remove(crate.model.entity);
+            } catch {
+                /* ignore */
+            }
+            crate.model.residualMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
+            crate.model.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
+            EntityManipulator.movement(crate.model.entity, deltaTime);
+            EntityManipulator.angularMovement(crate.model.entity, deltaTime);
+            for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
+                const collisions = Array.from(this.collisionSystem.getCollisions(crate.model.entity)).filter(
+                    (collided) => collided.id !== crate.model.entity.id
+                );
+                if (collisions.length === 0) {
+                    break;
+                }
+                for (const collided of collisions) {
+                    CollisionResolver.resolveCollision(crate.model.entity, collided);
+                }
+            }
+            this.collisionSystem.insert(crate.model.entity);
+        }
+
         // Update bullets (similar to BulletHandlingManager.handle)
         const bulletsToRemove: number[] = [];
         for (const bullet of this.bullets.values()) {
@@ -802,6 +979,7 @@ export class GameWorld {
                 // Handle bullet hits (only if collision occurred)
                 if (collisions.length > 0) {
                     let countedHitForSource = false;
+                    const cratesToDestroy = new Set<number>();
                     
                     for (const collided of collisions) {
                         // Skip collision with source tank - find source tank entity
@@ -861,7 +1039,24 @@ export class GameWorld {
                                 this.respawnTank(hitTank);
                             }
                         }
+                        const hitCrate = this.crates.get(collided.id);
+                        if (hitCrate) {
+                            hitCrate.hp -= bullet.model.damage;
+                            if (hitCrate.hp <= 0) {
+                                cratesToDestroy.add(hitCrate.id);
+                            }
+                        }
                         // Note: Wall collisions are handled by removal (bullet just disappears)
+                    }
+                    for (const crateId of cratesToDestroy) {
+                        const crate = this.crates.get(crateId);
+                        if (!crate) {
+                            continue;
+                        }
+                        const p = crate.model.entity.calcCenter();
+                        this.pushExplosion(p.x, p.y, this.randomFloat() * 2 * Math.PI - Math.PI);
+                        this.collisionSystem.remove(crate.model.entity);
+                        this.crates.delete(crateId);
                     }
                 }
             }
@@ -935,25 +1130,30 @@ export class GameWorld {
         }
         
         const boxType = this.getRandomBoxType();
-        const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
-            ResolutionManager.BOX_SIZE,
-            ResolutionManager.BOX_SIZE,
-            0, SPAWN_GRIDS_LINES_AMOUNT - 1,
-            0, SPAWN_GRIDS_COLUMNS_AMOUNT - 1
-        );
-        
-        // Check for collisions (like original spawnRandomBox)
-        // For simplicity, we'll just create the box - collision check would require creating entity first
-        // In original, it retries up to RESPAWN_TRYS_AMOUNT times
-        const item: ServerItem = {
-            id: ModelIDTracker.collectibleItemId,
-            x: spawnPoint.x,
-            y: spawnPoint.y,
-            type: boxType
-        };
-        this.items.set(item.id, item);
-        console.log(`[GAMEWORLD] spawnRandomBox: created box item id=${item.id}, x=${item.x.toFixed(1)}, y=${item.y.toFixed(1)}, type=${item.type}, totalItems=${this.items.size}`);
-        this.emitReplayItemSpawn(item.id, item.x, item.y, item.type, this.tick);
+        const sz = ResolutionManager.BOX_SIZE;
+        const slots = this.buildSpawnGridSlots(this.getDeathmatchSpawnCellBanned());
+        this.shuffleSpawnSlots(slots);
+        const probeId = ModelIDTracker.otherId;
+        for (const { line, col } of slots) {
+            const spawnPoint = this.pointSpawner.getSpawnPoint(sz, sz, line, col);
+            const probe = new RectangularEntity(spawnPoint, sz, sz, 0, Infinity, probeId);
+            const hits = Array.from(this.collisionSystem.getCollisions(probe)).filter((c) => c.id !== probeId);
+            if (hits.length > 0) {
+                continue;
+            }
+            const item: ServerItem = {
+                id: ModelIDTracker.collectibleItemId,
+                x: spawnPoint.x,
+                y: spawnPoint.y,
+                type: boxType
+            };
+            this.items.set(item.id, item);
+            console.log(
+                `[GAMEWORLD] spawnRandomBox: created box item id=${item.id}, x=${item.x.toFixed(1)}, y=${item.y.toFixed(1)}, type=${item.type}, totalItems=${this.items.size}`
+            );
+            this.emitReplayItemSpawn(item.id, item.x, item.y, item.type, this.tick);
+            return;
+        }
     }
 
     private checkItemCollisions(): void {
@@ -1121,6 +1321,7 @@ export class GameWorld {
         this.tanks.clear();
         this.tankConfigByTankId.clear();
         this.items.clear();
+        this.crates.clear();
         for (const wall of this.walls) {
             try {
                 this.collisionSystem.remove(wall.model.entity);
@@ -1160,6 +1361,40 @@ export class GameWorld {
                 y: it.y,
                 type: it.type as Bonus
             });
+        }
+        const crateSnaps =
+            (snap.crates as Array<{
+                id: number;
+                x: number;
+                y: number;
+                angle: number;
+                materialNum: number;
+                shapeNum: number;
+                hp: number;
+                maxHp: number;
+            }>) ?? [];
+        for (const c of crateSnaps) {
+            const shapeNum = Math.min(Math.max(Math.floor(c.shapeNum ?? 1), 0), ResolutionManager.WALL_WIDTH.length - 1);
+            const materialNum = Math.min(Math.max(Math.floor(c.materialNum ?? 0), 0), 2);
+            const ent = new RectangularEntity(
+                new Point(c.x, c.y),
+                ResolutionManager.WALL_WIDTH[shapeNum],
+                ResolutionManager.WALL_HEIGHT[shapeNum],
+                c.angle ?? 0,
+                WALL_MASS[materialNum][shapeNum] ?? WALL_MASS[materialNum][0],
+                c.id
+            );
+            const model = new WallModel(ent);
+            this.crates.set(c.id, {
+                id: c.id,
+                model,
+                materialNum,
+                shapeNum,
+                hp: Math.max(0, Math.floor(c.hp ?? GameWorld.DESTRUCTIBLE_CRATE_MAX_HP)),
+                maxHp: Math.max(1, Math.floor(c.maxHp ?? GameWorld.DESTRUCTIBLE_CRATE_MAX_HP))
+            });
+            idsForReseed.push(c.id);
+            this.collisionSystem.insert(ent);
         }
 
         ModelIDTracker.reseedCountersFromMaxEntityIds(idsForReseed);
@@ -1295,6 +1530,24 @@ export class GameWorld {
                 shapeNum: wall.shapeNum
             };
         });
+        const crateSnapshots = Array.from(this.crates.values()).map((crate) => {
+            const ent = crate.model.entity;
+            const sn = crate.shapeNum;
+            const bw = ResolutionManager.WALL_WIDTH[sn];
+            const bh = ResolutionManager.WALL_HEIGHT[sn];
+            const cx = ent.calcCenter().x;
+            const cy = ent.calcCenter().y;
+            return {
+                id: crate.id,
+                x: cx - bw / 2,
+                y: cy - bh / 2,
+                angle: ent.angle,
+                materialNum: crate.materialNum,
+                shapeNum: crate.shapeNum,
+                hp: crate.hp,
+                maxHp: crate.maxHp
+            };
+        });
 
         const itemSnapshots = Array.from(this.items.values()).map(item => ({
             id: item.id,
@@ -1308,6 +1561,7 @@ export class GameWorld {
             tanks: tankSnapshots,
             bullets: bulletSnapshots,
             walls: wallSnapshots,
+            crates: crateSnapshots,
             items: itemSnapshots,
             explosions: this.explosionsRecent.map(({ x, y, angle }) => ({ x, y, angle })),
             grenadeExplosions: this.grenadeExplosionsRecent.map(({ x, y, angle, size }) => ({

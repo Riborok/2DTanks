@@ -138,6 +138,18 @@
     min-width: 76px;
 }
 
+.hud-card-exit {
+    min-width: auto;
+    padding: 4px;
+    background: transparent;
+    border: none;
+}
+
+.hud-card-exit .replays-back-btn {
+    margin-top: 0;
+    white-space: nowrap;
+}
+
 .hud-card-timer.is-critical {
     border-color: rgba(255, 100, 120, 0.6);
 }

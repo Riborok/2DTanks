@@ -25,6 +25,7 @@ export interface MatchHistoryItemDto {
     isWinner: boolean;
     matchStats: Array<{
         playerId: string;
+        displayName?: string | null;
         role: 'attacker' | 'defender' | 'fighter';
         kills: number;
         deaths: number;

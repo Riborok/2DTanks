@@ -7,6 +7,8 @@ export type DeathmatchInit = {
 
 export type PlayerMatchStats = {
     playerId: string;
+    /** Ник на момент матча (для истории / UI); для старых записей может подставляться с сервера по роли. */
+    displayName?: string | null;
     role: 'attacker' | 'defender' | 'fighter';
     kills: number;
     deaths: number;
