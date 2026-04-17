@@ -1,8 +1,10 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useCallback, useState } from 'react';
 import TankPartSelector from './TankPartSelector';
 import TankPreview from './TankPreview';
 import ColorSelector from './ColorSelector';
 import TankSetStats from './TankSetStats';
+import TankPresetBar from './TankPresetBar';
+import { useAuth } from '../../context/AuthContext';
 
 interface TankConfig {
     hullIndex: number;
@@ -17,6 +19,7 @@ interface TankCustomizerProps {
 }
 
 const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
+    const { accessToken } = useAuth();
     const [config, setConfig] = useState<TankConfig>({
         hullIndex: 0,
         trackIndex: 0,
@@ -29,8 +32,23 @@ const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
         setConfig(prev => ({ ...prev, [key]: value }));
     };
 
+    const applyPreset = useCallback((p: {
+        color: number;
+        hullNum: number;
+        trackNum: number;
+        turretNum: number;
+        weaponNum: number;
+    }) => {
+        setConfig({
+            hullIndex: p.hullNum,
+            trackIndex: p.trackNum,
+            turretIndex: p.turretNum,
+            weaponIndex: p.weaponNum,
+            colorIndex: p.color
+        });
+    }, []);
+
     const handleAccept = () => {
-        // Сохраняем конфигурацию в localStorage или передаем в игровую логику
         localStorage.setItem('tankConfig', JSON.stringify(config));
         onAccept();
     };
@@ -46,12 +64,14 @@ const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
                     Соберите комплектацию и окраску. Параметры справа обновляются в реальном времени.
                 </p>
             </header>
+
             <div className="tank-customizer__body">
                 <div className="tank-customizer__grid">
-                    <aside className="tank-customizer__parts">
-                        <header className="tank-customizer__parts-header">
+                    {/* Колонка 1 — модули */}
+                    <aside className="tank-customizer__panel tank-customizer__parts">
+                        <header className="tank-customizer__panel-head">
                             <h2 className="tank-customizer__panel-title">Модули</h2>
-                            <p className="tank-customizer__lede">Корпус, ходовая, башня и орудие.</p>
+                            <p className="tank-customizer__lede">Корпус · ходовая · башня · орудие</p>
                         </header>
                         <div className="selectors-panel">
                             <TankPartSelector
@@ -85,29 +105,52 @@ const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
                         </div>
                     </aside>
 
+                    {/* Колонка 2 — превью танка */}
                     <section className="tank-customizer__stage">
-                        <header className="tank-customizer__stage-header">
-                            <h2 className="tank-customizer__panel-title">Обзор и параметры</h2>
-                            <p className="tank-customizer__lede tank-customizer__lede--muted">
-                                Оцените внешний вид и баланс характеристик перед игрой.
-                            </p>
-                        </header>
-                        <div className="tank-customizer__preview-shell">
+                        <div className="tank-customizer__preview-card">
+                            <span className="tank-customizer__preview-badge">Превью</span>
                             <div className="tank-customizer__preview-frame">
                                 <div className="tank-customizer__preview-scale">
                                     <TankPreview config={config} />
                                 </div>
                             </div>
+                            <div className="tank-customizer__preview-chips">
+                                <span>К{config.hullIndex}</span>
+                                <span>Г{config.trackIndex}</span>
+                                <span>Б{config.turretIndex}</span>
+                                <span>О{config.weaponIndex}</span>
+                            </div>
                         </div>
-                        <TankSetStats
-                            hullIndex={config.hullIndex}
-                            trackIndex={config.trackIndex}
-                            turretIndex={config.turretIndex}
-                            weaponIndex={config.weaponIndex}
-                        />
                     </section>
+
+                    {/* Колонка 3 — параметры сверху, сеты снизу (одновременно) */}
+                    <aside className="tank-customizer__side">
+                        <div className="tank-customizer__side-slot tank-customizer__side-slot--stats">
+                            <TankSetStats
+                                hullIndex={config.hullIndex}
+                                trackIndex={config.trackIndex}
+                                turretIndex={config.turretIndex}
+                                weaponIndex={config.weaponIndex}
+                            />
+                        </div>
+                        {accessToken && (
+                            <div className="tank-customizer__side-slot tank-customizer__side-slot--presets">
+                                <TankPresetBar
+                                    current={{
+                                        color: config.colorIndex,
+                                        hullNum: config.hullIndex,
+                                        trackNum: config.trackIndex,
+                                        turretNum: config.turretIndex,
+                                        weaponNum: config.weaponIndex
+                                    }}
+                                    onApply={applyPreset}
+                                />
+                            </div>
+                        )}
+                    </aside>
                 </div>
             </div>
+
             <footer className="tank-customizer__footer">
                 <div className="tank-customizer__footer-colors">
                     <span className="tank-customizer__palette-label">Окраска</span>
@@ -126,4 +169,3 @@ const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
 };
 
 export default TankCustomizer;
-

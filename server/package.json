@@ -11,7 +11,9 @@
     "migrate": "node scripts/run-migrations.js",
     "db:wipe": "node scripts/db-wipe.js",
     "db:reset": "node scripts/db-reset.js",
-    "db:seed:demo": "node scripts/seed-demo-data.js"
+    "db:seed:test": "node scripts/seed-test-data.js",
+    "db:seed:demo": "node scripts/seed-test-data.js --only=demo",
+    "db:seed:presets": "node scripts/seed-test-data.js --only=presets"
   },
   "keywords": [
     "game-server",

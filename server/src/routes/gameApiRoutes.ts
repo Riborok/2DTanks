@@ -2,8 +2,58 @@ import { Router, type Response } from 'express';
 import { getPool } from '../db/pool';
 import { requireBearerAuth } from '../auth/httpAuth';
 import * as replayRepo from '../repos/replayRepo';
+import * as tankPresetRepo from '../repos/tankPresetRepo';
 const router = Router();
 router.use(requireBearerAuth);
+
+function mapPresetRow(row: tankPresetRepo.TankPresetRow) {
+    return {
+        presetId: row.preset_id,
+        name: row.name,
+        color: row.tank_color,
+        hullNum: row.tank_hull_num,
+        trackNum: row.tank_track_num,
+        turretNum: row.tank_turret_num,
+        weaponNum: row.tank_weapon_num,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+    };
+}
+
+function parsePresetPayload(body: unknown):
+    | { ok: true; value: tankPresetRepo.TankPresetInput }
+    | { ok: false; message: string } {
+    if (!body || typeof body !== 'object') {
+        return { ok: false as const, message: 'Некорректные данные' };
+    }
+    const raw = body as Record<string, unknown>;
+    const nameInput = typeof raw.name === 'string' ? raw.name.trim() : '';
+    if (nameInput.length === 0) {
+        return { ok: false as const, message: 'Название обязательно' };
+    }
+    if (nameInput.length > tankPresetRepo.PRESET_NAME_MAX_LEN) {
+        return { ok: false as const, message: `Название длиннее ${tankPresetRepo.PRESET_NAME_MAX_LEN} символов` };
+    }
+    const nums: Record<string, number> = {};
+    for (const key of ['color', 'hullNum', 'trackNum', 'turretNum', 'weaponNum'] as const) {
+        const v = raw[key];
+        if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 15) {
+            return { ok: false as const, message: `Некорректное поле ${key}` };
+        }
+        nums[key] = v;
+    }
+    return {
+        ok: true as const,
+        value: {
+            name: nameInput,
+            color: nums.color,
+            hullNum: nums.hullNum,
+            trackNum: nums.trackNum,
+            turretNum: nums.turretNum,
+            weaponNum: nums.weaponNum
+        }
+    };
+}
 
 function noDb(res: Response): boolean {
     if (!getPool()) {
@@ -155,6 +205,89 @@ router.get('/matches/history', async (req, res) => {
     } catch (e) {
         console.error('[game/matches/history]', e);
         res.status(500).json({ error: 'Ошибка истории матчей' });
+    }
+});
+
+router.get('/tank-presets', async (req, res) => {
+    if (noDb(res)) {
+        return;
+    }
+    const pool = getPool()!;
+    try {
+        const rows = await tankPresetRepo.listPresetsForUser(pool, req.auth!.sub);
+        res.json({ presets: rows.map(mapPresetRow) });
+    } catch (e) {
+        console.error('[game/tank-presets list]', e);
+        res.status(500).json({ error: 'Ошибка загрузки сетов' });
+    }
+});
+
+router.post('/tank-presets', async (req, res) => {
+    if (noDb(res)) {
+        return;
+    }
+    const pool = getPool()!;
+    const parsed = parsePresetPayload(req.body);
+    if (parsed.ok === false) {
+        res.status(400).json({ error: parsed.message });
+        return;
+    }
+    try {
+        const count = await tankPresetRepo.countPresetsForUser(pool, req.auth!.sub);
+        if (count >= tankPresetRepo.MAX_PRESETS_PER_USER) {
+            res.status(400).json({
+                error: `Достигнут лимит сохранённых сетов (${tankPresetRepo.MAX_PRESETS_PER_USER})`
+            });
+            return;
+        }
+        const created = await tankPresetRepo.createPreset(pool, req.auth!.sub, parsed.value);
+        res.status(201).json({ preset: mapPresetRow(created) });
+    } catch (e) {
+        console.error('[game/tank-presets create]', e);
+        res.status(500).json({ error: 'Не удалось сохранить сет' });
+    }
+});
+
+router.put('/tank-presets/:presetId', async (req, res) => {
+    if (noDb(res)) {
+        return;
+    }
+    const pool = getPool()!;
+    const presetId = String(req.params.presetId || '');
+    const parsed = parsePresetPayload(req.body);
+    if (parsed.ok === false) {
+        res.status(400).json({ error: parsed.message });
+        return;
+    }
+    try {
+        const row = await tankPresetRepo.updatePreset(pool, req.auth!.sub, presetId, parsed.value);
+        if (!row) {
+            res.status(404).json({ error: 'Сет не найден' });
+            return;
+        }
+        res.json({ preset: mapPresetRow(row) });
+    } catch (e) {
+        console.error('[game/tank-presets update]', e);
+        res.status(500).json({ error: 'Не удалось обновить сет' });
+    }
+});
+
+router.delete('/tank-presets/:presetId', async (req, res) => {
+    if (noDb(res)) {
+        return;
+    }
+    const pool = getPool()!;
+    const presetId = String(req.params.presetId || '');
+    try {
+        const ok = await tankPresetRepo.deletePreset(pool, req.auth!.sub, presetId);
+        if (!ok) {
+            res.status(404).json({ error: 'Сет не найден' });
+            return;
+        }
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[game/tank-presets delete]', e);
+        res.status(500).json({ error: 'Не удалось удалить сет' });
     }
 });
 

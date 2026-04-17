@@ -287,17 +287,41 @@ export class TankModel extends LandModel implements ITankModel {
         // Заносы отключены: чистая тяга в направлении thrustAngle (вперёд/назад).
         this._isDrift = false;
         this._isBraking = false;
-        const speed = this._entity.velocity.length;
+        const entity = this._entity;
+        const speed = entity.velocity.length;
+        const cosT = Math.cos(thrustAngle);
+        const sinT = Math.sin(thrustAngle);
+        /** Скорость вдоль направления тяги: < 0, если едем «против» тяги (напр. вперёд при нажатом назад). */
+        const vAlong = speed > 1e-8 ? entity.velocity.x * cosT + entity.velocity.y * sinT : 0;
+
+        const acceleration = LandForcesCalculator.calcAcceleration(
+            data.force,
+            resistanceCoeff,
+            airResistanceCoeff,
+            deltaTime,
+            speed,
+            entity.mass,
+            entity.lengthwiseArea
+        );
+
+        /**
+         * Если (тяга − трение) < 0, скаляр всё равно умножается на направление тяги — при vAlong < 0 это даёт
+         * приращение скорости в сторону, противоположную тяге (для «назад» танк уезжает вперёд). На тяжёлой
+         * сборке трение велико — баг заметен. Тормозим вдоль текущей скорости, пока не пересилим трение.
+         */
+        if (acceleration < 0 && vAlong < 0) {
+            if (speed > 1e-8) {
+                const brakeMag = Math.min(speed, (-acceleration) * 0.95);
+                entity.velocity.addToCoordinates((-brakeMag / speed) * entity.velocity.x, (-brakeMag / speed) * entity.velocity.y);
+                if (entity.velocity.length < 0.0008) {
+                    entity.velocity.x = 0;
+                    entity.velocity.y = 0;
+                }
+            }
+            return;
+        }
+
         if (speed < data.finishSpeed) {
-            const acceleration = LandForcesCalculator.calcAcceleration(
-                data.force,
-                resistanceCoeff,
-                airResistanceCoeff,
-                deltaTime,
-                speed,
-                this._entity.mass,
-                this._entity.lengthwiseArea
-            );
             this.applyVelocityChange(acceleration, thrustAngle);
         }
     }

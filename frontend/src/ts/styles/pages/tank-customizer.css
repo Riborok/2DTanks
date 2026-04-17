@@ -15,8 +15,11 @@
     padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
+/* ============================================================
+   Корневой контейнер
+   ============================================================ */
 .tank-customizer {
-    --tank-preview-uniform-scale: 0.8;
+    --tank-preview-uniform-scale: 0.82;
     width: 100%;
     max-width: min(1720px, 100%);
     margin: 0 auto;
@@ -28,28 +31,31 @@
     flex-direction: column;
     overflow: hidden;
     padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-xl);
     background:
-        radial-gradient(100% 90% at 0% 0%, rgba(69, 183, 255, 0.14) 0%, transparent 52%),
-        radial-gradient(80% 70% at 100% 10%, rgba(147, 112, 219, 0.1) 0%, transparent 48%),
-        radial-gradient(90% 60% at 50% 120%, rgba(99, 230, 190, 0.09) 0%, transparent 45%),
-        linear-gradient(165deg, rgba(22, 28, 42, 0.98) 0%, rgba(12, 16, 26, 0.99) 100%);
+        radial-gradient(120% 90% at 0% 0%, rgba(69, 183, 255, 0.12) 0%, transparent 55%),
+        radial-gradient(80% 70% at 100% 10%, rgba(147, 112, 219, 0.09) 0%, transparent 50%),
+        radial-gradient(90% 60% at 50% 120%, rgba(99, 230, 190, 0.08) 0%, transparent 48%),
+        linear-gradient(165deg, rgba(20, 26, 40, 0.98) 0%, rgba(10, 14, 24, 0.99) 100%);
     box-shadow:
         var(--shadow-medium),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+/* ============================================================
+   Верхняя шапка
+   ============================================================ */
 .tank-customizer__topbar {
     flex-shrink: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 12px 24px;
-    padding: 16px 20px 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.25);
+    gap: 10px 24px;
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.22);
 }
 
 .tank-customizer__topbar-main {
@@ -57,9 +63,18 @@
     flex: 1 1 240px;
 }
 
+.tank-customizer__eyebrow {
+    margin: 0 0 4px 0;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(235, 243, 255, 0.55);
+    font-weight: 600;
+}
+
 .tank-customizer__page-title {
-    margin: 2px 0 0 0;
-    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    margin: 0;
+    font-size: clamp(1.3rem, 2.6vw, 1.75rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--color-text-100);
@@ -75,6 +90,9 @@
     color: var(--color-text-300);
 }
 
+/* ============================================================
+   Тело страницы — три независимые колонки
+   ============================================================ */
 .tank-customizer__body {
     flex: 1;
     min-height: 0;
@@ -83,153 +101,131 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 12px 14px 14px;
-}
-
-.tank-customizer__footer {
-    flex-shrink: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 14px 20px;
-    padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(12px);
-}
-
-.tank-customizer__footer-colors {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-}
-
-.tank-customizer__footer-colors .color-selector {
-    flex: 1;
-    min-width: 0;
+    padding: 14px 14px 14px;
 }
 
 .tank-customizer__grid {
     display: grid;
-    grid-template-columns: minmax(340px, 0.46fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    gap: 16px 24px;
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
     flex: 1;
     min-height: 0;
 }
 
-.tank-customizer__parts {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    gap: 0;
+@media (min-width: 1100px) {
+    .tank-customizer__grid {
+        grid-template-columns:
+            minmax(320px, 0.72fr)
+            minmax(0, 1.6fr)
+            minmax(320px, 0.78fr);
+        align-items: stretch;
+    }
 }
 
-.tank-customizer__parts-header,
-.tank-customizer__stage-header {
-    margin-bottom: 10px;
+/* Универсальный «стеклянный» блок-панель */
+.tank-customizer__panel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0.32) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    padding: 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+}
+
+.tank-customizer__panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
     flex-shrink: 0;
 }
 
-.tank-customizer__eyebrow {
-    margin: 0 0 4px 0;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-text-300);
-    font-weight: 600;
-}
-
-.tank-customizer__heading {
+.tank-customizer__panel-title {
     margin: 0;
-    font-size: clamp(1.15rem, 2.2vw, var(--text-xl));
-    font-weight: 600;
+    font-size: clamp(0.98rem, 1.5vw, 1.1rem);
+    font-weight: 700;
     color: var(--color-text-100);
     line-height: 1.2;
 }
 
-.tank-customizer__panel-title {
-    margin: 0 0 6px 0;
-    font-size: clamp(1.05rem, 1.8vw, 1.2rem);
-    font-weight: 700;
-    color: var(--color-text-100);
-    line-height: 1.25;
-}
-
 .tank-customizer__lede {
     margin: 0;
-    font-size: var(--text-sm);
-    color: var(--color-text-300);
-    line-height: 1.45;
+    font-size: 12.5px;
+    color: rgba(235, 243, 255, 0.55);
+    line-height: 1.4;
+    flex-shrink: 0;
 }
 
-.tank-customizer__lede--muted {
-    color: rgba(235, 243, 255, 0.55);
-    font-size: 13px;
+/* ============================================================
+   Колонка 1 — Модули (слева)
+   ============================================================ */
+.tank-customizer__parts {
+    /* использует tank-customizer__panel */
 }
 
 .tank-customizer__parts .selectors-panel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    flex: 1;
-    min-height: 0;
+    gap: 10px;
     align-content: start;
-    align-items: start;
+    min-height: 0;
 }
 
 .tank-customizer .tank-part-selector {
     container-type: inline-size;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-lg);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.28) 100%);
-    padding: 12px 12px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(0, 0, 0, 0.22) 100%);
+    padding: 10px 10px 8px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-height: 0;
     align-self: start;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .tank-customizer .tank-part-selector__label {
     margin: 0;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-text-200);
+    color: rgba(235, 243, 255, 0.7);
 }
 
 .tank-customizer .selector-view {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1fr) 46px;
-    gap: 10px;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 8px;
     align-items: center;
 }
 
-/* Высота от ширины карточки (cqi) + потолок; fallback — vw */
 .tank-customizer .part-display {
-    border-radius: var(--radius-md);
-    background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 65%),
-        rgba(0, 0, 0, 0.42);
+    border-radius: var(--radius-sm);
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 65%),
+        rgba(0, 0, 0, 0.38);
     width: 100%;
     min-width: 0;
     min-height: 0;
-    height: clamp(88px, 22vw, 128px);
-    padding: 8px 10px;
+    height: clamp(70px, 18vw, 108px);
+    padding: 6px 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @supports (height: 1cqi) {
     .tank-customizer .part-display {
-        height: clamp(88px, 50cqi, 128px);
+        height: clamp(70px, 46cqi, 108px);
     }
 }
 
@@ -240,15 +236,15 @@
     height: auto;
     object-fit: contain;
     display: block;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 }
 
 .tank-customizer .nav-button {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.08);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,71 +267,91 @@
 }
 
 .tank-customizer .btn-img {
-    width: 24px;
-    height: 24px;
-    opacity: 0.95;
+    width: 20px;
+    height: 20px;
+    opacity: 0.92;
 }
 
 .tank-customizer .selector-info {
-    border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.35);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.3);
     color: var(--color-text-200);
-    padding: 9px 10px;
+    padding: 6px 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 12.5px;
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
-    min-height: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .tank-customizer .tank-part-selector__variant {
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     color: var(--color-text-100);
 }
 
 .tank-customizer .tank-part-selector__variant-hint {
-    font-size: 12px;
+    font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--color-text-300);
+    color: rgba(235, 243, 255, 0.5);
 }
 
+/* ============================================================
+   Колонка 2 — Превью танка (центр)
+   ============================================================ */
 .tank-customizer__stage {
     display: flex;
     flex-direction: column;
-    gap: 12px;
     min-width: 0;
     min-height: 0;
+    gap: 12px;
 }
 
-.tank-customizer__preview-shell {
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 14px 16px;
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(0, 0, 0, 0.32);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+.tank-customizer__preview-card {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    padding: 10px 14px 14px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background:
+        radial-gradient(60% 50% at 50% 40%, rgba(69, 183, 255, 0.08) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.38) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.tank-customizer__preview-badge {
+    align-self: flex-start;
+    margin: 0;
+    padding: 4px 10px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(235, 243, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
 }
 
 .tank-customizer__preview-frame {
     width: 100%;
-    max-width: 620px;
-    height: calc(360px * var(--tank-preview-uniform-scale));
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
     margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
     border-radius: var(--radius-md);
 }
@@ -343,9 +359,9 @@
 .tank-customizer__preview-scale {
     width: 500px;
     height: 360px;
-    margin: 0 auto;
+    flex-shrink: 0;
     transform: scale(var(--tank-preview-uniform-scale));
-    transform-origin: top center;
+    transform-origin: center center;
 }
 
 .tank-customizer__preview-scale .tank-preview {
@@ -355,7 +371,7 @@
     height: 360px;
     margin: 0;
     border-radius: var(--radius-md);
-    background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.12) 0%, transparent 58%);
+    background: radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.14) 0%, transparent 58%);
 }
 
 .tank-preview {
@@ -413,46 +429,114 @@
     z-index: 4;
 }
 
+/* Чипы с номерами модулей под превью */
+.tank-customizer__preview-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.tank-customizer__preview-chips span {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: rgba(235, 243, 255, 0.8);
+    background: rgba(255, 255, 255, 0.04);
+    letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   Колонка 3 — Сайдбар: Параметры (сверху) + Сеты (снизу)
+   Обе панели видны одновременно; при изменении пресета сразу
+   виден пересчёт характеристик.
+   ============================================================ */
+.tank-customizer__side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.tank-customizer__side-slot {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Параметры — занимают столько, сколько нужно по контенту */
+.tank-customizer__side-slot--stats {
+    flex: 0 1 auto;
+    min-height: 0;
+}
+
+/* Сеты — забирают оставшееся пространство, список скроллится внутри */
+.tank-customizer__side-slot--presets {
+    flex: 1 1 0;
+    min-height: 180px;
+}
+
+/* ============================================================
+   Параметры сета (внутри сайдбара)
+   ============================================================ */
 .tank-set-stats {
     width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-    flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.32) 100%);
-    padding: 14px 16px 16px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.3) 100%);
+    padding: 12px 14px 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    container-type: inline-size;
 }
 
 .tank-set-stats__title {
-    margin: 0 0 10px 0;
-    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    margin: 0;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--color-text-100);
+    flex-shrink: 0;
 }
 
 .tank-set-stats__parts {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
+    margin: 0 0 2px 0;
+    flex-shrink: 0;
 }
 
 .tank-set-stats__parts span {
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 999px;
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 4px 10px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--color-text-200);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .tank-set-stats__rows {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 18px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px 16px;
+}
+
+@container (min-width: 420px) {
+    .tank-set-stats__rows {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .tank-set-stats__row {
@@ -463,9 +547,9 @@
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--color-text-200);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .tank-set-stats__meta span:first-child {
@@ -474,10 +558,10 @@
 }
 
 .tank-set-stats__bar {
-    height: 8px;
+    height: 7px;
     width: 100%;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     overflow: hidden;
 }
 
@@ -485,14 +569,311 @@
     height: 100%;
     border-radius: 999px;
     background: linear-gradient(90deg, #45b7ff 0%, #63e6be 100%);
+    transition: width 0.28s ease;
+}
+
+/* ============================================================
+   Пресеты (внутри сайдбара)
+   ============================================================ */
+.tank-presets {
+    width: 100%;
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.3) 100%);
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+}
+
+.tank-presets__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.tank-presets__title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.tank-presets__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-100);
+}
+
+.tank-presets__counter {
+    font-size: 11px;
+    color: rgba(235, 243, 255, 0.5);
+    font-variant-numeric: tabular-nums;
+}
+
+.tank-presets__save-btn {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-100);
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.tank-presets__save-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.tank-presets__save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tank-presets__save-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.tank-presets__name-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--color-text-100);
+    font-size: 13px;
+    outline: none;
+}
+
+.tank-presets__name-input:focus {
+    border-color: var(--color-accent-green);
+    box-shadow: 0 0 0 2px rgba(46, 213, 115, 0.22);
+}
+
+.tank-presets__save-confirm,
+.tank-presets__save-cancel {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-100);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tank-presets__save-confirm {
+    background: linear-gradient(135deg, rgba(0, 206, 201, 0.9) 0%, rgba(0, 184, 148, 0.9) 100%);
+    color: #0b1f1c;
+    border-color: rgba(0, 184, 148, 0.6);
+}
+
+.tank-presets__save-confirm:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.tank-presets__save-cancel:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tank-presets__save-confirm:disabled,
+.tank-presets__save-cancel:disabled,
+.tank-presets__name-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.tank-presets__error {
+    font-size: 12px;
+    color: #ffb4b4;
+    background: rgba(255, 107, 129, 0.12);
+    border: 1px solid rgba(255, 107, 129, 0.3);
+    border-radius: 8px;
+    padding: 6px 8px;
+    flex-shrink: 0;
+}
+
+.tank-presets__empty {
+    font-size: 12.5px;
+    color: rgba(235, 243, 255, 0.55);
+    padding: 12px 10px;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    text-align: center;
+    line-height: 1.45;
+}
+
+.tank-presets__list {
+    list-style: none;
+    margin: 0;
+    padding: 2px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.tank-presets__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 4px;
+    align-items: stretch;
+}
+
+.tank-presets__item.is-busy {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.tank-presets__apply {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 10px;
+    color: var(--color-text-100);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.tank-presets__apply:hover:not(:disabled) {
+    background: rgba(69, 183, 255, 0.12);
+    border-color: rgba(69, 183, 255, 0.36);
+}
+
+.tank-presets__apply:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.tank-presets__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.tank-presets__specs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(235, 243, 255, 0.62);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.tank-presets__color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.tank-presets__color-dot[data-color="0"] { background: #4c5977; }
+.tank-presets__color-dot[data-color="1"] { background: #766f4b; }
+.tank-presets__color-dot[data-color="2"] { background: #78574d; }
+.tank-presets__color-dot[data-color="3"] { background: #4e7b76; }
+
+.tank-presets__action {
+    width: 32px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    color: rgba(235, 243, 255, 0.75);
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.tank-presets__action:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: var(--color-text-100);
+}
+
+.tank-presets__action--delete:hover:not(:disabled) {
+    background: rgba(255, 107, 129, 0.18);
+    border-color: rgba(255, 107, 129, 0.42);
+    color: #ffb4b4;
+}
+
+.tank-presets__action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   Нижняя панель — палитра цветов + CTA
+   ============================================================ */
+.tank-customizer__footer {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px 20px;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+}
+
+.tank-customizer__footer-colors {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tank-customizer__footer-colors .color-selector {
+    flex: 1;
+    min-width: 0;
 }
 
 .tank-customizer__palette-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--color-text-300);
+    color: rgba(235, 243, 255, 0.6);
     flex-shrink: 0;
 }
 
@@ -502,16 +883,16 @@
 
 .color-list {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     justify-content: flex-start;
     flex-wrap: wrap;
 }
 
 .color-item {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
-    border: 2px solid rgba(255, 255, 255, 0.38);
+    border: 2px solid rgba(255, 255, 255, 0.32);
     cursor: pointer;
     transition:
         box-shadow 0.15s ease,
@@ -521,7 +902,7 @@
 
 .color-item:hover:not(.color-occupied) {
     border-color: rgba(255, 255, 255, 0.72);
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
     transform: scale(1.06);
 }
 
@@ -540,18 +921,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 14px 26px;
-    min-height: 52px;
-    border-radius: var(--radius-md);
+    gap: 10px;
+    padding: 12px 24px;
+    min-height: 48px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: linear-gradient(135deg, rgba(0, 206, 201, 0.98) 0%, rgba(0, 184, 148, 0.98) 100%);
     color: #0b1f1c;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 0.01em;
     cursor: pointer;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
     transition:
         transform 0.12s ease,
         box-shadow 0.12s ease,
@@ -560,7 +941,7 @@
 
 .tank-customizer__cta:hover {
     filter: brightness(1.06);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
 }
 
 .tank-customizer__cta:active {
@@ -568,121 +949,77 @@
 }
 
 .tank-customizer__cta-icon {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     object-fit: contain;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-/* Широкий экран: превью и статы в одной строке, меньше «пустоты» справа */
-@media (min-width: 1180px) {
-    .tank-customizer__stage {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-        grid-template-rows: auto minmax(220px, 1fr);
-        column-gap: 20px;
-        row-gap: 12px;
-        align-items: stretch;
-    }
-
-    .tank-customizer__stage-header {
-        grid-column: 1 / -1;
-    }
-
-    .tank-customizer__preview-shell {
-        grid-column: 1;
-        grid-row: 2;
-        margin: 0;
-        max-width: none;
-        min-height: min(54vh, 560px);
-    }
-
-    .tank-customizer__stage > .tank-set-stats {
-        grid-column: 2;
-        grid-row: 2;
-        margin: 0;
-        max-width: none;
-        height: auto;
-        align-self: stretch;
-        min-height: 0;
-        max-height: none;
-        overflow: auto;
-        overscroll-behavior: contain;
+/* ============================================================
+   Адаптив — скейл превью по высоте
+   ============================================================ */
+@media (min-height: 960px) {
+    .tank-customizer {
+        --tank-preview-uniform-scale: 0.95;
     }
 }
 
-@media (min-height: 900px) {
+@media (min-height: 880px) and (max-height: 959px) {
     .tank-customizer {
         --tank-preview-uniform-scale: 0.88;
     }
 }
 
-@media (min-height: 880px) and (max-height: 899px) {
-    .tank-customizer {
-        --tank-preview-uniform-scale: 0.84;
-    }
-}
-
 @media (max-height: 820px) {
     .tank-customizer {
-        --tank-preview-uniform-scale: 0.62;
+        --tank-preview-uniform-scale: 0.72;
     }
 }
 
-@media (max-height: 700px) {
+@media (max-height: 720px) {
     .tank-customizer {
-        --tank-preview-uniform-scale: 0.52;
+        --tank-preview-uniform-scale: 0.6;
     }
 }
 
-@media (max-width: 1024px) {
+/* ============================================================
+   Адаптив — средний (≤ 1099px): 2 колонки → 1 колонка
+   ============================================================ */
+@media (max-width: 1099px) {
     .tank-customizer__grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        flex: 0 1 auto;
-    }
-
-    .tank-customizer__parts .selectors-panel {
-        max-width: 720px;
-        margin: 0 auto;
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: min-content;
     }
 
     .tank-customizer__stage {
-        display: flex;
-        flex-direction: column;
         order: -1;
     }
 
-    .tank-customizer__preview-shell {
-        flex: 0 1 auto;
-        min-height: 200px;
+    .tank-customizer__preview-card {
+        min-height: 280px;
     }
 
-    .tank-customizer__stage > .tank-set-stats {
-        max-width: 720px;
+    .tank-customizer__side {
+        min-height: 280px;
     }
 }
 
 @media (max-width: 520px) {
     .tank-customizer__topbar {
-        padding: 12px 14px;
+        padding: 10px 12px;
     }
 
     .tank-customizer__body {
-        padding: 12px 12px 14px;
+        padding: 10px 10px 12px;
     }
 
     .tank-customizer__parts .selectors-panel {
         grid-template-columns: 1fr;
     }
 
-    .tank-set-stats__rows {
-        grid-template-columns: 1fr;
-    }
-
     .tank-customizer__footer {
         grid-template-columns: 1fr;
-        padding: 12px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
     }
 
     .tank-customizer__cta {

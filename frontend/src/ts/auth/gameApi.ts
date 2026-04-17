@@ -157,6 +157,86 @@ export async function getReplayPlayback(
     };
 }
 
+export interface TankPresetDto {
+    presetId: string;
+    name: string;
+    color: number;
+    hullNum: number;
+    trackNum: number;
+    turretNum: number;
+    weaponNum: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface TankPresetInputDto {
+    name: string;
+    color: number;
+    hullNum: number;
+    trackNum: number;
+    turretNum: number;
+    weaponNum: number;
+}
+
+export async function listTankPresets(token: string): Promise<{ presets: TankPresetDto[] }> {
+    const res = await fetch(`${getApiOrigin()}/api/game/tank-presets`, { headers: headers(token) });
+    const data = await parseJson<{ presets?: TankPresetDto[]; error?: string }>(res);
+    if (!res.ok) {
+        throw new Error(data.error || 'Не удалось загрузить сеты');
+    }
+    return { presets: data.presets ?? [] };
+}
+
+export async function createTankPreset(
+    token: string,
+    input: TankPresetInputDto
+): Promise<{ preset: TankPresetDto }> {
+    const res = await fetch(`${getApiOrigin()}/api/game/tank-presets`, {
+        method: 'POST',
+        headers: headers(token),
+        body: JSON.stringify(input)
+    });
+    const data = await parseJson<{ preset?: TankPresetDto; error?: string }>(res);
+    if (!res.ok || !data.preset) {
+        throw new Error(data.error || 'Не удалось сохранить сет');
+    }
+    return { preset: data.preset };
+}
+
+export async function updateTankPreset(
+    token: string,
+    presetId: string,
+    input: TankPresetInputDto
+): Promise<{ preset: TankPresetDto }> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/tank-presets/${encodeURIComponent(presetId)}`,
+        {
+            method: 'PUT',
+            headers: headers(token),
+            body: JSON.stringify(input)
+        }
+    );
+    const data = await parseJson<{ preset?: TankPresetDto; error?: string }>(res);
+    if (!res.ok || !data.preset) {
+        throw new Error(data.error || 'Не удалось обновить сет');
+    }
+    return { preset: data.preset };
+}
+
+export async function deleteTankPreset(token: string, presetId: string): Promise<void> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/tank-presets/${encodeURIComponent(presetId)}`,
+        {
+            method: 'DELETE',
+            headers: headers(token)
+        }
+    );
+    const data = await parseJson<{ error?: string }>(res);
+    if (!res.ok) {
+        throw new Error(data.error || 'Не удалось удалить сет');
+    }
+}
+
 export async function patchReplay(
     token: string,
     replayId: string,
