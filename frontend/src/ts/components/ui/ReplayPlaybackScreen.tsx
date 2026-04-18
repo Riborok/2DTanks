@@ -34,6 +34,25 @@ function applyTankConfigs(renderer: OnlineGameRenderer, world: GameWorldSnapshot
 /** Должен совпадать с SNAPSHOT_STEP_TICKS в server/src/game/world/replaySimulator.ts */
 const STORED_FRAME_STEP_TICKS = 1;
 
+/** Мультипликаторы скорости: отрицательные = реверс воспроизведения. */
+const PLAYBACK_SPEEDS: number[] = [-2, -1, -0.5, 0.25, 0.5, 1, 2, 4, 8];
+
+function formatClock(seconds: number): string {
+    const s = Math.max(0, Math.floor(seconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+}
+
+function formatSpeedLabel(speed: number): string {
+    if (Math.abs(speed) === 1) {
+        return speed < 0 ? '−1×' : '1×';
+    }
+    const abs = Math.abs(speed);
+    const label = Number.isInteger(abs) ? `${abs}×` : `${abs}×`;
+    return speed < 0 ? `−${label}` : label;
+}
+
 const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     meta,
     startMeta,
@@ -60,6 +79,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     framesRef.current = builtFrames;
 
     const playingRef = useRef(true);
+    const speedRef = useRef(1);
     const replayPositionFrameRef = useRef(0);
     const lastRafTimeRef = useRef(0);
     const lastDisplayFrameRef = useRef(-1);
@@ -69,6 +89,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const [playing, setPlaying] = useState(true);
     const [displayFrame, setDisplayFrame] = useState(0);
+    const [speed, setSpeed] = useState(1);
 
     const frameMs = useMemo(() => {
         const hz = startMeta.tickRate > 0 ? startMeta.tickRate : 60;
@@ -77,6 +98,15 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
 
     const totalReplayActions = actions.length;
     const totalReplayEvents = events.length;
+    const totalFrames = builtFrames.length;
+
+    /** Длительность матча из симулированных кадров (а не durationTicks из меты, иногда null). */
+    const totalDurationSec = useMemo(() => {
+        if (totalFrames <= 1) {
+            return 0;
+        }
+        return ((totalFrames - 1) * frameMs) / 1000;
+    }, [frameMs, totalFrames]);
 
     useEffect(() => {
         playingRef.current = playing;
@@ -84,6 +114,10 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             lastRafTimeRef.current = performance.now();
         }
     }, [playing]);
+
+    useEffect(() => {
+        speedRef.current = speed;
+    }, [speed]);
 
     useEffect(() => {
         ImagePreloader.preloadAll()
@@ -99,6 +133,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         setDisplayFrame(0);
         setPlaying(true);
         playingRef.current = true;
+        setSpeed(1);
+        speedRef.current = 1;
     }, [meta.replayId]);
 
     const bumpDisplayFromPosition = useCallback(() => {
@@ -109,6 +145,24 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             setDisplayFrame(idx);
         }
     }, []);
+
+    const seekBySeconds = useCallback(
+        (seconds: number) => {
+            const list = framesRef.current;
+            const span = Math.max(0, list.length - 1);
+            if (span === 0) {
+                return;
+            }
+            const deltaFrames = (seconds * 1000) / frameMs;
+            replayPositionFrameRef.current = Math.max(
+                0,
+                Math.min(span, replayPositionFrameRef.current + deltaFrames)
+            );
+            replayKeyframeIdxRef.current = -1;
+            bumpDisplayFromPosition();
+        },
+        [bumpDisplayFromPosition, frameMs]
+    );
 
     const stepReplayFrame = useCallback((delta: -1 | 1) => {
         setPlaying(false);
@@ -121,6 +175,86 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         replayKeyframeIdxRef.current = -1;
         bumpDisplayFromPosition();
     }, [bumpDisplayFromPosition]);
+
+    const handleScrubChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const list = framesRef.current;
+            const span = Math.max(0, list.length - 1);
+            const next = Math.max(0, Math.min(span, parseInt(e.target.value, 10) || 0));
+            replayPositionFrameRef.current = next;
+            replayKeyframeIdxRef.current = -1;
+            bumpDisplayFromPosition();
+        },
+        [bumpDisplayFromPosition]
+    );
+
+    const handleRestart = useCallback(() => {
+        replayPositionFrameRef.current = 0;
+        replayKeyframeIdxRef.current = -1;
+        bumpDisplayFromPosition();
+        setPlaying(true);
+    }, [bumpDisplayFromPosition]);
+
+    // Клавиатурные шорткаты: пробел — пауза, ←/→ — ±5с, Shift+←/→ — ±10с, J/K/L — YouTube-style.
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+            switch (e.key) {
+                case ' ':
+                case 'k':
+                case 'K':
+                    e.preventDefault();
+                    setPlaying((p) => !p);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    seekBySeconds(e.shiftKey ? -10 : -5);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    seekBySeconds(e.shiftKey ? 10 : 5);
+                    break;
+                case 'j':
+                case 'J':
+                    e.preventDefault();
+                    seekBySeconds(-10);
+                    break;
+                case 'l':
+                case 'L':
+                    e.preventDefault();
+                    seekBySeconds(10);
+                    break;
+                case ',':
+                    e.preventDefault();
+                    stepReplayFrame(-1);
+                    break;
+                case '.':
+                    e.preventDefault();
+                    stepReplayFrame(1);
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    replayPositionFrameRef.current = 0;
+                    replayKeyframeIdxRef.current = -1;
+                    bumpDisplayFromPosition();
+                    break;
+                case 'End': {
+                    e.preventDefault();
+                    const span = Math.max(0, framesRef.current.length - 1);
+                    replayPositionFrameRef.current = span;
+                    replayKeyframeIdxRef.current = -1;
+                    bumpDisplayFromPosition();
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [bumpDisplayFromPosition, seekBySeconds, stepReplayFrame]);
 
     useEffect(() => {
         if (!canvasRef.current || !imagesLoaded) {
@@ -186,9 +320,16 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             lastRafTimeRef.current = now;
 
             if (playingRef.current && span > 0) {
-                replayPositionFrameRef.current += dt / frameMs;
-                while (replayPositionFrameRef.current > span) {
-                    replayPositionFrameRef.current -= span;
+                replayPositionFrameRef.current += (dt / frameMs) * speedRef.current;
+                // Не зацикливаем: на концах останавливаемся. Пользователь видит, когда матч закончился.
+                if (replayPositionFrameRef.current >= span) {
+                    replayPositionFrameRef.current = span;
+                    playingRef.current = false;
+                    setPlaying(false);
+                } else if (replayPositionFrameRef.current <= 0) {
+                    replayPositionFrameRef.current = 0;
+                    playingRef.current = false;
+                    setPlaying(false);
                 }
             }
 
@@ -201,11 +342,22 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                 const merged = interpolateReplaySnapshots(wA, wB, alpha);
 
                 if (idx !== replayKeyframeIdxRef.current) {
+                    // Эффекты (взрывы/импакты) проигрываем только при движении вперёд, иначе
+                    // на перемотке назад эффекты будут срабатывать повторно — это визуально странно.
+                    const forward = idx > replayKeyframeIdxRef.current;
                     replayKeyframeIdxRef.current = idx;
-                    const landed = flist[idx].world as GameWorldSnapshot;
-                    merged.explosions = landed.explosions ? [...landed.explosions] : [];
-                    merged.grenadeExplosions = landed.grenadeExplosions ? [...landed.grenadeExplosions] : [];
-                    merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
+                    if (forward) {
+                        const landed = flist[idx].world as GameWorldSnapshot;
+                        merged.explosions = landed.explosions ? [...landed.explosions] : [];
+                        merged.grenadeExplosions = landed.grenadeExplosions
+                            ? [...landed.grenadeExplosions]
+                            : [];
+                        merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
+                    } else {
+                        merged.explosions = [];
+                        merged.grenadeExplosions = [];
+                        merged.bulletImpacts = [];
+                    }
                 }
 
                 snapshotRef.current = merged;
@@ -253,10 +405,31 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         );
     }
 
-    const snap = builtFrames[Math.min(displayFrame, builtFrames.length - 1)]?.world as
-        | GameWorldSnapshot
-        | undefined;
-    const tickLabel = builtFrames[Math.min(displayFrame, builtFrames.length - 1)]?.tick;
+    const clampedFrame = Math.min(displayFrame, builtFrames.length - 1);
+    const snap = builtFrames[clampedFrame]?.world as GameWorldSnapshot | undefined;
+    const tickLabel = builtFrames[clampedFrame]?.tick;
+    const elapsedSec = (clampedFrame * frameMs) / 1000;
+    const atEnd = clampedFrame >= builtFrames.length - 1;
+
+    const mode: 'standard' | 'deathmatch' = snap?.gameMode === 'deathmatch' ? 'deathmatch' : 'standard';
+    let timerPrimary: string;
+    let timerSecondary: string;
+    if (mode === 'deathmatch') {
+        const totalDm = snap?.deathmatchDurationSec ?? totalDurationSec;
+        const remaining = Math.max(0, (totalDm ?? 0) - elapsedSec);
+        timerPrimary = `Осталось ${formatClock(remaining)}`;
+        timerSecondary = `${formatClock(elapsedSec)} / ${formatClock(totalDm ?? totalDurationSec)}`;
+    } else {
+        const limit = snap?.standardTimeLimitSec ?? null;
+        if (limit && limit > 0) {
+            const remaining = Math.max(0, limit - elapsedSec);
+            timerPrimary = `Осталось ${formatClock(remaining)}`;
+            timerSecondary = `${formatClock(elapsedSec)} / ${formatClock(limit)}`;
+        } else {
+            timerPrimary = formatClock(elapsedSec);
+            timerSecondary = `из ${formatClock(totalDurationSec)}`;
+        }
+    }
 
     return (
         <div className="replay-playback-screen">
@@ -265,31 +438,125 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                 <div className="replay-playback-info">
                     <strong>{meta.title}</strong>
                     <span>
-                        Кадр {displayFrame + 1}/{builtFrames.length} · тик {tickLabel ?? '—'} · событий:{' '}
-                        {totalReplayEvents} ·
-                        вводов: {totalReplayActions}
+                        Кадр {clampedFrame + 1}/{builtFrames.length} · тик {tickLabel ?? '—'} · событий:{' '}
+                        {totalReplayEvents} · вводов: {totalReplayActions}
                     </span>
                 </div>
+                <div className="replay-playback-timer">
+                    <span className="replay-playback-timer-primary">{timerPrimary}</span>
+                    <span className="replay-playback-timer-secondary">{timerSecondary}</span>
+                </div>
                 <div className="replay-playback-controls">
-                    <button type="button" onClick={() => setPlaying((p) => !p)}>
-                        {playing ? 'Пауза' : 'Играть'}
-                    </button>
-                    <button type="button" onClick={() => stepReplayFrame(-1)}>
-                        ‹
-                    </button>
-                    <button type="button" onClick={() => stepReplayFrame(1)}>
-                        ›
-                    </button>
                     <button type="button" onClick={onBack}>
                         Выход
                     </button>
                 </div>
             </div>
+
             {snap && (
                 <div className="replay-playback-stats">
-                    Уровень {snap.currentLevel ?? 1} · ключи {snap.keysCollected ?? 0}
+                    {mode === 'deathmatch' ? (
+                        <>Арена · режим: бой на киллы</>
+                    ) : (
+                        <>Уровень {snap.currentLevel ?? 1} · ключи {snap.keysCollected ?? 0}</>
+                    )}
                 </div>
             )}
+
+            <div className="replay-playback-bottombar">
+                <input
+                    className="replay-playback-scrub"
+                    type="range"
+                    min={0}
+                    max={Math.max(0, builtFrames.length - 1)}
+                    value={clampedFrame}
+                    onChange={handleScrubChange}
+                    step={1}
+                    aria-label="Позиция воспроизведения"
+                />
+
+                <div className="replay-playback-controls-row">
+                    <button
+                        type="button"
+                        onClick={() => seekBySeconds(-10)}
+                        title="−10 секунд (J или Shift+←)"
+                    >
+                        «« 10с
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => seekBySeconds(-5)}
+                        title="−5 секунд (←)"
+                    >
+                        « 5с
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => stepReplayFrame(-1)}
+                        title="Предыдущий кадр (,)"
+                    >
+                        ‹
+                    </button>
+                    {atEnd ? (
+                        <button
+                            type="button"
+                            className="replay-playback-play"
+                            onClick={handleRestart}
+                            title="Смотреть заново"
+                        >
+                            ⟲ В начало
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="replay-playback-play"
+                            onClick={() => setPlaying((p) => !p)}
+                            title="Пауза/воспроизведение (пробел или K)"
+                        >
+                            {playing ? '❚❚ Пауза' : '▶ Играть'}
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => stepReplayFrame(1)}
+                        title="Следующий кадр (.)"
+                    >
+                        ›
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => seekBySeconds(5)}
+                        title="+5 секунд (→)"
+                    >
+                        5с »
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => seekBySeconds(10)}
+                        title="+10 секунд (L или Shift+→)"
+                    >
+                        10с »»
+                    </button>
+
+                    <div className="replay-playback-speed" role="group" aria-label="Скорость воспроизведения">
+                        {PLAYBACK_SPEEDS.map((s) => (
+                            <button
+                                key={s}
+                                type="button"
+                                className={speed === s ? 'active' : ''}
+                                onClick={() => setSpeed(s)}
+                                title={
+                                    s < 0
+                                        ? `Обратное воспроизведение ${Math.abs(s)}×`
+                                        : `Скорость ${s}×`
+                                }
+                            >
+                                {formatSpeedLabel(s)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

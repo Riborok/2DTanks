@@ -193,6 +193,14 @@ export class GameWorld {
         return this.rngSeed;
     }
 
+    /** Для реплея / записи матча арены — материал пола из спецификации deathmatch. */
+    public getDeathmatchSurfaceMaterial(): number {
+        if (!this.deathmatchSpec) {
+            return 0;
+        }
+        return Math.min(2, Math.max(0, Math.floor(this.deathmatchSpec.surfaceMaterial)));
+    }
+
     private randomFloat(): number {
         return this.rng.nextFloat();
     }
@@ -754,7 +762,10 @@ export class GameWorld {
 
         // Handle shooting
         if (action.shoot) {
-            const bullet = tank.model.shot();
+            // Симуляционное время вместо Date.now — единственный способ получить одинаковую
+            // частоту выстрелов и в live, и в replay (иначе replay строится в tight loop
+            // за миллисекунды и reloadSpeed по часам всегда гасит второй выстрел).
+            const bullet = tank.model.shot(this.elapsedMs);
             if (bullet) {
                 // In original, checkForSpawn is called BEFORE adding to collision system
                 // It uses resolveCollision which checks collisions WITHOUT requiring entity to be in system
@@ -783,7 +794,6 @@ export class GameWorld {
                     this.bullets.set(serverBullet.id, serverBullet);
                     // IMPORTANT: Don't insert into collision system here!
                     // Wait until first update, like in original (bullet is inserted in update method after movement)
-                    console.log(`[GAMEWORLD] Bullet created: id=${serverBullet.id}, bulletNum=${serverBullet.bulletNum}, x=${bullet.entity.points[0].x.toFixed(1)}, y=${bullet.entity.points[0].y.toFixed(1)}, angle=${bullet.entity.angle.toFixed(3)}, totalBullets=${this.bullets.size}`);
                 } else {
                     if (tank.playerId) {
                         this.ensurePlayerStats(tank.playerId, tank.role).shotsFired += 1;
@@ -807,14 +817,6 @@ export class GameWorld {
                             tank.model.bulletNum
                         );
                     }
-                    const collisionIds = validCollisions.map(c => {
-                        const tank = Array.from(this.tanks.values()).find(t => t.model.entity.id === c.id);
-                        const wall = this.walls.find(w => w.model.entity.id === c.id);
-                        if (tank) return `tank_${tank.id}`;
-                        if (wall) return `wall_${c.id}`;
-                        return `unknown_${c.id}`;
-                    });
-                    console.log(`[GAMEWORLD] Bullet creation blocked: immediate collision with ${validCollisions.length} objects: ${collisionIds.join(', ')}`);
                 }
             }
         }
@@ -1468,6 +1470,28 @@ export class GameWorld {
             this.wallMaterial = 0;
         }
 
+        const dm = snap.gameMode === 'deathmatch';
+        if (dm) {
+            const bm = Number(snap.backgroundMaterial);
+            if (Number.isFinite(bm)) {
+                this.backgroundMaterial = Math.min(2, Math.max(0, Math.floor(bm)));
+            }
+            const wm = Number(snap.wallMaterial);
+            if (Number.isFinite(wm)) {
+                this.wallMaterial = Math.min(2, Math.max(0, Math.floor(wm)));
+            }
+            const ks = snap.killScores as Record<string, unknown> | undefined;
+            if (ks && typeof ks === 'object') {
+                this.killCounts.clear();
+                for (const [pid, rawK] of Object.entries(ks)) {
+                    const k = Number(rawK);
+                    if (Number.isFinite(k)) {
+                        this.killCounts.set(pid, Math.max(0, Math.floor(k)));
+                    }
+                }
+            }
+        }
+
         const origin = new Point(ev.spawnOrigin.x, ev.spawnOrigin.y);
         this.levelSpawnOrigin = origin.clone();
         this.pointSpawner = new PointSpawner(origin, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
@@ -1517,10 +1541,6 @@ export class GameWorld {
             angle: bullet.model.entity.angle,
             type: bullet.bulletNum // Include bullet type (num) for rendering
         }));
-        if (bulletSnapshots.length > 0) {
-            console.log(`[GAMEWORLD] getSnapshot: including ${bulletSnapshots.length} bullets:`, bulletSnapshots.map(b => ({ id: b.id, type: b.type, x: b.x.toFixed(1), y: b.y.toFixed(1) })));
-        }
-
         const wallSnapshots = this.walls.map(wall => {
             const entity = wall.model.entity;
             return {
@@ -1560,6 +1580,8 @@ export class GameWorld {
 
         const elapsed = this.elapsedMs / 1000;
         const base: Record<string, unknown> = {
+            backgroundMaterial: this.backgroundMaterial,
+            wallMaterial: this.wallMaterial,
             tanks: tankSnapshots,
             bullets: bulletSnapshots,
             walls: wallSnapshots,

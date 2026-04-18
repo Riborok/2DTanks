@@ -4,6 +4,7 @@ import type {
     ReplayActionsRow,
     ReplayEvent,
     ReplayItemSpawnEvent,
+    ReplayStartMeta,
     ReplayWorldInitEvent
 } from '../../repos/replayRepo';
 import { replayEventsToActionRows } from '../../repos/replayRepo';
@@ -53,20 +54,16 @@ function groupItemSpawnsByTick(events: ReplayEvent[]): Map<number, ReplayItemSpa
     return byTick;
 }
 
-/** Старые записи без events / world_init — чистая симуляция по сиду и вводу. */
-function buildReplayFramesLegacy(row: ReplayActionsRow): ReplayFrame[] {
-    const meta = row.startMeta;
-    if (meta.mode !== 'standard') {
-        return [];
+function createWorldFromReplayMeta(meta: ReplayStartMeta): GameWorld {
+    if (meta.mode === 'deathmatch') {
+        const f0 = meta.fighters[0];
+        const cfg0 = f0?.config ?? { hullNum: 0, trackNum: 0, turretNum: 0, weaponNum: 0, color: 0 };
+        return new GameWorld(cfg0, cfg0, 'replay', false, false, {
+            surfaceMaterial: meta.surfaceMaterial,
+            fighters: meta.fighters
+        }, meta.rngSeed);
     }
-
-    const tickRate = meta.tickRate > 0 ? meta.tickRate : FALLBACK_TICK_RATE;
-    const stepMs = 1000 / tickRate;
-    const actionsByTick = groupActionsByTick(row.actions);
-    const maxActionTick = row.actions.reduce((m, a) => Math.max(m, a.tick ?? 0), 0);
-    const targetTicks = Math.max(row.durationTicks ?? 0, maxActionTick + 1);
-
-    const world = new GameWorld(
+    return new GameWorld(
         meta.attackerConfig,
         meta.defenderConfig,
         'replay',
@@ -75,7 +72,21 @@ function buildReplayFramesLegacy(row: ReplayActionsRow): ReplayFrame[] {
         undefined,
         meta.rngSeed
     );
-    world.setPlayerTankMapping(meta.attackerPlayerId, meta.defenderPlayerId);
+}
+
+/** Старые записи без events / world_init — чистая симуляция по сиду и вводу. */
+function buildReplayFramesLegacy(row: ReplayActionsRow): ReplayFrame[] {
+    const meta = row.startMeta;
+    const tickRate = meta.tickRate > 0 ? meta.tickRate : FALLBACK_TICK_RATE;
+    const stepMs = 1000 / tickRate;
+    const actionsByTick = groupActionsByTick(row.actions);
+    const maxActionTick = row.actions.reduce((m, a) => Math.max(m, a.tick ?? 0), 0);
+    const targetTicks = Math.max(row.durationTicks ?? 0, maxActionTick + 1);
+
+    const world = createWorldFromReplayMeta(meta);
+    if (meta.mode === 'standard') {
+        world.setPlayerTankMapping(meta.attackerPlayerId, meta.defenderPlayerId);
+    }
 
     const frames: ReplayFrame[] = [{ tick: 0, world: world.getSnapshot() }];
     for (let tick = 0; tick < targetTicks; tick++) {
@@ -95,9 +106,6 @@ function buildReplayFramesLegacy(row: ReplayActionsRow): ReplayFrame[] {
 /** Реплей по журналу: world_init → симуляция с подстановкой item_spawn из записи. */
 function buildReplayFramesFromEventLog(row: ReplayActionsRow): ReplayFrame[] {
     const meta = row.startMeta;
-    if (meta.mode !== 'standard') {
-        return [];
-    }
     const events = row.events!;
     const worldInits = events.filter(isWorldInit).sort((a, b) => a.tick - b.tick);
     if (worldInits.length === 0) {
@@ -114,19 +122,15 @@ function buildReplayFramesFromEventLog(row: ReplayActionsRow): ReplayFrame[] {
     const maxEventTick = events.reduce((m, e) => Math.max(m, e.tick ?? 0), 0);
     const targetTicks = Math.max(row.durationTicks ?? 0, maxActionTick + 1, maxEventTick + 1);
 
-    const world = new GameWorld(
-        meta.attackerConfig,
-        meta.defenderConfig,
-        'replay',
-        false,
-        false,
-        undefined,
-        meta.rngSeed
-    );
-    world.setPlayerTankMapping(meta.attackerPlayerId, meta.defenderPlayerId);
+    const world = createWorldFromReplayMeta(meta);
+    const attackerId = meta.mode === 'standard' ? meta.attackerPlayerId : '';
+    const defenderId = meta.mode === 'standard' ? meta.defenderPlayerId : '';
+    if (meta.mode === 'standard') {
+        world.setPlayerTankMapping(meta.attackerPlayerId, meta.defenderPlayerId);
+    }
 
     const firstInit = worldInits[0];
-    world.applyReplayWorldInitForPlayback(firstInit, meta.attackerPlayerId, meta.defenderPlayerId);
+    world.applyReplayWorldInitForPlayback(firstInit, attackerId, defenderId);
     world.configureReplayPlaybackFromEvents(itemSpawnsByTick, true);
 
     const frames: ReplayFrame[] = [{ tick: world.getTick(), world: world.getSnapshot() }];
@@ -135,7 +139,7 @@ function buildReplayFramesFromEventLog(row: ReplayActionsRow): ReplayFrame[] {
         for (let i = 1; i < worldInits.length; i++) {
             const wi = worldInits[i];
             if (Math.floor(wi.tick) === tick) {
-                world.applyReplayWorldInitForPlayback(wi, meta.attackerPlayerId, meta.defenderPlayerId);
+                world.applyReplayWorldInitForPlayback(wi, attackerId, defenderId);
                 world.configureReplayPlaybackFromEvents(itemSpawnsByTick, true);
             }
         }

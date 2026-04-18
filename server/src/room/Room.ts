@@ -26,9 +26,14 @@ export class Room {
     private gameWorld: GameWorld | null = null;
     private gameLoopInterval: NodeJS.Timeout | null = null;
     private lastGameLoopTime: number = 0;
-    private currentDeltaTime: number = 16.67; // Default to ~60Hz
     private readonly TICK_RATE = 60; // 60 Hz
     private readonly TICK_INTERVAL = 1000 / this.TICK_RATE;
+    /**
+     * Фиксированный шаг симуляции. Обязательно совпадает с шагом реплея
+     * (replaySimulator → stepMs = 1000 / tickRate), иначе live-физика и
+     * воспроизведение разъезжаются на первом же лаг-фрейме.
+     */
+    private readonly FIXED_DELTA_MS = 1000 / 60;
     private readonly singlePlayerTest: boolean;
     /** Два игрока: не пишем матч в БД, без лимита времени в мире. */
     private readonly practiceMode: boolean;
@@ -246,10 +251,18 @@ export class Room {
             const surface = getRandomInt(0, 2);
             const cfg0 = fighters[0].config;
             console.log(`[ROOM ${this.code}] Starting deathmatch (${fighters.length} players), surface ${surface}`);
-            this.gameWorld = new GameWorld(cfg0, cfg0, this.code, false, false, {
-                surfaceMaterial: surface,
-                fighters
-            });
+            this.gameWorld = new GameWorld(
+                cfg0,
+                cfg0,
+                this.code,
+                false,
+                false,
+                {
+                    surfaceMaterial: surface,
+                    fighters
+                },
+                this.replayRngSeed
+            );
         } else if (this.singlePlayerTest) {
             if (!attacker || !attacker.tankConfig) {
                 console.log(`[ROOM ${this.code}] Cannot start solo game - missing attacker config`);
@@ -278,34 +291,68 @@ export class Room {
                 this.replayRngSeed
             );
             this.gameWorld.setPlayerTankMapping(attacker.id, defender.id);
-            this.replayStartMeta = {
-                mode: 'standard',
-                tickRate: this.TICK_RATE,
-                attackerPlayerId: attacker.id,
-                defenderPlayerId: defender.id,
-                attackerConfig: attacker.tankConfig,
-                defenderConfig: defender.tankConfig,
-                rngSeed: this.replayRngSeed
-            };
         }
 
         const pool = getPool();
-        if (pool && !this.singlePlayerTest && !this.practiceMode && !this.deathmatchMode) {
-            const participants: matchRepo.MatchParticipantInput[] = [];
-            for (const p of playersArray) {
-                if (p.role && p.tankConfig && (p.role === 'attacker' || p.role === 'defender')) {
-                    participants.push({
-                        userId: p.userId,
-                        role: p.role,
-                        tankConfig: p.tankConfig
-                    });
-                }
-            }
+        if (pool && !this.singlePlayerTest && this.gameWorld) {
             try {
-                this.matchId = await matchRepo.createMatchWithParticipants(pool, {
-                    roomCode: this.code,
-                    players: participants
-                });
+                if (this.deathmatchMode) {
+                    const fightersOrdered = playersArray
+                        .filter((p) => p.tankConfig)
+                        .map((p) => ({
+                            playerId: p.id,
+                            userId: p.userId,
+                            config: p.tankConfig!
+                        }));
+                    this.matchId = await matchRepo.createMatchWithParticipants(pool, {
+                        roomCode: this.code,
+                        matchTypeCode: 'kill_time',
+                        players: fightersOrdered.map((f) => ({
+                            userId: f.userId,
+                            role: 'fighter' as const,
+                            tankConfig: f.config
+                        }))
+                    });
+                    if (this.matchId) {
+                        this.replayStartMeta = {
+                            mode: 'deathmatch',
+                            tickRate: this.TICK_RATE,
+                            rngSeed: this.replayRngSeed,
+                            surfaceMaterial: this.gameWorld.getDeathmatchSurfaceMaterial(),
+                            fighters: fightersOrdered.map(({ playerId, config }) => ({ playerId, config }))
+                        };
+                    }
+                } else {
+                    const defender = playersArray.find((p) => p.role === 'defender');
+                    if (attacker && defender && attacker.tankConfig && defender.tankConfig) {
+                        const participants: matchRepo.MatchParticipantInput[] = [];
+                        for (const p of playersArray) {
+                            if (p.role && p.tankConfig && (p.role === 'attacker' || p.role === 'defender')) {
+                                participants.push({
+                                    userId: p.userId,
+                                    role: p.role,
+                                    tankConfig: p.tankConfig
+                                });
+                            }
+                        }
+                        this.matchId = await matchRepo.createMatchWithParticipants(pool, {
+                            roomCode: this.code,
+                            matchTypeCode: 'standard',
+                            players: participants
+                        });
+                        if (this.matchId) {
+                            this.replayStartMeta = {
+                                mode: 'standard',
+                                tickRate: this.TICK_RATE,
+                                attackerPlayerId: attacker.id,
+                                defenderPlayerId: defender.id,
+                                attackerConfig: attacker.tankConfig,
+                                defenderConfig: defender.tankConfig,
+                                rngSeed: this.replayRngSeed
+                            };
+                        }
+                    }
+                }
                 if (this.matchId) {
                     console.log(`[ROOM ${this.code}] Match persisted: ${this.matchId}`);
                 }
@@ -337,26 +384,31 @@ export class Room {
         this.broadcastSnapshot();
         console.log(`[ROOM ${this.code}] Game started, sending snapshots at ${this.TICK_RATE} Hz`);
 
-        // Start game loop (similar to original GameLoop.gameLoop)
         this.lastGameLoopTime = Date.now();
+        let accumulator = 0;
         this.gameLoopInterval = setInterval(() => {
+            if (!this.gameWorld) return;
             const currentTime = Date.now();
-            const deltaTime = currentTime - this.lastGameLoopTime;
+            const wallDelta = Math.min(currentTime - this.lastGameLoopTime, 250);
             this.lastGameLoopTime = currentTime;
-            
-            // Store current deltaTime for use in handlePlayerAction
-            // Cap deltaTime to prevent huge jumps (similar to original)
-            this.currentDeltaTime = Math.min(deltaTime, 100); // Cap at 100ms
-
-            if (this.gameWorld) {
-                this.gameWorld.update(this.currentDeltaTime);
-                this.broadcastSnapshot();
-
-                // Check game end conditions
+            accumulator += wallDelta;
+            const maxTicksPerFrame = 5;
+            let ticks = 0;
+            while (accumulator >= this.FIXED_DELTA_MS && ticks < maxTicksPerFrame) {
+                this.gameWorld.update(this.FIXED_DELTA_MS);
+                accumulator -= this.FIXED_DELTA_MS;
+                ticks++;
                 const gameEnd = this.gameWorld.checkGameEnd();
                 if (gameEnd) {
                     this.endGame(gameEnd);
+                    return;
                 }
+            }
+            if (accumulator > this.FIXED_DELTA_MS * maxTicksPerFrame) {
+                accumulator = this.FIXED_DELTA_MS;
+            }
+            if (ticks > 0) {
+                this.broadcastSnapshot();
             }
         }, this.TICK_INTERVAL);
     }
@@ -375,9 +427,8 @@ export class Room {
                     action
                 });
             }
-            // Use actual deltaTime from game loop (similar to original GameLoop)
-            // This ensures actions are processed with the same time scale as game updates
-            this.gameWorld.handlePlayerAction(playerId, action, this.currentDeltaTime);
+            // Фиксированный dt для детерминизма live/replay (см. replaySimulator).
+            this.gameWorld.handlePlayerAction(playerId, action, this.FIXED_DELTA_MS);
         }
     }
 
@@ -454,8 +505,9 @@ export class Room {
 
     private persistMatchEnd(params: {
         matchStatus: 'completed' | 'aborted';
-        winner: 'attacker' | 'defender';
         reason: string;
+        standardWinner?: 'attacker' | 'defender';
+        deathmatchWinnerPlayerIds?: string[];
     }): void {
         const matchId = this.matchId;
         const ticks = this.gameWorld?.getTick() ?? 0;
@@ -485,10 +537,17 @@ export class Room {
                     ...row,
                     displayName: displayByPlayerId.get(row.playerId) ?? row.displayName ?? null
                 }));
+                const winnerUserIds =
+                    params.deathmatchWinnerPlayerIds && params.deathmatchWinnerPlayerIds.length > 0
+                        ? params.deathmatchWinnerPlayerIds
+                              .map((pid) => this.players.get(pid)?.userId)
+                              .filter((id): id is string => Boolean(id))
+                        : null;
                 await matchRepo.finalizeMatch(pool, {
                     matchId,
                     status: params.matchStatus,
-                    winnerRole: params.winner,
+                    winnerRole: params.standardWinner ?? null,
+                    winnerUserIds,
                     endReason: params.reason,
                     durationTicks: ticks,
                     matchStats
@@ -517,8 +576,14 @@ export class Room {
         if (result.mode === 'standard') {
             this.persistMatchEnd({
                 matchStatus: 'completed',
-                winner: result.winner,
-                reason: result.reason
+                reason: result.reason,
+                standardWinner: result.winner
+            });
+        } else {
+            this.persistMatchEnd({
+                matchStatus: 'completed',
+                reason: result.reason,
+                deathmatchWinnerPlayerIds: result.winnerPlayerIds
             });
         }
 

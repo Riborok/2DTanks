@@ -48,15 +48,23 @@ export function replayEventsToActionRows(events: ReplayEvent[]): ReplayActionEve
     return events.filter(isReplayPlayerInput).map((e) => ({ tick: e.tick, playerId: e.playerId, action: e.action }));
 }
 
-export type ReplayStartMeta = {
-    mode: 'standard';
-    tickRate: number;
-    attackerPlayerId: string;
-    defenderPlayerId: string;
-    attackerConfig: TankConfig;
-    defenderConfig: TankConfig;
-    rngSeed: number;
-};
+export type ReplayStartMeta =
+    | {
+          mode: 'standard';
+          tickRate: number;
+          attackerPlayerId: string;
+          defenderPlayerId: string;
+          attackerConfig: TankConfig;
+          defenderConfig: TankConfig;
+          rngSeed: number;
+      }
+    | {
+          mode: 'deathmatch';
+          tickRate: number;
+          rngSeed: number;
+          surfaceMaterial: number;
+          fighters: { playerId: string; config: TankConfig }[];
+      };
 
 export type ReplayActionsRow = {
     startMeta: ReplayStartMeta;
@@ -246,7 +254,8 @@ export async function listParticipantNamesForMatch(pool: Pool, matchId: string):
         `SELECT mp.role, u.display_name
          FROM match_participants mp
          LEFT JOIN users u ON u.user_id = mp.user_id
-         WHERE mp.match_id = $1`,
+         WHERE mp.match_id = $1
+         ORDER BY mp.created_at ASC`,
         [matchId]
     );
     return r.rows;

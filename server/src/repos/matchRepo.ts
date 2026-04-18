@@ -3,24 +3,47 @@ import type { TankConfig } from '../utils/types';
 
 export type MatchParticipantInput = {
     userId: string | null;
-    role: 'attacker' | 'defender';
+    role: 'attacker' | 'defender' | 'fighter';
     tankConfig: TankConfig;
 };
 
+let matchParticipantsSchemaEnsured = false;
+
+async function ensureMatchParticipantsSchema(pool: Pool): Promise<void> {
+    if (matchParticipantsSchemaEnsured) {
+        return;
+    }
+    await pool.query(
+        `ALTER TABLE match_participants DROP CONSTRAINT IF EXISTS match_participants_role_check`
+    );
+    await pool.query(
+        `ALTER TABLE match_participants
+         ADD CONSTRAINT match_participants_role_check
+         CHECK (role IN ('attacker', 'defender', 'spectator', 'fighter'))`
+    );
+    await pool.query(
+        `INSERT INTO match_types (code, name, description) VALUES ('kill_time', 'Kill Time', 'Арена — режим на киллы за время')
+         ON CONFLICT (code) DO NOTHING`
+    );
+    matchParticipantsSchemaEnsured = true;
+}
+
 export async function createMatchWithParticipants(
     pool: Pool,
-    params: { roomCode: string; players: MatchParticipantInput[] }
+    params: { roomCode: string; matchTypeCode?: string; players: MatchParticipantInput[] }
 ): Promise<string | null> {
     if (params.players.length === 0) {
         return null;
     }
+    await ensureMatchParticipantsSchema(pool);
 
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+        const matchTypeCode = params.matchTypeCode ?? 'standard';
         const typeRes = await client.query<{ match_type_id: string }>(
             `SELECT match_type_id FROM match_types WHERE code = $1 LIMIT 1`,
-            ['standard']
+            [matchTypeCode]
         );
         if (typeRes.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -70,7 +93,10 @@ export async function finalizeMatch(
     params: {
         matchId: string;
         status: 'completed' | 'aborted';
-        winnerRole: 'attacker' | 'defender';
+        /** Для стандарта / practice (1v1). Для арены оставить null и задать winnerUserIds. */
+        winnerRole?: 'attacker' | 'defender' | null;
+        /** Победители арены: UUID пользователей из match_participants.user_id */
+        winnerUserIds?: string[] | null;
         endReason: string;
         durationTicks: number;
         matchStats?: unknown[] | null;
@@ -80,6 +106,7 @@ export async function finalizeMatch(
         `ALTER TABLE matches
          ADD COLUMN IF NOT EXISTS match_stats JSONB`
     );
+    const winnerRole = params.winnerRole ?? null;
     await pool.query(
         `UPDATE matches SET
             match_status = $2,
@@ -93,14 +120,25 @@ export async function finalizeMatch(
         [
             params.matchId,
             params.status,
-            params.winnerRole,
+            winnerRole,
             params.endReason,
             params.durationTicks,
             params.matchStats ? JSON.stringify(params.matchStats) : null
         ]
     );
-    await pool.query(
-        `UPDATE match_participants SET is_winner = (role = $2) WHERE match_id = $1`,
-        [params.matchId, params.winnerRole]
-    );
+    const wu = params.winnerUserIds?.filter((id) => typeof id === 'string' && id.length > 0) ?? [];
+    if (wu.length > 0) {
+        await pool.query(
+            `UPDATE match_participants SET is_winner = (user_id IS NOT NULL AND user_id = ANY($2::uuid[]))
+             WHERE match_id = $1`,
+            [params.matchId, wu]
+        );
+    } else if (winnerRole) {
+        await pool.query(
+            `UPDATE match_participants SET is_winner = (role = $2) WHERE match_id = $1`,
+            [params.matchId, winnerRole]
+        );
+    } else {
+        await pool.query(`UPDATE match_participants SET is_winner = FALSE WHERE match_id = $1`, [params.matchId]);
+    }
 }

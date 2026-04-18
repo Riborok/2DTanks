@@ -82,15 +82,23 @@ export type ReplayEventDto =
     | { kind: 'item_spawn'; tick: number; id: number; x: number; y: number; type: number }
     | { kind: 'player_input'; tick: number; playerId: string; action: ReplayActionDto['action'] };
 
-export interface ReplayStartMetaDto {
-    mode: 'standard';
-    tickRate: number;
-    attackerPlayerId: string;
-    defenderPlayerId: string;
-    attackerConfig: unknown;
-    defenderConfig: unknown;
-    rngSeed: number;
-}
+export type ReplayStartMetaDto =
+    | {
+          mode: 'standard';
+          tickRate: number;
+          attackerPlayerId: string;
+          defenderPlayerId: string;
+          attackerConfig: unknown;
+          defenderConfig: unknown;
+          rngSeed: number;
+      }
+    | {
+          mode: 'deathmatch';
+          tickRate: number;
+          rngSeed: number;
+          surfaceMaterial: number;
+          fighters: { playerId: string; config: unknown }[];
+      };
 
 async function parseJson<T>(res: Response): Promise<T & { error?: string }> {
     return (await res.json()) as T & { error?: string };

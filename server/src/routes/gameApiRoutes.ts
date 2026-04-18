@@ -112,8 +112,22 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             return;
         }
         const participants = await replayRepo.listParticipantNamesForMatch(pool, meta.match_id);
-        const attackerName = participants.find((p) => p.role === 'attacker')?.display_name ?? 'Attacker';
-        const defenderName = participants.find((p) => p.role === 'defender')?.display_name ?? 'Defender';
+        const sm = replayData.startMeta;
+        let playerNames: Record<string, string> = {};
+        if (sm.mode === 'standard') {
+            const attackerName = participants.find((p) => p.role === 'attacker')?.display_name ?? 'Attacker';
+            const defenderName = participants.find((p) => p.role === 'defender')?.display_name ?? 'Defender';
+            playerNames = {
+                [sm.attackerPlayerId]: attackerName,
+                [sm.defenderPlayerId]: defenderName
+            };
+        } else {
+            for (let i = 0; i < sm.fighters.length; i++) {
+                const pid = sm.fighters[i].playerId;
+                const nm = participants[i]?.display_name?.trim();
+                playerNames[pid] = nm && nm.length > 0 ? nm : `Игрок ${i + 1}`;
+            }
+        }
         res.json({
             meta: {
                 replayId: meta.replay_id,
@@ -130,10 +144,7 @@ router.get('/replays/:replayId/playback', async (req, res) => {
             startMeta: replayData.startMeta,
             actions: replayData.actions,
             events: replayData.events ?? [],
-            playerNames: {
-                [replayData.startMeta.attackerPlayerId]: attackerName,
-                [replayData.startMeta.defenderPlayerId]: defenderName
-            }
+            playerNames
         });
     } catch (e) {
         console.error('[game/replays/playback]', e);

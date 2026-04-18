@@ -43,7 +43,8 @@ export interface IBulletReceiver {
 }
 
 export interface IBulletShooter {
-    shot(): any | null;
+    /** simTimeMs — симуляционное время (мс). Не используйте Date.now(), иначе ломается детерминизм replay. */
+    shot(simTimeMs: number): any | null;
 }
 
 export interface ILandMovement {

@@ -19,6 +19,11 @@ interface ITurretControl {
     turretCounterclockwiseMovement(deltaTime: number): void;
 }
 
+/**
+ * Выстрел принимает симуляционное время (GameWorld.elapsedMs), а не Date.now().
+ * Иначе live и replay расходятся: в replay все тики строятся в tight-loop за миллисекунды,
+ * reloadSpeed по часам всегда «ещё не остыл» — второй и последующие выстрелы гасятся.
+ */
 export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletShooter, ITurretControl, IBulletReceiver {
     /** Повернуть башню на тот же угол, на который за шаг повернулся корпус (ω·dt). */
     syncTurretAfterHullStep(deltaAngleRadians: number): void;
@@ -49,7 +54,12 @@ export class TankModel extends LandModel implements ITankModel {
 
     private readonly _tankParts: TankParts;
     private _surfaceMaterialIndex: number = 1;
-    private _lastTimeShot: number = 0; // Initialize to 0 so first shot always works
+    /**
+     * Симуляционное время (мс) последнего выстрела. -Infinity — значит ни разу не стреляли,
+     * любой первый выстрел проходит проверку reloadSpeed. Завязка на симуляционное время
+     * (а не Date.now) обязательна для детерминизма live и replay.
+     */
+    private _lastTimeShot: number = -Infinity;
     private _bulletQuantity: number = 0;
     private _bulletNum: number = TankModel.DEFAULT_BULLET_NUM;
     private _isBraking: boolean = false;
@@ -65,8 +75,7 @@ export class TankModel extends LandModel implements ITankModel {
         this._tankParts = tankParts;
         this._turretAngle = entity.angle;
         this._armor = tankParts.hull.armor;
-        // Reset _lastTimeShot to 0 so first shot always works
-        this._lastTimeShot = 0;
+        this._lastTimeShot = -Infinity;
     }
 
     /** Без обнуления осей при смене знака — иначе рывки при торможении по диагонали. */
@@ -93,16 +102,12 @@ export class TankModel extends LandModel implements ITankModel {
     public get armorStrength(): number { return this._tankParts.hull.armorStrength }
     public get bulletNum(): number { return this._bulletNum }
     
-    public shot(): IBulletModel | null {
-        const dateNow = Date.now();
-        const timeSinceLastShot = dateNow - this._lastTimeShot;
+    /**
+     * simTimeMs — симуляционное время (GameWorld.elapsedMs). Wall-clock (Date.now) ломает replay.
+     */
+    public shot(simTimeMs: number): IBulletModel | null {
         const reloadSpeed = this._tankParts.weapon.reloadSpeed;
-        
-        console.log(`[TANKMODEL] shot() called: _lastTimeShot=${this._lastTimeShot}, dateNow=${dateNow}, timeSinceLastShot=${timeSinceLastShot}ms, reloadSpeed=${reloadSpeed}ms`);
-        
-        // If _lastTimeShot is 0, this is the first shot - allow it
-        if (this._lastTimeShot !== 0 && timeSinceLastShot < reloadSpeed) {
-            console.log(`[TANKMODEL] shot() blocked: reload cooldown (${timeSinceLastShot}ms < ${reloadSpeed}ms)`);
+        if (simTimeMs - this._lastTimeShot < reloadSpeed) {
             return null;
         }
 
@@ -111,9 +116,7 @@ export class TankModel extends LandModel implements ITankModel {
 
         const bulletModel = BulletModelCreator.create(this._bulletNum, this.calcBulletExit(),
             this._turretAngle, this._tankParts.weapon);
-        this._lastTimeShot = dateNow;
-        
-        console.log(`[TANKMODEL] shot() successful: bulletNum=${this._bulletNum}, bulletId=${bulletModel.entity.id}`);
+        this._lastTimeShot = simTimeMs;
 
         return bulletModel;
     }
