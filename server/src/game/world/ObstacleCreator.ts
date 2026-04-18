@@ -1,4 +1,4 @@
-import {ResolutionManager, WALL_MASS} from "../../constants/gameConstants";
+import {dynamicCrateMass, ResolutionManager, WALL_MASS} from "../../constants/gameConstants";
 import {RectangularEntity} from "../../polygon/entity/IEntity";
 import {ModelIDTracker} from "../../utils/IDTracker";
 import {WallModel} from "../../model/obstacle/IWallModel";
@@ -59,7 +59,14 @@ export class ObstacleCreator {
     }
     
     public static createWall(point: Point, angle: number, materialNum: number, shapeNum: number, hasMass: boolean = false): ServerWall {
-        const mass = hasMass ? WALL_MASS[materialNum][shapeNum] : Infinity;
+        let mass = Infinity;
+        if (hasMass) {
+            if (shapeNum === 1) {
+                mass = dynamicCrateMass(materialNum);
+            } else {
+                mass = WALL_MASS[materialNum][shapeNum];
+            }
+        }
         const model = new WallModel(new RectangularEntity(point,
             ResolutionManager.WALL_WIDTH[shapeNum], ResolutionManager.WALL_HEIGHT[shapeNum], angle, mass, ModelIDTracker.wallId));
         return new ServerWall(model, materialNum, shapeNum, point);

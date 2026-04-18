@@ -4,7 +4,7 @@ import { TankModel, ITankModel } from '../../model/tank/ITankModel';
 import { IBulletModel } from '../../model/bullet/IBulletModel';
 import { TankPartsCreator } from '../../components/tank_parts/TankPartsCreator';
 import { RectangularEntity } from '../../polygon/entity/IEntity';
-import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS } from '../../constants/gameConstants';
+import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS, dynamicCrateMass } from '../../constants/gameConstants';
 import { ModelIDTracker } from '../../utils/IDTracker';
 import { EntityManipulator } from '../../polygon/entity/EntityManipulator';
 import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
@@ -1381,7 +1381,9 @@ export class GameWorld {
                 ResolutionManager.WALL_WIDTH[shapeNum],
                 ResolutionManager.WALL_HEIGHT[shapeNum],
                 c.angle ?? 0,
-                WALL_MASS[materialNum][shapeNum] ?? WALL_MASS[materialNum][0],
+                shapeNum === 1
+                    ? dynamicCrateMass(materialNum)
+                    : (WALL_MASS[materialNum][shapeNum] ?? WALL_MASS[materialNum][0]),
                 c.id
             );
             const model = new WallModel(ent);

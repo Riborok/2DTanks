@@ -2,6 +2,17 @@ export const ANGLE_EPSILON: number = Math.PI / 180;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 export const SHAPE: string[] = ['Rect', 'Square'];
 export const WALL_MASS: number[][] = [[4, 2], [5.5, 2.5], [7, 3]];
+/**
+ * Масса только разрушаемых ящиков (shape 1, hasMass) в deathmatch.
+ * Ниже минимальной массы танка (~0.81 сумма hull+turret+weapon), чтобы тяжёлый танк заметно лучше сдвигал ящик, лёгкий — с большей отдачей (invMass в CollisionResolver).
+ * Индекс = materialNum стены арены (0…2), как у WALL_MASS.
+ */
+export const CRATE_DYNAMIC_MASS: number[] = [0.42, 0.5, 0.58];
+
+export function dynamicCrateMass(materialNum: number): number {
+    const idx = Math.max(0, Math.min(CRATE_DYNAMIC_MASS.length - 1, materialNum));
+    return CRATE_DYNAMIC_MASS[idx];
+}
 export const RESISTANCE_COEFFICIENT: number[] = [0.6, 0.76, 0.9];
 /**
  * Доля бокового скольжения гусениц по покрытию (не «сила дрифта» в аркадном смысле).
