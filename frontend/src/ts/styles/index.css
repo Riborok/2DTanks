@@ -23,3 +23,6 @@
 @import './pages/game-end.css';
 @import './pages/replays.css';
 @import './pages/tank-customizer.css';
+@import './pages/settings.css';
+@import './pages/hud.css';
+@import './pages/social.css';

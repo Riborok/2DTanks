@@ -10,6 +10,8 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#0e1220">
     <link rel="icon" type="image/png" href="./src/img/icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./src/img/icon.png">
     <title>2DTanks Online</title>
 
     <!-- Preload critical images -->
@@ -65,5 +67,14 @@
 <body>
     <div id="root"></div>
     <script src="/src/js/bundle.js"></script>
+    <script>
+        // Регистрируем service worker для PWA-кэширования. Работает только в prod-сборке
+        // под HTTPS (или localhost в dev). В hot-reload dev-сервере может быть нежелателен.
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function () { /* ignore */ });
+            });
+        }
+    </script>
 </body>
 </html>

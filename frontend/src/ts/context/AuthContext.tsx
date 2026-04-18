@@ -11,6 +11,7 @@ import { fetchMe, loginAccount, registerAccount } from '../auth/authApi';
 import { getStoredAccessToken, setStoredAccessToken } from '../auth/authStorage';
 
 export type AuthUser = {
+    userId: string;
     displayName: string;
     login: string;
     preferredRole?: 'attacker' | 'defender' | null;
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .then(({ user, profile }) => {
                 if (!cancelled) {
                     setAuthUser({
+                        userId: user.userId,
                         displayName: user.displayName,
                         login: user.login,
                         preferredRole: profile?.preferredRole ?? null,
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setStoredAccessToken(token);
             setAccessToken(token);
             setAuthUser({
+                userId: user.userId,
                 displayName: user.displayName,
                 login: user.login,
                 preferredRole: profile?.preferredRole ?? null,
@@ -111,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setStoredAccessToken(token);
                 setAccessToken(token);
                 setAuthUser({
+                    userId: user.userId,
                     displayName: user.displayName,
                     login: user.login,
                     preferredRole: profile?.preferredRole ?? null,

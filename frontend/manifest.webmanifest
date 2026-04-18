@@ -1,0 +1,26 @@
+{
+  "name": "2DTanks Online",
+  "short_name": "2DTanks",
+  "description": "Онлайн-танки: захват ключей и арена на одной странице в браузере.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0e1220",
+  "theme_color": "#0e1220",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/src/img/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/src/img/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

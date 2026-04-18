@@ -261,6 +261,93 @@ export async function listParticipantNamesForMatch(pool: Pool, matchId: string):
     return r.rows;
 }
 
+/** Лениво добавляет колонку replays.shared_slug. Безопасно при повторных вызовах. */
+async function ensureSharedSlugColumn(pool: Pool): Promise<void> {
+    await pool.query(`ALTER TABLE replays ADD COLUMN IF NOT EXISTS shared_slug TEXT`);
+    await pool.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_replays_shared_slug ON replays (shared_slug) WHERE shared_slug IS NOT NULL`
+    );
+}
+
+function generateSlug(): string {
+    // 10 символов из алфавита без путаницы 0/O, 1/l
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let s = '';
+    for (let i = 0; i < 10; i++) {
+        s += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return s;
+}
+
+/**
+ * Выдаёт (создавая при необходимости) публичный slug для реплея, принадлежащего
+ * пользователю. Заодно помечает реплей как public, чтобы его можно было открыть
+ * без авторизации. Возвращает null, если реплей не принадлежит пользователю.
+ */
+export async function ensureReplaySharedSlug(
+    pool: Pool,
+    replayId: string,
+    userId: string
+): Promise<string | null> {
+    await ensureSharedSlugColumn(pool);
+    const existing = await pool.query<{ shared_slug: string | null; is_public: boolean }>(
+        `SELECT shared_slug, is_public FROM replays
+         WHERE replay_id = $1 AND created_by_user_id = $2 LIMIT 1`,
+        [replayId, userId]
+    );
+    const row = existing.rows[0];
+    if (!row) return null;
+    if (row.shared_slug && row.is_public) return row.shared_slug;
+
+    // Пытаемся несколько раз — на случай редкой коллизии
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const slug = row.shared_slug ?? generateSlug();
+        try {
+            await pool.query(
+                `UPDATE replays SET shared_slug = $3, is_public = TRUE, updated_at = NOW()
+                 WHERE replay_id = $1 AND created_by_user_id = $2`,
+                [replayId, userId, slug]
+            );
+            return slug;
+        } catch (e) {
+            if (attempt === 4) throw e;
+        }
+    }
+    return null;
+}
+
+/** Отключает публичный доступ к реплею (сбрасывает slug и is_public). */
+export async function revokeReplaySharedSlug(
+    pool: Pool,
+    replayId: string,
+    userId: string
+): Promise<boolean> {
+    await ensureSharedSlugColumn(pool);
+    const r = await pool.query(
+        `UPDATE replays SET shared_slug = NULL, is_public = FALSE, updated_at = NOW()
+         WHERE replay_id = $1 AND created_by_user_id = $2`,
+        [replayId, userId]
+    );
+    return (r.rowCount ?? 0) > 0;
+}
+
+export async function getReplayBySharedSlug(
+    pool: Pool,
+    slug: string
+): Promise<ReplayAccessRow | null> {
+    await ensureSharedSlugColumn(pool);
+    const r = await pool.query<ReplayAccessRow>(
+        `SELECT r.replay_id, r.match_id, r.title, r.is_public, r.created_at,
+                m.ended_at, m.room_code, m.winner_role, m.match_status, m.end_reason, m.duration_ticks
+         FROM replays r
+         INNER JOIN matches m ON m.match_id = r.match_id
+         WHERE r.shared_slug = $1 AND r.is_public = TRUE
+         LIMIT 1`,
+        [slug]
+    );
+    return r.rows[0] ?? null;
+}
+
 export async function updateReplayMeta(
     pool: Pool,
     replayId: string,

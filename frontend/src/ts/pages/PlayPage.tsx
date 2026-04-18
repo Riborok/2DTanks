@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { WebSocketClient } from '../online/WebSocketClient';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PlayHubScreen from '../components/ui/PlayHubScreen';
 import OnlineTankCustomizer from '../components/ui/OnlineTankCustomizer';
 import LobbyScreen from '../components/ui/LobbyScreen';
 import GameScreen from '../components/ui/GameScreen';
 import GameEndScreen, { type DeathmatchScoreRow, type PlayerMatchStatsRow } from '../components/ui/GameEndScreen';
 import { useAuth } from '../context/AuthContext';
+import { TANKS_PENDING_JOIN_ROOM_EVENT, useGameWebSocket } from '../context/GameSocketContext';
 
 type PlayScreen = 'hub' | 'tankSelection' | 'lobby' | 'game' | 'gameEnd';
 
@@ -39,9 +39,9 @@ function enrichMatchStats(
 }
 
 const PlayPage: React.FC = () => {
-    const { tokenRef, authRestored, accessToken, authUser } = useAuth();
+    const { authRestored, accessToken, authUser } = useAuth();
+    const { wsClient } = useGameWebSocket();
     const [screen, setScreen] = useState<PlayScreen>('hub');
-    const wsClient = useMemo(() => new WebSocketClient(undefined, () => tokenRef.current), []);
 
     const [roomId, setRoomId] = useState<string>('');
     const [myPlayerId, setMyPlayerId] = useState<string>('');
@@ -78,7 +78,7 @@ const PlayPage: React.FC = () => {
         }
 
         let cancelled = false;
-        wsClient.connect().catch((err) => {
+        void wsClient.connect().catch((err) => {
             console.error('Failed to connect:', err);
             if (!cancelled) {
                 setError(
@@ -161,7 +161,11 @@ const PlayPage: React.FC = () => {
 
         return () => {
             cancelled = true;
-            wsClient.disconnect();
+            wsClient.off('joined', onJoined);
+            wsClient.off('error', onError);
+            wsClient.off('roomUpdate', onRoomUpdate);
+            wsClient.off('gameStart', onGameStart);
+            wsClient.off('snapshot', onSnapshot);
         };
     }, [authRestored, accessToken, authUser, wsClient]);
 
@@ -204,6 +208,59 @@ const PlayPage: React.FC = () => {
         setDeathmatchRoom(false);
         wsClient.send({ type: 'joinRoom', code });
     };
+
+    /** Покинуть текущую сессию (если есть) и подключиться к комнате по коду — для accept инвайта. */
+    const leaveAndJoinRoom = useCallback(
+        (code: string) => {
+            setError('');
+            const c = code.trim().toUpperCase();
+            const joinAfterConnect = () => {
+                void wsClient
+                    .connect()
+                    .then(() => {
+                        wsClient.send({ type: 'joinRoom', code: c });
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        setError('Не удалось подключиться к комнате');
+                    });
+            };
+
+            if (screenRef.current === 'hub' && !myPlayerIdRef.current) {
+                joinAfterConnect();
+                return;
+            }
+
+            wsClient.send({ type: 'leaveGame' });
+            setRoomId('');
+            setMyPlayerId('');
+            myPlayerIdRef.current = '';
+            setMyRole('attacker');
+            setPlayers([]);
+            setScreen('hub');
+            screenRef.current = 'hub';
+            setSinglePlayerRoom(false);
+            setPracticeRoom(false);
+            setDeathmatchRoom(false);
+            setGameEndReason(null);
+            joinAfterConnect();
+        },
+        [wsClient]
+    );
+
+    const leaveAndJoinRef = useRef(leaveAndJoinRoom);
+    leaveAndJoinRef.current = leaveAndJoinRoom;
+
+    useEffect(() => {
+        const onPendingJoin = (e: Event) => {
+            const code = (e as CustomEvent<{ code?: string }>).detail?.code;
+            if (code && typeof code === 'string') {
+                leaveAndJoinRef.current(code);
+            }
+        };
+        window.addEventListener(TANKS_PENDING_JOIN_ROOM_EVENT, onPendingJoin as EventListener);
+        return () => window.removeEventListener(TANKS_PENDING_JOIN_ROOM_EVENT, onPendingJoin as EventListener);
+    }, []);
 
     const handleTankConfigAccept = (config: {
         color: number;
@@ -255,7 +312,9 @@ const PlayPage: React.FC = () => {
     };
 
     const handleBackToMenu = () => {
-        wsClient.closeSocket();
+        if (myPlayerIdRef.current) {
+            wsClient.send({ type: 'leaveGame' });
+        }
         setScreen('hub');
         screenRef.current = 'hub';
         setRoomId('');
@@ -267,16 +326,12 @@ const PlayPage: React.FC = () => {
         setGameEndReason(null);
         setSinglePlayerRoom(false);
         setPracticeRoom(false);
-        if (authUser) {
-            wsClient.connect().catch((err) => {
-                console.error('Failed to reconnect:', err);
-            });
-        }
     };
 
     const handleLeaveGame = () => {
-        wsClient.send({ type: 'leaveGame' });
-        wsClient.closeSocket();
+        if (myPlayerIdRef.current) {
+            wsClient.send({ type: 'leaveGame' });
+        }
         setScreen('hub');
         screenRef.current = 'hub';
         setRoomId('');
@@ -319,6 +374,11 @@ const PlayPage: React.FC = () => {
                     deathmatchRoom={deathmatchRoom}
                     onReady={handleReady}
                     onCopyCode={() => {}}
+                    wsClient={wsClient}
+                    accessToken={accessToken}
+                    myAuthUserId={authUser?.userId}
+                    serverError={error}
+                    onClearServerError={() => setError('')}
                 />
             )}
 

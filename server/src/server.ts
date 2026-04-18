@@ -6,9 +6,13 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { RoomManager } from './room/RoomManager';
 import authRoutes from './routes/authRoutes';
 import gameApiRoutes from './routes/gameApiRoutes';
+import publicReplayRoutes from './routes/publicReplayRoutes';
 import { parseWsUserFromRequest } from './ws/parseWsUser';
 import type { WsAuthUser } from './auth/types';
 import { resolveListenPort } from './serverPort';
+import { getPool } from './db/pool';
+import * as friendshipsRepo from './repos/friendshipsRepo';
+import { registerUserSocket, unregisterUserSocket, notifyUserSockets } from './ws/userSocketRegistry';
 
 const PORT = resolveListenPort();
 
@@ -25,6 +29,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/public', publicReplayRoutes);
 app.use('/api/game', gameApiRoutes);
 
 app.get('/api/health', (_req, res) => {
@@ -34,6 +39,14 @@ app.get('/api/health', (_req, res) => {
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
+
+// Rate-limit для социальных сообщений (пинги 2 msg/sec, чат 1 msg/sec).
+// Хранится в памяти — при рестарте сбрасывается, чего достаточно для
+// анти-спама «в рамках сессии». В прод пригодится TTL/cleanup по inactivity.
+const pingRateByPlayer = new Map<string, number>();
+const chatRateByPlayer = new Map<string, number>();
+const inviteRateBySender = new Map<string, number>();
+const inviteRateByPair = new Map<string, number>();
 
 server.listen(PORT, () => {
     console.log(`HTTP + WebSocket on port ${PORT}`);
@@ -60,8 +73,12 @@ wss.on('connection', (ws: WebSocket, req) => {
 
     console.log('New client connected from', req.socket.remoteAddress, `(user ${wsUser.login})`);
 
+    registerUserSocket(wsUser.userId, ws);
+
     let playerId: string | null = null;
     let roomCode: string | null = null;
+    let spectatorId: string | null = null;
+    let spectatorRoomCode: string | null = null;
     const restored = roomManager.reconnectByUser(ws, wsUser);
     if (restored) {
         roomCode = restored.code;
@@ -134,6 +151,171 @@ wss.on('connection', (ws: WebSocket, req) => {
                     }
                     roomManager.handlePlayerAction(roomCode, playerId, action);
                 }
+            } else if (data.type === 'ping:send' && roomCode && playerId) {
+                const allowed: Array<'careful' | 'enemy' | 'attack' | 'retreat'> = [
+                    'careful',
+                    'enemy',
+                    'attack',
+                    'retreat'
+                ];
+                const pingType = allowed.includes(data.pingType) ? data.pingType : null;
+                const x = Number(data.x);
+                const y = Number(data.y);
+                if (pingType && Number.isFinite(x) && Number.isFinite(y)) {
+                    // Простейший rate-limit: не чаще 2 пингов в секунду на игрока
+                    const nowTs = Date.now();
+                    const last = pingRateByPlayer.get(playerId) ?? 0;
+                    if (nowTs - last >= 500) {
+                        pingRateByPlayer.set(playerId, nowTs);
+                        const room = roomManager.getRoom(roomCode);
+                        room?.broadcast({
+                            type: 'ping:msg',
+                            fromId: playerId,
+                            x,
+                            y,
+                            pingType,
+                            at: nowTs
+                        });
+                    }
+                }
+            } else if (data.type === 'chat:send' && roomCode && playerId) {
+                const text = String(data.text ?? '').trim().slice(0, 200);
+                if (text) {
+                    const nowTs = Date.now();
+                    const last = chatRateByPlayer.get(playerId) ?? 0;
+                    if (nowTs - last >= 1000) {
+                        chatRateByPlayer.set(playerId, nowTs);
+                        const room = roomManager.getRoom(roomCode);
+                        room?.broadcast({
+                            type: 'chat:msg',
+                            fromId: playerId,
+                            fromName: room.getPlayerDisplayName(playerId) ?? 'Игрок',
+                            text,
+                            at: nowTs
+                        });
+                    }
+                }
+            } else if (data.type === 'invite:send' && roomCode && playerId) {
+                const targetUserId = String(data.targetUserId ?? '').trim();
+                if (!targetUserId || targetUserId === wsUser.userId) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Укажите друга' }));
+                    return;
+                }
+                const room = roomManager.getRoom(roomCode);
+                if (!room) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Комната не найдена' }));
+                    return;
+                }
+                const pub = room.getPublicInfo();
+                if (pub.singlePlayerTest) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Из соло-комнаты нельзя пригласить' }));
+                    return;
+                }
+                if (room.hasUser(targetUserId)) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Игрок уже в этой комнате' }));
+                    return;
+                }
+                const pool = getPool();
+                if (!pool) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Сервис временно недоступен' }));
+                    return;
+                }
+                void (async () => {
+                    try {
+                        if (await friendshipsRepo.isBlockedBetween(pool, wsUser.userId, targetUserId)) {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Нельзя пригласить этого пользователя' }));
+                            return;
+                        }
+                        if (!(await friendshipsRepo.areAcceptedFriends(pool, wsUser.userId, targetUserId))) {
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'error',
+                                    message: 'Инвайт доступен только принятым друзьям'
+                                })
+                            );
+                            return;
+                        }
+                        const nowTs = Date.now();
+                        const lastGlobal = inviteRateBySender.get(wsUser.userId) ?? 0;
+                        if (nowTs - lastGlobal < 2000) {
+                            ws.send(
+                                JSON.stringify({ type: 'error', message: 'Слишком часто. Подождите пару секунд.' })
+                            );
+                            return;
+                        }
+                        const pairKey = `${wsUser.userId}\t${targetUserId}`;
+                        const lastPair = inviteRateByPair.get(pairKey) ?? 0;
+                        if (nowTs - lastPair < 8000) {
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'error',
+                                    message: 'Этому другу уже недавно отправляли приглашение.'
+                                })
+                            );
+                            return;
+                        }
+                        inviteRateBySender.set(wsUser.userId, nowTs);
+                        inviteRateByPair.set(pairKey, nowTs);
+
+                        notifyUserSockets(targetUserId, {
+                            type: 'invite:msg',
+                            roomCode,
+                            fromUserId: wsUser.userId,
+                            fromLogin: wsUser.login,
+                            fromDisplayName: wsUser.displayName,
+                            practiceMode: pub.practiceMode,
+                            deathmatchMode: pub.deathmatchMode,
+                            singlePlayerTest: pub.singlePlayerTest,
+                            at: nowTs
+                        });
+                        ws.send(JSON.stringify({ type: 'invite:sent', targetUserId, roomCode }));
+                    } catch (e) {
+                        console.error('[invite:send]', e);
+                        try {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Не удалось отправить приглашение' }));
+                        } catch {
+                            /* ignore */
+                        }
+                    }
+                })();
+            } else if (data.type === 'spectate:list') {
+                // Вернуть список комнат, которые можно смотреть.
+                ws.send(
+                    JSON.stringify({
+                        type: 'spectate:list',
+                        rooms: roomManager.listWatchableRooms()
+                    })
+                );
+            } else if (data.type === 'spectate:join') {
+                const targetCode = String(data.code || '').trim().toUpperCase();
+                if (!targetCode) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Не указана комната' }));
+                    return;
+                }
+                // Если клиент уже игрок в комнате — запрещаем наблюдение.
+                if (roomCode && playerId) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Нельзя смотреть во время игры' }));
+                    return;
+                }
+                if (spectatorId && spectatorRoomCode) {
+                    roomManager.handleSpectatorDisconnect(spectatorRoomCode, spectatorId);
+                    spectatorId = null;
+                    spectatorRoomCode = null;
+                }
+                const result = roomManager.spectateRoom(targetCode, ws, wsUser);
+                if (!result) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Комната не найдена или пуста' }));
+                    return;
+                }
+                spectatorId = result.spectatorId;
+                spectatorRoomCode = result.code;
+            } else if (data.type === 'spectate:leave') {
+                if (spectatorId && spectatorRoomCode) {
+                    roomManager.handleSpectatorDisconnect(spectatorRoomCode, spectatorId);
+                    spectatorId = null;
+                    spectatorRoomCode = null;
+                    ws.send(JSON.stringify({ type: 'spectate:left' }));
+                }
             } else if (data.type === 'leaveGame') {
                 if (roomCode && playerId) {
                     roomManager.leaveRoom(roomCode, playerId);
@@ -164,9 +346,12 @@ wss.on('connection', (ws: WebSocket, req) => {
     }, 30000);
 
     ws.on('close', (code, reason) => {
+        unregisterUserSocket(wsUser.userId, ws);
         if (roomCode && playerId) {
             console.log(`[SERVER] Player ${playerId} disconnected from room ${roomCode}`);
             roomManager.handleDisconnect(roomCode, playerId);
+        } else if (spectatorId && spectatorRoomCode) {
+            roomManager.handleSpectatorDisconnect(spectatorRoomCode, spectatorId);
         } else {
             console.log('[SERVER] Client disconnected (not in room)');
         }

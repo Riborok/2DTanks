@@ -1,5 +1,22 @@
 export interface ServerMessage {
-    type: 'joined' | 'error' | 'snapshot' | 'gameEnd' | 'roomUpdate' | 'gameStart' | 'leftGame';
+    type:
+        | 'joined'
+        | 'error'
+        | 'snapshot'
+        | 'gameEnd'
+        | 'roomUpdate'
+        | 'gameStart'
+        | 'leftGame'
+        | 'invite:msg'
+        | 'invite:sent'
+        | 'friends:accepted'
+        | 'friends:incoming'
+        | 'friends:became_friends'
+        | 'friends:you_accepted'
+        | 'spectate:list'
+        | 'spectate:joined'
+        | 'spectate:left'
+        | 'ping:msg';
     roomId?: string;
     playerId?: string;
     role?: 'attacker' | 'defender' | 'fighter';
@@ -19,6 +36,30 @@ export interface ServerMessage {
     singlePlayerTest?: boolean;
     practiceMode?: boolean;
     deathmatchMode?: boolean;
+    /** invite:msg — приглашение в комнату от друга */
+    roomCode?: string;
+    fromUserId?: string;
+    fromLogin?: string;
+    fromDisplayName?: string;
+    targetUserId?: string;
+    at?: number;
+    friendUserId?: string;
+    friendLogin?: string;
+    friendDisplayName?: string;
+    /** friends:became_friends — второй участник дружбы */
+    peerUserId?: string;
+    peerLogin?: string;
+    peerDisplayName?: string;
+    /** spectate:joined */
+    hasActiveGame?: boolean;
+    spectatorId?: string;
+    /** spectate:list */
+    rooms?: unknown[];
+    /** ping:msg (время — то же поле `at`, что и у invite:msg) */
+    fromId?: string;
+    x?: number;
+    y?: number;
+    pingType?: string;
 }
 
 export interface ClientMessage {

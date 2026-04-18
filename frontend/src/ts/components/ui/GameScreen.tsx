@@ -1,17 +1,29 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { WebSocketClient } from '../../online/WebSocketClient';
 import { OnlineGameRenderer } from '../../online/OnlineGameRenderer';
 import { GameWorldSnapshot } from '../../online/types';
 import { Size } from '../../additionally/type';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE } from '../../constants/keyCodes';
+import {
+    actionToVk,
+    findActionForKeyCode,
+    GAME_CONTROL_VK_CODES
+} from '../../utils/keyBindings';
 import { ImagePreloader } from '../../utils/ImagePreloader';
 import type { DeathmatchScoreRow, PlayerMatchStatsRow } from './GameEndScreen';
 import TouchJoystick from './TouchJoystick';
+import { useSettings } from '../../context/SettingsContext';
+import { SoundManager, spatial } from '../../utils/SoundManager';
+import { useHudEvents } from '../hud/useHudEvents';
+import KillFeed from '../hud/KillFeed';
+import DamageNumbers from '../hud/DamageNumbers';
+import DamageDirection from '../hud/DamageDirection';
+import Minimap from '../hud/Minimap';
+import FullscreenToggle from '../hud/FullscreenToggle';
+import PingWheel, { PingType } from '../hud/PingWheel';
 
 const REQUIRED_KEYS_PER_LEVEL = 1;
-
-const GAME_KEY_CODES = [VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE];
 
 function buildAction(pressedKeys: Set<number>, includeShoot: boolean = false) {
     return {
@@ -23,33 +35,6 @@ function buildAction(pressedKeys: Set<number>, includeShoot: boolean = false) {
         turretRight: pressedKeys.has(VK_E),
         shoot: includeShoot && pressedKeys.has(VK_SPACE)
     };
-}
-
-function normalizeControlKeyCode(e: KeyboardEvent): number | null {
-    switch (e.code) {
-        case 'KeyW':
-        case 'ArrowUp':
-            return VK_W;
-        case 'KeyS':
-        case 'ArrowDown':
-            return VK_S;
-        case 'KeyA':
-        case 'ArrowLeft':
-            return VK_A;
-        case 'KeyD':
-        case 'ArrowRight':
-            return VK_D;
-        case 'KeyQ':
-            return VK_Q;
-        case 'KeyE':
-            return VK_E;
-        case 'Space':
-            return VK_SPACE;
-        default:
-            break;
-    }
-    // Fallback for old browsers / non-standard events.
-    return GAME_KEY_CODES.includes(e.keyCode) ? e.keyCode : null;
 }
 
 interface GameScreenProps {
@@ -116,6 +101,13 @@ const GameScreen: React.FC<GameScreenProps> = ({
         fire: () => {}
     });
     const [useTouchUi, setUseTouchUi] = useState(false);
+    const { settings } = useSettings();
+    const settingsRef = useRef(settings);
+    settingsRef.current = settings;
+    const [pingWheelOpen, setPingWheelOpen] = useState(false);
+    const [worldPings, setWorldPings] = useState<
+        Array<{ id: number; x: number; y: number; type: PingType; createdAt: number; fromName: string }>
+    >([]);
     /** null: нет лимита (практика/соло) или ещё не пришёл снимок; иначе секунды до конца */
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
     const [myKills, setMyKills] = useState(0);
@@ -156,6 +148,111 @@ const GameScreen: React.FC<GameScreenProps> = ({
         mq.addEventListener('change', apply);
         return () => mq.removeEventListener('change', apply);
     }, []);
+
+    // Прокидываем уровни громкости из настроек в звуковой менеджер
+    useEffect(() => {
+        SoundManager.setVolumes(settings.audio);
+    }, [settings.audio]);
+
+    // Слушатель пингов с сервера
+    useEffect(() => {
+        const handler = (message: any) => {
+            if (!message || message.type !== 'ping:msg') return;
+            const fromName =
+                players.find((p) => p.playerId === message.fromId)?.displayName?.slice(0, 12) || 'Игрок';
+            setWorldPings((prev) => [
+                ...prev,
+                {
+                    id: Math.random(),
+                    x: Number(message.x),
+                    y: Number(message.y),
+                    type: message.pingType as PingType,
+                    createdAt: performance.now(),
+                    fromName
+                }
+            ]);
+            SoundManager.play('ui:click');
+        };
+        wsClient.on('ping:msg' as any, handler);
+        return () => wsClient.off('ping:msg' as any, handler);
+    }, [wsClient, players]);
+
+    // Периодическая чистка старых world-пингов
+    useEffect(() => {
+        const t = window.setInterval(() => {
+            setWorldPings((prev) => {
+                const now = performance.now();
+                const next = prev.filter((p) => now - p.createdAt < 3000);
+                return next.length === prev.length ? prev : next;
+            });
+        }, 500);
+        return () => window.clearInterval(t);
+    }, []);
+
+    // Карта playerId → displayName для kill-feed и пингов
+    const playerNameById = useMemo(() => {
+        const m = new Map<string, string>();
+        for (const p of players) {
+            m.set(p.playerId, (p.displayName || p.playerId).slice(0, 16));
+        }
+        return m;
+    }, [players]);
+
+    // События HUD (kill-feed, damage numbers, damage direction, sfx/haptics)
+    const hud = useHudEvents(snapshotRef, {
+        myPlayerId,
+        playerNameById,
+        onNewExplosion: (x, y) => {
+            const snap = snapshotRef.current;
+            const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+            if (me) {
+                const s = spatial(x, y, me.x, me.y, 1600);
+                SoundManager.play('game:explosion', s);
+            } else {
+                SoundManager.play('game:explosion');
+            }
+        },
+        onNewBulletImpact: (x, y) => {
+            const snap = snapshotRef.current;
+            const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+            if (me) {
+                const s = spatial(x, y, me.x, me.y, 1400);
+                SoundManager.play('game:hit', s);
+            } else {
+                SoundManager.play('game:hit');
+            }
+        },
+        onOwnShot: () => {
+            SoundManager.play('game:shot');
+            if (settingsRef.current.mobile.haptics) {
+                try {
+                    navigator.vibrate?.(15);
+                } catch {
+                    /* ignore */
+                }
+            }
+        },
+        onOwnDamage: () => {
+            SoundManager.play('game:damageTaken');
+            if (settingsRef.current.mobile.haptics) {
+                try {
+                    navigator.vibrate?.([0, 45]);
+                } catch {
+                    /* ignore */
+                }
+            }
+        },
+        onTankKilled: (tank) => {
+            SoundManager.play('game:kill');
+            if (tank.playerId === myPlayerId && settingsRef.current.mobile.haptics) {
+                try {
+                    navigator.vibrate?.([0, 80, 40, 80]);
+                } catch {
+                    /* ignore */
+                }
+            }
+        }
+    });
 
     useEffect(() => {
         if (!canvasRef.current || !imagesLoaded) return;
@@ -355,7 +452,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
         };
 
         const applyKeyDown = (code: number) => {
-            if (!GAME_KEY_CODES.includes(code)) return;
+            if (!GAME_CONTROL_VK_CODES.includes(code)) return;
             setKeysPressed(prev => {
                 const newSet = new Set(prev);
                 const wasPressed = newSet.has(code);
@@ -370,7 +467,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
         };
 
         const applyKeyUp = (code: number) => {
-            if (!GAME_KEY_CODES.includes(code)) return;
+            if (!GAME_CONTROL_VK_CODES.includes(code)) return;
             if (code === VK_SPACE) {
                 shootSentRef.current = false;
             }
@@ -402,21 +499,29 @@ const GameScreen: React.FC<GameScreenProps> = ({
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            const code = normalizeControlKeyCode(e);
-            if (code === null) return;
-            if (code === VK_SPACE) {
+            // V — колесо пингов на десктопе
+            if (e.code === 'KeyV') {
+                e.preventDefault();
+                setPingWheelOpen((v) => !v);
+                return;
+            }
+            const action = findActionForKeyCode(settingsRef.current.controls.keyBindings, e.code);
+            if (!action) return;
+            const vk = actionToVk(action);
+            if (action === 'shoot') {
                 e.preventDefault();
             }
-            applyKeyDown(code);
+            applyKeyDown(vk);
         };
 
         const handleKeyUp = (e: KeyboardEvent) => {
-            const code = normalizeControlKeyCode(e);
-            if (code === null) return;
-            if (code === VK_SPACE) {
+            const action = findActionForKeyCode(settingsRef.current.controls.keyBindings, e.code);
+            if (!action) return;
+            const vk = actionToVk(action);
+            if (action === 'shoot') {
                 e.preventDefault();
             }
-            applyKeyUp(code);
+            applyKeyUp(vk);
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -605,6 +710,24 @@ const GameScreen: React.FC<GameScreenProps> = ({
     const timerCardClass = isTimeCritical ? 'hud-card hud-card-timer is-critical' : 'hud-card hud-card-timer';
     const timerValueClass = isTimeCritical ? 'hud-value is-critical' : 'hud-value';
 
+    const touchSide = settings.mobile.touchSide;
+    const touchScale = settings.mobile.touchScale;
+    const leftSideClass =
+        touchSide === 'left' ? 'game-touch-left' : 'game-touch-left game-touch-left--right';
+    const rightSideClass =
+        touchSide === 'left' ? 'game-touch-right' : 'game-touch-right game-touch-right--left';
+    const touchScaleStyle: React.CSSProperties = { transform: `scale(${touchScale})`, transformOrigin: 'bottom' };
+
+    const handlePingPicked = (type: PingType) => {
+        const snap = snapshotRef.current;
+        const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+        if (!me) return;
+        // Пингуем точку перед башней, примерно 200 единиц мира
+        const x = me.x + Math.cos(me.turretAngle) * 200;
+        const y = me.y + Math.sin(me.turretAngle) * 200;
+        wsClient.send({ type: 'ping:send', x, y, pingType: type } as any);
+    };
+
     return (
         <div className="game-screen">
             <div className="game-screen-grid-overlay" />
@@ -612,6 +735,25 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 ref={canvasRef}
                 className="game-canvas"
             />
+            <FullscreenToggle />
+            <Minimap snapshotRef={snapshotRef} myPlayerId={myPlayerId} />
+            <KillFeed kills={hud.kills} />
+            <DamageNumbers hits={hud.hits} />
+            <DamageDirection events={hud.damageTaken} />
+            {worldPings.map((p) => {
+                const screen = {
+                    x: ResolutionManager.worldToCanvasX(p.x),
+                    y: ResolutionManager.worldToCanvasY(p.y)
+                };
+                return (
+                    <div key={p.id} className="world-ping" style={{ left: screen.x, top: screen.y }}>
+                        {p.fromName}: {pingLabel(p.type)}
+                    </div>
+                );
+            })}
+            {pingWheelOpen && (
+                <PingWheel onPick={handlePingPicked} onClose={() => setPingWheelOpen(false)} />
+            )}
             {useTouchUi && (
                 <div className="mobile-orientation-hint" aria-hidden="true">
                     Поверните телефон горизонтально для удобной игры
@@ -619,13 +761,13 @@ const GameScreen: React.FC<GameScreenProps> = ({
             )}
             {useTouchUi && (
                 <>
-                    <div className="game-touch-left" role="presentation">
+                    <div className={leftSideClass} role="presentation" style={touchScaleStyle}>
                         <TouchJoystick onVector={handleJoystickVector} />
                         <div className="game-touch-hint">
                             Вверх/вниз — ход · влево/вправо — поворот
                         </div>
                     </div>
-                    <div className="game-touch-right" role="toolbar" aria-label="Управление">
+                    <div className={rightSideClass} role="toolbar" aria-label="Управление" style={touchScaleStyle}>
                         <div className="game-touch-turret">
                             <button
                                 type="button"
@@ -644,6 +786,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
                                 ⟳
                             </button>
                         </div>
+                        <button
+                            type="button"
+                            className="game-touch-btn game-touch-btn-ping"
+                            onClick={() => setPingWheelOpen((v) => !v)}
+                            aria-label="Пинг"
+                        >
+                            !
+                        </button>
                         <button
                             type="button"
                             className="game-touch-btn game-touch-btn-fire"
@@ -692,5 +842,18 @@ const GameScreen: React.FC<GameScreenProps> = ({
         </div>
     );
 };
+
+function pingLabel(type: PingType): string {
+    switch (type) {
+        case 'careful':
+            return 'Осторожно';
+        case 'enemy':
+            return 'Вижу врага';
+        case 'attack':
+            return 'Атакую';
+        case 'retreat':
+            return 'Отступаю';
+    }
+}
 
 export default GameScreen;

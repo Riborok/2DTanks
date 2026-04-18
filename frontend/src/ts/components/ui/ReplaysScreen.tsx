@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     listReplays,
     listMatchHistory,
+    shareReplay,
     type ReplayListItemDto,
     type MatchHistoryItemDto
 } from '../../auth/gameApi';
@@ -145,13 +146,37 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                                         {r.winnerRole ? ` · победитель: ${r.winnerRole}` : ''}
                                     </span>
                                 </div>
-                                <button
-                                    type="button"
-                                    className="replays-play-btn"
-                                    onClick={() => onPlayReplay(r.replayId)}
-                                >
-                                    Смотреть
-                                </button>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button
+                                        type="button"
+                                        className="replays-play-btn"
+                                        onClick={() => onPlayReplay(r.replayId)}
+                                    >
+                                        Смотреть
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="replays-back-btn"
+                                        onClick={async () => {
+                                            try {
+                                                const { slug } = await shareReplay(accessToken, r.replayId);
+                                                const url = `${window.location.origin}/s/${slug}`;
+                                                try {
+                                                    await navigator.clipboard.writeText(url);
+                                                    alert(`Ссылка скопирована: ${url}`);
+                                                } catch {
+                                                    prompt('Ссылка на реплей:', url);
+                                                }
+                                            } catch (e) {
+                                                alert(
+                                                    e instanceof Error ? e.message : 'Не удалось поделиться'
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        Поделиться
+                                    </button>
+                                </div>
                             </li>
                         ))}
                     </ul>

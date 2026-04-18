@@ -1,60 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getReplayPlayback } from '../auth/gameApi';
-import { useAuth } from '../context/AuthContext';
+import { getPublicReplayPlayback } from '../auth/gameApi';
 import ReplayPlaybackScreen from '../components/ui/ReplayPlaybackScreen';
 
-const ReplayWatchPage: React.FC = () => {
-    const { replayId } = useParams<{ replayId: string }>();
-    const { accessToken, authRestored } = useAuth();
+/**
+ * Публичная страница просмотра реплея по короткой ссылке /s/:slug.
+ * Не требует авторизации — данные берутся из открытого API /api/public/replays/by-slug/:slug.
+ */
+const SharedReplayPage: React.FC = () => {
+    const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [playback, setPlayback] = useState<Awaited<ReturnType<typeof getReplayPlayback>> | null>(null);
+    const [playback, setPlayback] = useState<Awaited<ReturnType<typeof getPublicReplayPlayback>> | null>(null);
 
     useEffect(() => {
-        if (!authRestored) {
-            return;
-        }
-        if (!accessToken || !replayId) {
-            setLoading(false);
-            return;
-        }
+        if (!slug) return;
         let cancelled = false;
         setLoading(true);
         setError('');
-        getReplayPlayback(accessToken, replayId)
+        getPublicReplayPlayback(slug)
             .then((data) => {
-                if (!cancelled) {
-                    setPlayback(data);
-                }
+                if (!cancelled) setPlayback(data);
             })
             .catch((e) => {
-                if (!cancelled) {
-                    setError(e instanceof Error ? e.message : 'Не удалось открыть реплей');
-                }
+                if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось открыть реплей');
             })
             .finally(() => {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+                if (!cancelled) setLoading(false);
             });
         return () => {
             cancelled = true;
         };
-    }, [authRestored, accessToken, replayId]);
+    }, [slug]);
 
-    if (!replayId) {
+    if (!slug) {
         return (
             <div className="page-replay-watch page-message">
-                <p>Не указан реплей.</p>
-                <button type="button" className="auth-submit" onClick={() => navigate('/replays')}>
-                    К списку
-                </button>
+                <p>Не указана ссылка.</p>
             </div>
         );
     }
-
     if (loading) {
         return (
             <div className="page-replay-watch page-loading">
@@ -62,18 +48,16 @@ const ReplayWatchPage: React.FC = () => {
             </div>
         );
     }
-
     if (error || !playback) {
         return (
             <div className="page-replay-watch page-message">
                 <p className="auth-form-error">{error || 'Нет данных'}</p>
-                <button type="button" className="auth-submit" onClick={() => navigate('/replays')}>
-                    К списку
+                <button type="button" className="auth-submit" onClick={() => navigate('/home')}>
+                    На главную
                 </button>
             </div>
         );
     }
-
     return (
         <ReplayPlaybackScreen
             meta={playback.meta}
@@ -81,9 +65,9 @@ const ReplayWatchPage: React.FC = () => {
             actions={playback.actions}
             events={playback.events}
             playerNames={playback.playerNames}
-            onBack={() => navigate('/replays')}
+            onBack={() => navigate('/home')}
         />
     );
 };
 
-export default ReplayWatchPage;
+export default SharedReplayPage;

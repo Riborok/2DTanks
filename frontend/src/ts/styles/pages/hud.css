@@ -1,0 +1,305 @@
+/* ==========================================================================
+   Kill feed
+   ========================================================================== */
+.kill-feed {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 80px);
+    right: 14px;
+    z-index: 10005;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+    max-width: 300px;
+}
+
+.kill-feed-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(10, 14, 24, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #eef3ff;
+    animation: killFeedIn 180ms ease-out;
+}
+
+.kill-feed-killer {
+    color: #7fc7ff;
+    font-weight: 600;
+}
+
+.kill-feed-icon {
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: 700;
+}
+
+.kill-feed-victim {
+    color: #ff9aa2;
+    font-weight: 600;
+}
+
+@keyframes killFeedIn {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==========================================================================
+   Damage numbers
+   ========================================================================== */
+.damage-numbers {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10004;
+}
+
+.damage-number {
+    position: absolute;
+    color: #ffd166;
+    font-weight: 800;
+    font-size: 16px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    transition: none;
+    will-change: transform, opacity;
+}
+
+/* ==========================================================================
+   Damage direction indicator
+   ========================================================================== */
+.damage-direction {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(80vmin, 560px);
+    height: min(80vmin, 560px);
+    pointer-events: none;
+    z-index: 10003;
+}
+
+.damage-direction path {
+    fill: none;
+    stroke: #ff4d4d;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transform-origin: center;
+    transform-box: view-box;
+    filter: drop-shadow(0 0 6px rgba(255, 77, 77, 0.75));
+}
+
+/* ==========================================================================
+   Minimap
+   ========================================================================== */
+.minimap {
+    position: fixed;
+    right: 14px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    z-index: 10006;
+    padding: 4px;
+    background: rgba(10, 14, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.minimap-canvas {
+    display: block;
+    border-radius: 6px;
+}
+
+@media (max-width: 640px) {
+    .minimap {
+        right: auto;
+        left: 14px;
+        bottom: auto;
+        top: calc(env(safe-area-inset-top, 0px) + 70px);
+    }
+    /* Kill-feed перенесём под HUD на мобиле, чтобы не перекрывать мини-карту */
+    .kill-feed {
+        top: calc(env(safe-area-inset-top, 0px) + 70px);
+        right: 8px;
+        max-width: 50vw;
+    }
+    .kill-feed-row {
+        font-size: 11px;
+    }
+    .damage-number {
+        font-size: 14px;
+    }
+}
+
+/* ==========================================================================
+   Fullscreen / orientation toggle
+   ========================================================================== */
+.fullscreen-toggle {
+    position: fixed;
+    right: 14px;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    z-index: 10010;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(10, 14, 24, 0.7);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (pointer: coarse) {
+    .fullscreen-toggle {
+        display: flex;
+    }
+}
+
+/* ==========================================================================
+   Ping wheel / indicators
+   ========================================================================== */
+.ping-wheel {
+    position: fixed;
+    inset: 0;
+    z-index: 10011;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.ping-wheel-inner {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: rgba(10, 14, 24, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    position: relative;
+}
+
+.ping-wheel-option {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(35, 45, 70, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 96px;
+    text-align: center;
+}
+
+.ping-wheel-option:hover,
+.ping-wheel-option.active {
+    background: rgba(77, 163, 255, 0.35);
+    border-color: rgba(77, 163, 255, 0.7);
+}
+
+.world-ping {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10007;
+    transform: translate(-50%, -50%);
+    padding: 2px 8px;
+    background: rgba(10, 14, 24, 0.85);
+    border: 1px solid rgba(255, 220, 70, 0.7);
+    border-radius: 10px;
+    color: #ffe066;
+    font-size: 12px;
+    font-weight: 700;
+    animation: worldPingIn 200ms ease-out;
+}
+
+@keyframes worldPingIn {
+    from {
+        transform: translate(-50%, -50%) scale(0.6);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.game-touch-btn-ping {
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 50%;
+    font-size: 20px;
+    background: rgba(255, 220, 70, 0.22);
+    border-color: rgba(255, 220, 70, 0.55);
+}
+
+/* ==========================================================================
+   Chat (lobby / post-match)
+   ========================================================================== */
+.chat-panel {
+    margin-top: 16px;
+    background: rgba(10, 14, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+}
+
+.chat-log {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 4px;
+}
+
+.chat-msg {
+    font-size: 13px;
+    color: rgba(235, 243, 255, 0.92);
+    word-break: break-word;
+}
+
+.chat-msg .chat-from {
+    color: #7fc7ff;
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 6px;
+}
+
+.chat-input-row input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.chat-input-row button {
+    background: rgba(77, 163, 255, 0.22);
+    border: 1px solid rgba(77, 163, 255, 0.65);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}

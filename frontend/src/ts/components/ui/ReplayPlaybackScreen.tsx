@@ -61,16 +61,19 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     playerNames = {},
     onBack
 }) => {
-    const builtFrames = useMemo(
-        () =>
-            buildReplayFramesClient({
+    const builtFrames = useMemo(() => {
+        try {
+            return buildReplayFramesClient({
                 startMeta,
                 actions,
                 events,
                 durationTicks: meta.durationTicks
-            }),
-        [meta.replayId, meta.durationTicks, startMeta, actions, events]
-    );
+            });
+        } catch (e) {
+            console.error('[replay] buildReplayFramesClient', e);
+            return [];
+        }
+    }, [meta.replayId, meta.durationTicks, startMeta, actions, events]);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<OnlineGameRenderer | null>(null);
@@ -90,6 +93,21 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const [playing, setPlaying] = useState(true);
     const [displayFrame, setDisplayFrame] = useState(0);
     const [speed, setSpeed] = useState(1);
+
+    // Free-cam (пан+зум поверх canvas через CSS transform).
+    // Это чисто визуальное преобразование, не влияющее на данные кадра, чтобы не
+    // ломать логику и интерполяцию рендерера. Для повышенного зума картинка
+    // становится мягче — браузерный linear interpolation. Для целей "рассмотреть
+    // эпизод" этого достаточно.
+    const [freeCam, setFreeCam] = useState(false);
+    const [camX, setCamX] = useState(0);
+    const [camY, setCamY] = useState(0);
+    const [camZoom, setCamZoom] = useState(1);
+
+    // Состояние записи клипа
+    const [recording, setRecording] = useState<null | { startedAt: number; secondsLeft: number }>(null);
+    const recorderRef = useRef<MediaRecorder | null>(null);
+    const recordingChunksRef = useRef<BlobPart[]>([]);
 
     const frameMs = useMemo(() => {
         const hz = startMeta.tickRate > 0 ? startMeta.tickRate : 60;
@@ -388,6 +406,137 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         };
     }, [frameMs, imagesLoaded, meta.replayId, builtFrames, playerNames]);
 
+    // Применяем CSS-трансформацию к canvas при включённом free-cam.
+    useEffect(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        if (!freeCam) {
+            c.style.transform = '';
+            c.style.transformOrigin = '';
+            return;
+        }
+        c.style.transformOrigin = '50% 50%';
+        c.style.transform = `translate(${camX}px, ${camY}px) scale(${camZoom})`;
+    }, [freeCam, camX, camY, camZoom]);
+
+    // Mouse drag + wheel zoom для free-cam.
+    useEffect(() => {
+        const c = canvasRef.current;
+        if (!c || !freeCam) return;
+
+        let dragging = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        const onDown = (e: MouseEvent) => {
+            dragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        };
+        const onMove = (e: MouseEvent) => {
+            if (!dragging) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            setCamX((v) => v + dx);
+            setCamY((v) => v + dy);
+        };
+        const onUp = () => {
+            dragging = false;
+        };
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            const delta = -e.deltaY * 0.0015;
+            setCamZoom((z) => Math.max(0.4, Math.min(5, z * (1 + delta))));
+        };
+
+        c.addEventListener('mousedown', onDown);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        c.addEventListener('wheel', onWheel, { passive: false });
+        return () => {
+            c.removeEventListener('mousedown', onDown);
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            c.removeEventListener('wheel', onWheel as any);
+        };
+    }, [freeCam]);
+
+    const resetCam = useCallback(() => {
+        setCamX(0);
+        setCamY(0);
+        setCamZoom(1);
+    }, []);
+
+    // Тиковый таймер оставшихся секунд записи
+    useEffect(() => {
+        if (!recording) return;
+        const id = setInterval(() => {
+            setRecording((r) => {
+                if (!r) return r;
+                const elapsed = (performance.now() - r.startedAt) / 1000;
+                const left = Math.max(0, 10 - elapsed);
+                if (left <= 0) return r;
+                return { ...r, secondsLeft: Math.ceil(left) };
+            });
+        }, 200);
+        return () => clearInterval(id);
+    }, [recording]);
+
+    const startClipRecording = useCallback(async () => {
+        const c = canvasRef.current;
+        if (!c) return;
+        if (recorderRef.current) return;
+        if (typeof MediaRecorder === 'undefined' || typeof c.captureStream !== 'function') {
+            alert('Ваш браузер не поддерживает запись клипов (MediaRecorder).');
+            return;
+        }
+        try {
+            const stream = c.captureStream(60);
+            const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+                .find((m) => MediaRecorder.isTypeSupported(m));
+            const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4_000_000 } : undefined);
+            recordingChunksRef.current = [];
+            rec.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    recordingChunksRef.current.push(e.data);
+                }
+            };
+            rec.onstop = () => {
+                const blob = new Blob(recordingChunksRef.current, { type: mime ?? 'video/webm' });
+                recordingChunksRef.current = [];
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `replay_${meta.replayId.slice(0, 8)}_${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+                recorderRef.current = null;
+                setRecording(null);
+            };
+            rec.start();
+            recorderRef.current = rec;
+            setRecording({ startedAt: performance.now(), secondsLeft: 10 });
+            setTimeout(() => {
+                try {
+                    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+                        recorderRef.current.stop();
+                    }
+                } catch {
+                    /* ignore */
+                }
+            }, 10_000);
+        } catch (e) {
+            console.error('[clip record]', e);
+            alert('Не удалось начать запись клипа.');
+            recorderRef.current = null;
+            setRecording(null);
+        }
+    }, [meta.replayId]);
+
     if (!builtFrames.length) {
         return (
             <div className="replay-playback-screen">
@@ -555,6 +704,40 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                             </button>
                         ))}
                     </div>
+                </div>
+
+                <div className="replay-playback-controls-row replay-playback-controls-row--extras">
+                    <button
+                        type="button"
+                        className={freeCam ? 'active' : ''}
+                        onClick={() => setFreeCam((v) => !v)}
+                        title="Free-cam: свободное перемещение и зум мыши"
+                    >
+                        {freeCam ? '🎥 Free-cam: on' : '🎥 Free-cam: off'}
+                    </button>
+                    {freeCam && (
+                        <>
+                            <button type="button" onClick={() => setCamZoom((z) => Math.min(5, z * 1.2))} title="Увеличить">
+                                +
+                            </button>
+                            <button type="button" onClick={() => setCamZoom((z) => Math.max(0.4, z / 1.2))} title="Уменьшить">
+                                −
+                            </button>
+                            <button type="button" onClick={resetCam} title="Сбросить положение камеры">
+                                ⟲ Камера
+                            </button>
+                            <span className="replay-playback-zoom-label">{(camZoom * 100).toFixed(0)}%</span>
+                        </>
+                    )}
+                    <button
+                        type="button"
+                        className={recording ? 'active' : ''}
+                        disabled={!!recording}
+                        onClick={startClipRecording}
+                        title="Записать следующие 10 секунд в webm-клип"
+                    >
+                        {recording ? `⏺ ${recording.secondsLeft}с` : '⏺ Записать 10с'}
+                    </button>
                 </div>
             </div>
         </div>

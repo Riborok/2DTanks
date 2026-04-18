@@ -105,4 +105,59 @@ export class RoomManager {
     getRoom(code: string): Room | undefined {
         return this.rooms.get(code);
     }
+
+    /**
+     * Список активных комнат (с идущей игрой) для страницы «Смотреть матч».
+     * Возвращаем только то, что не помечено как singlePlayerTest, и где реально
+     * есть игроки — наблюдать в пустой тестовой комнате смысла нет.
+     */
+    listWatchableRooms(): Array<{
+        code: string;
+        playerCount: number;
+        spectatorCount: number;
+        hasActiveGame: boolean;
+        practiceMode: boolean;
+        deathmatchMode: boolean;
+    }> {
+        const out: Array<{
+            code: string;
+            playerCount: number;
+            spectatorCount: number;
+            hasActiveGame: boolean;
+            practiceMode: boolean;
+            deathmatchMode: boolean;
+        }> = [];
+        for (const [code, room] of this.rooms.entries()) {
+            const info = room.getPublicInfo();
+            if (info.singlePlayerTest) continue;
+            if (info.playerCount === 0) continue;
+            out.push({
+                code,
+                playerCount: info.playerCount,
+                spectatorCount: info.spectatorCount,
+                hasActiveGame: info.hasActiveGame,
+                practiceMode: info.practiceMode,
+                deathmatchMode: info.deathmatchMode
+            });
+        }
+        return out;
+    }
+
+    spectateRoom(
+        code: string,
+        ws: WebSocket,
+        auth: WsAuthUser | null = null
+    ): { spectatorId: string; code: string } | null {
+        const room = this.rooms.get(code);
+        if (!room) return null;
+        const added = room.addSpectator(ws, auth);
+        if (!added) return null;
+        return { spectatorId: added.spectatorId, code };
+    }
+
+    handleSpectatorDisconnect(code: string, spectatorId: string): void {
+        const room = this.rooms.get(code);
+        if (!room) return;
+        room.removeSpectator(spectatorId);
+    }
 }

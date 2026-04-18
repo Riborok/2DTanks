@@ -20,11 +20,26 @@ interface Player {
     displayName: string | null;
 }
 
+/**
+ * Наблюдатель не участвует в игре, но получает снапшоты и room-update.
+ * Каждый наблюдатель — отдельный WS, может быть один и тот же userId на
+ * нескольких вкладках, поэтому ключ — собственный spectator_id.
+ */
+interface Spectator {
+    id: string;
+    ws: WebSocket;
+    userId: string | null;
+    displayName: string | null;
+}
+
 export class Room {
     private code: string;
     private players: Map<string, Player> = new Map();
+    private spectators: Map<string, Spectator> = new Map();
     private gameWorld: GameWorld | null = null;
     private gameLoopInterval: NodeJS.Timeout | null = null;
+    /** true между созданием gameWorld и запуском setInterval (внутри await — может зайти наблюдатель). */
+    private simulationStarting: boolean = false;
     private lastGameLoopTime: number = 0;
     private readonly TICK_RATE = 60; // 60 Hz
     private readonly TICK_INTERVAL = 1000 / this.TICK_RATE;
@@ -233,6 +248,7 @@ export class Room {
     }
 
     private async startGameAsync(): Promise<void> {
+        this.simulationStarting = false;
         this.matchId = null;
         this.replayEvents = [];
         this.replayStartMeta = null;
@@ -293,6 +309,8 @@ export class Room {
             this.gameWorld.setPlayerTankMapping(attacker.id, defender.id);
         }
 
+        this.simulationStarting = true;
+        try {
         const pool = getPool();
         if (pool && !this.singlePlayerTest && this.gameWorld) {
             try {
@@ -371,12 +389,20 @@ export class Room {
             this.gameWorld.pushReplayWorldInitEvent();
         }
 
+        const gameStartPayload = JSON.stringify({ type: 'gameStart' });
         // Notify all players that game is starting
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
-                player.ws.send(JSON.stringify({
-                    type: 'gameStart'
-                }));
+                player.ws.send(gameStartPayload);
+            }
+        }
+        for (const sp of this.spectators.values()) {
+            if (sp.ws.readyState === WebSocket.OPEN) {
+                try {
+                    sp.ws.send(gameStartPayload);
+                } catch {
+                    /* ignore */
+                }
             }
         }
 
@@ -411,6 +437,9 @@ export class Room {
                 this.broadcastSnapshot();
             }
         }, this.TICK_INTERVAL);
+        } finally {
+            this.simulationStarting = false;
+        }
     }
 
     handlePlayerAction(playerId: string, action: any): void {
@@ -453,6 +482,132 @@ export class Room {
         }
     }
 
+    /**
+     * Рассылает произвольное сообщение всем участникам комнаты. Используется
+     * для лёгких социальных фич (пинги, чат), которые не затрагивают детерминизм
+     * игрового цикла и не должны попадать в запись реплея.
+     */
+    public broadcast(message: Record<string, any>, excludePlayerId?: string): void {
+        const payload = JSON.stringify(message);
+        for (const player of this.players.values()) {
+            if (excludePlayerId && player.id === excludePlayerId) continue;
+            if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+                try {
+                    player.ws.send(payload);
+                } catch {
+                    /* ignore */
+                }
+            }
+        }
+        for (const sp of this.spectators.values()) {
+            if (sp.ws.readyState === WebSocket.OPEN) {
+                try {
+                    sp.ws.send(payload);
+                } catch {
+                    /* ignore */
+                }
+            }
+        }
+    }
+
+    /**
+     * Добавить наблюдателя. Наблюдатели подключаются к уже существующей комнате
+     * и получают снапшоты + room-update, но не участвуют в матче. Возвращает
+     * `null`, если комната полностью пустая (без смысла смотреть).
+     */
+    public addSpectator(ws: WebSocket, auth: WsAuthUser | null): { spectatorId: string } | null {
+        if (this.players.size === 0 && this.spectators.size === 0) {
+            // Нет смысла наблюдать полностью пустую комнату
+            return null;
+        }
+        const spectatorId = `spec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        this.spectators.set(spectatorId, {
+            id: spectatorId,
+            ws,
+            userId: auth?.userId ?? null,
+            displayName: auth?.displayName ?? null
+        });
+        try {
+            ws.send(
+                JSON.stringify({
+                    type: 'spectate:joined',
+                    roomId: this.code,
+                    spectatorId,
+                    hasActiveGame: this.hasActiveGame() || this.simulationStarting
+                })
+            );
+        } catch {
+            /* ignore */
+        }
+        // Отдать сразу last room state + снапшот (если идёт игра)
+        try {
+            const playersArray = Array.from(this.players.values()).map((player) => ({
+                playerId: player.id,
+                role: player.role,
+                tankConfig: player.tankConfig,
+                ready: player.ready,
+                userId: player.userId ?? undefined,
+                displayName: player.displayName ?? undefined
+            }));
+            ws.send(
+                JSON.stringify({
+                    type: 'roomUpdate',
+                    players: playersArray,
+                    singlePlayerTest: this.singlePlayerTest,
+                    practiceMode: this.practiceMode,
+                    deathmatchMode: this.deathmatchMode
+                })
+            );
+            if (this.gameWorld) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'snapshot',
+                        tick: this.gameWorld.getTick(),
+                        world: this.gameWorld.getSnapshot()
+                    })
+                );
+            }
+        } catch {
+            /* ignore */
+        }
+        console.log(`[ROOM ${this.code}] Spectator ${spectatorId} joined (total spectators: ${this.spectators.size})`);
+        return { spectatorId };
+    }
+
+    public removeSpectator(spectatorId: string): void {
+        if (this.spectators.delete(spectatorId)) {
+            console.log(`[ROOM ${this.code}] Spectator ${spectatorId} left`);
+        }
+    }
+
+    public getSpectatorCount(): number {
+        return this.spectators.size;
+    }
+
+    public getPublicInfo(): {
+        code: string;
+        playerCount: number;
+        spectatorCount: number;
+        hasActiveGame: boolean;
+        singlePlayerTest: boolean;
+        practiceMode: boolean;
+        deathmatchMode: boolean;
+    } {
+        return {
+            code: this.code,
+            playerCount: this.players.size,
+            spectatorCount: this.spectators.size,
+            hasActiveGame: this.hasActiveGame(),
+            singlePlayerTest: this.singlePlayerTest,
+            practiceMode: this.practiceMode,
+            deathmatchMode: this.deathmatchMode
+        };
+    }
+
+    public getPlayerDisplayName(playerId: string): string | undefined {
+        return this.players.get(playerId)?.displayName ?? undefined;
+    }
+
     private broadcastRoomUpdate(): void {
         const playersArray = Array.from(this.players.values()).map(player => ({
             playerId: player.id,
@@ -468,17 +623,25 @@ export class Room {
         ).join(', ');
         console.log(`[ROOM ${this.code}] Broadcasting update: ${statusSummary}`);
 
+        const roomUpdatePayload = JSON.stringify({
+            type: 'roomUpdate',
+            players: playersArray,
+            singlePlayerTest: this.singlePlayerTest,
+            practiceMode: this.practiceMode,
+            deathmatchMode: this.deathmatchMode
+        });
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
-                player.ws.send(
-                    JSON.stringify({
-                        type: 'roomUpdate',
-                        players: playersArray,
-                        singlePlayerTest: this.singlePlayerTest,
-                        practiceMode: this.practiceMode,
-                        deathmatchMode: this.deathmatchMode
-                    })
-                );
+                player.ws.send(roomUpdatePayload);
+            }
+        }
+        for (const sp of this.spectators.values()) {
+            if (sp.ws.readyState === WebSocket.OPEN) {
+                try {
+                    sp.ws.send(roomUpdatePayload);
+                } catch {
+                    /* ignore */
+                }
             }
         }
     }
@@ -492,13 +655,23 @@ export class Room {
             console.log(`[ROOM ${this.code}] broadcastSnapshot: sending ${snapshot.bullets.length} bullets to clients`);
         }
 
+        const snapshotPayload = JSON.stringify({
+            type: 'snapshot',
+            tick: this.gameWorld.getTick(),
+            world: snapshot
+        });
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
-                player.ws.send(JSON.stringify({
-                    type: 'snapshot',
-                    tick: this.gameWorld.getTick(),
-                    world: snapshot
-                }));
+                player.ws.send(snapshotPayload);
+            }
+        }
+        for (const sp of this.spectators.values()) {
+            if (sp.ws.readyState === WebSocket.OPEN) {
+                try {
+                    sp.ws.send(snapshotPayload);
+                } catch {
+                    /* ignore */
+                }
             }
         }
     }
@@ -568,6 +741,7 @@ export class Room {
     }
 
     private endGame(result: GameWorldEndResult): void {
+        this.simulationStarting = false;
         if (this.gameLoopInterval) {
             clearInterval(this.gameLoopInterval);
             this.gameLoopInterval = null;
@@ -612,6 +786,34 @@ export class Room {
                 }
             }
         }
+        for (const sp of this.spectators.values()) {
+            if (sp.ws.readyState !== WebSocket.OPEN) continue;
+            try {
+                if (result.mode === 'standard') {
+                    sp.ws.send(
+                        JSON.stringify({
+                            type: 'gameEnd',
+                            winner: result.winner,
+                            reason: result.reason,
+                            stats: result.stats
+                        })
+                    );
+                } else {
+                    sp.ws.send(
+                        JSON.stringify({
+                            type: 'gameEnd',
+                            deathmatch: true,
+                            reason: result.reason,
+                            winnerPlayerIds: result.winnerPlayerIds,
+                            scores: result.scores,
+                            stats: result.stats
+                        })
+                    );
+                }
+            } catch {
+                /* ignore */
+            }
+        }
 
         if (this.gameWorld) {
             this.gameWorld.setReplayEventSink(null);
@@ -628,6 +830,7 @@ export class Room {
         return true;
     }
 
+    /** Идёт тиковый цикл матча (для реконнекта и списка «Смотреть»). */
     hasActiveGame(): boolean {
         return this.gameWorld !== null && this.gameLoopInterval !== null;
     }
@@ -642,6 +845,7 @@ export class Room {
     }
 
     forceCloseDueToEmpty(): void {
+        this.simulationStarting = false;
         if (this.gameLoopInterval) {
             clearInterval(this.gameLoopInterval);
             this.gameLoopInterval = null;

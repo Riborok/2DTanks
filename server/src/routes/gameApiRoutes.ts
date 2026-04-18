@@ -3,6 +3,10 @@ import { getPool } from '../db/pool';
 import { requireBearerAuth } from '../auth/httpAuth';
 import * as replayRepo from '../repos/replayRepo';
 import * as tankPresetRepo from '../repos/tankPresetRepo';
+import * as friendshipsRepo from '../repos/friendshipsRepo';
+import * as replayLikesRepo from '../repos/replayLikesRepo';
+import { notifyUserSockets } from '../ws/userSocketRegistry';
+import * as userRepo from '../repos/userRepo';
 const router = Router();
 router.use(requireBearerAuth);
 
@@ -149,6 +153,40 @@ router.get('/replays/:replayId/playback', async (req, res) => {
     } catch (e) {
         console.error('[game/replays/playback]', e);
         res.status(500).json({ error: 'Ошибка загрузки записи' });
+    }
+});
+
+router.post('/replays/:replayId/share', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const replayId = String(req.params.replayId || '');
+    try {
+        const slug = await replayRepo.ensureReplaySharedSlug(pool, replayId, req.auth!.sub);
+        if (!slug) {
+            res.status(404).json({ error: 'Реплей не найден' });
+            return;
+        }
+        res.json({ slug });
+    } catch (e) {
+        console.error('[game/replays share]', e);
+        res.status(500).json({ error: 'Не удалось создать ссылку' });
+    }
+});
+
+router.delete('/replays/:replayId/share', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const replayId = String(req.params.replayId || '');
+    try {
+        const ok = await replayRepo.revokeReplaySharedSlug(pool, replayId, req.auth!.sub);
+        if (!ok) {
+            res.status(404).json({ error: 'Реплей не найден' });
+            return;
+        }
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[game/replays share revoke]', e);
+        res.status(500).json({ error: 'Не удалось отозвать ссылку' });
     }
 });
 
@@ -299,6 +337,260 @@ router.delete('/tank-presets/:presetId', async (req, res) => {
     } catch (e) {
         console.error('[game/tank-presets delete]', e);
         res.status(500).json({ error: 'Не удалось удалить сет' });
+    }
+});
+
+// ===== FRIENDS =====
+
+function mapFriendRow(row: friendshipsRepo.FriendRow) {
+    return {
+        userId: row.other_user_id,
+        login: row.other_login,
+        displayName: row.other_display_name,
+        status: row.status,
+        requestedByMe: row.requested_by_me,
+        createdAt: row.created_at
+    };
+}
+
+router.get('/friends', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    try {
+        const [friends, incoming, outgoing, blocked] = await Promise.all([
+            friendshipsRepo.listFriends(pool, req.auth!.sub),
+            friendshipsRepo.listIncomingRequests(pool, req.auth!.sub),
+            friendshipsRepo.listOutgoingRequests(pool, req.auth!.sub),
+            friendshipsRepo.listBlocked(pool, req.auth!.sub)
+        ]);
+        res.json({
+            friends: friends.map(mapFriendRow),
+            incoming: incoming.map(mapFriendRow),
+            outgoing: outgoing.map(mapFriendRow),
+            blocked: blocked.map(mapFriendRow)
+        });
+    } catch (e) {
+        console.error('[game/friends list]', e);
+        res.status(500).json({ error: 'Ошибка загрузки друзей' });
+    }
+});
+
+router.post('/friends/request', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const targetId = String(req.body?.userId || '').trim();
+    if (!targetId) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const result = await friendshipsRepo.sendFriendRequest(pool, req.auth!.sub, targetId);
+        if (result === 'user_not_found') {
+            res.status(404).json({ error: 'Пользователь не найден' });
+            return;
+        }
+        if (result === 'self') {
+            res.status(400).json({ error: 'Нельзя добавить себя' });
+            return;
+        }
+        if (result === 'blocked') {
+            res.status(403).json({ error: 'Этот пользователь недоступен' });
+            return;
+        }
+        if (result === 'ok') {
+            const mutual = await friendshipsRepo.areAcceptedFriends(pool, req.auth!.sub, targetId);
+            if (mutual) {
+                const peerRow = await userRepo.findUserById(pool, targetId);
+                notifyUserSockets(targetId, {
+                    type: 'friends:became_friends',
+                    peerUserId: req.auth!.sub,
+                    peerLogin: req.auth!.login,
+                    peerDisplayName: req.auth!.displayName
+                });
+                notifyUserSockets(req.auth!.sub, {
+                    type: 'friends:became_friends',
+                    peerUserId: targetId,
+                    peerLogin: peerRow?.login ?? '',
+                    peerDisplayName: peerRow?.display_name ?? ''
+                });
+            } else {
+                notifyUserSockets(targetId, {
+                    type: 'friends:incoming',
+                    fromUserId: req.auth!.sub,
+                    fromLogin: req.auth!.login,
+                    fromDisplayName: req.auth!.displayName
+                });
+            }
+        }
+        res.json({ ok: true, status: result });
+    } catch (e) {
+        console.error('[game/friends request]', e);
+        res.status(500).json({ error: 'Не удалось отправить запрос' });
+    }
+});
+
+router.post('/friends/accept', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const other = String(req.body?.userId || '').trim();
+    if (!other) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const r = await friendshipsRepo.acceptFriendRequest(pool, req.auth!.sub, other);
+        if (r === 'no_pending') {
+            res.status(404).json({ error: 'Нет входящего запроса' });
+            return;
+        }
+        // `other` — отправитель заявки: уведомляем, что её приняли.
+        notifyUserSockets(other, {
+            type: 'friends:accepted',
+            friendUserId: req.auth!.sub,
+            friendLogin: req.auth!.login,
+            friendDisplayName: req.auth!.displayName
+        });
+        // Принявший тоже получает push — список друзей обновится без перезагрузки.
+        const otherRow = await userRepo.findUserById(pool, other);
+        notifyUserSockets(req.auth!.sub, {
+            type: 'friends:you_accepted',
+            friendUserId: other,
+            friendLogin: otherRow?.login ?? '',
+            friendDisplayName: otherRow?.display_name ?? ''
+        });
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[game/friends accept]', e);
+        res.status(500).json({ error: 'Ошибка принятия запроса' });
+    }
+});
+
+router.post('/friends/reject', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const other = String(req.body?.userId || '').trim();
+    if (!other) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const ok = await friendshipsRepo.rejectFriendRequest(pool, req.auth!.sub, other);
+        res.json({ ok });
+    } catch (e) {
+        console.error('[game/friends reject]', e);
+        res.status(500).json({ error: 'Ошибка отклонения запроса' });
+    }
+});
+
+router.post('/friends/remove', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const other = String(req.body?.userId || '').trim();
+    if (!other) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const ok = await friendshipsRepo.removeFriend(pool, req.auth!.sub, other);
+        res.json({ ok });
+    } catch (e) {
+        console.error('[game/friends remove]', e);
+        res.status(500).json({ error: 'Ошибка удаления' });
+    }
+});
+
+router.post('/friends/block', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const other = String(req.body?.userId || '').trim();
+    if (!other) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const r = await friendshipsRepo.blockUser(pool, req.auth!.sub, other);
+        if (r === 'self') {
+            res.status(400).json({ error: 'Нельзя заблокировать себя' });
+            return;
+        }
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[game/friends block]', e);
+        res.status(500).json({ error: 'Ошибка блокировки' });
+    }
+});
+
+router.post('/friends/unblock', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const other = String(req.body?.userId || '').trim();
+    if (!other) {
+        res.status(400).json({ error: 'Не указан пользователь' });
+        return;
+    }
+    try {
+        const ok = await friendshipsRepo.unblockUser(pool, req.auth!.sub, other);
+        res.json({ ok });
+    } catch (e) {
+        console.error('[game/friends unblock]', e);
+        res.status(500).json({ error: 'Ошибка разблокировки' });
+    }
+});
+
+router.get('/users/search', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const q = String(req.query?.q || '').trim();
+    if (q.length < 2) {
+        res.json({ users: [] });
+        return;
+    }
+    try {
+        const rows = await friendshipsRepo.searchUsers(pool, req.auth!.sub, q, 20);
+        res.json({
+            users: rows.map((u) => ({
+                userId: u.user_id,
+                login: u.login,
+                displayName: u.display_name
+            }))
+        });
+    } catch (e) {
+        console.error('[game/users/search]', e);
+        res.status(500).json({ error: 'Ошибка поиска' });
+    }
+});
+
+// ===== REPLAY LIKES / GALLERY =====
+
+router.post('/replays/:replayId/like', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const replayId = String(req.params.replayId || '');
+    try {
+        const r = await replayLikesRepo.likeReplay(pool, replayId, req.auth!.sub);
+        if (r === 'not_public') {
+            res.status(403).json({ error: 'Реплей не публичный' });
+            return;
+        }
+        const info = await replayLikesRepo.getLikeInfo(pool, replayId, req.auth!.sub);
+        res.json({ ok: true, ...info });
+    } catch (e) {
+        console.error('[game/replays like]', e);
+        res.status(500).json({ error: 'Ошибка лайка' });
+    }
+});
+
+router.delete('/replays/:replayId/like', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const replayId = String(req.params.replayId || '');
+    try {
+        await replayLikesRepo.unlikeReplay(pool, replayId, req.auth!.sub);
+        const info = await replayLikesRepo.getLikeInfo(pool, replayId, req.auth!.sub);
+        res.json({ ok: true, ...info });
+    } catch (e) {
+        console.error('[game/replays unlike]', e);
+        res.status(500).json({ error: 'Ошибка удаления лайка' });
     }
 });
 

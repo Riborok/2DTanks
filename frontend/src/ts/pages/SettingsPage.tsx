@@ -1,0 +1,184 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useSettings } from '../context/SettingsContext';
+import { SoundManager } from '../utils/SoundManager';
+import {
+    CONTROL_ACTION_LABELS,
+    CONTROL_ACTION_ORDER,
+    DEFAULT_KEY_BINDINGS,
+    RESERVED_GAME_KEY_CODES,
+    type ControlAction,
+    formatKeyCode
+} from '../utils/keyBindings';
+
+const TOUCH_GAME_MEDIA = '(max-width: 900px), (pointer: coarse)';
+
+const SettingsPage: React.FC = () => {
+    const { settings, update, reset } = useSettings();
+    const [touchGameUi, setTouchGameUi] = useState(false);
+    const [capturing, setCapturing] = useState<ControlAction | null>(null);
+
+    useEffect(() => {
+        const mq = window.matchMedia(TOUCH_GAME_MEDIA);
+        const apply = () => setTouchGameUi(mq.matches);
+        apply();
+        mq.addEventListener('change', apply);
+        return () => mq.removeEventListener('change', apply);
+    }, []);
+
+    useEffect(() => {
+        if (!capturing) return;
+        const onKey = (e: KeyboardEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.code === 'Escape') {
+                setCapturing(null);
+                return;
+            }
+            if (e.repeat) return;
+            if (RESERVED_GAME_KEY_CODES.has(e.code)) {
+                return;
+            }
+            const cur = settings.controls.keyBindings;
+            const takenBy = CONTROL_ACTION_ORDER.find((a) => a !== capturing && cur[a] === e.code);
+            if (takenBy) {
+                return;
+            }
+            update('controls', {
+                keyBindings: { ...cur, [capturing]: e.code }
+            });
+            setCapturing(null);
+        };
+        window.addEventListener('keydown', onKey, true);
+        return () => window.removeEventListener('keydown', onKey, true);
+    }, [capturing, settings.controls.keyBindings, update]);
+
+    const onAudioChange = (key: 'master' | 'music' | 'sfx' | 'ui') => (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = Number(e.target.value) / 100;
+        update('audio', { [key]: v } as any);
+        SoundManager.setVolumes({ ...settings.audio, [key]: v });
+    };
+
+    const previewClick = () => SoundManager.play('ui:click');
+
+    const resetKeys = useCallback(() => {
+        update('controls', { keyBindings: { ...DEFAULT_KEY_BINDINGS } });
+    }, [update]);
+
+    return (
+        <div className="settings-page">
+            <h1 className="settings-title">Настройки</h1>
+
+            <section className="settings-section">
+                <h2>Аудио</h2>
+                <Slider label="Общая громкость" value={settings.audio.master} onChange={onAudioChange('master')} />
+                <Slider label="Звуки в бою" value={settings.audio.sfx} onChange={onAudioChange('sfx')} />
+                <Slider label="Интерфейс" value={settings.audio.ui} onChange={onAudioChange('ui')} />
+                <Slider label="Музыка" value={settings.audio.music} onChange={onAudioChange('music')} />
+                <button className="settings-btn" type="button" onClick={previewClick}>
+                    Проверить звук
+                </button>
+            </section>
+
+            {!touchGameUi && (
+                <section className="settings-section">
+                    <h2>Клавиатура (ПК)</h2>
+                    <p className="settings-lede">
+                        В бою клавиша <kbd>V</kbd> зарезервирована под колесо пингов. Нажмите поле и нажмите новую
+                        клавишу; <kbd>Esc</kbd> — отмена записи.
+                    </p>
+                    <div className="settings-key-grid">
+                        {CONTROL_ACTION_ORDER.map((action) => (
+                            <div key={action} className="settings-key-row">
+                                <span className="settings-key-label">{CONTROL_ACTION_LABELS[action]}</span>
+                                <button
+                                    type="button"
+                                    className={
+                                        capturing === action ? 'settings-key-cap settings-key-cap--active' : 'settings-key-cap'
+                                    }
+                                    onClick={() => setCapturing((c) => (c === action ? null : action))}
+                                >
+                                    {capturing === action ? '… нажмите клавишу' : formatKeyCode(settings.controls.keyBindings[action])}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <button className="settings-btn" type="button" onClick={resetKeys}>
+                        Сбросить клавиши по умолчанию
+                    </button>
+                </section>
+            )}
+
+            {touchGameUi && (
+                <section className="settings-section">
+                    <h2>Мобильное управление</h2>
+                    <p className="settings-lede">
+                        Только для сенсорного режима игры (как на телефоне). Подсказка повернуть устройство в бою в
+                        этом режиме всегда включена.
+                    </p>
+                    <div className="settings-row">
+                        <label>Сторона джойстика</label>
+                        <div className="settings-seg">
+                            <button
+                                type="button"
+                                className={settings.mobile.touchSide === 'left' ? 'active' : ''}
+                                onClick={() => update('mobile', { touchSide: 'left' })}
+                            >
+                                Слева (правша)
+                            </button>
+                            <button
+                                type="button"
+                                className={settings.mobile.touchSide === 'right' ? 'active' : ''}
+                                onClick={() => update('mobile', { touchSide: 'right' })}
+                            >
+                                Справа (левша)
+                            </button>
+                        </div>
+                    </div>
+                    <Slider
+                        label={`Размер кнопок: ${settings.mobile.touchScale.toFixed(2)}×`}
+                        value={(settings.mobile.touchScale - 0.7) / 0.6}
+                        onChange={(e) => update('mobile', { touchScale: 0.7 + (Number(e.target.value) / 100) * 0.6 })}
+                    />
+                    <Checkbox
+                        label="Удержание кнопки стреляет очередью"
+                        checked={settings.mobile.holdToFire}
+                        onChange={(v) => update('mobile', { holdToFire: v })}
+                    />
+                    <Checkbox
+                        label="Вибрация при выстреле и попадании"
+                        checked={settings.mobile.haptics}
+                        onChange={(v) => update('mobile', { haptics: v })}
+                    />
+                </section>
+            )}
+
+            <button type="button" className="settings-reset" onClick={reset}>
+                Сбросить к стандартным
+            </button>
+        </div>
+    );
+};
+
+const Slider: React.FC<{
+    label: string;
+    value: number;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ label, value, onChange }) => (
+    <div className="settings-row">
+        <label>{label}</label>
+        <input type="range" min={0} max={100} value={Math.round(value * 100)} onChange={onChange} />
+    </div>
+);
+
+const Checkbox: React.FC<{
+    label: string;
+    checked: boolean;
+    onChange: (v: boolean) => void;
+}> = ({ label, checked, onChange }) => (
+    <label className="settings-checkbox">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <span>{label}</span>
+    </label>
+);
+
+export default SettingsPage;

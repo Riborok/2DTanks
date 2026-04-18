@@ -155,6 +155,23 @@
     align-items: flex-end;
 }
 
+/* Зеркальные режимы для настройки «Сторона джойстика» */
+.game-touch-left.game-touch-left--right {
+    left: auto;
+    right: 0;
+    padding-left: 14px;
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
+    align-items: flex-end;
+}
+
+.game-touch-right.game-touch-right--left {
+    right: auto;
+    left: 0;
+    padding-right: 14px;
+    padding-left: calc(14px + env(safe-area-inset-left, 0px));
+    align-items: flex-start;
+}
+
 .game-touch-hint {
     pointer-events: none;
     font-size: 10px;

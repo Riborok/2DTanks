@@ -27,11 +27,23 @@ const AppShell: React.FC = () => {
                     <NavLink to="/replays" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
                         Реплеи
                     </NavLink>
+                    <NavLink to="/gallery" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                        Галерея
+                    </NavLink>
+                    <NavLink to="/watch" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                        Смотреть
+                    </NavLink>
+                    <NavLink to="/friends" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                        Друзья
+                    </NavLink>
                     <NavLink to="/stats" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
                         Статистика
                     </NavLink>
                     <NavLink to="/profile" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
                         Профиль
+                    </NavLink>
+                    <NavLink to="/settings" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                        Настройки
                     </NavLink>
                 </nav>
                 <div className="app-shell-user">

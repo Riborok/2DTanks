@@ -165,6 +165,59 @@ export async function getReplayPlayback(
     };
 }
 
+export async function shareReplay(token: string, replayId: string): Promise<{ slug: string }> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/share`,
+        { method: 'POST', headers: headers(token) }
+    );
+    const data = await parseJson<{ slug?: string; error?: string }>(res);
+    if (!res.ok || !data.slug) {
+        throw new Error(data.error || 'Не удалось получить ссылку');
+    }
+    return { slug: data.slug };
+}
+
+export async function revokeReplayShare(token: string, replayId: string): Promise<void> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/share`,
+        { method: 'DELETE', headers: headers(token) }
+    );
+    if (!res.ok) {
+        const data = await parseJson<{ error?: string }>(res);
+        throw new Error(data.error || 'Не удалось отозвать ссылку');
+    }
+}
+
+export async function getPublicReplayPlayback(slug: string): Promise<{
+    meta: ReplayPlaybackMetaDto;
+    startMeta: ReplayStartMetaDto;
+    actions: ReplayActionDto[];
+    events: ReplayEventDto[];
+    playerNames: Record<string, string>;
+}> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/public/replays/by-slug/${encodeURIComponent(slug)}/playback`
+    );
+    const data = await parseJson<{
+        meta?: ReplayPlaybackMetaDto;
+        startMeta?: ReplayStartMetaDto;
+        actions?: ReplayActionDto[];
+        events?: ReplayEventDto[];
+        playerNames?: Record<string, string>;
+        error?: string;
+    }>(res);
+    if (!res.ok || !data.meta || !data.startMeta) {
+        throw new Error(data.error || 'Не удалось загрузить запись');
+    }
+    return {
+        meta: data.meta,
+        startMeta: data.startMeta,
+        actions: data.actions ?? [],
+        events: data.events ?? [],
+        playerNames: data.playerNames ?? {}
+    };
+}
+
 export interface TankPresetDto {
     presetId: string;
     name: string;
@@ -243,6 +296,134 @@ export async function deleteTankPreset(token: string, presetId: string): Promise
     if (!res.ok) {
         throw new Error(data.error || 'Не удалось удалить сет');
     }
+}
+
+// ====== FRIENDS ======
+
+export type FriendshipStatus = 'pending' | 'accepted' | 'blocked';
+
+export interface FriendDto {
+    userId: string;
+    login: string;
+    displayName: string | null;
+    status: FriendshipStatus;
+    requestedByMe: boolean;
+    createdAt: string;
+}
+
+export interface FriendsListDto {
+    friends: FriendDto[];
+    incoming: FriendDto[];
+    outgoing: FriendDto[];
+    blocked: FriendDto[];
+}
+
+export async function getFriends(token: string): Promise<FriendsListDto> {
+    const res = await fetch(`${getApiOrigin()}/api/game/friends`, { headers: headers(token) });
+    const data = await parseJson<Partial<FriendsListDto> & { error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Не удалось загрузить друзей');
+    return {
+        friends: data.friends ?? [],
+        incoming: data.incoming ?? [],
+        outgoing: data.outgoing ?? [],
+        blocked: data.blocked ?? []
+    };
+}
+
+async function friendAction(
+    token: string,
+    path: string,
+    userId: string
+): Promise<void> {
+    const res = await fetch(`${getApiOrigin()}/api/game/friends/${path}`, {
+        method: 'POST',
+        headers: headers(token),
+        body: JSON.stringify({ userId })
+    });
+    const data = await parseJson<{ error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Ошибка');
+}
+
+export const sendFriendRequestApi = (t: string, id: string) => friendAction(t, 'request', id);
+export const acceptFriendApi = (t: string, id: string) => friendAction(t, 'accept', id);
+export const rejectFriendApi = (t: string, id: string) => friendAction(t, 'reject', id);
+export const removeFriendApi = (t: string, id: string) => friendAction(t, 'remove', id);
+export const blockUserApi = (t: string, id: string) => friendAction(t, 'block', id);
+export const unblockUserApi = (t: string, id: string) => friendAction(t, 'unblock', id);
+
+export interface UserSearchDto {
+    userId: string;
+    login: string;
+    displayName: string | null;
+}
+
+export async function searchUsers(token: string, query: string): Promise<UserSearchDto[]> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/users/search?q=${encodeURIComponent(query)}`,
+        { headers: headers(token) }
+    );
+    const data = await parseJson<{ users?: UserSearchDto[]; error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Ошибка поиска');
+    return data.users ?? [];
+}
+
+// ====== REPLAY LIKES / PUBLIC GALLERY ======
+
+export interface GalleryReplayDto {
+    replayId: string;
+    matchId: string;
+    title: string;
+    slug: string | null;
+    ownerDisplayName: string | null;
+    createdAt: string;
+    endedAt: string | null;
+    roomCode: string | null;
+    winnerRole: string | null;
+    matchStatus: string | null;
+    durationTicks: number | null;
+    likeCount: number;
+    likedByMe: boolean;
+}
+
+export async function getPublicGallery(params: {
+    limit?: number;
+    offset?: number;
+    sort?: 'new' | 'top';
+} = {}): Promise<GalleryReplayDto[]> {
+    const q = new URLSearchParams();
+    if (params.limit) q.set('limit', String(params.limit));
+    if (params.offset) q.set('offset', String(params.offset));
+    if (params.sort) q.set('sort', params.sort);
+    const res = await fetch(`${getApiOrigin()}/api/public/gallery?${q.toString()}`);
+    const data = await parseJson<{ replays?: GalleryReplayDto[]; error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Ошибка загрузки галереи');
+    return data.replays ?? [];
+}
+
+export async function likeReplay(
+    token: string,
+    replayId: string
+): Promise<{ likeCount: number; likedByMe: boolean }> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/like`,
+        { method: 'POST', headers: headers(token) }
+    );
+    const data = await parseJson<{ likeCount?: number; likedByMe?: boolean; error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Ошибка');
+    return { likeCount: Number(data.likeCount ?? 0), likedByMe: Boolean(data.likedByMe) };
+}
+
+export async function unlikeReplay(
+    token: string,
+    replayId: string
+): Promise<{ likeCount: number; likedByMe: boolean }> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/game/replays/${encodeURIComponent(replayId)}/like`,
+        { method: 'DELETE', headers: headers(token) }
+    );
+    const data = await parseJson<{ likeCount?: number; likedByMe?: boolean; error?: string }>(res);
+    if (!res.ok) throw new Error(data.error || 'Ошибка');
+    return { likeCount: Number(data.likeCount ?? 0), likedByMe: Boolean(data.likedByMe) };
 }
 
 export async function patchReplay(
