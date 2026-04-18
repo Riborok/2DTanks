@@ -144,6 +144,16 @@ const PlayPage: React.FC = () => {
         };
 
         const onSnapshot = () => {
+            // Этот «авто-переход в game по снапшоту» — спасательный круг
+            // на случай, если клиент пропустил `gameStart` (реконнект и
+            // т.п.). Но без проверки myPlayerIdRef он же ломал «Выйти из
+            // матча»: handleLeaveGame ставит screen='hub', а ещё пара
+            // снапшотов из не закрытой сервером комнаты успевала
+            // вернуть нас обратно в game. Поэтому игнорим снапшоты,
+            // когда мы уже не считаем себя игроком.
+            if (!myPlayerIdRef.current) {
+                return;
+            }
             setScreen((prevScreen) => {
                 if (prevScreen !== 'game' && prevScreen !== 'gameEnd') {
                     screenRef.current = 'game';
@@ -153,11 +163,23 @@ const PlayPage: React.FC = () => {
             });
         };
 
+        const onLeftGame = () => {
+            // Сервер подтвердил выход — на всякий случай гасим возможный
+            // «прилипший» экран, если локальный handleLeaveGame по
+            // какой-то причине не был вызван (например, выход инициирован
+            // не кнопкой, а дисконнектом из комнаты).
+            myPlayerIdRef.current = '';
+            setMyPlayerId('');
+            setScreen((prev) => (prev === 'game' ? 'hub' : prev));
+            screenRef.current = 'hub';
+        };
+
         wsClient.on('joined', onJoined);
         wsClient.on('error', onError);
         wsClient.on('roomUpdate', onRoomUpdate);
         wsClient.on('gameStart', onGameStart);
         wsClient.on('snapshot', onSnapshot);
+        wsClient.on('leftGame', onLeftGame);
 
         return () => {
             cancelled = true;
@@ -166,6 +188,7 @@ const PlayPage: React.FC = () => {
             wsClient.off('roomUpdate', onRoomUpdate);
             wsClient.off('gameStart', onGameStart);
             wsClient.off('snapshot', onSnapshot);
+            wsClient.off('leftGame', onLeftGame);
         };
     }, [authRestored, accessToken, authUser, wsClient]);
 

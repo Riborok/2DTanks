@@ -30,6 +30,7 @@ RUN apk add --no-cache wget
 # Copy built files to nginx
 COPY --from=builder /app/src/js /usr/share/nginx/html/src/js
 COPY --from=builder /app/src/img /usr/share/nginx/html/src/img
+COPY --from=builder /app/src/audio /usr/share/nginx/html/src/audio
 COPY --from=builder /app/src/index.css /usr/share/nginx/html/src/
 COPY --from=builder /app/index.html /usr/share/nginx/html/
 

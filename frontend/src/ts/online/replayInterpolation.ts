@@ -115,6 +115,7 @@ export function interpolateReplaySnapshots(
         killScores: to.killScores,
         explosions: [],
         grenadeExplosions: [],
-        bulletImpacts: []
+        bulletImpacts: [],
+        hullCollisions: []
     };
 }

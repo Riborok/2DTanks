@@ -64,9 +64,20 @@ interface TimedBulletImpactEvent extends TimedExplosionEvent {
     bulletType: number;
 }
 
+/** Удар корпуса танка о препятствие/другой танк — для клиентского SFX без эвристик. */
+interface TimedHullCollisionEvent {
+    tick: number;
+    x: number;
+    y: number;
+    playerId: string;
+}
+
 interface MutablePlayerMatchStats extends PlayerMatchStats {}
 
 export class GameWorld {
+    /** Порог нормального импульса: ниже — микроджиттер/покой у стены, без звука. */
+    private static readonly HULL_IMPULSE_SOUND_MIN = 0.38;
+
     private tick: number = 0;
     private roomCode: string;
     private elapsedMs: number = 0;
@@ -153,6 +164,7 @@ export class GameWorld {
     private explosionsRecent: TimedExplosionEvent[] = [];
     private grenadeExplosionsRecent: TimedGrenadeExplosionEvent[] = [];
     private bulletImpactsRecent: TimedBulletImpactEvent[] = [];
+    private hullCollisionsRecent: TimedHullCollisionEvent[] = [];
 
     private levelSpawnOrigin: Point | null = null;
     private replayEventSink: ((e: ReplayEvent) => void) | null = null;
@@ -253,11 +265,16 @@ export class GameWorld {
         this.bulletImpactsRecent.push({ tick: this.tick, x, y, angle, bulletType });
     }
 
+    private pushHullCollision(x: number, y: number, playerId: string): void {
+        this.hullCollisionsRecent.push({ tick: this.tick, x, y, playerId });
+    }
+
     private pruneRecentEffects(): void {
         const minTick = Math.max(0, this.tick - GameWorld.EFFECT_RETENTION_TICKS + 1);
         this.explosionsRecent = this.explosionsRecent.filter((e) => e.tick >= minTick);
         this.grenadeExplosionsRecent = this.grenadeExplosionsRecent.filter((e) => e.tick >= minTick);
         this.bulletImpactsRecent = this.bulletImpactsRecent.filter((e) => e.tick >= minTick);
+        this.hullCollisionsRecent = this.hullCollisionsRecent.filter((e) => e.tick >= minTick);
     }
 
     private initializeLevel(level: number): void {
@@ -312,12 +329,22 @@ export class GameWorld {
                 ? MazeCreator.createMazeLvl2(this.wallMaterial, point)
                 : MazeCreator.createMazeLvl3(this.wallMaterial, point);
 
+        // Дедуп лабиринта: соседние линии стен в `MazeCreator` законно
+        // ставят коннектор-«квадратик» в один и тот же угол сетки
+        // (например, конец вертикальной линии и начало горизонтальной).
+        // Раньше второй такой кусок выкидывался по факту коллизии в
+        // QuadTree — но ровно тот же фильтр ронял и легитимные блоки,
+        // которые пересекались с _ранее_ не успевшим встать дубликатом
+        // (порядок вставки нестабилен). Поэтому теперь дедупим строго по
+        // (originalPoint, shapeNum) — это убирает только настоящие
+        // близнецы и больше ничего.
+        const seen = new Set<string>();
         for (const wall of mapWalls) {
-            const wid = wall.model.entity.id;
-            const hits = Array.from(this.collisionSystem.getCollisions(wall.model.entity)).filter((c) => c.id !== wid);
-            if (hits.length > 0) {
+            const key = `${Math.round(wall.originalPoint.x)}|${Math.round(wall.originalPoint.y)}|${wall.shapeNum}`;
+            if (seen.has(key)) {
                 continue;
             }
+            seen.add(key);
             this.collisionSystem.insert(wall.model.entity);
             this.walls.push(wall);
         }
@@ -700,13 +727,24 @@ export class GameWorld {
         tank.model.syncTurretAfterHullStep(hullDeltaAngle);
         tank.model.stabilizeVelocityAfterHullStep(deltaTime);
 
+        const hullSoundOnce = new Set<string>();
         for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
             const collisions = Array.from(this.collisionSystem.getCollisions(tank.model.entity))
                 .filter(collided => collided.id !== tank.model.entity.id);
             if (collisions.length === 0)
                 break;
-            for (const collided of collisions)
-                CollisionResolver.resolveCollision(tank.model.entity, collided);
+            for (const collided of collisions) {
+                const res = CollisionResolver.resolveCollision(tank.model.entity, collided);
+                if (!res) continue;
+                if (
+                    tank.playerId &&
+                    Math.abs(res.jnApplied) >= GameWorld.HULL_IMPULSE_SOUND_MIN &&
+                    !hullSoundOnce.has(tank.id)
+                ) {
+                    hullSoundOnce.add(tank.id);
+                    this.pushHullCollision(res.contact.x, res.contact.y, tank.playerId);
+                }
+            }
         }
         
         // Re-insert into collision system (as in original TankMovementManager.hullUpdate)
@@ -1539,7 +1577,8 @@ export class GameWorld {
             x: bullet.model.entity.points[0].x,
             y: bullet.model.entity.points[0].y,
             angle: bullet.model.entity.angle,
-            type: bullet.bulletNum // Include bullet type (num) for rendering
+            type: bullet.bulletNum, // Include bullet type (num) for rendering
+            sourceTankId: bullet.sourceId
         }));
         const wallSnapshots = this.walls.map(wall => {
             const entity = wall.model.entity;
@@ -1599,6 +1638,12 @@ export class GameWorld {
                 y,
                 angle,
                 bulletType
+            })),
+            hullCollisions: this.hullCollisionsRecent.map(({ tick, x, y, playerId }) => ({
+                tick,
+                x,
+                y,
+                playerId
             })),
             keysCollected: this.keysCollected,
             currentLevel: this.currentLevel,

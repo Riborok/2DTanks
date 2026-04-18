@@ -26,6 +26,8 @@ export interface ServerBullet {
     y: number;
     angle: number;
     type: number;
+    /** id танка-источника (сервер `sourceId`) — для SFX своего выстрела; в старых реплеях может отсутствовать */
+    sourceTankId?: string;
 }
 
 export interface ServerWall {
@@ -76,6 +78,14 @@ export interface ServerBulletImpact {
     bulletType: number;
 }
 
+/** Удар корпуса танка (сервер, нормальный импульс контакта) — для SFX без эвристик. */
+export interface ServerHullCollision {
+    tick: number;
+    x: number;
+    y: number;
+    playerId: string;
+}
+
 export interface GameWorldSnapshot {
     tanks: ServerTank[];
     bullets: ServerBullet[];
@@ -85,6 +95,7 @@ export interface GameWorldSnapshot {
     explosions?: ServerExplosion[]; // Optional: tank explosions from this tick
     grenadeExplosions?: ServerGrenadeExplosion[]; // Optional: grenade explosions from this tick
     bulletImpacts?: ServerBulletImpact[];
+    hullCollisions?: ServerHullCollision[];
     keysCollected: number;
     currentLevel: number;
     timeElapsed: number;

@@ -3,6 +3,13 @@ import {Point, Vector} from "./Point";
 import {VectorUtils} from "./VectorUtils";
 import {CollisionDetector} from "./CollisionDetector";
 
+/** Результат разрешения контакта — нужен миру для SFX (только при ненулевом jn). */
+export interface CollisionResolveResult {
+    contact: Point;
+    /** Нормальный импульс (масштаб решателя); 0 если удар «мёртвый». */
+    jnApplied: number;
+}
+
 export class CollisionResolver {
     private constructor() {}
 
@@ -13,7 +20,10 @@ export class CollisionResolver {
     private static readonly OVERLAP_SLOP: number = 0.02;
     private static readonly FRICTION_COEFFICIENT: number = 0.14;
 
-    public static resolveCollision(impartingEntity: IEntity, receivingEntity: IEntity): Point | null {
+    public static resolveCollision(
+        impartingEntity: IEntity,
+        receivingEntity: IEntity
+    ): CollisionResolveResult | null {
         const collisionResult = CollisionDetector.getCollisionResult(impartingEntity, receivingEntity);
         if (collisionResult === null)
             return null;
@@ -73,7 +83,7 @@ export class CollisionResolver {
                 this.applyImpulsePair(impartingEntity, receivingEntity, rA, rB, t, jf, invMassA, invMassB, invIA, invIB);
         }
 
-        return contact;
+        return { contact, jnApplied };
     }
 
     private static invMass(m: number): number {

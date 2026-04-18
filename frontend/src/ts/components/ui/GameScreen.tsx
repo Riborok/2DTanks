@@ -15,6 +15,11 @@ import type { DeathmatchScoreRow, PlayerMatchStatsRow } from './GameEndScreen';
 import TouchJoystick from './TouchJoystick';
 import { useSettings } from '../../context/SettingsContext';
 import { SoundManager, spatial } from '../../utils/SoundManager';
+import {
+    hitMetalPlaybackRateForBulletType,
+    shotSfxIdForBulletType,
+    wallHitPlaybackRateForBulletType
+} from '../../utils/bulletAudio';
 import { useHudEvents } from '../hud/useHudEvents';
 import KillFeed from '../hud/KillFeed';
 import DamageNumbers from '../hud/DamageNumbers';
@@ -212,18 +217,61 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 SoundManager.play('game:explosion');
             }
         },
-        onNewBulletImpact: (x, y) => {
+        onGrenadeExplosion: (x, y) => {
             const snap = snapshotRef.current;
             const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
             if (me) {
-                const s = spatial(x, y, me.x, me.y, 1400);
-                SoundManager.play('game:hit', s);
+                const s = spatial(x, y, me.x, me.y, 1500);
+                SoundManager.play('game:explosion', s);
             } else {
-                SoundManager.play('game:hit');
+                SoundManager.play('game:explosion');
             }
         },
-        onOwnShot: () => {
-            SoundManager.play('game:shot');
+        onNewBulletImpact: (x, y, hitTank) => {
+            const snap = snapshotRef.current;
+            const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+            const sfx = hitTank ? 'game:hit' : 'game:wallHit';
+            if (me) {
+                const s = spatial(x, y, me.x, me.y, 1400);
+                SoundManager.play(sfx, s);
+            } else {
+                SoundManager.play(sfx);
+            }
+        },
+        onTankCollision: (x, y, sourcePlayerId) => {
+            const snap = snapshotRef.current;
+            const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+            const selfImpact = sourcePlayerId === myPlayerId;
+            if (me) {
+                const s = spatial(x, y, me.x, me.y, 1300);
+                if (s.volume <= 0) return;
+                SoundManager.play('game:collision', s);
+                if (
+                    selfImpact &&
+                    settingsRef.current.mobile.haptics
+                ) {
+                    try {
+                        navigator.vibrate?.(20);
+                    } catch {
+                        /* ignore */
+                    }
+                }
+            } else {
+                SoundManager.play('game:collision');
+            }
+        },
+        onCrateBroken: (x, y) => {
+            const snap = snapshotRef.current;
+            const me = snap?.tanks.find((t) => t.playerId === myPlayerId);
+            if (me) {
+                const s = spatial(x, y, me.x, me.y, 1500);
+                SoundManager.play('game:crateBreak', s);
+            } else {
+                SoundManager.play('game:crateBreak');
+            }
+        },
+        onOwnShot: (bulletType) => {
+            SoundManager.play(shotSfxIdForBulletType(bulletType));
             if (settingsRef.current.mobile.haptics) {
                 try {
                     navigator.vibrate?.(15);

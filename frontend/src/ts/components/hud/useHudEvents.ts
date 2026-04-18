@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { GameWorldSnapshot, ServerTank } from '../../online/types';
+import { GameWorldSnapshot, ServerCrate, ServerTank } from '../../online/types';
 
 /**
- * События HUD, которые мы извлекаем из diff-а снапшотов без изменений серверного
- * протокола: попадания (изменения HP), убийства (переход HP > 0 → HP ≤ 0)
- * и прилёты взрывов/пуль (через bulletImpacts/explosions из снапшота).
- *
- * Это даёт синхронный kill-feed, floating damage numbers и источник для звуков
- * без дополнительных полей в снапшоте. Детерминизм не страдает: всё считается
- * на клиенте по тем же снапшотам, что сервер и так рассылает.
+ * События HUD из diff-а снапшотов: попадания (HP), убийства, взрывы/импакты.
+ * Звук столкновения корпуса — только по полю `hullCollisions` из снапшота
+ * (сервер фиксирует реальный нормальный импульс в физике), без эвристик по
+ * скорости на клиенте.
  */
 
 export interface HitEvent {
@@ -54,20 +51,41 @@ interface Options {
     myPlayerId: string;
     playerNameById: Map<string, string>;
     onNewExplosion?: (x: number, y: number) => void;
-    onNewBulletImpact?: (x: number, y: number) => void;
-    onOwnShot?: () => void;
+    /** Граната/снаряд взорвался (отдельно от взрыва танка). */
+    onGrenadeExplosion?: (x: number, y: number) => void;
+    /**
+     * Прилёт пули. `hitTank` помогает звуковому слою различать
+     * звон по броне и глухой тук по стене/земле.
+     */
+    onNewBulletImpact?: (x: number, y: number, hitTank: boolean, bulletType: number) => void;
+    onOwnShot?: (bulletType: number) => void;
     onOwnDamage?: (dmg: number) => void;
     onTankKilled?: (tank: ServerTank) => void;
+    /**
+     * Удар корпуса (данные с сервера: точка контакта и игрок, чей танк
+     * участвовал в разрешении контакта).
+     */
+    onTankCollision?: (x: number, y: number, playerId: string) => void;
+    /** Ящик разрушен (исчез или hp ≤ 0). */
+    onCrateBroken?: (x: number, y: number) => void;
 }
 
 export function useHudEvents(snapshotRef: React.MutableRefObject<GameWorldSnapshot | null>, opts: Options) {
     const [state, setState] = useState<HudEventsState>({ hits: [], kills: [], damageTaken: [] });
     const prevTanksRef = useRef<Map<string, ServerTank>>(new Map());
-    const prevBulletCountByTankRef = useRef<Map<string, number>>(new Map());
+    /** Уже учтённые id пуль (с prune при исчезновении из мира). */
+    const seenBulletIdsRef = useRef<Set<number>>(new Set());
+    /** Первый кадр после входа — только заполняем seen, без звука «свой выстрел». */
+    const bulletsPrimedRef = useRef(false);
     const explosionsSeenRef = useRef<Set<string>>(new Set());
     const impactsSeenRef = useRef<Set<string>>(new Set());
+    const hullCollisionsSeenRef = useRef<Set<string>>(new Set());
+    const prevCratesRef = useRef<Map<number, ServerCrate>>(new Map());
 
     useEffect(() => {
+        seenBulletIdsRef.current.clear();
+        bulletsPrimedRef.current = false;
+
         const KEEP_HIT_MS = 900;
         const KEEP_KILL_MS = 5000;
         const KEEP_DMG_MS = 1200;
@@ -139,22 +157,45 @@ export function useHudEvents(snapshotRef: React.MutableRefObject<GameWorldSnapsh
 
                 if (snap.explosions) {
                     for (const ex of snap.explosions) {
-                        const k = `${ex.x}|${ex.y}|${ex.angle}`;
+                        const k = `tank|${ex.x}|${ex.y}|${ex.angle}`;
                         if (!explosionsSeenRef.current.has(k)) {
                             explosionsSeenRef.current.add(k);
                             opts.onNewExplosion?.(ex.x, ex.y);
                         }
                     }
-                    if (explosionsSeenRef.current.size > 1024) {
-                        explosionsSeenRef.current.clear();
+                }
+                if (snap.grenadeExplosions) {
+                    for (const ex of snap.grenadeExplosions) {
+                        // size — часть ключа, чтобы не схлопнуть рядом стоящие гранаты разного калибра
+                        const k = `grenade|${ex.x}|${ex.y}|${ex.angle}|${ex.size}`;
+                        if (!explosionsSeenRef.current.has(k)) {
+                            explosionsSeenRef.current.add(k);
+                            opts.onGrenadeExplosion?.(ex.x, ex.y);
+                        }
                     }
                 }
+                if (explosionsSeenRef.current.size > 1024) {
+                    explosionsSeenRef.current.clear();
+                }
                 if (snap.bulletImpacts) {
+                    // Чтобы понять, попала ли пуля по броне, ищем ближайший
+                    // танк, который только что получил урон. В пределах ~70 ед —
+                    // считаем попаданием по танку (металлический звон), иначе
+                    // глухой удар по стене/ящику.
+                    const HIT_RADIUS = 70;
+                    const recentHits = newHits;
                     for (const im of snap.bulletImpacts) {
-                        const k = `${im.x}|${im.y}|${im.angle}`;
+                        const k = `${im.x}|${im.y}|${im.angle}|${im.bulletType}`;
                         if (!impactsSeenRef.current.has(k)) {
                             impactsSeenRef.current.add(k);
-                            opts.onNewBulletImpact?.(im.x, im.y);
+                            let hitTank = false;
+                            for (const h of recentHits) {
+                                if (Math.hypot(h.x - im.x, h.y - im.y) < HIT_RADIUS) {
+                                    hitTank = true;
+                                    break;
+                                }
+                            }
+                            opts.onNewBulletImpact?.(im.x, im.y, hitTank, im.bulletType);
                         }
                     }
                     if (impactsSeenRef.current.size > 1024) {
@@ -162,15 +203,59 @@ export function useHudEvents(snapshotRef: React.MutableRefObject<GameWorldSnapsh
                     }
                 }
 
-                // Отслеживание собственного выстрела: считаем пули в мире. Если
-                // количество пуль в кадре выросло и недавно стреляли — это наш shot.
-                // Точность пригодна только для аудио/хаптики, не для логики.
-                const ownBullets = snap.bullets.length;
-                const prevOwnBullets = prevBulletCountByTankRef.current.get(opts.myPlayerId) ?? ownBullets;
-                if (ownBullets > prevOwnBullets) {
-                    opts.onOwnShot?.();
+                if (snap.hullCollisions) {
+                    for (const h of snap.hullCollisions) {
+                        const k = `hull|${h.tick}|${h.playerId}|${Math.round(h.x)}|${Math.round(h.y)}`;
+                        if (!hullCollisionsSeenRef.current.has(k)) {
+                            hullCollisionsSeenRef.current.add(k);
+                            opts.onTankCollision?.(h.x, h.y, h.playerId);
+                        }
+                    }
+                    if (hullCollisionsSeenRef.current.size > 1024) {
+                        hullCollisionsSeenRef.current.clear();
+                    }
                 }
-                prevBulletCountByTankRef.current.set(opts.myPlayerId, ownBullets);
+
+                // ----- Разрушение ящиков ----
+                if (snap.crates) {
+                    const prevCrates = prevCratesRef.current;
+                    const currCrates = new Map<number, ServerCrate>();
+                    for (const c of snap.crates) currCrates.set(c.id, c);
+
+                    if (prevCrates.size > 0) {
+                        for (const [id, prevC] of prevCrates) {
+                            const curr = currCrates.get(id);
+                            if (!curr) {
+                                // Был и пропал — разрушен
+                                opts.onCrateBroken?.(prevC.x, prevC.y);
+                            } else if (prevC.hp > 0 && curr.hp <= 0) {
+                                opts.onCrateBroken?.(curr.x, curr.y);
+                            }
+                        }
+                    }
+                    prevCratesRef.current = currCrates;
+                }
+
+                // Свой выстрел: новая пуля в снапшоте с sourceTankId === id своего танка
+                // (сервер присылает sourceTankId; без него — тихо пропускаем, см. старые реплеи).
+                const myTankId = myTank?.id;
+                const currBulletIdSet = new Set<number>();
+                for (const b of snap.bullets) {
+                    currBulletIdSet.add(b.id);
+                    if (seenBulletIdsRef.current.has(b.id)) continue;
+                    seenBulletIdsRef.current.add(b.id);
+                    if (bulletsPrimedRef.current && myTankId && b.sourceTankId === myTankId) {
+                        opts.onOwnShot?.(b.type);
+                    }
+                }
+                if (!bulletsPrimedRef.current) {
+                    bulletsPrimedRef.current = true;
+                }
+                for (const id of seenBulletIdsRef.current) {
+                    if (!currBulletIdSet.has(id)) {
+                        seenBulletIdsRef.current.delete(id);
+                    }
+                }
 
                 if (newHits.length || newKills.length || newDamageTaken.length) {
                     setState((prevState) => ({

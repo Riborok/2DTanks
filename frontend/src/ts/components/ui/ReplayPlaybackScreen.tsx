@@ -371,10 +371,12 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                             ? [...landed.grenadeExplosions]
                             : [];
                         merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
+                        merged.hullCollisions = landed.hullCollisions ? [...landed.hullCollisions] : [];
                     } else {
                         merged.explosions = [];
                         merged.grenadeExplosions = [];
                         merged.bulletImpacts = [];
+                        merged.hullCollisions = [];
                     }
                 }
 

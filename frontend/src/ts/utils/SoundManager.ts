@@ -1,18 +1,38 @@
 /**
- * Лёгкий менеджер звука без внешних аудио-файлов: все эффекты синтезируются
- * через Web Audio API. Это даёт читаемый аудио-фидбек «из коробки», пока
- * не добавим реальные sfx-ассеты. Замена на реальные сэмплы — в play*():
- * просто подменить тело метода на decodeAudioData + BufferSource.
+ * Менеджер звука без внешних аудио-файлов: все эффекты синтезируются
+ * через Web Audio API с использованием фильтров (BiquadFilter), нескольких
+ * слоёв (sub-bass + body + crack + tail) и небольшой случайной вариации,
+ * чтобы повторные срабатывания не звучали роботизированно.
  *
- * Громкость берётся из настроек через setVolumes(): эффекты слушают audio.sfx/ui,
- * master мастерится отдельным GainNode в цепочке.
+ * Дизайн ориентирован на реализм танковых эффектов:
+ *   - shot       — артиллерийский выстрел: короткий «клик» дульного среза +
+ *                  низкий «удар» + затухающий хвост шума.
+ *   - explosion  — мощный взрыв: суб-бас, белый шум через low-pass,
+ *                  яркий «крэк» сверху и долгий рокочущий хвост.
+ *   - hit        — пуля по броне: металлический «звонкий» удар через bandpass.
+ *   - wallHit    — пуля по бетону/земле: глухой «тук» через lowpass.
+ *   - collision  — удар корпуса: играется по событию hullCollisions из
+ *                  снапшота (сервер фиксирует нормальный импульс контакта),
+ *                  а не по клиентским эвристикам движения.
+ *   - crateBreak — разлом ящика: древесный «крак» + россыпь обломков.
+ *
+ * Громкость берётся из настроек через setVolumes(). При наличии внешнего
+ * ассета (registerAsset) играем его BufferSource; иначе — синтез ниже.
  */
 export type SfxId =
     | 'ui:click'
     | 'ui:error'
     | 'game:shot'
+    | 'game:shot0'
+    | 'game:shot1'
+    | 'game:shot2'
+    | 'game:shot3'
+    | 'game:shot4'
     | 'game:hit'
+    | 'game:wallHit'
     | 'game:explosion'
+    | 'game:collision'
+    | 'game:crateBreak'
     | 'game:pickup'
     | 'game:damageTaken'
     | 'game:kill';
@@ -32,6 +52,14 @@ class SoundManagerImpl {
     private musicGain: GainNode | null = null;
     private muted = false;
     private volumes: Volumes = { master: 0.8, music: 0.4, sfx: 0.8, ui: 0.6 };
+
+    /**
+     * Кеш предрассчитанных шумовых буферов разной длительности (в сек).
+     * Регенерация белого шума на каждый выстрел — это лишние аллокации,
+     * поэтому держим пул и переиспользуем (BufferSource одноразовый, а
+     * сам AudioBuffer — нет).
+     */
+    private noiseBuffers: Map<number, AudioBuffer> = new Map();
 
     /**
      * Таблица пользовательских ассетов. Если для SfxId есть буфер — играем его,
@@ -71,6 +99,12 @@ class SoundManagerImpl {
         this.musicGain.connect(this.masterGain);
         this.masterGain.connect(ctx.destination);
         this.applyVolumes();
+        // Сразу после получения AudioContext (который требует user-gesture)
+        // прогреваем все зарегистрированные внешние ассеты, чтобы первый
+        // выстрел/удар играл реальный звук, а не синтез-фолбэк.
+        for (const id of Object.keys(this.assetUrls) as SfxId[]) {
+            void this.loadAssetOnce(id);
+        }
         return true;
     }
 
@@ -94,18 +128,12 @@ class SoundManagerImpl {
     }
 
     /**
-     * Создаёт кратковременный тон/шум, направляет через sfxGain (или uiGain для ui:*)
-     * и применяет pan ∈ [-1; 1] через StereoPannerNode.
-     */
-    /**
      * Зарегистрировать внешний аудио-ассет. Имя `id` должно совпадать с одним из
      * SfxId. URL загружается лениво при первом `play()`. Если загрузка не
      * удалась — используется синтезированный звук.
      */
     public registerAsset(id: SfxId, url: string): void {
         this.assetUrls[id] = url;
-        // Не сбрасываем уже загруженный буфер — допускаем hot-swap через
-        // повторный вызов с новым URL: тогда старый кеш останется до перезагрузки.
     }
 
     public registerAssets(map: Partial<Record<SfxId, string>>): void {
@@ -145,12 +173,16 @@ class SoundManagerImpl {
         return p;
     }
 
-    public play(id: SfxId, opts?: { volume?: number; pan?: number }) {
+    public play(id: SfxId, opts?: { volume?: number; pan?: number; playbackRate?: number }) {
         if (!this.ensure()) return;
         const ctx = this.ctx!;
         const now = ctx.currentTime;
         const pan = Math.max(-1, Math.min(1, opts?.pan ?? 0));
         const volume = Math.max(0, Math.min(1, opts?.volume ?? 1));
+        const playbackRate = Math.max(0.25, Math.min(4, opts?.playbackRate ?? 1));
+        // Игнорируем неслышные звуки (далеко за радиусом слышимости),
+        // чтобы не плодить осцилляторы впустую.
+        if (volume < 0.01) return;
         const target = id.startsWith('ui:') ? this.uiGain! : this.sfxGain!;
 
         const out = ctx.createGain();
@@ -165,53 +197,141 @@ class SoundManagerImpl {
         }
 
         // Если зарегистрирован внешний ассет — используем BufferSource.
-        // Буфер уже в кеше → играем сразу; иначе fire-and-forget, fallback на синтез.
         const cached = this.assetBuffers[id];
         if (cached) {
-            this.playBuffer(out, now, cached);
+            this.playBuffer(out, now, cached, playbackRate);
             return;
         }
         if (this.assetUrls[id]) {
-            // Пытаемся загрузить, но параллельно запускаем синтез, чтобы не было задержки.
-            // При следующем вызове проиграет уже реальный ассет.
             void this.loadAssetOnce(id);
         }
 
         switch (id) {
             case 'ui:click':
-                this.playTone(out, now, { freq: 880, durMs: 60, type: 'sine', gain: 0.25 });
+                this.synthUiClick(out, now);
                 break;
             case 'ui:error':
-                this.playTone(out, now, { freq: 180, durMs: 160, type: 'square', gain: 0.25 });
+                this.synthUiError(out, now);
                 break;
             case 'game:shot':
-                // Короткий «чпок» — шум + нисходящий тон
-                this.playNoise(out, now, 70, 0.25);
-                this.playTone(out, now, { freq: 420, durMs: 100, type: 'sawtooth', gain: 0.18, freqEnd: 120 });
+            case 'game:shot0':
+            case 'game:shot1':
+            case 'game:shot2':
+            case 'game:shot3':
+            case 'game:shot4':
+                this.synthShot(out, now);
                 break;
             case 'game:hit':
-                this.playTone(out, now, { freq: 280, durMs: 80, type: 'triangle', gain: 0.2, freqEnd: 90 });
+                this.synthMetalHit(out, now);
+                break;
+            case 'game:wallHit':
+                this.synthWallHit(out, now);
                 break;
             case 'game:explosion':
-                this.playNoise(out, now, 450, 0.35);
-                this.playTone(out, now, { freq: 80, durMs: 400, type: 'sine', gain: 0.25, freqEnd: 40 });
+                this.synthExplosion(out, now);
+                break;
+            case 'game:collision':
+                this.synthCollision(out, now);
+                break;
+            case 'game:crateBreak':
+                this.synthCrateBreak(out, now);
                 break;
             case 'game:pickup':
-                this.playTone(out, now, { freq: 660, durMs: 100, type: 'sine', gain: 0.22, freqEnd: 990 });
+                this.synthPickup(out, now);
                 break;
             case 'game:damageTaken':
-                this.playTone(out, now, { freq: 180, durMs: 140, type: 'square', gain: 0.24, freqEnd: 110 });
+                this.synthDamageTaken(out, now);
                 break;
             case 'game:kill':
-                this.playTone(out, now, { freq: 400, durMs: 100, type: 'sine', gain: 0.22, freqEnd: 700 });
+                this.synthKill(out, now);
                 break;
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Низкоуровневые помощники
+    // -------------------------------------------------------------------------
+
+    /** Шумовой буфер фиксированной длительности (кеширован). Без затухания. */
+    private getNoiseBuffer(durSec: number): AudioBuffer | null {
+        if (!this.ctx) return null;
+        const key = Math.max(0.02, Math.round(durSec * 100) / 100);
+        const cached = this.noiseBuffers.get(key);
+        if (cached) return cached;
+        const length = Math.max(1, Math.floor(key * this.ctx.sampleRate));
+        const buf = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < length; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        this.noiseBuffers.set(key, buf);
+        return buf;
+    }
+
+    /**
+     * Шумовой источник через BiquadFilter с экспоненциальной огибающей. Гибкий
+     * примитив: подобрав type/freq/Q можно собрать почти любой ударный звук.
+     */
+    private playFilteredNoise(
+        dest: AudioNode,
+        startAt: number,
+        params: {
+            durMs: number;
+            peakGain: number;
+            filterType: BiquadFilterType;
+            freq: number;
+            freqEnd?: number;
+            Q?: number;
+            attackMs?: number;
+        }
+    ): void {
+        if (!this.ctx) return;
+        const ctx = this.ctx;
+        const dur = params.durMs / 1000;
+        const noise = this.getNoiseBuffer(Math.max(0.05, dur));
+        if (!noise) return;
+        const src = ctx.createBufferSource();
+        src.buffer = noise;
+        const filter = ctx.createBiquadFilter();
+        filter.type = params.filterType;
+        filter.frequency.setValueAtTime(params.freq, startAt);
+        if (typeof params.freqEnd === 'number') {
+            filter.frequency.exponentialRampToValueAtTime(
+                Math.max(20, params.freqEnd),
+                startAt + dur
+            );
+        }
+        filter.Q.value = params.Q ?? 1;
+
+        const g = ctx.createGain();
+        const attack = (params.attackMs ?? 3) / 1000;
+        g.gain.setValueAtTime(0.0001, startAt);
+        g.gain.exponentialRampToValueAtTime(params.peakGain, startAt + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+
+        src.connect(filter);
+        filter.connect(g);
+        g.connect(dest);
+        src.start(startAt);
+        src.stop(startAt + dur + 0.02);
+    }
+
+    /**
+     * Тон с возможностью свипа частоты и (опционально) фильтром на выходе.
+     * Для синусоидальных «бумов» и «ударов» через lowpass-секцию.
+     */
     private playTone(
         dest: AudioNode,
         startAt: number,
-        params: { freq: number; durMs: number; type: OscillatorType; gain: number; freqEnd?: number }
+        params: {
+            freq: number;
+            durMs: number;
+            type: OscillatorType;
+            gain: number;
+            freqEnd?: number;
+            attackMs?: number;
+            filter?: { type: BiquadFilterType; freq: number; Q?: number };
+        }
     ) {
         if (!this.ctx) return;
         const ctx = this.ctx;
@@ -225,42 +345,365 @@ class SoundManagerImpl {
                 startAt + params.durMs / 1000
             );
         }
-        const end = startAt + params.durMs / 1000;
+        const dur = params.durMs / 1000;
+        const attack = (params.attackMs ?? 3) / 1000;
         g.gain.setValueAtTime(0.0001, startAt);
-        g.gain.exponentialRampToValueAtTime(params.gain, startAt + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.0001, end);
+        g.gain.exponentialRampToValueAtTime(params.gain, startAt + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
         osc.connect(g);
-        g.connect(dest);
+        if (params.filter) {
+            const f = ctx.createBiquadFilter();
+            f.type = params.filter.type;
+            f.frequency.value = params.filter.freq;
+            f.Q.value = params.filter.Q ?? 1;
+            g.connect(f);
+            f.connect(dest);
+        } else {
+            g.connect(dest);
+        }
         osc.start(startAt);
-        osc.stop(end + 0.01);
+        osc.stop(startAt + dur + 0.02);
     }
 
-    private playBuffer(dest: AudioNode, startAt: number, buffer: AudioBuffer): void {
+    private playBuffer(dest: AudioNode, startAt: number, buffer: AudioBuffer, playbackRate = 1): void {
         if (!this.ctx) return;
         const src = this.ctx.createBufferSource();
         src.buffer = buffer;
+        src.playbackRate.value = playbackRate;
         src.connect(dest);
         src.start(startAt);
     }
 
-    private playNoise(dest: AudioNode, startAt: number, durMs: number, peakGain: number) {
-        if (!this.ctx) return;
-        const ctx = this.ctx;
-        const length = Math.max(1, Math.floor((durMs / 1000) * ctx.sampleRate));
-        const buf = ctx.createBuffer(1, length, ctx.sampleRate);
-        const data = buf.getChannelData(0);
-        for (let i = 0; i < length; i++) {
-            data[i] = (Math.random() * 2 - 1) * (1 - i / length);
-        }
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(peakGain, startAt);
-        g.gain.exponentialRampToValueAtTime(0.001, startAt + durMs / 1000);
-        src.connect(g);
-        g.connect(dest);
-        src.start(startAt);
-        src.stop(startAt + durMs / 1000 + 0.02);
+    private rand(min: number, max: number): number {
+        return min + Math.random() * (max - min);
+    }
+
+    // -------------------------------------------------------------------------
+    // Синтез отдельных эффектов
+    // -------------------------------------------------------------------------
+
+    private synthUiClick(dest: AudioNode, t: number): void {
+        this.playTone(dest, t, { freq: 880, durMs: 50, type: 'sine', gain: 0.22 });
+    }
+
+    private synthUiError(dest: AudioNode, t: number): void {
+        this.playTone(dest, t, {
+            freq: 200,
+            durMs: 160,
+            type: 'square',
+            gain: 0.22,
+            freqEnd: 110
+        });
+    }
+
+    /**
+     * Танковый выстрел. Слои:
+     *   1) Дульный «клик» — короткий highpass-noise (≤8 мс) для атаки.
+     *   2) Низкий «удар» — sine 90→35 Гц с быстрым спадом, даёт грудной thump.
+     *   3) Тело — bandpass-noise около 200–400 Гц, ~120 мс.
+     *   4) Хвост — lowpass-noise, ~250 мс, имитация эха выстрела на местности.
+     * Случайные лёгкие отстройки частот не дают звучать одинаково.
+     */
+    private synthShot(dest: AudioNode, t: number): void {
+        const punchFreq = this.rand(85, 100);
+        const bodyFreq = this.rand(220, 320);
+        // Резкая атака — щелчок дульного среза
+        this.playFilteredNoise(dest, t, {
+            durMs: 25,
+            peakGain: 0.5,
+            filterType: 'highpass',
+            freq: 3500,
+            attackMs: 1
+        });
+        // Низкочастотный удар: «бум» от ствола
+        this.playTone(dest, t, {
+            freq: punchFreq,
+            durMs: 220,
+            type: 'sine',
+            gain: 0.55,
+            freqEnd: 32,
+            attackMs: 2
+        });
+        // Тело выстрела — резонансный шум
+        this.playFilteredNoise(dest, t + 0.005, {
+            durMs: 130,
+            peakGain: 0.35,
+            filterType: 'bandpass',
+            freq: bodyFreq,
+            freqEnd: 140,
+            Q: 1.4,
+            attackMs: 2
+        });
+        // Хвост — раскат
+        this.playFilteredNoise(dest, t + 0.02, {
+            durMs: 280,
+            peakGain: 0.2,
+            filterType: 'lowpass',
+            freq: 600,
+            freqEnd: 200,
+            Q: 0.7,
+            attackMs: 6
+        });
+    }
+
+    /**
+     * Взрыв. Сильный, объёмный, с долгим хвостом.
+     *   1) Sub-bass — sine 55→22 Гц, 600 мс.
+     *   2) Боди — lowpass-noise, 450 мс, имитация газового хлопка.
+     *   3) Крэк — bandpass на 1.6 кГц, короткая яркая вспышка.
+     *   4) Хвост-рокот — lowpass на 90→50 Гц, ~900 мс.
+     */
+    private synthExplosion(dest: AudioNode, t: number): void {
+        const sub = this.rand(50, 60);
+        // Crack — самый верх, мгновенная атака
+        this.playFilteredNoise(dest, t, {
+            durMs: 80,
+            peakGain: 0.35,
+            filterType: 'bandpass',
+            freq: 1700,
+            Q: 0.6,
+            attackMs: 1
+        });
+        // Sub-bass thump
+        this.playTone(dest, t, {
+            freq: sub,
+            durMs: 700,
+            type: 'sine',
+            gain: 0.7,
+            freqEnd: 22,
+            attackMs: 4
+        });
+        // Body — газовый хлопок
+        this.playFilteredNoise(dest, t + 0.005, {
+            durMs: 480,
+            peakGain: 0.55,
+            filterType: 'lowpass',
+            freq: 900,
+            freqEnd: 200,
+            Q: 0.7,
+            attackMs: 4
+        });
+        // Длинный хвост-рокот
+        this.playFilteredNoise(dest, t + 0.04, {
+            durMs: 950,
+            peakGain: 0.28,
+            filterType: 'lowpass',
+            freq: 140,
+            freqEnd: 60,
+            Q: 0.5,
+            attackMs: 12
+        });
+    }
+
+    /**
+     * Пуля по броне — звонкий металлический «динь».
+     * Bandpass-noise высокого тона + лёгкий короткий thump.
+     */
+    private synthMetalHit(dest: AudioNode, t: number): void {
+        const ring = this.rand(1500, 2400);
+        this.playFilteredNoise(dest, t, {
+            durMs: 18,
+            peakGain: 0.45,
+            filterType: 'highpass',
+            freq: 5000,
+            attackMs: 1
+        });
+        this.playFilteredNoise(dest, t, {
+            durMs: 180,
+            peakGain: 0.4,
+            filterType: 'bandpass',
+            freq: ring,
+            freqEnd: ring * 0.85,
+            Q: 6,
+            attackMs: 1
+        });
+        this.playTone(dest, t, {
+            freq: 280,
+            durMs: 70,
+            type: 'triangle',
+            gain: 0.18,
+            freqEnd: 90,
+            attackMs: 2
+        });
+    }
+
+    /**
+     * Пуля по стене/ящику/земле — глухой «тук» без металлического звона.
+     */
+    private synthWallHit(dest: AudioNode, t: number): void {
+        this.playFilteredNoise(dest, t, {
+            durMs: 90,
+            peakGain: 0.42,
+            filterType: 'lowpass',
+            freq: 700,
+            freqEnd: 250,
+            Q: 0.7,
+            attackMs: 1
+        });
+        this.playTone(dest, t, {
+            freq: 130,
+            durMs: 120,
+            type: 'sine',
+            gain: 0.32,
+            freqEnd: 60,
+            attackMs: 2
+        });
+        // Лёгкие «осколки» сверху
+        this.playFilteredNoise(dest, t + 0.01, {
+            durMs: 80,
+            peakGain: 0.12,
+            filterType: 'bandpass',
+            freq: 2200,
+            Q: 1.2,
+            attackMs: 2
+        });
+    }
+
+    /**
+     * Столкновение танка (с танком/стеной/ящиком) — тяжёлый металлический клэнк
+     * с лёгкой вибрацией стали и низким рокотом массы.
+     */
+    private synthCollision(dest: AudioNode, t: number): void {
+        const clankFreq = this.rand(380, 520);
+        // Основной CLANK — резонансный bandpass
+        this.playFilteredNoise(dest, t, {
+            durMs: 220,
+            peakGain: 0.5,
+            filterType: 'bandpass',
+            freq: clankFreq,
+            Q: 8,
+            attackMs: 1
+        });
+        // Высокий «лязг» поверх (металл)
+        this.playFilteredNoise(dest, t, {
+            durMs: 110,
+            peakGain: 0.22,
+            filterType: 'bandpass',
+            freq: clankFreq * 3.7,
+            Q: 5,
+            attackMs: 1
+        });
+        // Низкий thump — масса танка
+        this.playTone(dest, t + 0.005, {
+            freq: 90,
+            durMs: 160,
+            type: 'sine',
+            gain: 0.4,
+            freqEnd: 45,
+            attackMs: 2
+        });
+        // Хвост — короткий рокот шасси
+        this.playFilteredNoise(dest, t + 0.02, {
+            durMs: 220,
+            peakGain: 0.14,
+            filterType: 'lowpass',
+            freq: 280,
+            freqEnd: 120,
+            Q: 0.6,
+            attackMs: 8
+        });
+    }
+
+    /**
+     * Разлом ящика — древесный «крак» + россыпь обломков.
+     */
+    private synthCrateBreak(dest: AudioNode, t: number): void {
+        // Короткий древесный крэк
+        this.playFilteredNoise(dest, t, {
+            durMs: 50,
+            peakGain: 0.45,
+            filterType: 'bandpass',
+            freq: 1800,
+            Q: 3,
+            attackMs: 1
+        });
+        // Низкий «уф» массы
+        this.playTone(dest, t, {
+            freq: 160,
+            durMs: 180,
+            type: 'triangle',
+            gain: 0.3,
+            freqEnd: 70,
+            attackMs: 2
+        });
+        // Россыпь обломков
+        this.playFilteredNoise(dest, t + 0.04, {
+            durMs: 240,
+            peakGain: 0.2,
+            filterType: 'bandpass',
+            freq: 900,
+            freqEnd: 500,
+            Q: 1.2,
+            attackMs: 6
+        });
+        // Лёгкий «шуршащий» хвост
+        this.playFilteredNoise(dest, t + 0.08, {
+            durMs: 180,
+            peakGain: 0.1,
+            filterType: 'highpass',
+            freq: 2500,
+            attackMs: 8
+        });
+    }
+
+    private synthPickup(dest: AudioNode, t: number): void {
+        this.playTone(dest, t, {
+            freq: 660,
+            durMs: 90,
+            type: 'sine',
+            gain: 0.22,
+            freqEnd: 1320,
+            attackMs: 2
+        });
+        this.playTone(dest, t + 0.06, {
+            freq: 990,
+            durMs: 120,
+            type: 'sine',
+            gain: 0.18,
+            freqEnd: 1480,
+            attackMs: 2
+        });
+    }
+
+    private synthDamageTaken(dest: AudioNode, t: number): void {
+        // Тревожный low-mid удар по корпусу
+        this.playFilteredNoise(dest, t, {
+            durMs: 120,
+            peakGain: 0.35,
+            filterType: 'lowpass',
+            freq: 500,
+            freqEnd: 180,
+            Q: 0.7,
+            attackMs: 1
+        });
+        this.playTone(dest, t, {
+            freq: 200,
+            durMs: 160,
+            type: 'sawtooth',
+            gain: 0.2,
+            freqEnd: 95,
+            attackMs: 2
+        });
+    }
+
+    private synthKill(dest: AudioNode, t: number): void {
+        // Короткая «победная» секвенция, не торжественная
+        this.playTone(dest, t, {
+            freq: 520,
+            durMs: 90,
+            type: 'sine',
+            gain: 0.22,
+            freqEnd: 760,
+            attackMs: 2
+        });
+        this.playTone(dest, t + 0.07, {
+            freq: 760,
+            durMs: 130,
+            type: 'sine',
+            gain: 0.2,
+            freqEnd: 980,
+            attackMs: 2
+        });
     }
 }
 
@@ -268,7 +711,7 @@ export const SoundManager = new SoundManagerImpl();
 
 /**
  * Помощник: pan и volume для звука источником в мировых координатах относительно
- * игрока-камеры. Громкость спадает линейно до нуля на расстоянии maxDist.
+ * игрока-камеры. Громкость спадает плавно (квадратично) до нуля на расстоянии maxDist.
  */
 export function spatial(
     sourceX: number,
@@ -281,8 +724,10 @@ export function spatial(
     const dy = sourceY - listenerY;
     const dist = Math.hypot(dx, dy);
     if (dist >= maxDist) return { pan: 0, volume: 0 };
-    const volume = 1 - dist / maxDist;
-    // Ограничиваем pan, чтобы не было слишком сильного отката при близком звуке
+    // Квадратичный спад звучит естественнее линейного: ближние звуки громче,
+    // дальние быстрее уходят в фон.
+    const k = 1 - dist / maxDist;
+    const volume = k * k;
     const pan = Math.max(-1, Math.min(1, dx / (maxDist * 0.7)));
     return { pan, volume };
 }
