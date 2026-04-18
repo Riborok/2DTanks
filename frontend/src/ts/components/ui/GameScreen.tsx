@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { WebSocketClient } from '../../online/WebSocketClient';
 import { OnlineGameRenderer } from '../../online/OnlineGameRenderer';
 import { GameWorldSnapshot } from '../../online/types';
@@ -7,6 +7,7 @@ import { ResolutionManager } from '../../constants/gameConstants';
 import { VK_W, VK_S, VK_A, VK_D, VK_Q, VK_E, VK_SPACE } from '../../constants/keyCodes';
 import { ImagePreloader } from '../../utils/ImagePreloader';
 import type { DeathmatchScoreRow, PlayerMatchStatsRow } from './GameEndScreen';
+import TouchJoystick from './TouchJoystick';
 
 const REQUIRED_KEYS_PER_LEVEL = 1;
 
@@ -386,7 +387,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
         const applyFirePress = () => {
             if (!snapshotRef.current) return;
-            wsClient.send({ type: 'action', action: buildAction(keysPressedRef.current, true) });
+            // Выстрел с touch-кнопки не зависит от состояния клавиш — shoot выставляем
+            // явно. buildAction(..., true) здесь не подходит: он проверяет VK_SPACE в
+            // наборе нажатых клавиш, а на мобилке Space никогда не попадает туда.
+            const action = buildAction(keysPressedRef.current, false);
+            action.shoot = true;
+            wsClient.send({ type: 'action', action });
         };
 
         touchBridgeRef.current = {
@@ -485,13 +491,84 @@ const GameScreen: React.FC<GameScreenProps> = ({
         onLostPointerCapture: () => touchBridgeRef.current.keyUp(code)
     });
 
+    /**
+     * Hold-to-fire: пока палец прижат к кнопке «Огонь», периодически шлём событие
+     * стрельбы. Сервер сам учтёт reloadSpeed (см. TankModel.shot), лишние события
+     * безопасно игнорируются. Частота 120 мс заведомо чаще минимальной перезарядки,
+     * но не создаёт лишней нагрузки.
+     */
+    const fireHoldTimerRef = useRef<number | null>(null);
+
+    const stopHoldFire = useCallback(() => {
+        if (fireHoldTimerRef.current !== null) {
+            window.clearInterval(fireHoldTimerRef.current);
+            fireHoldTimerRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => stopHoldFire, [stopHoldFire]);
+
     const bindFireTouch = () => ({
         onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
             e.preventDefault();
             e.stopPropagation();
+            try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+                /* ignore */
+            }
             touchBridgeRef.current.fire();
-        }
+            stopHoldFire();
+            fireHoldTimerRef.current = window.setInterval(() => {
+                touchBridgeRef.current.fire();
+            }, 120);
+        },
+        onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            stopHoldFire();
+            try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+            } catch {
+                /* ignore */
+            }
+        },
+        onPointerCancel: () => stopHoldFire(),
+        onLostPointerCapture: () => stopHoldFire()
     });
+
+    /**
+     * Преобразуем вектор джойстика в дискретные WASD. Порог небольшой (0.25),
+     * чтобы на короткие наклоны уже шла реакция. По диагонали можно одновременно
+     * ехать и поворачивать — т.е. удерживать W и A сразу.
+     */
+    const joyStateRef = useRef({ w: false, s: false, a: false, d: false });
+    const handleJoystickVector = useCallback(
+        (v: { x: number; y: number }) => {
+            const TH = 0.25;
+            const bridge = touchBridgeRef.current;
+            const next = {
+                w: v.y < -TH,
+                s: v.y > TH,
+                a: v.x < -TH,
+                d: v.x > TH
+            };
+            const prev = joyStateRef.current;
+            if (next.w !== prev.w) {
+                next.w ? bridge.keyDown(VK_W) : bridge.keyUp(VK_W);
+            }
+            if (next.s !== prev.s) {
+                next.s ? bridge.keyDown(VK_S) : bridge.keyUp(VK_S);
+            }
+            if (next.a !== prev.a) {
+                next.a ? bridge.keyDown(VK_A) : bridge.keyUp(VK_A);
+            }
+            if (next.d !== prev.d) {
+                next.d ? bridge.keyDown(VK_D) : bridge.keyUp(VK_D);
+            }
+            joyStateRef.current = next;
+        },
+        []
+    );
 
     // Show loading screen while images are loading
     if (!imagesLoaded) {
@@ -536,39 +613,47 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 className="game-canvas"
             />
             {useTouchUi && (
-                <div className="game-touch-controls" role="toolbar" aria-label="Управление">
-                    <div className="game-touch-controls-inner">
-                        <div className="game-touch-cluster">
-                            <div className="game-touch-row">
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_Q)} aria-label="Башня влево">
-                                    ⟲
-                                </button>
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_W)} aria-label="Вперёд">
-                                    W
-                                </button>
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_E)} aria-label="Башня вправо">
-                                    ⟳
-                                </button>
-                            </div>
-                            <div className="game-touch-row">
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_A)} aria-label="Влево">
-                                    A
-                                </button>
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_S)} aria-label="Назад">
-                                    S
-                                </button>
-                                <button type="button" className="game-touch-btn" {...bindTouchKey(VK_D)} aria-label="Вправо">
-                                    D
-                                </button>
-                            </div>
-                        </div>
-                        <div className="game-touch-cluster game-touch-cluster-fire">
-                            <button type="button" className="game-touch-btn game-touch-btn-fire" {...bindFireTouch()} aria-label="Огонь">
-                                ОГОНЬ
-                            </button>
+                <div className="mobile-orientation-hint" aria-hidden="true">
+                    Поверните телефон горизонтально для удобной игры
+                </div>
+            )}
+            {useTouchUi && (
+                <>
+                    <div className="game-touch-left" role="presentation">
+                        <TouchJoystick onVector={handleJoystickVector} />
+                        <div className="game-touch-hint">
+                            Вверх/вниз — ход · влево/вправо — поворот
                         </div>
                     </div>
-                </div>
+                    <div className="game-touch-right" role="toolbar" aria-label="Управление">
+                        <div className="game-touch-turret">
+                            <button
+                                type="button"
+                                className="game-touch-btn game-touch-btn-turret"
+                                {...bindTouchKey(VK_Q)}
+                                aria-label="Башня влево"
+                            >
+                                ⟲
+                            </button>
+                            <button
+                                type="button"
+                                className="game-touch-btn game-touch-btn-turret"
+                                {...bindTouchKey(VK_E)}
+                                aria-label="Башня вправо"
+                            >
+                                ⟳
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            className="game-touch-btn game-touch-btn-fire"
+                            {...bindFireTouch()}
+                            aria-label="Огонь"
+                        >
+                            ОГОНЬ
+                        </button>
+                    </div>
+                </>
             )}
             <div ref={menuRef} className="game-ui game-ui-modern">
                 <div className="game-stats game-stats-modern">

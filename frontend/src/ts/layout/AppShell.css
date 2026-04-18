@@ -184,3 +184,95 @@
     color: rgba(235, 243, 255, 0.85);
     font-size: 1.1rem;
 }
+
+/* ==========================================================================
+   Мобильный лейаут: компактная шапка и горизонтальный скролл навигации,
+   учёт safe-area, чуть плотнее паддинги основной области.
+   ========================================================================== */
+
+@media (max-width: 720px) {
+    .app-shell-header {
+        padding: 8px 10px calc(8px + env(safe-area-inset-top, 0px));
+        padding-top: calc(8px + env(safe-area-inset-top, 0px));
+        gap: 6px 10px;
+        flex-wrap: nowrap;
+    }
+
+    .app-shell-brand {
+        font-size: 0.95rem;
+        padding: 6px 8px;
+        margin-right: 0;
+        flex-shrink: 0;
+    }
+
+    .app-shell-nav {
+        gap: 6px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        min-width: 0;
+    }
+
+    .app-shell-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .app-shell-nav .nav-link {
+        font-size: 0.82rem;
+        padding: 6px 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .app-shell-user {
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .app-shell-user-name {
+        display: none;
+    }
+
+    .app-shell-logout {
+        padding: 6px 8px;
+        font-size: 0.78rem;
+    }
+
+    .app-shell-main {
+        padding: 12px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell {
+        --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 64px);
+        --game-hud-top: calc(env(safe-area-inset-top, 0px) + 60px);
+    }
+}
+
+/* В альбомной ориентации на узком телефоне шапка очень маленькой высоты */
+@media (max-height: 480px) and (orientation: landscape) {
+    .app-shell-header {
+        padding: 4px 8px;
+        gap: 4px 8px;
+    }
+
+    .app-shell-brand {
+        font-size: 0.85rem;
+        padding: 4px 6px;
+    }
+
+    .app-shell-nav .nav-link {
+        font-size: 0.78rem;
+        padding: 4px 8px;
+    }
+
+    .app-shell-logout {
+        padding: 4px 6px;
+        font-size: 0.74rem;
+    }
+
+    .app-shell {
+        --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 44px);
+        --game-hud-top: calc(env(safe-area-inset-top, 0px) + 40px);
+    }
+}

@@ -2,7 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#0e1220">
     <link rel="icon" type="image/png" href="./src/img/icon.png">
     <title>2DTanks Online</title>
 
@@ -29,10 +35,25 @@
             box-sizing: border-box;
         }
 
-        body {
-            width: 100vw;
+        html, body {
+            width: 100%;
+            /* 100dvh корректно учитывает адресную строку на iOS/Android, 100vh — fallback */
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Разрешаем выделение только внутри контролов, которым оно нужно */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         #root {
