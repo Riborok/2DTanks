@@ -46,7 +46,7 @@ function resolveReplayTankIdle(prev: ServerTank | undefined, next: ServerTank): 
 
 function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): ServerTank {
     if (!prev) {
-        return { ...next, isIdle: resolveReplayTankIdle(undefined, next) };
+        return { ...next, isIdle: resolveReplayTankIdle(undefined, next), shieldActive: next.shieldActive };
     }
     return {
         ...next,
@@ -58,7 +58,8 @@ function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): Se
         maxHealth: next.maxHealth,
         armor: next.armor,
         maxArmor: next.maxArmor,
-        isIdle: resolveReplayTankIdle(prev, next)
+        isIdle: resolveReplayTankIdle(prev, next),
+        shieldActive: next.shieldActive
     };
 }
 

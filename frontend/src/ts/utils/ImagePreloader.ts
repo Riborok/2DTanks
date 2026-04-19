@@ -28,7 +28,6 @@ export class ImagePreloader {
             imagePaths.push(`/src/img/backgrounds/${material}_0.png`);
             imagePaths.push(`/src/img/backgrounds/${material}_1.png`);
         }
-
         // Bullet images (5 types: 0-4)
         for (let i = 0; i < 5; i++) {
             imagePaths.push(`/src/img/tanks/Bullets/Bullet_${i}.png`);
@@ -64,7 +63,6 @@ export class ImagePreloader {
         for (let trackNum = 0; trackNum < 4; trackNum++) {
             imagePaths.push(`/src/img/tanks/Tracks/Track_${trackNum}.png`);
         }
-
         // Item images
         imagePaths.push('/src/img/item/Key.png');
         imagePaths.push('/src/img/item/Light_Bullet_Box.png');
@@ -72,6 +70,7 @@ export class ImagePreloader {
         imagePaths.push('/src/img/item/Heavy_Bullet_Box.png');
         imagePaths.push('/src/img/item/Grenade_Bullet_Box.png');
         imagePaths.push('/src/img/item/Sniper_Bullet_Box.png');
+        imagePaths.push('/src/img/item/Perk_Shield.png');
 
         // Effect images
         imagePaths.push('/src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png');

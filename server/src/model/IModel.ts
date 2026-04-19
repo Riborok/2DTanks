@@ -8,7 +8,8 @@ export interface IModel extends IHealth {
     get entity(): IEntity;
     isIdle(): boolean;
     isAngularMotionStopped(): boolean;
-    takeDamage(bullet: IBulletModel): void;
+    /** simTimeMs — симуляционное время мира (для щита и т.п.); можно не передавать у не-танков. */
+    takeDamage(bullet: IBulletModel, simTimeMs?: number): void;
 }
 
 export abstract class Model implements IModel {
@@ -60,7 +61,7 @@ export abstract class Model implements IModel {
             entity.angularVelocity -= angularVelocity + acceleration > 0 ? -angularVelocity : acceleration;
     }
     
-    public takeDamage(bullet: IBulletModel) { this._health -= bullet.damage }
+    public takeDamage(bullet: IBulletModel, _simTimeMs?: number) { this._health -= bullet.damage }
 }
 
 export interface ILandModel extends IModel {

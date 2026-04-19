@@ -162,6 +162,7 @@ export enum Bonus {
     bulHeavy = 2,
     bulGrenade = 3,
     bulSniper = 4,
-    key = 5
+    key = 5,
+    perkShield = 6
 }
 

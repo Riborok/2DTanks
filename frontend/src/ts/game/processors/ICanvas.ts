@@ -20,6 +20,8 @@ export interface IStorageWithIdRemoval<T extends IIdentifiable> extends IStorage
 
 export interface IShapeAdder {
     addRectangle(rect: IRectangle): void;
+    /** Синее пульсирующее кольцо (щит): координаты уже в пикселях холста */
+    addShieldRing(centerX: number, centerY: number, radius: number): void;
 }
 
 export interface ICanvas extends IDrawable, IStorageWithIdRemoval<IIdentifiable & IGetImgSprite>, IShapeAdder{
@@ -32,6 +34,7 @@ export class Canvas implements ICanvas {
     private readonly _bufferCanvas: HTMLCanvasElement;
     private readonly _bufferCtx: CanvasRenderingContext2D;
     private readonly _rectangles: IRectangle[] = new Array<IRectangle>();
+    private readonly _shieldRings: { cx: number; cy: number; r: number }[] = [];
     private readonly _sprites: Map<number, ISprite>[] = new Array<Map<number, ISprite>>();
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
@@ -90,9 +93,35 @@ export class Canvas implements ICanvas {
         this._ctx.drawImage(this._bufferCanvas, 0, 0);
     }
     private drawAdditionalShapes(){
+        this.drawShieldRings();
         this.drawRectangles();
 
         this._rectangles.length = 0;
+    }
+
+    private drawShieldRings(): void {
+        if (this._shieldRings.length === 0) {
+            return;
+        }
+        const ctx = this._bufferCtx;
+        const t = performance.now() * 0.005;
+        const pulse = 1 + 0.06 * Math.sin(t);
+        ctx.save();
+        for (const ring of this._shieldRings) {
+            const r = ring.r * pulse;
+            ctx.beginPath();
+            ctx.arc(ring.cx, ring.cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 180, 255, 0.28)';
+            ctx.lineWidth = 9;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(ring.cx, ring.cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(140, 235, 255, 0.92)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+        ctx.restore();
+        this._shieldRings.length = 0;
     }
     private drawRectangles(){
         for (const rect of this._rectangles){
@@ -103,9 +132,15 @@ export class Canvas implements ICanvas {
     public addRectangle(rect: IRectangle){
         this._rectangles.push(rect);
     }
+    public addShieldRing(centerX: number, centerY: number, radius: number): void {
+        if (radius > 2) {
+            this._shieldRings.push({ cx: centerX, cy: centerY, r: radius });
+        }
+    }
     public clear() {
         this._sprites.length = 0;
         this._rectangles.length = 0;
+        this._shieldRings.length = 0;
     }
     private draw(sprite: ISprite) {
         this._bufferCtx.save();

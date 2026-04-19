@@ -24,6 +24,9 @@ export class BoxSprite extends Sprite{
             case Bonus.bulSniper:
                 this._imgSprite.src = '/src/img/item/Sniper_Bullet_Box.png'
                 break;
+            case Bonus.perkShield:
+                this._imgSprite.src = '/src/img/item/Perk_Shield.png'
+                break;
             default:
                 throw new Error(`Unsupported bulletType: ${bulletType}`);
         }

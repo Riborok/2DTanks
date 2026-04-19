@@ -38,8 +38,13 @@ export enum Bonus {
     bulHeavy = 2,
     bulGrenade = 3,
     bulSniper = 4,
-    key = 5
+    key = 5,
+    /** Перк: неуязвимость к урону от снарядов на несколько секунд */
+    perkShield = 6
 }
+
+/** Длительность щита после подбора (мс), симуляционное время */
+export const SHIELD_DURATION_MS = 5000;
 
 // Resolution constants (based on 1920px width)
 export class ResolutionManager {

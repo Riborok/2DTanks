@@ -4,7 +4,7 @@ import { TankModel, ITankModel } from '../../model/tank/ITankModel';
 import { IBulletModel } from '../../model/bullet/IBulletModel';
 import { TankPartsCreator } from '../../components/tank_parts/TankPartsCreator';
 import { RectangularEntity } from '../../polygon/entity/IEntity';
-import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS, dynamicCrateMass } from '../../constants/gameConstants';
+import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS, dynamicCrateMass, SHIELD_DURATION_MS } from '../../constants/gameConstants';
 import { ModelIDTracker } from '../../utils/IDTracker';
 import { EntityManipulator } from '../../polygon/entity/EntityManipulator';
 import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
@@ -19,9 +19,9 @@ import { SeededRandom } from '../../utils/seededRandom';
 import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
 import { WallModel } from '../../model/obstacle/IWallModel';
 import {
-    DEATHMATCH_ARENA_WALL_CELLS,
     buildFreeSpawnSlots,
     deathmatchBannedCellsAroundWalls,
+    getDeathmatchArenaWallCellsForSeed,
     pickDeathmatchSpawnSlots
 } from './deathmatchArenaLayout';
 
@@ -131,6 +131,8 @@ export class GameWorld {
     private readonly tankConfigByTankId = new Map<string, TankConfig>();
     private readonly rng: SeededRandom;
     private readonly rngSeed: number;
+    /** Ячейки статичных стен deathmatch (пресет от rngSeed). Вне DM — пустой массив. */
+    private readonly deathmatchArenaWallCells: ReadonlyArray<{ line: number; col: number }>;
     private static readonly DEATHMATCH_DURATION_SEC = 60;
 
     // Track which tanks received actions in the current tick to avoid double-processing
@@ -169,6 +171,9 @@ export class GameWorld {
         this.deathmatchMode = Boolean(deathmatch && deathmatch.fighters.length >= 2);
         this.rngSeed = Number.isFinite(rngSeed) ? (rngSeed as number) >>> 0 : (Date.now() >>> 0);
         this.rng = new SeededRandom(this.rngSeed);
+        this.deathmatchArenaWallCells = this.deathmatchMode
+            ? getDeathmatchArenaWallCellsForSeed(this.rngSeed)
+            : [];
         if (this.deathmatchMode && deathmatch) {
             for (const f of deathmatch.fighters) {
                 this.killCounts.set(f.playerId, 0);
@@ -347,7 +352,7 @@ export class GameWorld {
         const w = ResolutionManager.WALL_WIDTH[0];
         const h = ResolutionManager.WALL_HEIGHT[0];
         const result: ServerWall[] = [];
-        for (const cell of DEATHMATCH_ARENA_WALL_CELLS) {
+        for (const cell of this.deathmatchArenaWallCells) {
             const topLeft = ps.getSpawnPoint(w, h, cell.line, cell.col);
             result.push(ObstacleCreator.createWall(topLeft, 0, this.wallMaterial, 0, false));
         }
@@ -355,7 +360,7 @@ export class GameWorld {
     }
 
     private getDeathmatchSpawnCellBanned(): Set<string> | null {
-        return this.deathmatchMode ? deathmatchBannedCellsAroundWalls() : null;
+        return this.deathmatchMode ? deathmatchBannedCellsAroundWalls(this.deathmatchArenaWallCells) : null;
     }
 
     private buildSpawnGridSlots(cellBanned: Set<string> | null): Array<{ line: number; col: number }> {
@@ -509,7 +514,7 @@ export class GameWorld {
         this.tankConfigByTankId.clear();
 
         if (this.deathmatchMode && this.deathmatchSpec) {
-            const dmBanned = deathmatchBannedCellsAroundWalls();
+            const dmBanned = deathmatchBannedCellsAroundWalls(this.deathmatchArenaWallCells);
             const freeSlots = buildFreeSpawnSlots(dmBanned);
             const fightersOrdered = [...this.deathmatchSpec.fighters].sort((a, b) =>
                 a.playerId.localeCompare(b.playerId)
@@ -1093,7 +1098,7 @@ export class GameWorld {
                         const hitTank = Array.from(this.tanks.values()).find(t => t.model.entity.id === collided.id);
                         if (hitTank) {
                             const hpBefore = hitTank.model.health + hitTank.model.armor;
-                            hitTank.model.takeDamage(bullet.model);
+                            hitTank.model.takeDamage(bullet.model, this.elapsedMs);
                             const hpAfter = hitTank.model.health + hitTank.model.armor;
                             const dealt = Math.max(0, hpBefore - hpAfter);
                             if (dealt > 0) {
@@ -1213,15 +1218,35 @@ export class GameWorld {
     
     private getRandomBoxType(): Bonus {
         const res = this.randomInt(1, 100);
-        
-        if (res < 40)
-            return Bonus.bulMedium;
-        else if (res < 70)
-            return Bonus.bulSniper;
-        else if (res < 85)
-            return Bonus.bulHeavy;
-        else
+        // Лабиринт (standard): щит должен часто появляться; в deathmatch — реже.
+        if (!this.deathmatchMode) {
+            if (res <= 42) {
+                return Bonus.perkShield;
+            }
+            if (res <= 62) {
+                return Bonus.bulMedium;
+            }
+            if (res <= 80) {
+                return Bonus.bulSniper;
+            }
+            if (res <= 92) {
+                return Bonus.bulHeavy;
+            }
             return Bonus.bulGrenade;
+        }
+        if (res <= 8) {
+            return Bonus.perkShield;
+        }
+        if (res < 45) {
+            return Bonus.bulMedium;
+        }
+        if (res < 72) {
+            return Bonus.bulSniper;
+        }
+        if (res < 87) {
+            return Bonus.bulHeavy;
+        }
+        return Bonus.bulGrenade;
     }
     
     private spawnRandomBox(): void {
@@ -1292,6 +1317,9 @@ export class GameWorld {
                             console.log(`[GAMEWORLD] ${GameWorld.REQUIRED_KEYS_PER_LEVEL} keys collected on level ${this.currentLevel} - advancing to level ${this.currentLevel + 1}`);
                             this.advanceToNextLevel();
                         }
+                    } else if (item.type === Bonus.perkShield) {
+                        tank.model.activateShield(this.elapsedMs, SHIELD_DURATION_MS);
+                        itemsToRemove.push(item.id);
                     } else if (item.type !== Bonus.key) {
                         // Bullet box - need to map Bonus enum to bulletNum
                         // Bonus: bulLight=0, bulMedium=1, bulHeavy=2, bulGrenade=3, bulSniper=4
@@ -1336,7 +1364,7 @@ export class GameWorld {
 
         let spawnPoint: Point;
         if (this.deathmatchMode) {
-            const banned = deathmatchBannedCellsAroundWalls();
+            const banned = deathmatchBannedCellsAroundWalls(this.deathmatchArenaWallCells);
             const slots = buildFreeSpawnSlots(banned);
             const shuffled = [...slots];
             this.shuffleSpawnSlots(shuffled);
@@ -1670,7 +1698,8 @@ export class GameWorld {
                 maxHealth: tank.model.maxHealth,
                 armor: tank.model.armor,
                 maxArmor: tank.model.maxArmor,
-                isIdle: tank.model.isIdle() // Add idle state to determine if track animation should stop
+                isIdle: tank.model.isIdle(), // Add idle state to determine if track animation should stop
+                shieldActive: tank.model.isShieldActive(this.elapsedMs)
             };
         });
 

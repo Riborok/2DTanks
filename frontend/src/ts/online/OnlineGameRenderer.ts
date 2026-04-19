@@ -264,9 +264,29 @@ export class OnlineGameRenderer {
         for (const serverTank of this.tanksDataForHealthBars) {
             const renderableTank = this.tanks.get(serverTank.id);
             if (renderableTank) {
+                this.drawShieldRingIfActive(serverTank, renderableTank);
                 this.drawHealthAndArmorBars(serverTank, renderableTank);
             }
         }
+    }
+
+    private drawShieldRingIfActive(serverTank: ServerTank, renderableTank: RenderableTank): void {
+        if (!serverTank.shieldActive) {
+            return;
+        }
+        const hullNum = renderableTank.config.hullNum;
+        const tankEntityWidth = ResolutionManager.getTankEntityWidth(hullNum);
+        const tankEntityHeight = ResolutionManager.getTankEntityHeight(hullNum);
+        const sin = Math.sin(serverTank.angle);
+        const cos = Math.cos(serverTank.angle);
+        const point2RelativeRotatedX = tankEntityWidth * cos - tankEntityHeight * sin;
+        const point2RelativeRotatedY = tankEntityWidth * sin + tankEntityHeight * cos;
+        const scaledTankX = ResolutionManager.worldToCanvasX(serverTank.x);
+        const scaledTankY = ResolutionManager.worldToCanvasY(serverTank.y);
+        const point2 = new Point(scaledTankX + point2RelativeRotatedX, scaledTankY + point2RelativeRotatedY);
+        const center = calcMidBetweenTwoPoint(new Point(scaledTankX, scaledTankY), point2);
+        const baseR = Math.max(tankEntityWidth, tankEntityHeight) * 0.48;
+        this.canvas.addShieldRing(center.x, center.y, baseR);
     }
     
     private drawHealthAndArmorBars(serverTank: ServerTank, renderableTank: RenderableTank): void {

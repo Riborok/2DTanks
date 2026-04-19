@@ -18,6 +18,8 @@ export interface ServerTank {
     weaponNum: number;
     color: number;
     isIdle?: boolean; // Whether the tank is idle (velocity.length === 0)
+    /** Активен перк щита (сервер): клиент рисует синее кольцо */
+    shieldActive?: boolean;
 }
 
 export interface ServerBullet {

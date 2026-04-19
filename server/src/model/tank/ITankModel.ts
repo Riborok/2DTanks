@@ -25,6 +25,8 @@ interface ITurretControl {
  * reloadSpeed по часам всегда «ещё не остыл» — второй и последующие выстрелы гасятся.
  */
 export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletShooter, ITurretControl, IBulletReceiver {
+    isShieldActive(simTimeMs: number): boolean;
+    activateShield(simTimeMs: number, durationMs: number): void;
     /** Повернуть башню на тот же угол, на который за шаг повернулся корпус (ω·dt). */
     syncTurretAfterHullStep(deltaAngleRadians: number): void;
     /** Индекс материала уровня (0 трава, 1 грунт, 2 песчаник) — влияет на силу дрифта. */
@@ -89,7 +91,21 @@ export class TankModel extends LandModel implements ITankModel {
         }
     }
     
-    public takeDamage(bullet: IBulletModel) {
+    private _shieldUntilSimMs: number = -Infinity;
+
+    public isShieldActive(simTimeMs: number): boolean {
+        return simTimeMs < this._shieldUntilSimMs;
+    }
+
+    public activateShield(simTimeMs: number, durationMs: number): void {
+        const until = simTimeMs + durationMs;
+        this._shieldUntilSimMs = Math.max(this._shieldUntilSimMs, until);
+    }
+
+    public takeDamage(bullet: IBulletModel, simTimeMs?: number) {
+        if (simTimeMs !== undefined && this.isShieldActive(simTimeMs)) {
+            return;
+        }
         this._armor -= bullet.armorPenetration;
         if (this._armor < 0) { this._armor = 0; }
 

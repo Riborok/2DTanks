@@ -38,7 +38,8 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     winnerPlayerIds = [],
     myPlayerId
 }) => {
-    const [showFullStats, setShowFullStats] = useState(false);
+    /** В deathmatch сразу показываем полную таблицу (план: пост-матчевые метрики). */
+    const [showFullStats, setShowFullStats] = useState(() => mode === 'deathmatch');
     const sortedStats = [...stats].sort(
         (a, b) =>
             b.kills - a.kills ||

@@ -14,6 +14,40 @@ export const DEATHMATCH_ARENA_WALL_CELLS: ReadonlyArray<{ line: number; col: num
     { line: 2, col: 6 }
 ];
 
+/** Пресет 1: усиление центральной полосы + боковые опоры у длинных сторон. */
+const ARENA_WALL_PRESET_SIDE_FOCUS: ReadonlyArray<{ line: number; col: number }> = [
+    { line: 0, col: 4 },
+    { line: 0, col: 6 },
+    { line: 4, col: 4 },
+    { line: 4, col: 6 },
+    { line: 2, col: 2 },
+    { line: 2, col: 8 }
+];
+
+/** Пресет 2: вертикальные пары у центральной колонны + верхние углы. */
+const ARENA_WALL_PRESET_VERTICAL_PAIRS: ReadonlyArray<{ line: number; col: number }> = [
+    { line: 1, col: 5 },
+    { line: 3, col: 5 },
+    { line: 2, col: 3 },
+    { line: 2, col: 7 },
+    { line: 0, col: 2 },
+    { line: 0, col: 8 }
+];
+
+const ARENA_WALL_PRESETS: ReadonlyArray<ReadonlyArray<{ line: number; col: number }>> = [
+    DEATHMATCH_ARENA_WALL_CELLS,
+    ARENA_WALL_PRESET_SIDE_FOCUS,
+    ARENA_WALL_PRESET_VERTICAL_PAIRS
+];
+
+export const DEATHMATCH_ARENA_PRESET_COUNT = ARENA_WALL_PRESETS.length;
+
+/** Ротация раскладки статичных стен по `rngSeed` матча (детерминированно для реплея). */
+export function getDeathmatchArenaWallCellsForSeed(seed: number): ReadonlyArray<{ line: number; col: number }> {
+    const idx = (seed >>> 0) % ARENA_WALL_PRESETS.length;
+    return ARENA_WALL_PRESETS[idx]!;
+}
+
 /**
  * Ячейки, куда нельзя ставить танки/ящики рядом со статикой (как раньше — «подушка» ±1 по сетке).
  */
