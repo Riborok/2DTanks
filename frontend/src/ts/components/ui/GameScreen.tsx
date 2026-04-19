@@ -24,7 +24,6 @@ import { useHudEvents } from '../hud/useHudEvents';
 import KillFeed from '../hud/KillFeed';
 import DamageNumbers from '../hud/DamageNumbers';
 import DamageDirection from '../hud/DamageDirection';
-import Minimap from '../hud/Minimap';
 import FullscreenToggle from '../hud/FullscreenToggle';
 import PingWheel, { PingType } from '../hud/PingWheel';
 
@@ -784,7 +783,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 className="game-canvas"
             />
             <FullscreenToggle />
-            <Minimap snapshotRef={snapshotRef} myPlayerId={myPlayerId} />
             <KillFeed kills={hud.kills} />
             <DamageNumbers hits={hud.hits} />
             <DamageDirection events={hud.damageTaken} />

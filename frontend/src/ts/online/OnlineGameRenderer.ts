@@ -510,7 +510,7 @@ export class OnlineGameRenderer {
         for (const serverCrate of serverCrates) {
             let renderableCrate = this.crates.get(serverCrate.id);
             if (!renderableCrate) {
-                const sprite = new DestructibleCrateSprite();
+                const sprite = new DestructibleCrateSprite(serverCrate.skinIndex ?? 0);
                 renderableCrate = { id: serverCrate.id, sprite };
                 this.crates.set(serverCrate.id, renderableCrate);
                 this.canvas.insert(sprite);

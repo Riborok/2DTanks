@@ -46,6 +46,8 @@ export interface ServerCrate {
     angle: number;
     materialNum: number;
     shapeNum: number;
+    /** Вариант спрайта разрушаемого блока (0…N), клиент `DestructibleCrateSprite`. */
+    skinIndex?: number;
     hp: number;
     maxHp: number;
 }

@@ -96,34 +96,8 @@
     filter: drop-shadow(0 0 6px rgba(255, 77, 77, 0.75));
 }
 
-/* ==========================================================================
-   Minimap
-   ========================================================================== */
-.minimap {
-    position: fixed;
-    right: 14px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    z-index: 10006;
-    padding: 4px;
-    background: rgba(10, 14, 24, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    pointer-events: none;
-}
-
-.minimap-canvas {
-    display: block;
-    border-radius: 6px;
-}
-
 @media (max-width: 640px) {
-    .minimap {
-        right: auto;
-        left: 14px;
-        bottom: auto;
-        top: calc(env(safe-area-inset-top, 0px) + 70px);
-    }
-    /* Kill-feed перенесём под HUD на мобиле, чтобы не перекрывать мини-карту */
+    /* Kill-feed на узком экране — компактнее */
     .kill-feed {
         top: calc(env(safe-area-inset-top, 0px) + 70px);
         right: 8px;

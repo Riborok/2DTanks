@@ -18,6 +18,12 @@ import type { DeathmatchInit, GameWorldEndResult, PlayerMatchStats } from './gam
 import { SeededRandom } from '../../utils/seededRandom';
 import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
 import { WallModel } from '../../model/obstacle/IWallModel';
+import {
+    DEATHMATCH_ARENA_WALL_CELLS,
+    buildFreeSpawnSlots,
+    deathmatchBannedCellsAroundWalls,
+    pickDeathmatchSpawnSlots
+} from './deathmatchArenaLayout';
 
 interface ServerTank {
     id: string;
@@ -45,6 +51,8 @@ interface ServerCrate {
     model: WallModel;
     materialNum: number;
     shapeNum: number;
+    /** Вариант спрайта на клиенте (0…9). */
+    skinIndex: number;
     hp: number;
     maxHp: number;
 }
@@ -91,35 +99,7 @@ export class GameWorld {
     private static readonly DESTRUCTIBLE_CRATE_MAX_HP: number = 90;
     private static readonly DESTRUCTIBLE_CRATE_SPAWN_TRIES: number = 30;
     private static readonly ARENA_DESTRUCTIBLE_CRATE_COUNT: number = 10;
-    /** Ячейки сетки спавна, где стоят статичные блоки арены (те же координаты, что в createDeathmatchArenaWalls). */
-    private static readonly DEATHMATCH_ARENA_WALL_GRID: ReadonlyArray<{ line: number; col: number }> = [
-        { line: 0, col: 2 },
-        { line: 0, col: 8 },
-        { line: 2, col: 2 },
-        { line: 2, col: 8 },
-        { line: 4, col: 2 },
-        { line: 4, col: 8 },
-        { line: 1, col: 5 },
-        { line: 3, col: 5 }
-    ];
 
-    /** Ячейки сетки, куда нельзя ставить ящики: колонны 110×55 задевают соседние клетки. */
-    private static deathmatchCrateSpawnBannedCells(): Set<string> {
-        const banned = new Set<string>();
-        for (const { line, col } of GameWorld.DEATHMATCH_ARENA_WALL_GRID) {
-            for (let dl = -1; dl <= 1; dl++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    const l = line + dl;
-                    const c = col + dc;
-                    if (l >= 0 && l < SPAWN_GRIDS_LINES_AMOUNT && c >= 0 && c < SPAWN_GRIDS_COLUMNS_AMOUNT) {
-                        banned.add(`${l},${c}`);
-                    }
-                }
-            }
-        }
-        return banned;
-    }
-    
     private tanks: Map<string, ServerTank> = new Map();
     private bullets: Map<number, ServerBullet> = new Map();
     private walls: ServerWall[] = [];
@@ -367,7 +347,7 @@ export class GameWorld {
         const w = ResolutionManager.WALL_WIDTH[0];
         const h = ResolutionManager.WALL_HEIGHT[0];
         const result: ServerWall[] = [];
-        for (const cell of GameWorld.DEATHMATCH_ARENA_WALL_GRID) {
+        for (const cell of DEATHMATCH_ARENA_WALL_CELLS) {
             const topLeft = ps.getSpawnPoint(w, h, cell.line, cell.col);
             result.push(ObstacleCreator.createWall(topLeft, 0, this.wallMaterial, 0, false));
         }
@@ -375,7 +355,7 @@ export class GameWorld {
     }
 
     private getDeathmatchSpawnCellBanned(): Set<string> | null {
-        return this.deathmatchMode ? GameWorld.deathmatchCrateSpawnBannedCells() : null;
+        return this.deathmatchMode ? deathmatchBannedCellsAroundWalls() : null;
     }
 
     private buildSpawnGridSlots(cellBanned: Set<string> | null): Array<{ line: number; col: number }> {
@@ -400,6 +380,83 @@ export class GameWorld {
         }
     }
 
+    /**
+     * Сортирует ячейки: сначала ближе к центру арены (манхэттен до середины сетки),
+     * внутри одного расстояния — случайный порядок (стабильный по сиду).
+     */
+    private orderSpawnSlotsCenterFirst(slots: Array<{ line: number; col: number }>): Array<{ line: number; col: number }> {
+        const centerL = (SPAWN_GRIDS_LINES_AMOUNT - 1) / 2;
+        const centerC = (SPAWN_GRIDS_COLUMNS_AMOUNT - 1) / 2;
+        const scored = slots.map((s) => ({
+            s,
+            d: Math.abs(s.line - centerL) + Math.abs(s.col - centerC)
+        }));
+        scored.sort((a, b) => a.d - b.d);
+        const out: Array<{ line: number; col: number }> = [];
+        let i = 0;
+        while (i < scored.length) {
+            const d0 = scored[i]!.d;
+            const run: Array<{ line: number; col: number }> = [];
+            while (i < scored.length && scored[i]!.d === d0) {
+                run.push(scored[i]!.s);
+                i++;
+            }
+            this.shuffleSpawnSlots(run);
+            out.push(...run);
+        }
+        return out;
+    }
+
+    /**
+     * Если дуло «в упор», стартовая позиция снаряда может слегка заходить в стену.
+     * Сдвиг **вперёд** вдоль полёта выталкивал пулю на обратную сторону стены — баг «выстрел сквозь стену».
+     * Здесь только откат **назад** (против направления полёта), к свободному пространству у стрелка.
+     */
+    private nudgeBulletBackwardOutOfSolid(
+        bullet: IBulletModel,
+        shooterHullEntityId: number,
+        maxBackPx: number,
+        stepPx: number
+    ): void {
+        const ang = bullet.entity.angle;
+        const cos = Math.cos(ang);
+        const sin = Math.sin(ang);
+        let moved = 0;
+        while (moved < maxBackPx) {
+            const hits = Array.from(this.collisionSystem.getCollisions(bullet.entity)).filter(
+                (c) => c.id !== shooterHullEntityId
+            );
+            if (hits.length === 0) {
+                return;
+            }
+            for (const p of bullet.entity.points) {
+                p.x -= cos * stepPx;
+                p.y -= sin * stepPx;
+            }
+            moved += stepPx;
+        }
+    }
+
+    private trySpawnTankAtGridCells(
+        tw: number,
+        th: number,
+        mass: number,
+        cells: Array<{ line: number; col: number }>
+    ): RectangularEntity | null {
+        if (!this.pointSpawner) {
+            return null;
+        }
+        for (const { line, col } of cells) {
+            const spawnPoint = this.pointSpawner.getSpawnPoint(tw, th, line, col);
+            const candidate = new RectangularEntity(spawnPoint, tw, th, 0, mass, ModelIDTracker.tankId);
+            const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
+            if (hits.length === 0) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     private spawnDestructibleCrates(count: number): void {
         if (!this.pointSpawner) {
             return;
@@ -407,8 +464,7 @@ export class GameWorld {
         this.crates.clear();
         const cw = ResolutionManager.WALL_WIDTH[1];
         const ch = ResolutionManager.WALL_HEIGHT[1];
-        const slots = this.buildSpawnGridSlots(this.getDeathmatchSpawnCellBanned());
-        this.shuffleSpawnSlots(slots);
+        const slots = this.orderSpawnSlotsCenterFirst(this.buildSpawnGridSlots(this.getDeathmatchSpawnCellBanned()));
         let placed = 0;
         for (const { line, col } of slots) {
             if (placed >= count) {
@@ -428,6 +484,7 @@ export class GameWorld {
                 model: wallLike.model,
                 materialNum: this.wallMaterial,
                 shapeNum: 1,
+                skinIndex: this.randomInt(0, 9),
                 hp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP,
                 maxHp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP
             };
@@ -452,7 +509,15 @@ export class GameWorld {
         this.tankConfigByTankId.clear();
 
         if (this.deathmatchMode && this.deathmatchSpec) {
-            for (const f of this.deathmatchSpec.fighters) {
+            const dmBanned = deathmatchBannedCellsAroundWalls();
+            const freeSlots = buildFreeSpawnSlots(dmBanned);
+            const fightersOrdered = [...this.deathmatchSpec.fighters].sort((a, b) =>
+                a.playerId.localeCompare(b.playerId)
+            );
+            const plannedSlots = pickDeathmatchSpawnSlots(fightersOrdered.length, freeSlots);
+
+            for (let idx = 0; idx < fightersOrdered.length; idx++) {
+                const f = fightersOrdered[idx];
                 const cfg = f.config;
                 const tankParts = TankPartsCreator.create(
                     cfg.hullNum,
@@ -463,37 +528,32 @@ export class GameWorld {
                 const tw = ResolutionManager.getTankEntityWidth(cfg.hullNum);
                 const th = ResolutionManager.getTankEntityHeight(cfg.hullNum);
                 const mass = tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass;
-                let entity: RectangularEntity | null = null;
-                for (let attempt = 0; attempt < GameWorld.DESTRUCTIBLE_CRATE_SPAWN_TRIES; attempt++) {
-                    const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
-                        tw,
-                        th,
-                        0,
-                        SPAWN_GRIDS_LINES_AMOUNT - 1,
-                        0,
-                        SPAWN_GRIDS_COLUMNS_AMOUNT - 1
-                    );
-                    const candidate = new RectangularEntity(spawnPoint, tw, th, 0, mass, ModelIDTracker.tankId);
-                    const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
-                    if (hits.length > 0) {
+
+                const planned = plannedSlots[idx];
+                const shuffledFree = [...freeSlots];
+                this.shuffleSpawnSlots(shuffledFree);
+                const tryCells: Array<{ line: number; col: number }> = [];
+                if (planned) {
+                    tryCells.push(planned);
+                }
+                for (const s of shuffledFree) {
+                    if (planned && s.line === planned.line && s.col === planned.col) {
                         continue;
                     }
-                    entity = candidate;
-                    break;
+                    tryCells.push(s);
                 }
-                if (!entity) {
-                    outer: for (let line = 0; line < SPAWN_GRIDS_LINES_AMOUNT; line++) {
-                        for (let col = 0; col < SPAWN_GRIDS_COLUMNS_AMOUNT; col++) {
-                            const fallbackPt = this.pointSpawner.getSpawnPoint(tw, th, line, col);
-                            const candidate = new RectangularEntity(fallbackPt, tw, th, 0, mass, ModelIDTracker.tankId);
-                            const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
-                            if (hits.length === 0) {
-                                entity = candidate;
-                                break outer;
-                            }
-                        }
-                    }
-                }
+
+                let entity =
+                    this.trySpawnTankAtGridCells(tw, th, mass, tryCells) ||
+                    this.trySpawnTankAtGridCells(
+                        tw,
+                        th,
+                        mass,
+                        Array.from({ length: SPAWN_GRIDS_LINES_AMOUNT * SPAWN_GRIDS_COLUMNS_AMOUNT }, (_, k) => ({
+                            line: Math.floor(k / SPAWN_GRIDS_COLUMNS_AMOUNT),
+                            col: k % SPAWN_GRIDS_COLUMNS_AMOUNT
+                        }))
+                    );
                 if (!entity) {
                     const last = this.pointSpawner.getSpawnPoint(tw, th, 0, 0);
                     entity = new RectangularEntity(last, tw, th, 0, mass, ModelIDTracker.tankId);
@@ -810,7 +870,10 @@ export class GameWorld {
                 // We should NOT add bullet to collision system here - wait until first update
                 // But we should check if there's an immediate collision (like checkForSpawn does)
                 // However, since getCollisions works with entities not in system, we can check here
-                
+
+                // Микропересечение со стеной у дула — только откат к стрелку, без выталкивания «сквозь» стену.
+                this.nudgeBulletBackwardOutOfSolid(bullet, tank.model.entity.id, 36, 3);
+
                 // Check for immediate collision BEFORE adding to system (like checkForSpawn)
                 const immediateCollisions = Array.from(this.collisionSystem.getCollisions(bullet.entity));
                 // Filter out collision with source tank (as in original, source tank collision is ignored)
@@ -1266,35 +1329,73 @@ export class GameWorld {
             : tank.role === 'attacker'
               ? this.attackerConfig
               : this.defenderConfig;
-        let minColumn = tank.role === 'attacker' ? 0 : Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2);
-        let maxColumn = tank.role === 'attacker'
-            ? Math.floor(SPAWN_GRIDS_COLUMNS_AMOUNT / 2)
-            : SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+        const tw = ResolutionManager.getTankEntityWidth(config.hullNum);
+        const th = ResolutionManager.getTankEntityHeight(config.hullNum);
+        const tankParts = TankPartsCreator.create(config.hullNum, config.trackNum, config.turretNum, config.weaponNum);
+        const mass = tankParts.hull.mass + tankParts.turret.mass + tankParts.weapon.mass;
+
+        let spawnPoint: Point;
         if (this.deathmatchMode) {
-            minColumn = 0;
-            maxColumn = SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+            const banned = deathmatchBannedCellsAroundWalls();
+            const slots = buildFreeSpawnSlots(banned);
+            const shuffled = [...slots];
+            this.shuffleSpawnSlots(shuffled);
+            let found: Point | null = null;
+            for (const { line, col } of shuffled) {
+                const pt = this.pointSpawner.getSpawnPoint(tw, th, line, col);
+                const candidate = new RectangularEntity(pt, tw, th, 0, mass, ModelIDTracker.tankId);
+                const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
+                if (hits.length === 0) {
+                    found = pt;
+                    break;
+                }
+            }
+            if (found) {
+                spawnPoint = found;
+            } else {
+                let fb: Point | null = null;
+                for (let attempt = 0; attempt < GameWorld.DESTRUCTIBLE_CRATE_SPAWN_TRIES; attempt++) {
+                    const pt = this.pointSpawner.getRandomSpawnPoint(
+                        tw,
+                        th,
+                        0,
+                        SPAWN_GRIDS_LINES_AMOUNT - 1,
+                        0,
+                        SPAWN_GRIDS_COLUMNS_AMOUNT - 1
+                    );
+                    const candidate = new RectangularEntity(pt, tw, th, 0, mass, ModelIDTracker.tankId);
+                    const hits = Array.from(this.collisionSystem.getCollisions(candidate)).filter((c) => c.id !== candidate.id);
+                    if (hits.length === 0) {
+                        fb = pt;
+                        break;
+                    }
+                }
+                spawnPoint = fb ?? this.pointSpawner.getSpawnPoint(tw, th, 0, 0);
+            }
+        } else {
+            const minColumn = tank.role === 'attacker' ? 0 : Math.ceil(SPAWN_GRIDS_COLUMNS_AMOUNT / 2);
+            const maxColumn =
+                tank.role === 'attacker'
+                    ? Math.floor(SPAWN_GRIDS_COLUMNS_AMOUNT / 2)
+                    : SPAWN_GRIDS_COLUMNS_AMOUNT - 1;
+            spawnPoint = this.pointSpawner.getRandomSpawnPoint(
+                tw,
+                th,
+                0,
+                SPAWN_GRIDS_LINES_AMOUNT - 1,
+                minColumn,
+                maxColumn
+            );
         }
-        
-        const spawnPoint = this.pointSpawner.getRandomSpawnPoint(
-            ResolutionManager.getTankEntityWidth(config.hullNum),
-            ResolutionManager.getTankEntityHeight(config.hullNum),
-            0, SPAWN_GRIDS_LINES_AMOUNT - 1,
-            minColumn, maxColumn
-        );
-        
+
         const angles = [0, 1.57, 3.14, 4.71];
         const angle = angles[this.randomInt(0, 3)];
-        
-        tank.model.entity.adjustPolygon(spawnPoint, 
-            ResolutionManager.getTankEntityWidth(config.hullNum),
-            ResolutionManager.getTankEntityHeight(config.hullNum),
-            angle);
+
+        tank.model.entity.adjustPolygon(spawnPoint, tw, th, angle);
         tank.model.entity.velocity.x = 0;
         tank.model.entity.velocity.y = 0;
         tank.model.entity.angularVelocity = 0;
-        
-        // Reset health - recreate model with full health
-        const tankParts = TankPartsCreator.create(config.hullNum, config.trackNum, config.turretNum, config.weaponNum);
+
         const newModel = new TankModel(tankParts, tank.model.entity);
         tank.model = newModel;
         
@@ -1410,6 +1511,7 @@ export class GameWorld {
                 angle: number;
                 materialNum: number;
                 shapeNum: number;
+                skinIndex?: number;
                 hp: number;
                 maxHp: number;
             }>) ?? [];
@@ -1432,6 +1534,7 @@ export class GameWorld {
                 model,
                 materialNum,
                 shapeNum,
+                skinIndex: Math.max(0, Math.min(9, Math.floor(Number(c.skinIndex) || 0))),
                 hp: Math.max(0, Math.floor(c.hp ?? GameWorld.DESTRUCTIBLE_CRATE_MAX_HP)),
                 maxHp: Math.max(1, Math.floor(c.maxHp ?? GameWorld.DESTRUCTIBLE_CRATE_MAX_HP))
             });
@@ -1605,6 +1708,7 @@ export class GameWorld {
                 angle: ent.angle,
                 materialNum: crate.materialNum,
                 shapeNum: crate.shapeNum,
+                skinIndex: crate.skinIndex,
                 hp: crate.hp,
                 maxHp: crate.maxHp
             };
