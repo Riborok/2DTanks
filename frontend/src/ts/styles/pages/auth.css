@@ -1,11 +1,25 @@
 .page-auth {
-    min-height: 100vh;
+    min-height: 100svh;
     padding: 24px 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .page-auth .connection-container {
     width: min(460px, 96vw);
     padding: 28px;
+}
+
+@media (max-width: 520px), (orientation: landscape) and (max-height: 520px) {
+    .page-auth {
+        padding: 10px 8px calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .page-auth .connection-container {
+        width: 100%;
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
 }
 
 .page-auth .game-title {

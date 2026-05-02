@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {IScalable, Sprite} from "../ISprite";
 import {ResolutionManager} from "../../constants/gameConstants";
 import {Point} from "../../geometry/Point";
@@ -11,7 +12,7 @@ export class KeySprite extends Sprite implements IScalable{
         super(ResolutionManager.KEY_SIZE, ResolutionManager.KEY_SIZE, zIndex);
         this._point = point;
         this._angle = angle;
-        this._imgSprite.src = "/src/img/item/Key.png";
+        this._imgSprite.src = gameImg('item/Key.png');
     }
     public get scaleX(): number {
         if (this._isIncreasing){

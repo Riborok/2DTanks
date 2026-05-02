@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { Room } from './Room';
+import { Room, type RoomCreateOptions } from './Room';
 import { RoomCodeGenerator } from '../utils/roomCodeGenerator';
 import type { WsAuthUser } from '../auth/types';
 
@@ -17,7 +17,12 @@ export class RoomManager {
             code = RoomCodeGenerator.generate();
         } while (this.rooms.has(code));
 
-        const room = new Room(code, { singlePlayerTest, practiceMode, deathmatchMode });
+        const roomOptions: RoomCreateOptions = {
+            singlePlayerTest,
+            practiceMode,
+            deathmatchMode
+        };
+        const room = new Room(code, roomOptions);
         const playerId = room.addPlayer(null, auth);
         this.rooms.set(code, room);
 

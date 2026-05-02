@@ -1,5 +1,5 @@
 .app-shell {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background: var(--color-bg-900);
@@ -12,6 +12,36 @@
      * Шапка + перенос навигации — запас по вертикали.
      */
     --game-hud-top: calc(env(safe-area-inset-top, 0px) + 76px);
+}
+
+/**
+ * На тач-устройствах фиксируем высоту в 100dvh и запрещаем внешний скролл,
+ * чтобы overflow-y: auto на .app-shell-main работал правильно (iOS-fix).
+ * На десктопе оставляем min-height и даём телу скроллиться естественно
+ * — это убирает лишний внутренний скроллбар на pages Settings / PlayHub.
+ */
+@media (pointer: coarse) {
+    .app-shell {
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .app-shell-main {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/**
+ * Десктоп (pointer: fine): при только min-height:100dvh у .app-shell flex-элемент
+ * main может не получить долю высоты — канвас игры (height:100%) схлопывается.
+ * На таче уже задано height:100dvh. Здесь фиксируем окно для всего /play кроме
+ * корневого hub (у него нет .app-container).
+ */
+.app-shell:has(.play-page-root.app-container) {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
 }
 
 .app-shell-header {
@@ -109,8 +139,8 @@
     position: relative;
     z-index: 1;
     overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    /* overflow-y: visible — на десктопе тело скроллится естественно.
+       На мобилке @media (pointer: coarse) ниже переключает на auto. */
 }
 
 /**
@@ -137,12 +167,17 @@
     min-height: 0;
 }
 
+.app-shell-main:has(.play-page-root.app-container:has(.game-screen)) {
+    overflow: hidden;
+}
+
 /* HUD игры выше шапки по z-index, позиция по --game-hud-top из .app-shell */
 .app-shell .game-ui {
     z-index: 10002 !important;
 }
 
 .play-page-root.app-container {
+    flex: 1;
     width: 100%;
     max-width: 100%;
     margin: 0;
@@ -153,6 +188,22 @@
     align-items: center;
     justify-content: flex-start;
     min-height: 0;
+}
+
+.play-page-root.app-container:has(.lobby-screen) {
+    align-items: stretch;
+    min-height: calc(100dvh - var(--app-shell-play-chrome));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.play-page-root.app-container:has(.game-screen) {
+    align-self: stretch;
+    align-items: stretch;
+    height: calc(100dvh - var(--app-shell-play-chrome));
+    min-height: calc(100dvh - var(--app-shell-play-chrome));
+    overflow: hidden;
+    padding: 0;
 }
 
 /* Выбор танка: ровно остаток окна под шапкой, без «вылезания» за экран */
@@ -241,6 +292,8 @@
 
     .app-shell-main {
         padding: 12px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .app-shell {
@@ -275,4 +328,100 @@
         --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 44px);
         --game-hud-top: calc(env(safe-area-inset-top, 0px) + 40px);
     }
+}
+
+@media (max-width: 720px), (max-height: 480px) {
+    .play-page-root.app-container:not(:has(.game-screen)):not(:has(.tank-customizer)) {
+        min-height: auto;
+        overflow: visible;
+    }
+
+    .app-shell-main:has(.play-page-root:not(.app-container)) {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (pointer: coarse) {
+    .app-shell-main:has(.game-screen) {
+        padding: 0;
+    }
+}
+
+/* Надёжный fallback без :has(): лобби на телефоне должно скроллиться всегда. */
+.play-page-root--lobby.app-container {
+    align-self: stretch;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: calc(100dvh - var(--app-shell-play-chrome));
+    max-height: calc(100dvh - var(--app-shell-play-chrome));
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.play-page-root--lobby .lobby-screen {
+    flex: 0 0 auto;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+    align-items: flex-start;
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+    .play-page-root--lobby.app-container {
+        padding: 6px 6px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* ==========================================================================
+   Полноэкранный режим: класс html.is-browser-fullscreen (ставит FullscreenToggle),
+   надёжнее чем только CSS :fullscreen. Меню сайта — data-fullscreen-header-open.
+   ========================================================================== */
+
+html.is-browser-fullscreen .app-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .app-shell-header {
+    display: none !important;
+}
+
+html.is-browser-fullscreen[data-fullscreen-header-open="true"] .app-shell-header {
+    display: flex !important;
+}
+
+html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .app-shell-main {
+    height: 100dvh;
+    max-height: 100dvh;
+}
+
+html.is-browser-fullscreen[data-fullscreen-header-open="true"] .app-shell-main {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+}
+
+html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .play-page-root.app-container:has(.game-screen) {
+    height: 100dvh;
+    min-height: 100dvh;
+}
+
+html.is-browser-fullscreen[data-fullscreen-header-open="true"] .play-page-root.app-container:has(.game-screen) {
+    height: calc(100dvh - var(--app-shell-play-chrome));
+    min-height: calc(100dvh - var(--app-shell-play-chrome));
+    max-height: calc(100dvh - var(--app-shell-play-chrome));
+}
+
+/* Запасной вариант без JS-класса */
+html:fullscreen:not([data-fullscreen-header-open="true"]) .app-shell-header,
+html:-webkit-full-screen:not([data-fullscreen-header-open="true"]) .app-shell-header,
+html:-moz-full-screen:not([data-fullscreen-header-open="true"]) .app-shell-header {
+    display: none !important;
 }

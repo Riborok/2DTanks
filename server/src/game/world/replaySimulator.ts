@@ -58,10 +58,18 @@ function createWorldFromReplayMeta(meta: ReplayStartMeta): GameWorld {
     if (meta.mode === 'deathmatch') {
         const f0 = meta.fighters[0];
         const cfg0 = f0?.config ?? { hullNum: 0, trackNum: 0, turretNum: 0, weaponNum: 0, color: 0 };
-        return new GameWorld(cfg0, cfg0, 'replay', false, false, {
-            surfaceMaterial: meta.surfaceMaterial,
-            fighters: meta.fighters
-        }, meta.rngSeed);
+        return new GameWorld(
+            cfg0,
+            cfg0,
+            'replay',
+            false,
+            false,
+            {
+                surfaceMaterial: meta.surfaceMaterial,
+                fighters: meta.fighters
+            },
+            meta.rngSeed
+        );
     }
     return new GameWorld(
         meta.attackerConfig,

@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {IFrameByFrame} from "../ISprite";
 import {Point} from "../../geometry/Point";
 import {AnimationSprite} from "./IAnimation";
@@ -14,7 +15,7 @@ export class BulletImpactAnimation extends AnimationSprite implements IFrameByFr
     public constructor(point: Point, angle: number, width: number, height: number, num: number) {
         const zIndex: number = 1;
         super(width, height, zIndex);
-        this._imgSprite.src = `/src/img/tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_${num === 0 ? 0 : 1}.png`;
+        this._imgSprite.src = gameImg(`tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_${num === 0 ? 0 : 1}.png`);
 
         const newPoint = new Point(
             point.x + height / 2 * Math.sin(angle),

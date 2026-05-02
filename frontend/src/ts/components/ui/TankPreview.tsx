@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { gameImg } from '../../constants/gameAssets';
 
 interface TankConfig {
     hullIndex: number;
@@ -40,28 +41,28 @@ const TankPreview: React.FC<TankPreviewProps> = ({ config }) => {
     return (
         <div className="tank-preview">
             <img
-                src={`/src/img/tanks/Tracks/Track_${trackIndex}_Solo.png`}
+                src={gameImg(`tanks/Tracks/Track_${trackIndex}_Solo.png`)}
                 alt="Track"
                 className="track-top-view"
             />
             <img
-                src={`/src/img/tanks/Tracks/Track_${trackIndex}_Solo.png`}
+                src={gameImg(`tanks/Tracks/Track_${trackIndex}_Solo.png`)}
                 alt="Track"
                 className="track-bottom-view"
             />
             <img
-                src={`/src/img/tanks/Hulls/Hull_${hullIndex}/Hull_${colorIndex % 4}.png`}
+                src={gameImg(`tanks/Hulls/Hull_${hullIndex}/Hull_${colorIndex % 4}.png`)}
                 alt="Hull"
                 className="hull-view"
             />
             <img
-                src={`/src/img/tanks/Weapons/Weapon_${weaponIndex}.png`}
+                src={gameImg(`tanks/Weapons/Weapon_${weaponIndex}.png`)}
                 alt="Weapon"
                 className="weapon-view"
                 style={{ left: `${weaponLeft}px`, top: `${weaponTop}px` }}
             />
             <img
-                src={`/src/img/tanks/Turrets/Turret_${turretIndex}/Turret_${colorIndex % 4}.png`}
+                src={gameImg(`tanks/Turrets/Turret_${turretIndex}/Turret_${colorIndex % 4}.png`)}
                 alt="Turret"
                 className="turret-view"
             />

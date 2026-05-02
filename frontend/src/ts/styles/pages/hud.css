@@ -112,29 +112,110 @@
 }
 
 /* ==========================================================================
-   Fullscreen / orientation toggle
+   Fullscreen: HUD-панель (toolbar / corner); «Меню» — показать шапку сайта
    ========================================================================== */
+.fullscreen-toolbar {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
 .fullscreen-toggle {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(10, 14, 24, 0.65);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    backdrop-filter: blur(4px);
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.fullscreen-toggle:hover {
+    color: #fff;
+    background: rgba(10, 14, 24, 0.85);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.fullscreen-toggle--toolbar {
+    position: relative;
+    width: 38px;
+    height: 34px;
+    flex-shrink: 0;
+}
+
+.fullscreen-toggle--corner {
     position: fixed;
     right: 14px;
     top: calc(env(safe-area-inset-top, 0px) + 14px);
     z-index: 10010;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(10, 14, 24, 0.7);
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    display: none;
+    width: 36px;
+    height: 36px;
+}
+
+.fullscreen-site-menu-btn {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 5px;
+    height: 34px;
+    padding: 0 11px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(10, 14, 24, 0.82);
+    color: #eef3ff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.fullscreen-site-menu-btn:hover {
+    background: rgba(28, 38, 56, 0.95);
+    border-color: rgba(127, 199, 255, 0.45);
+}
+
+.fullscreen-site-menu-btn__chevron {
+    font-size: 11px;
+    opacity: 0.92;
+}
+
+@media (max-width: 520px) {
+    .fullscreen-site-menu-btn__label {
+        display: none;
+    }
+
+    .fullscreen-site-menu-btn {
+        padding: 0 8px;
+        min-width: 40px;
+        justify-content: center;
+    }
 }
 
 @media (pointer: coarse) {
-    .fullscreen-toggle {
-        display: flex;
+    .fullscreen-toggle--corner {
+        width: 42px;
+        height: 42px;
+        font-size: 17px;
+    }
+
+    .fullscreen-toggle--toolbar {
+        width: 42px;
+        height: 38px;
+        font-size: 17px;
+    }
+
+    .fullscreen-site-menu-btn {
+        height: 38px;
+        min-height: 38px;
     }
 }
 

@@ -1,11 +1,13 @@
 .lobby-screen {
-    width: 100vw;
-    min-height: 100vh;
+    width: 100%;
+    min-height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
     position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .lobby-container {
@@ -148,6 +150,20 @@
 }
 
 @media (max-width: 900px) {
+    .lobby-screen {
+        align-items: flex-start;
+        min-height: auto;
+        overflow: visible;
+        padding: 4px 2px calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .lobby-container {
+        width: 100%;
+        padding: 16px 12px;
+        border-radius: 12px;
+        margin-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
     .players-status-grid {
         grid-template-columns: 1fr;
     }
@@ -159,5 +175,38 @@
 
     .lobby-mode-chip {
         width: fit-content;
+    }
+}
+
+@media (max-width: 520px) {
+    .room-code-display,
+    .lobby-self-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .copy-button,
+    .ready-button.ready-button-prominent {
+        width: 100%;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .lobby-screen {
+        align-items: flex-start;
+        padding: 2px 2px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .lobby-container {
+        padding: 10px;
+    }
+
+    .lobby-title {
+        margin-bottom: 8px;
+        font-size: clamp(22px, 7vh, 30px);
+    }
+
+    .lobby-topbar {
+        margin-bottom: 10px;
     }
 }

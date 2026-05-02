@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {IFrameByFrame, IScalable} from "../ISprite";
 import {Point} from "../../geometry/Point";
 import {AnimationSprite} from "./IAnimation";
@@ -12,7 +13,7 @@ abstract class TankDriftAnimation extends AnimationSprite implements IFrameByFra
     protected constructor(width: number, height: number) {
         const zIndex: number = 1;
         super(width, height, zIndex);
-        this._imgSprite.src = `/src/img/tanks/Effects/Sprites/Sprite_Effects_Smoke.png`;
+        this._imgSprite.src = gameImg('tanks/Effects/Sprites/Sprite_Effects_Smoke.png');
     }
     public set frame(value: number) {
         this._frame = value;

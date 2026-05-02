@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {Sprite} from "../ISprite";
 import {MATERIAL, ResolutionManager} from "../../constants/gameConstants";
 import {getRandomInt} from "../../additionally/additionalFunc";
@@ -8,7 +9,7 @@ export class BackgroundSprite extends Sprite {
         const zIndex: number = 0;
         super(ResolutionManager.BACKGROUND_SIZE, ResolutionManager.BACKGROUND_SIZE, zIndex);
         // Use absolute path for webpack dev server (same as UI components)
-        const imagePath = `/src/img/backgrounds/${MATERIAL[materialNum]}_${getRandomInt(0, 1)}.png`;
+        const imagePath = gameImg(`backgrounds/${MATERIAL[materialNum]}_${getRandomInt(0, 1)}.png`);
         this._imgSprite.src = imagePath;
         // Initialize point and angle for background (always at origin)
         this._point = new Point(0, 0);

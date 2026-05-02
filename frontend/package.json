@@ -6,7 +6,8 @@
   "scripts": {
     "serve": "webpack serve --mode=development",
     "build-dev": "webpack --mode=development",
-    "build-prod": "webpack --mode=production"
+    "build-prod": "webpack --mode=production",
+    "ensure-assets": "node scripts/ensure-game-assets.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {IFrameByFrame, Sprite} from "../ISprite";
 import {ResolutionManager} from "../../constants/gameConstants";
 
@@ -8,7 +9,7 @@ export class SpriteAcceleration extends Sprite implements IFrameByFrame {
     public constructor() {
         const zIndex: number = 2;
         super(ResolutionManager.ACCELERATION_SIZE, ResolutionManager.ACCELERATION_SIZE, zIndex);
-        this._imgSprite.src = '/src/img/tanks/Effects/Movement/Movement.png';
+        this._imgSprite.src = gameImg('tanks/Effects/Movement/Movement.png');
     }
     public set frame(value: number) {
         this._frame = value;

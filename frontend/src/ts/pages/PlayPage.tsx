@@ -5,7 +5,11 @@ import LobbyScreen from '../components/ui/LobbyScreen';
 import GameScreen from '../components/ui/GameScreen';
 import GameEndScreen, { type DeathmatchScoreRow, type PlayerMatchStatsRow } from '../components/ui/GameEndScreen';
 import { useAuth } from '../context/AuthContext';
-import { TANKS_PENDING_JOIN_ROOM_EVENT, useGameWebSocket } from '../context/GameSocketContext';
+import {
+    TANKS_PENDING_JOIN_ROOM_EVENT,
+    TANKS_PENDING_JOIN_ROOM_STORAGE_KEY,
+    useGameWebSocket
+} from '../context/GameSocketContext';
 
 type PlayScreen = 'hub' | 'tankSelection' | 'lobby' | 'game' | 'gameEnd';
 
@@ -71,6 +75,7 @@ const PlayPage: React.FC = () => {
 
     const myPlayerIdRef = useRef<string>('');
     const screenRef = useRef<PlayScreen>('hub');
+    const pendingInviteJoinCodeRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (!authRestored || !accessToken || !authUser) {
@@ -172,6 +177,11 @@ const PlayPage: React.FC = () => {
             setMyPlayerId('');
             setScreen((prev) => (prev === 'game' ? 'hub' : prev));
             screenRef.current = 'hub';
+            const pendingCode = pendingInviteJoinCodeRef.current;
+            if (pendingCode) {
+                pendingInviteJoinCodeRef.current = null;
+                wsClient.send({ type: 'joinRoom', code: pendingCode });
+            }
         };
 
         wsClient.on('joined', onJoined);
@@ -192,36 +202,12 @@ const PlayPage: React.FC = () => {
         };
     }, [authRestored, accessToken, authUser, wsClient]);
 
-    const handleCreateRoom = () => {
+    const handleCreateRoom = (mode: 'standard' | 'practice' | 'deathmatch' | 'solo') => {
         setError('');
-        setSinglePlayerRoom(false);
-        setPracticeRoom(false);
-        setDeathmatchRoom(false);
-        wsClient.send({ type: 'createRoom' });
-    };
-
-    const handleCreateDeathmatchRoom = () => {
-        setError('');
-        setSinglePlayerRoom(false);
-        setPracticeRoom(false);
-        setDeathmatchRoom(true);
-        wsClient.send({ type: 'createRoom', deathmatch: true });
-    };
-
-    const handleCreatePracticeRoom = () => {
-        setError('');
-        setSinglePlayerRoom(false);
-        setPracticeRoom(true);
-        setDeathmatchRoom(false);
-        wsClient.send({ type: 'createRoom', practice: true });
-    };
-
-    const handleCreateSoloTest = () => {
-        setError('');
-        setSinglePlayerRoom(true);
-        setPracticeRoom(false);
-        setDeathmatchRoom(false);
-        wsClient.send({ type: 'createRoom', singlePlayer: true });
+        setSinglePlayerRoom(mode === 'solo');
+        setPracticeRoom(mode === 'practice');
+        setDeathmatchRoom(mode === 'deathmatch');
+        wsClient.send({ type: 'createRoom', mode } as any);
     };
 
     const handleJoinRoom = (code: string) => {
@@ -237,11 +223,11 @@ const PlayPage: React.FC = () => {
         (code: string) => {
             setError('');
             const c = code.trim().toUpperCase();
-            const joinAfterConnect = () => {
+            const joinAfterConnect = (joinCode: string) => {
                 void wsClient
                     .connect()
                     .then(() => {
-                        wsClient.send({ type: 'joinRoom', code: c });
+                        wsClient.send({ type: 'joinRoom', code: joinCode });
                     })
                     .catch((err) => {
                         console.error(err);
@@ -250,10 +236,11 @@ const PlayPage: React.FC = () => {
             };
 
             if (screenRef.current === 'hub' && !myPlayerIdRef.current) {
-                joinAfterConnect();
+                joinAfterConnect(c);
                 return;
             }
 
+            pendingInviteJoinCodeRef.current = c;
             wsClient.send({ type: 'leaveGame' });
             setRoomId('');
             setMyPlayerId('');
@@ -266,7 +253,7 @@ const PlayPage: React.FC = () => {
             setPracticeRoom(false);
             setDeathmatchRoom(false);
             setGameEndReason(null);
-            joinAfterConnect();
+            // joinRoom отправим только после серверного leftGame (см. onLeftGame).
         },
         [wsClient]
     );
@@ -278,10 +265,24 @@ const PlayPage: React.FC = () => {
         const onPendingJoin = (e: Event) => {
             const code = (e as CustomEvent<{ code?: string }>).detail?.code;
             if (code && typeof code === 'string') {
+                try {
+                    sessionStorage.removeItem(TANKS_PENDING_JOIN_ROOM_STORAGE_KEY);
+                } catch {
+                    /* ignore */
+                }
                 leaveAndJoinRef.current(code);
             }
         };
         window.addEventListener(TANKS_PENDING_JOIN_ROOM_EVENT, onPendingJoin as EventListener);
+        try {
+            const storedCode = sessionStorage.getItem(TANKS_PENDING_JOIN_ROOM_STORAGE_KEY);
+            if (storedCode) {
+                sessionStorage.removeItem(TANKS_PENDING_JOIN_ROOM_STORAGE_KEY);
+                window.setTimeout(() => leaveAndJoinRef.current(storedCode), 0);
+            }
+        } catch {
+            /* ignore */
+        }
         return () => window.removeEventListener(TANKS_PENDING_JOIN_ROOM_EVENT, onPendingJoin as EventListener);
     }, []);
 
@@ -369,17 +370,18 @@ const PlayPage: React.FC = () => {
         setDeathmatchRoom(false);
     };
 
+    const rootClassName = [
+        'play-page-root',
+        `play-page-root--${screen}`,
+        screen === 'hub' ? '' : 'app-container'
+    ]
+        .filter(Boolean)
+        .join(' ');
+
     return (
-        <div className={`play-page-root ${screen === 'hub' ? '' : 'app-container'}`}>
+        <div className={rootClassName}>
             {screen === 'hub' && (
-                <PlayHubScreen
-                    onCreateRoom={handleCreateRoom}
-                    onCreateDeathmatchRoom={handleCreateDeathmatchRoom}
-                    onCreatePracticeRoom={handleCreatePracticeRoom}
-                    onCreateSoloTest={handleCreateSoloTest}
-                    onJoinRoom={handleJoinRoom}
-                    error={error}
-                />
+                <PlayHubScreen onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} error={error} />
             )}
 
             {screen === 'tankSelection' && (

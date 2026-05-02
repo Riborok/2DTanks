@@ -32,6 +32,12 @@ interface Spectator {
     displayName: string | null;
 }
 
+export type RoomCreateOptions = {
+    singlePlayerTest?: boolean;
+    practiceMode?: boolean;
+    deathmatchMode?: boolean;
+};
+
 export class Room {
     private code: string;
     private players: Map<string, Player> = new Map();
@@ -62,10 +68,7 @@ export class Room {
     private replayRngSeed: number = 0;
     private static readonly REPLAY_MAX_ACTIONS = 20000;
 
-    constructor(
-        code: string,
-        options?: { singlePlayerTest?: boolean; practiceMode?: boolean; deathmatchMode?: boolean }
-    ) {
+    constructor(code: string, options?: RoomCreateOptions) {
         this.code = code;
         this.singlePlayerTest = options?.singlePlayerTest === true;
         this.deathmatchMode = options?.deathmatchMode === true && !this.singlePlayerTest;

@@ -1,18 +1,19 @@
+import { gameImg } from '../../constants/gameAssets';
 import { Sprite } from '../ISprite';
 import { ResolutionManager } from '../../constants/gameConstants';
 
 /** Ассеты из `src/img/blocks/crate_pack/` (Kenney-style). */
 const CRATE_SKIN_PATHS: readonly string[] = [
-    '/src/img/blocks/crate_pack/obj_crate001.png',
-    '/src/img/blocks/crate_pack/obj_crate002.png',
-    '/src/img/blocks/crate_pack/obj_crate003.png',
-    '/src/img/blocks/crate_pack/obj_crate004.png',
-    '/src/img/blocks/crate_pack/obj_crate005.png',
-    '/src/img/blocks/crate_pack/obj_box001.png',
-    '/src/img/blocks/crate_pack/obj_box002.png',
-    '/src/img/blocks/crate_pack/obj_box003.png',
-    '/src/img/blocks/crate_pack/obj_box004.png',
-    '/src/img/blocks/crate_pack/obj_box005.png'
+    gameImg('blocks/crate_pack/obj_crate001.png'),
+    gameImg('blocks/crate_pack/obj_crate002.png'),
+    gameImg('blocks/crate_pack/obj_crate003.png'),
+    gameImg('blocks/crate_pack/obj_crate004.png'),
+    gameImg('blocks/crate_pack/obj_crate005.png'),
+    gameImg('blocks/crate_pack/obj_box001.png'),
+    gameImg('blocks/crate_pack/obj_box002.png'),
+    gameImg('blocks/crate_pack/obj_box003.png'),
+    gameImg('blocks/crate_pack/obj_box004.png'),
+    gameImg('blocks/crate_pack/obj_box005.png')
 ];
 
 /** Подвижная / разрушаемая коробка на арене (отдельный ассет от стен). */

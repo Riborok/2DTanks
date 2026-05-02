@@ -11,7 +11,7 @@
 }
 
 .u-page-shell {
-    width: 100vw;
-    min-height: 100vh;
+    width: 100%;
+    min-height: 100svh;
     padding: var(--space-8) var(--space-4);
 }

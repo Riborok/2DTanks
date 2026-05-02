@@ -45,7 +45,7 @@
 }
 
 .page-play-hub.connection-screen {
-    min-height: calc(100vh - 80px);
+    min-height: 0;
     width: 100%;
     margin: 0;
 }
@@ -217,4 +217,84 @@
 
 .page-auth .auth-hint a {
     color: #00cec9;
+}
+
+/* ===== Мобильные улучшения ===== */
+
+@media (max-width: 520px) {
+    .page-home-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .page-home-card {
+        padding: 14px 14px;
+    }
+
+    .page-profile-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .page-stats-summary {
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .page-stats-chip {
+        padding: 6px 10px;
+        font-size: 0.82rem;
+    }
+
+    .page-stats-analytics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .page-stats-analytics-card {
+        padding: 10px;
+    }
+
+    .page-stats-analytics-value {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .page-stats-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+    .page-home-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .page-home-card {
+        padding: 10px 14px;
+    }
+
+    .page-home-title {
+        font-size: 1.4rem;
+        margin-bottom: 6px;
+    }
+
+    .page-home-lead {
+        margin-bottom: 12px;
+    }
+
+    .page-profile-card {
+        padding: 12px 16px;
+    }
+
+    .page-stats-summary {
+        margin-bottom: 10px;
+    }
+
+    .page-stats-analytics-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
 }

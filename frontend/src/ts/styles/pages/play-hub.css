@@ -1,11 +1,13 @@
 .connection-screen {
-    width: 100vw;
-    min-height: 100vh;
+    width: 100%;
+    min-height: min(100%, 100dvh);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
     position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .connection-screen::before {
@@ -66,9 +68,22 @@
     text-align: left;
     min-height: 88px;
     display: grid;
-    align-content: center;
+    align-content: start;
     gap: 4px;
     padding: 12px 14px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.playhub-mode-card:hover {
+    border-color: var(--color-border-400);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.playhub-mode-card--active {
+    border-color: rgba(0, 214, 211, 0.6) !important;
+    background: rgba(0, 214, 211, 0.08) !important;
 }
 
 .playhub-mode-card strong {
@@ -80,6 +95,21 @@
     color: var(--color-text-300);
     font-size: var(--text-sm);
     font-weight: var(--weight-regular);
+}
+
+.playhub-mode-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(0, 214, 211, 0.18);
+    border: 1px solid rgba(0, 214, 211, 0.45);
+    color: #00d6d3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .playhub-join-card {
@@ -214,11 +244,60 @@
 }
 
 @media (max-width: 760px) {
+    .connection-screen {
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 10px 8px calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .connection-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
+
+    .playhub-header {
+        margin-bottom: 12px;
+    }
+
+    .playhub-quick-start {
+        margin-bottom: 8px;
+    }
+
+    .playhub-primary-cta,
+    .join-button {
+        width: 100%;
+    }
+
     .playhub-layout {
         grid-template-columns: 1fr;
     }
 
     .playhub-mode-grid {
         grid-template-columns: 1fr;
+    }
+
+    .join-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .connection-screen {
+        align-items: flex-start;
+        padding: 8px;
+    }
+
+    .connection-container {
+        padding: 12px;
+    }
+
+    .game-title {
+        font-size: clamp(24px, 6vh, 34px);
+    }
+
+    .page-play-hub .page-subtitle {
+        margin-bottom: 12px;
     }
 }

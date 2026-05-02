@@ -18,11 +18,20 @@ module.exports = (env, options) => {
                 directory: path.join(__dirname, '.'),
             },
             port: 8081,
+            host: '0.0.0.0',
             hot: true,
             open: true,
             historyApiFallback: {
                 index: '/index.html'
             },
+            /** Тот же origin, что у страницы (в т.ч. по LAN) — без CORS; цель: HTTP API на :3000 */
+            proxy: [
+                {
+                    context: ['/api'],
+                    target: process.env.GAME_API_PROXY_TARGET || 'http://127.0.0.1:3000',
+                    changeOrigin: true
+                }
+            ]
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.jsx', '.js'],
@@ -62,7 +71,9 @@ module.exports = (env, options) => {
                 __GAME_API_ORIGIN__: JSON.stringify(
                     process.env.GAME_API_ORIGIN !== undefined
                         ? process.env.GAME_API_ORIGIN
-                        : 'http://localhost:3000'
+                        : isDevelopment
+                          ? ''
+                          : 'http://localhost:3000'
                 ),
                 /** Непустое значение, например /game: WebSocket через тот же host (nginx proxy). */
                 __GAME_WS_PATH__: JSON.stringify(process.env.GAME_WS_PATH || ''),

@@ -1,4 +1,5 @@
 ﻿import React, { useCallback, useState } from 'react';
+import { gameImg } from '../../constants/gameAssets';
 import TankPartSelector from './TankPartSelector';
 import TankPreview from './TankPreview';
 import ColorSelector from './ColorSelector';
@@ -161,7 +162,7 @@ const TankCustomizer: React.FC<TankCustomizerProps> = ({ onAccept }) => {
                 </div>
                 <button type="button" className="tank-customizer__cta" onClick={handleAccept}>
                     <span>Подтвердить</span>
-                    <img src="/src/img/GUI/ok.png" alt="" className="tank-customizer__cta-icon" />
+                    <img src={gameImg('GUI/ok.png')} alt="" className="tank-customizer__cta-icon" />
                 </button>
             </footer>
         </div>

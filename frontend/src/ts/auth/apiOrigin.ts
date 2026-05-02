@@ -1,4 +1,7 @@
-/** Задаётся webpack DefinePlugin: пустая строка = тот же origin (Docker + nginx). */
+/**
+ * Webpack DefinePlugin: пустая строка = `window.location.origin`
+ * (Docker/nginx или devServer + proxy `/api` → бэкенд без CORS).
+ */
 declare const __GAME_API_ORIGIN__: string | undefined;
 
 export function getApiOrigin(): string {

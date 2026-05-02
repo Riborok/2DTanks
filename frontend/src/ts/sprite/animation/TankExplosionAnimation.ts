@@ -1,3 +1,4 @@
+import { gameImg } from '../../constants/gameAssets';
 import {IFrameByFrame} from "../ISprite";
 import {Point} from "../../geometry/Point";
 import {AnimationSprite} from "./IAnimation";
@@ -13,7 +14,7 @@ export class TankExplosionAnimation extends AnimationSprite implements IFrameByF
     public constructor(point: Point, angle: number) {
         const zIndex: number = 1;
         super(ResolutionManager.TANK_EXPLOSION_SIZE, ResolutionManager.TANK_EXPLOSION_SIZE, zIndex);
-        this._imgSprite.src = `/src/img/tanks/Effects/Sprites/Sprite_Effects_Explosion.png`; // Absolute path
+        this._imgSprite.src = gameImg('tanks/Effects/Sprites/Sprite_Effects_Explosion.png');
 
         this._point = new Point(
             point.x - ResolutionManager.TANK_EXPLOSION_SIZE / 2,

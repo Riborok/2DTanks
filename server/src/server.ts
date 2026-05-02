@@ -16,17 +16,40 @@ import { registerUserSocket, unregisterUserSocket, notifyUserSockets } from './w
 
 const PORT = resolveListenPort();
 
+/** Разрешённые Origin для CORS (браузерные запросы с другого хоста/порта). */
+function isAllowedCorsOrigin(origin: string | undefined): boolean {
+    if (!origin) {
+        return true;
+    }
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+        return true;
+    }
+    // LAN / Docker Desktop / dev с телефона: 192.168.x.x, 10.x.x.x, 172.16–31.x.x
+    if (/^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
+        return true;
+    }
+    if (/^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
+        return true;
+    }
+    if (/^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
+        return true;
+    }
+    const extra = (process.env.CORS_ORIGINS ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    return extra.includes(origin);
+}
+
 const app = express();
-app.use(cors({
-    origin: (origin, cb) => {
-        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-            cb(null, true);
-            return;
-        }
-        cb(null, false);
-    },
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: (origin, cb) => {
+            cb(null, isAllowedCorsOrigin(origin));
+        },
+        credentials: true
+    })
+);
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/public', publicReplayRoutes);
@@ -91,15 +114,12 @@ wss.on('connection', (ws: WebSocket, req) => {
             const data = JSON.parse(message.toString());
 
             if (data.type === 'createRoom') {
-                const singlePlayer = data.singlePlayer === true;
-                const deathmatch = data.deathmatch === true && !singlePlayer;
-                const practice = data.practice === true && !singlePlayer && !deathmatch;
-                console.log(
-                    `[SERVER] Creating new room...${
-                        singlePlayer ? ' (solo test)' : deathmatch ? ' (deathmatch)' : practice ? ' (practice)' : ''
-                    }`
-                );
-                const result = roomManager.createRoom(singlePlayer, wsUser, practice, deathmatch);
+                const mode: string = typeof data.mode === 'string' ? data.mode : 'deathmatch';
+                const singlePlayerTest = mode === 'solo';
+                const practiceMode    = mode === 'practice';
+                const deathmatchMode  = mode === 'deathmatch';
+                console.log(`[SERVER] Creating new room, mode=${mode}`);
+                const result = roomManager.createRoom(singlePlayerTest, wsUser, practiceMode, deathmatchMode);
                 roomCode = result.code;
                 console.log(`[SERVER] Room created: ${roomCode}, player: ${result.playerId}`);
                 const room = roomManager.getRoom(result.code);
@@ -108,8 +128,13 @@ wss.on('connection', (ws: WebSocket, req) => {
                     playerId = result.playerId;
                 }
             } else if (data.type === 'joinRoom') {
-                const code = data.code;
+                const code = String(data.code || '').trim().toUpperCase();
                 console.log(`[SERVER] Player joining room: ${code}`);
+                if (roomCode && playerId && roomCode !== code) {
+                    roomManager.leaveRoom(roomCode, playerId);
+                    roomCode = null;
+                    playerId = null;
+                }
                 const result = roomManager.joinRoom(code, ws, wsUser);
 
                 if (result) {

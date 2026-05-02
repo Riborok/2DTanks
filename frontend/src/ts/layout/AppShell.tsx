@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AppShell: React.FC = () => {
     const { authUser, logout } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const syncBrowserFullscreenClass = () => {
+            document.documentElement.classList.toggle('is-browser-fullscreen', Boolean(document.fullscreenElement));
+        };
+        document.addEventListener('fullscreenchange', syncBrowserFullscreenClass);
+        document.addEventListener('webkitfullscreenchange', syncBrowserFullscreenClass);
+        syncBrowserFullscreenClass();
+        return () => {
+            document.removeEventListener('fullscreenchange', syncBrowserFullscreenClass);
+            document.removeEventListener('webkitfullscreenchange', syncBrowserFullscreenClass);
+        };
+    }, []);
 
     const handleLogout = () => {
         logout();

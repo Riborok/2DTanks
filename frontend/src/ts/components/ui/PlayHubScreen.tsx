@@ -1,27 +1,52 @@
 import React, { useState } from 'react';
 
+type GameMode = 'standard' | 'practice' | 'deathmatch' | 'solo';
+
+interface ModeCard {
+    mode: GameMode;
+    title: string;
+    desc: string;
+    badge?: string;
+}
+
+const MODES: ModeCard[] = [
+    {
+        mode: 'deathmatch',
+        title: 'Арена',
+        desc: 'FFA до 5 бойцов, 1 минута, побеждает лидер по фрагам.',
+        badge: 'популярно'
+    },
+    {
+        mode: 'standard',
+        title: 'Классика',
+        desc: 'Атакующий vs Защитник: собери ключи и доберись до базы.'
+    },
+    {
+        mode: 'practice',
+        title: 'Тренировка',
+        desc: '2 игрока, без записи статистики и без лимита времени.'
+    },
+    {
+        mode: 'solo',
+        title: 'Соло',
+        desc: 'Один игрок против компьютера — для проверки механик.'
+    }
+];
+
 interface PlayHubScreenProps {
-    onCreateRoom: () => void;
-    onCreateDeathmatchRoom?: () => void;
-    onCreatePracticeRoom?: () => void;
-    onCreateSoloTest?: () => void;
+    onCreateRoom: (mode: GameMode) => void;
     onJoinRoom: (code: string) => void;
     error?: string;
 }
 
-const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
-    onCreateRoom,
-    onCreateDeathmatchRoom,
-    onCreatePracticeRoom,
-    onCreateSoloTest,
-    onJoinRoom,
-    error
-}) => {
+const PlayHubScreen: React.FC<PlayHubScreenProps> = ({ onCreateRoom, onJoinRoom, error }) => {
     const [roomCode, setRoomCode] = useState('');
+    const [selected, setSelected] = useState<GameMode>('deathmatch');
 
     const handleJoin = () => {
-        if (roomCode.trim().length === 6) {
-            onJoinRoom(roomCode.trim().toUpperCase());
+        const code = roomCode.trim().toUpperCase();
+        if (code.length === 6) {
+            onJoinRoom(code);
         }
     };
 
@@ -29,75 +54,62 @@ const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
         <div className="page-play-hub connection-screen">
             <div className="connection-container">
                 <div className="playhub-header">
-                    <h1 className="game-title">Игра онлайн</h1>
+                    <h1 className="game-title">2D Танки</h1>
                     <p className="page-subtitle">
-                        Выберите формат матча и стартуйте за пару кликов.
+                        Выбери режим, создай комнату и пригласи друзей по коду.
                     </p>
                 </div>
 
                 <div className="playhub-layout">
                     <section className="playhub-main">
+                        {/* Выбор режима */}
+                        <div className="playhub-mode-grid">
+                            {MODES.map(({ mode, title, desc, badge }) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    className={`playhub-mode-card card${selected === mode ? ' playhub-mode-card--active' : ''}`}
+                                    onClick={() => setSelected(mode)}
+                                >
+                                    {badge && (
+                                        <span className="playhub-mode-badge">{badge}</span>
+                                    )}
+                                    <strong>{title}</strong>
+                                    <span>{desc}</span>
+                                </button>
+                            ))}
+                        </div>
+
                         <div className="playhub-quick-start">
                             <button
                                 type="button"
                                 className="connection-button create-button playhub-primary-cta"
-                                onClick={onCreateRoom}
+                                onClick={() => onCreateRoom(selected)}
                             >
-                                Быстрый старт: Классика (2 игрока)
+                                Создать комнату — {MODES.find((m) => m.mode === selected)?.title}
                             </button>
                             <span className="playhub-quick-hint">
-                                Рейтинговый матч с сохранением статистики и реплея.
+                                Поделись шестизначным кодом из лобби, чтобы друзья присоединились.
                             </span>
-                        </div>
-
-                        <div className="playhub-mode-grid">
-                            {onCreateDeathmatchRoom && (
-                                <button
-                                    type="button"
-                                    className="connection-button secondary-outline playhub-mode-card"
-                                    onClick={onCreateDeathmatchRoom}
-                                    title="Случайная поверхность, без ролей, победа по фрагам за 60 секунд"
-                                >
-                                    <strong>Арена</strong>
-                                    <span>Динамичный бой на 1 минуту, 2-5 игроков.</span>
-                                </button>
-                            )}
-                            {onCreatePracticeRoom && (
-                                <button
-                                    type="button"
-                                    className="connection-button secondary-outline playhub-mode-card"
-                                    onClick={onCreatePracticeRoom}
-                                    title="Два игрока, без лимита 5 мин и без сохранения в БД"
-                                >
-                                    <strong>Тренировка</strong>
-                                    <span>2 игрока, без записи в статистику.</span>
-                                </button>
-                            )}
-                            {onCreateSoloTest && (
-                                <button
-                                    type="button"
-                                    className="connection-button secondary-outline playhub-mode-card"
-                                    onClick={onCreateSoloTest}
-                                >
-                                    <strong>Соло-тест</strong>
-                                    <span>Проверка управления и сборки танка.</span>
-                                </button>
-                            )}
                         </div>
                     </section>
 
                     <aside className="playhub-side">
                         <div className="playhub-join-card">
-                            <div className="playhub-join-title">Вход в комнату</div>
+                            <div className="playhub-join-title">Войти по коду</div>
                             <div className="join-section">
                                 <input
                                     type="text"
                                     className="room-code-input"
                                     placeholder="Код комнаты"
                                     value={roomCode}
-                                    onChange={(e) => setRoomCode(e.target.value.toUpperCase().slice(0, 6))}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
+                                    onChange={(e) =>
+                                        setRoomCode(e.target.value.toUpperCase().slice(0, 6))
+                                    }
+                                    onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                                     maxLength={6}
+                                    autoComplete="off"
+                                    autoCapitalize="characters"
                                 />
                                 <button
                                     type="button"
@@ -108,13 +120,22 @@ const PlayHubScreen: React.FC<PlayHubScreenProps> = ({
                                     Войти
                                 </button>
                             </div>
-                            <p className="playhub-side-note">Код состоит из 6 символов.</p>
+                            <p className="playhub-side-note">
+                                Код из 6 символов — режим определяет создатель комнаты.
+                            </p>
                         </div>
+
                         <div className="playhub-tips-card">
-                            <h3>Рекомендация</h3>
+                            <h3>Совет</h3>
                             <p>
-                                Для честного соревновательного матча выбирай «Классика». Для быстрых боев с друзьями -
-                                «Арена».
+                                {selected === 'deathmatch' &&
+                                    'В Арене фраг засчитывается за уничтожение любого игрока. Собирай аптечки и боеприпасы!'}
+                                {selected === 'standard' &&
+                                    'Атакующий собирает ключи, защитник охраняет базу. Побеждает тот, кто выполнил свою роль до конца.'}
+                                {selected === 'practice' &&
+                                    'Тренировка идеальна для отработки позиций и управления без давления рейтинга.'}
+                                {selected === 'solo' &&
+                                    'Соло-режим создаёт комнату без защитника — можно изучить карту одному.'}
                             </p>
                         </div>
                     </aside>

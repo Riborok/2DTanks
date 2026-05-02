@@ -310,9 +310,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
         // Function to resize canvas to fit full window - menu is overlay on top
         const resizeCanvas = () => {
-            // Canvas occupies full window - menu is an overlay on top
-            const canvasWidth = window.innerWidth;
-            const canvasHeight = window.innerHeight;
+            const host = canvas.parentElement;
+            const rect = host?.getBoundingClientRect();
+            // Canvas занимает доступную область игры, а не весь window под шапкой shell.
+            const canvasWidth = Math.max(1, Math.floor(rect?.width || window.innerWidth));
+            const canvasHeight = Math.max(1, Math.floor(rect?.height || window.innerHeight));
             
             // Set canvas internal size to match window size
             canvas.width = canvasWidth;
@@ -763,7 +765,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
         touchSide === 'left' ? 'game-touch-left' : 'game-touch-left game-touch-left--right';
     const rightSideClass =
         touchSide === 'left' ? 'game-touch-right' : 'game-touch-right game-touch-right--left';
-    const touchScaleStyle: React.CSSProperties = { transform: `scale(${touchScale})`, transformOrigin: 'bottom' };
+    const leftTouchScaleStyle: React.CSSProperties = {
+        transform: `scale(${touchScale})`,
+        transformOrigin: touchSide === 'left' ? 'left bottom' : 'right bottom'
+    };
+    const rightTouchScaleStyle: React.CSSProperties = {
+        transform: `scale(${touchScale})`,
+        transformOrigin: touchSide === 'left' ? 'right bottom' : 'left bottom'
+    };
+    const joystickSize =
+        typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 740 ? 126 : 150;
 
     const handlePingPicked = (type: PingType) => {
         const snap = snapshotRef.current;
@@ -777,12 +788,10 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
     return (
         <div className="game-screen">
-            <div className="game-screen-grid-overlay" />
-            <canvas
-                ref={canvasRef}
-                className="game-canvas"
-            />
-            <FullscreenToggle />
+            <div className="game-screen-viewport" aria-hidden="true">
+                <div className="game-screen-grid-overlay" />
+                <canvas ref={canvasRef} className="game-canvas" />
+            </div>
             <KillFeed kills={hud.kills} />
             <DamageNumbers hits={hud.hits} />
             <DamageDirection events={hud.damageTaken} />
@@ -807,13 +816,13 @@ const GameScreen: React.FC<GameScreenProps> = ({
             )}
             {useTouchUi && (
                 <>
-                    <div className={leftSideClass} role="presentation" style={touchScaleStyle}>
-                        <TouchJoystick onVector={handleJoystickVector} />
+                    <div className={leftSideClass} role="presentation" style={leftTouchScaleStyle}>
+                        <TouchJoystick onVector={handleJoystickVector} size={joystickSize} />
                         <div className="game-touch-hint">
                             Вверх/вниз — ход · влево/вправо — поворот
                         </div>
                     </div>
-                    <div className={rightSideClass} role="toolbar" aria-label="Управление" style={touchScaleStyle}>
+                    <div className={rightSideClass} role="toolbar" aria-label="Управление" style={rightTouchScaleStyle}>
                         <div className="game-touch-turret">
                             <button
                                 type="button"
@@ -878,7 +887,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
                             </span>
                         </div>
                     )}
-                    <div className="hud-card hud-card-exit">
+                    <div className="hud-card hud-card-exit hud-card-exit-with-fs">
+                        <FullscreenToggle variant="toolbar" />
                         <button type="button" className="replays-back-btn" onClick={onLeaveGame}>
                             Выйти из матча
                         </button>

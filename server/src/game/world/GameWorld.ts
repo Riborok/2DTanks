@@ -336,7 +336,7 @@ export class GameWorld {
         
         // Spawn tanks
         this.spawnTanks();
-        
+
         // Spawn keys
         this.spawnKeys();
         if (this.deathmatchMode) {
@@ -1426,7 +1426,7 @@ export class GameWorld {
 
         const newModel = new TankModel(tankParts, tank.model.entity);
         tank.model = newModel;
-        
+
         // Re-insert into collision system
         this.collisionSystem.insert(tank.model.entity);
     }
@@ -1674,6 +1674,7 @@ export class GameWorld {
         }
 
         this.tick = Math.max(0, Math.floor(ev.tick));
+
         this.setPlayerTankMapping(attackerPlayerId, defenderPlayerId);
     }
 

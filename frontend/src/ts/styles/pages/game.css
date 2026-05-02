@@ -1,9 +1,19 @@
 .game-screen {
-    width: 100vw;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     position: relative;
-    overflow: hidden;
+    /* Не hidden: fixed HUD (кнопка полного экрана и т.д.) иначе обрезаются родителем */
+    overflow: visible;
     background: var(--color-bg-900);
+}
+
+/* Обрезка только мира/канваса; sibling-кнопки с position:fixed остаются видимыми */
+.game-screen-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
 }
 
 .game-canvas {
@@ -50,6 +60,8 @@
     .game-ui-modern {
         min-width: 0;
         top: calc(env(safe-area-inset-top, 0px) + 8px);
+        width: calc(100vw - 10px);
+        max-width: calc(100vw - 10px);
         padding: 6px 10px;
         gap: 6px;
     }
@@ -72,8 +84,11 @@
     }
 
     .hud-card-exit .replays-back-btn {
-        padding: 6px 10px;
-        font-size: 12px;
+        padding: 5px 8px;
+        font-size: 11px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -132,7 +147,7 @@
     bottom: 0;
     z-index: 10001;
     pointer-events: none;
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
     display: flex;
     align-items: flex-end;
     gap: 12px;
@@ -191,8 +206,8 @@
 }
 
 .game-touch-btn {
-    min-width: 64px;
-    min-height: 64px;
+    min-width: 60px;
+    min-height: 60px;
     padding: 0 10px;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.22);
@@ -223,8 +238,8 @@
 }
 
 .game-touch-btn-fire {
-    min-width: 96px;
-    min-height: 96px;
+    min-width: 86px;
+    min-height: 86px;
     border-radius: 50%;
     font-size: 16px;
     letter-spacing: 1px;
@@ -284,19 +299,69 @@
     }
 
     .game-touch-btn {
-        min-width: 56px;
-        min-height: 56px;
-        font-size: 20px;
+        min-width: 52px;
+        min-height: 52px;
+        font-size: 18px;
     }
 
     .game-touch-btn-fire {
-        min-width: 84px;
-        min-height: 84px;
-        font-size: 14px;
+        min-width: 76px;
+        min-height: 76px;
+        font-size: 13px;
     }
 
     .game-touch-hint {
         display: none;
+    }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
+    .game-ui-modern {
+        top: calc(env(safe-area-inset-top, 0px) + 4px);
+        padding: 4px 8px;
+        border-radius: 10px;
+    }
+
+    .game-stats-modern {
+        gap: 6px;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .hud-card {
+        min-width: 78px;
+        padding: 3px 8px;
+    }
+
+    .hud-label {
+        font-size: 8px;
+    }
+
+    .hud-value {
+        font-size: 14px;
+    }
+
+    .game-touch-left,
+    .game-touch-right {
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .game-touch-btn {
+        min-width: 46px;
+        min-height: 46px;
+        font-size: 16px;
+        border-radius: 11px;
+    }
+
+    .game-touch-btn-fire {
+        min-width: 66px;
+        min-height: 66px;
+        font-size: 11px;
+    }
+
+    .touch-joystick {
+        width: 112px !important;
+        height: 112px !important;
     }
 }
 
@@ -328,6 +393,15 @@
     padding: 4px;
     background: transparent;
     border: none;
+}
+
+.hud-card-exit-with-fs {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .hud-card-exit .replays-back-btn {
@@ -390,7 +464,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100%;
     color: var(--color-text-100);
     background: var(--color-bg-900);
 }

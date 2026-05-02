@@ -631,3 +631,120 @@
         max-width: none;
     }
 }
+
+@media (max-width: 520px) {
+    .friends-page,
+    .gallery-page,
+    .watch-page {
+        padding: 12px 0;
+    }
+
+    .friends-title,
+    .gallery-title,
+    .watch-title {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+
+    .friends-tabs {
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+
+    .friends-tab {
+        padding: 6px 8px;
+        font-size: 13px;
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    .friends-toast {
+        top: auto;
+        bottom: 20px;
+        right: 12px;
+        left: 12px;
+        text-align: center;
+    }
+
+    .gallery-list {
+        grid-template-columns: 1fr;
+    }
+
+    .gallery-controls {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .gallery-sort {
+        flex: 1;
+        text-align: center;
+    }
+
+    .watch-list {
+        grid-template-columns: 1fr;
+    }
+
+    .watch-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .watch-join-form {
+        width: 100%;
+    }
+
+    .watch-join-input {
+        flex: 1;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .watch-refresh,
+    .watch-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .watch-join-form .watch-btn {
+        width: auto;
+        flex-shrink: 0;
+    }
+
+    .friends-search-input {
+        font-size: 16px; /* предотвращает авто-зум iOS */
+    }
+
+    .watch-join-input {
+        font-size: 16px;
+    }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+    .friends-page,
+    .gallery-page,
+    .watch-page {
+        padding: 8px 0;
+    }
+
+    .friends-title,
+    .gallery-title,
+    .watch-title {
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+    }
+
+    .gallery-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .watch-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .friends-tabs {
+        margin-bottom: 8px;
+    }
+}

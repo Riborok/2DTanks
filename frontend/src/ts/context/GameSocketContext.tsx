@@ -5,6 +5,8 @@ import { useAuth } from './AuthContext';
 
 /** Событие: немедленно присоединиться к комнате (работает даже если уже на /play). */
 export const TANKS_PENDING_JOIN_ROOM_EVENT = 'tanks-pending-join-room';
+/** Буфер для случая, когда invite приняли до монтирования страницы /play. */
+export const TANKS_PENDING_JOIN_ROOM_STORAGE_KEY = 'tanks-pending-join-room-code';
 
 /** После push по друзьям из WS — перезагрузить списки на странице «Друзья». */
 export const TANKS_FRIENDS_LIST_SYNC_EVENT = 'tanks-friends-list-sync';
@@ -194,6 +196,11 @@ const GlobalWsToasts: React.FC = () => {
     const goPlayWithJoin = (roomCode: string, inviteId: string) => {
         const code = roomCode.trim().toUpperCase();
         dismissInvite(inviteId);
+        try {
+            sessionStorage.setItem(TANKS_PENDING_JOIN_ROOM_STORAGE_KEY, code);
+        } catch {
+            /* ignore */
+        }
         try {
             window.dispatchEvent(new CustomEvent(TANKS_PENDING_JOIN_ROOM_EVENT, { detail: { code } }));
         } catch {
