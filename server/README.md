@@ -24,8 +24,30 @@ npm run dev
 
 Сервер запустится на порту 3000 (или порту, указанном в переменной окружения PORT).
 
+## Автоматическое тестирование (Jest)
+
+Модульные тесты (геометрия, JWT, пароли, утилиты, CORS) без поднятого HTTP-порта:
+
+```bash
+npm run test:unit
+```
+
+Интеграционные тесты (Supertest + Express-приложение из `createHttpApp()`):
+
+- без БД выполняется только `GET /api/health`;
+- полный набор сценариев `/api/auth` — при заданном `DATABASE_URL` или `TEST_DATABASE_URL` (см. [.env.test.example](.env.test.example): скопируйте в `.env.test`, примените миграции к тестовой базе `npm run migrate`).
+
+```bash
+npm run test:integration
+npm test          # unit + integration
+npm run test:coverage   # покрытие по модульным тестам
+```
+
+Подробнее: [TESTING.md](TESTING.md).
+
 ## Структура
 
+- `src/createHttpApp.ts` - Сборка Express-приложения (HTTP API без listen; используется сервером и тестами)
 - `src/server.ts` - Главный файл сервера с WebSocket сервером
 - `src/room/` - Система управления комнатами
 - `src/game/` - Игровая логика

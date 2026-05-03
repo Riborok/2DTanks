@@ -1,63 +1,18 @@
 import 'dotenv/config';
 import http from 'http';
-import express from 'express';
-import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import { RoomManager } from './room/RoomManager';
-import authRoutes from './routes/authRoutes';
-import gameApiRoutes from './routes/gameApiRoutes';
-import publicReplayRoutes from './routes/publicReplayRoutes';
 import { parseWsUserFromRequest } from './ws/parseWsUser';
 import type { WsAuthUser } from './auth/types';
 import { resolveListenPort } from './serverPort';
 import { getPool } from './db/pool';
 import * as friendshipsRepo from './repos/friendshipsRepo';
 import { registerUserSocket, unregisterUserSocket, notifyUserSockets } from './ws/userSocketRegistry';
+import { createHttpApp } from './createHttpApp';
 
 const PORT = resolveListenPort();
 
-/** Разрешённые Origin для CORS (браузерные запросы с другого хоста/порта). */
-function isAllowedCorsOrigin(origin: string | undefined): boolean {
-    if (!origin) {
-        return true;
-    }
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
-        return true;
-    }
-    // LAN / Docker Desktop / dev с телефона: 192.168.x.x, 10.x.x.x, 172.16–31.x.x
-    if (/^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
-        return true;
-    }
-    if (/^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
-        return true;
-    }
-    if (/^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$/i.test(origin)) {
-        return true;
-    }
-    const extra = (process.env.CORS_ORIGINS ?? '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-    return extra.includes(origin);
-}
-
-const app = express();
-app.use(
-    cors({
-        origin: (origin, cb) => {
-            cb(null, isAllowedCorsOrigin(origin));
-        },
-        credentials: true
-    })
-);
-app.use(express.json());
-app.use('/api/auth', authRoutes);
-app.use('/api/public', publicReplayRoutes);
-app.use('/api/game', gameApiRoutes);
-
-app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
-});
+const app = createHttpApp();
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
@@ -116,8 +71,8 @@ wss.on('connection', (ws: WebSocket, req) => {
             if (data.type === 'createRoom') {
                 const mode: string = typeof data.mode === 'string' ? data.mode : 'deathmatch';
                 const singlePlayerTest = mode === 'solo';
-                const practiceMode    = mode === 'practice';
-                const deathmatchMode  = mode === 'deathmatch';
+                const practiceMode = mode === 'practice';
+                const deathmatchMode = mode === 'deathmatch';
                 console.log(`[SERVER] Creating new room, mode=${mode}`);
                 const result = roomManager.createRoom(singlePlayerTest, wsUser, practiceMode, deathmatchMode);
                 roomCode = result.code;
@@ -143,46 +98,53 @@ wss.on('connection', (ws: WebSocket, req) => {
                     console.log(`[SERVER] Player ${playerId} joined room ${code}`);
                 } else {
                     console.log(`[SERVER] Failed to join room ${code} - room full or doesn't exist`);
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: 'Room is full or does not exist'
-                    }));
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: 'Room is full or does not exist'
+                        })
+                    );
                 }
             } else if (data.type === 'tankConfig' && roomCode && playerId) {
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} selected tank config`);
                 const result = roomManager.setTankConfig(roomCode, playerId, data.data);
                 if (!result.success) {
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: result.message || 'Failed to set tank config'
-                    }));
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: result.message || 'Failed to set tank config'
+                        })
+                    );
                 }
             } else if (data.type === 'ready' && roomCode && playerId) {
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} is ready: ${data.ready}`);
                 const result = roomManager.setReady(roomCode, playerId, data.ready);
                 if (!result.success) {
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: result.message || 'Failed to set ready status'
-                    }));
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: result.message || 'Failed to set ready status'
+                        })
+                    );
                 }
             } else if (data.type === 'action') {
                 if (roomCode && playerId) {
                     const action = data.action || data;
-                    const hasAction = action.forward || action.backward || action.turnLeft || action.turnRight ||
-                        action.turretLeft || action.turretRight || action.shoot;
+                    const hasAction =
+                        action.forward ||
+                        action.backward ||
+                        action.turnLeft ||
+                        action.turnRight ||
+                        action.turretLeft ||
+                        action.turretRight ||
+                        action.shoot;
                     if (hasAction) {
                         console.log(`[SERVER] Player ${playerId} in room ${roomCode} sent action:`, JSON.stringify(action));
                     }
                     roomManager.handlePlayerAction(roomCode, playerId, action);
                 }
             } else if (data.type === 'ping:send' && roomCode && playerId) {
-                const allowed: Array<'careful' | 'enemy' | 'attack' | 'retreat'> = [
-                    'careful',
-                    'enemy',
-                    'attack',
-                    'retreat'
-                ];
+                const allowed: Array<'careful' | 'enemy' | 'attack' | 'retreat'> = ['careful', 'enemy', 'attack', 'retreat'];
                 const pingType = allowed.includes(data.pingType) ? data.pingType : null;
                 const x = Number(data.x);
                 const y = Number(data.y);
@@ -204,7 +166,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     }
                 }
             } else if (data.type === 'chat:send' && roomCode && playerId) {
-                const text = String(data.text ?? '').trim().slice(0, 200);
+                const text = String(data.text ?? '')
+                    .trim()
+                    .slice(0, 200);
                 if (text) {
                     const nowTs = Date.now();
                     const last = chatRateByPlayer.get(playerId) ?? 0;
@@ -263,9 +227,7 @@ wss.on('connection', (ws: WebSocket, req) => {
                         const nowTs = Date.now();
                         const lastGlobal = inviteRateBySender.get(wsUser.userId) ?? 0;
                         if (nowTs - lastGlobal < 2000) {
-                            ws.send(
-                                JSON.stringify({ type: 'error', message: 'Слишком часто. Подождите пару секунд.' })
-                            );
+                            ws.send(JSON.stringify({ type: 'error', message: 'Слишком часто. Подождите пару секунд.' }));
                             return;
                         }
                         const pairKey = `${wsUser.userId}\t${targetUserId}`;
@@ -355,10 +317,12 @@ wss.on('connection', (ws: WebSocket, req) => {
             }
         } catch (error) {
             console.error('Error processing message:', error);
-            ws.send(JSON.stringify({
-                type: 'error',
-                message: 'Invalid message format'
-            }));
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: 'Invalid message format'
+                })
+            );
         }
     });
 
@@ -388,5 +352,5 @@ wss.on('connection', (ws: WebSocket, req) => {
         clearInterval(pingInterval);
     });
 
-    ws.on('pong', () => { });
+    ws.on('pong', () => {});
 });

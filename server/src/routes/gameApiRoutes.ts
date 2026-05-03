@@ -7,6 +7,7 @@ import * as friendshipsRepo from '../repos/friendshipsRepo';
 import * as replayLikesRepo from '../repos/replayLikesRepo';
 import { notifyUserSockets } from '../ws/userSocketRegistry';
 import * as userRepo from '../repos/userRepo';
+import { parseTankPresetPayload } from '../gameApi/parseTankPresetPayload';
 const router = Router();
 router.use(requireBearerAuth);
 
@@ -21,41 +22,6 @@ function mapPresetRow(row: tankPresetRepo.TankPresetRow) {
         weaponNum: row.tank_weapon_num,
         createdAt: row.created_at,
         updatedAt: row.updated_at
-    };
-}
-
-function parsePresetPayload(body: unknown):
-    | { ok: true; value: tankPresetRepo.TankPresetInput }
-    | { ok: false; message: string } {
-    if (!body || typeof body !== 'object') {
-        return { ok: false as const, message: 'Некорректные данные' };
-    }
-    const raw = body as Record<string, unknown>;
-    const nameInput = typeof raw.name === 'string' ? raw.name.trim() : '';
-    if (nameInput.length === 0) {
-        return { ok: false as const, message: 'Название обязательно' };
-    }
-    if (nameInput.length > tankPresetRepo.PRESET_NAME_MAX_LEN) {
-        return { ok: false as const, message: `Название длиннее ${tankPresetRepo.PRESET_NAME_MAX_LEN} символов` };
-    }
-    const nums: Record<string, number> = {};
-    for (const key of ['color', 'hullNum', 'trackNum', 'turretNum', 'weaponNum'] as const) {
-        const v = raw[key];
-        if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 15) {
-            return { ok: false as const, message: `Некорректное поле ${key}` };
-        }
-        nums[key] = v;
-    }
-    return {
-        ok: true as const,
-        value: {
-            name: nameInput,
-            color: nums.color,
-            hullNum: nums.hullNum,
-            trackNum: nums.trackNum,
-            turretNum: nums.turretNum,
-            weaponNum: nums.weaponNum
-        }
     };
 }
 
@@ -276,7 +242,7 @@ router.post('/tank-presets', async (req, res) => {
         return;
     }
     const pool = getPool()!;
-    const parsed = parsePresetPayload(req.body);
+    const parsed = parseTankPresetPayload(req.body);
     if (parsed.ok === false) {
         res.status(400).json({ error: parsed.message });
         return;
@@ -303,7 +269,7 @@ router.put('/tank-presets/:presetId', async (req, res) => {
     }
     const pool = getPool()!;
     const presetId = String(req.params.presetId || '');
-    const parsed = parsePresetPayload(req.body);
+    const parsed = parseTankPresetPayload(req.body);
     if (parsed.ok === false) {
         res.status(400).json({ error: parsed.message });
         return;
