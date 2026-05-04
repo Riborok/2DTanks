@@ -1,18 +1,94 @@
-:root {
-    --color-bg-950: #0f1115;
-    --color-bg-900: #151922;
-    --color-bg-800: #1c2230;
-    --color-surface-700: #1c2230;
-    --color-surface-600: #232b3b;
-    --color-border-400: #3a455a;
-    --color-border-300: #313b4f;
-    --color-text-100: #f3f5f8;
-    --color-text-200: #dbe1ea;
-    --color-text-300: #aab5c7;
-    --color-accent-cyan: #5b8def;
-    --color-accent-cyan-strong: #4b79d1;
-    --color-accent-green: #63b978;
-    --color-accent-gold: #c3a85b;
-    --color-danger: #ce6573;
-    --color-warning: #c3a85b;
+/**
+ * Визуальная система: тёплый индустриальный / «штаб на карте».
+ * Тёмная тема — уголь и бронза; светлая — тёплая бумага и охра.
+ * Переключение: html[data-theme="light"] + ранний скрипт в index.html.
+ */
+html {
+    color-scheme: dark;
+    /* Фон: тёплый графит */
+    --color-bg-950: #060504;
+    --color-bg-900: #0c0a08;
+    --color-bg-800: #12100c;
+    --color-surface-700: #161311;
+    --color-surface-600: #1e1b16;
+    --color-border-400: #4a4034;
+    --color-border-300: #322c24;
+    --color-text-100: #f5f0e6;
+    --color-text-200: #d4cbc0;
+    --color-text-300: #9c9082;
+    --color-text-400: #6b6258;
+    /* Акценты: медь / янтарь и «сигнальный» лайм */
+    --color-accent-cyan: #e0902e;
+    --color-accent-cyan-strong: #c47018;
+    --color-accent-green: #c4e832;
+    --color-accent-gold: #f2c14e;
+    --color-text-on-accent: #140a04;
+    --color-danger: #e05048;
+    --color-warning: #f0a832;
+    /* Карточки / маркетинговые блоки */
+    --gradient-card: linear-gradient(155deg, #1f1a14 0%, #12100d 55%, #0a0907 100%);
+    --gradient-card-hover: linear-gradient(155deg, #2a241c 0%, #181410 55%, #0c0a08 100%);
+    --color-card-title: #f0d78a;
+    --color-page-hero: #fff4dc;
+    --color-page-hero-muted: rgba(245, 236, 216, 0.72);
+    /* Навигация */
+    --color-nav-muted: rgba(232, 224, 210, 0.62);
+    --color-nav-link-active: #fff8ed;
+    --color-nav-pill-bg: rgba(255, 240, 210, 0.06);
+    --color-nav-pill-text: var(--color-text-100);
+    --color-shell-header-border: rgba(200, 170, 120, 0.12);
+    /* Настройки */
+    --color-settings-heading: rgba(250, 244, 232, 0.95);
+    --color-settings-muted: rgba(220, 208, 188, 0.68);
+    --color-settings-kbd-bg: rgba(0, 0, 0, 0.45);
+    --color-settings-kbd-border: rgba(255, 220, 170, 0.12);
+    --color-focus-ring: rgba(224, 144, 46, 0.45);
+    /* Вторичные плашки (статистика и т.п.) */
+    --color-pill-surface: rgba(255, 236, 200, 0.05);
+    --color-pill-border: rgba(255, 220, 180, 0.12);
+    --color-ui-chrome: rgba(224, 144, 46, 0.38);
+    --color-ui-chrome-strong: rgba(224, 144, 46, 0.72);
+    --gradient-cta: linear-gradient(135deg, #4a3820 0%, #c97820 48%, #e8a040 100%);
+}
+
+html[data-theme='light'] {
+    color-scheme: light;
+    --color-bg-950: #dcd4c8;
+    --color-bg-900: #e8e2d8;
+    --color-bg-800: #ded6cc;
+    --color-surface-700: #faf6f0;
+    --color-surface-600: #f2ebe2;
+    --color-border-400: #b8a896;
+    --color-border-300: #cec2b2;
+    --color-text-100: #1a1510;
+    --color-text-200: #3d3428;
+    --color-text-300: #5c5246;
+    --color-text-400: #7a6f62;
+    --color-accent-cyan: #b85a0a;
+    --color-accent-cyan-strong: #8f4200;
+    --color-accent-green: #5a6e00;
+    --color-accent-gold: #9a6a0a;
+    --color-text-on-accent: #fffaf2;
+    --color-danger: #b91c1c;
+    --color-warning: #a16207;
+    --gradient-card: linear-gradient(155deg, #fffef8 0%, #f4ebe0 50%, #ebe3d6 100%);
+    --gradient-card-hover: linear-gradient(155deg, #fffdf5 0%, #f8efe4 55%, #efe4d4 100%);
+    --color-card-title: #8a4a08;
+    --color-page-hero: #1a1510;
+    --color-page-hero-muted: rgba(40, 34, 26, 0.72);
+    --color-nav-muted: rgba(45, 38, 28, 0.78);
+    --color-nav-link-active: #120e0a;
+    --color-nav-pill-bg: rgba(40, 30, 18, 0.06);
+    --color-nav-pill-text: var(--color-text-100);
+    --color-shell-header-border: rgba(40, 30, 20, 0.1);
+    --color-settings-heading: rgba(22, 18, 12, 0.94);
+    --color-settings-muted: rgba(55, 48, 38, 0.75);
+    --color-settings-kbd-bg: rgba(40, 32, 22, 0.06);
+    --color-settings-kbd-border: rgba(40, 32, 22, 0.12);
+    --color-focus-ring: rgba(184, 90, 10, 0.4);
+    --color-pill-surface: rgba(40, 30, 20, 0.05);
+    --color-pill-border: rgba(40, 30, 20, 0.1);
+    --color-ui-chrome: rgba(184, 90, 10, 0.35);
+    --color-ui-chrome-strong: rgba(184, 90, 10, 0.65);
+    --gradient-cta: linear-gradient(135deg, #7a4a12 0%, #c47018 55%, #e0902e 100%);
 }

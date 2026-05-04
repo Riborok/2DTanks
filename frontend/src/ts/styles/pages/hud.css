@@ -261,8 +261,8 @@
 
 .ping-wheel-option:hover,
 .ping-wheel-option.active {
-    background: rgba(77, 163, 255, 0.35);
-    border-color: rgba(77, 163, 255, 0.7);
+    background: color-mix(in srgb, var(--color-accent-cyan) 34%, transparent);
+    border-color: color-mix(in srgb, var(--color-accent-cyan) 72%, transparent);
 }
 
 .world-ping {
@@ -331,7 +331,7 @@
 }
 
 .chat-msg .chat-from {
-    color: #7fc7ff;
+    color: var(--color-accent-cyan);
     font-weight: 600;
     margin-right: 6px;
 }
@@ -351,8 +351,8 @@
 }
 
 .chat-input-row button {
-    background: rgba(77, 163, 255, 0.22);
-    border: 1px solid rgba(77, 163, 255, 0.65);
+    background: color-mix(in srgb, var(--color-accent-cyan) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent-cyan) 65%, transparent);
     color: #fff;
     padding: 8px 14px;
     border-radius: 8px;

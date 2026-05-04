@@ -8,11 +8,28 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
-    <meta name="theme-color" content="#0e1220">
+    <meta name="theme-color" content="#0c0a08">
     <link rel="icon" type="image/png" href="/src/img/icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" href="/src/img/icon.png">
     <title>2DTanks Online</title>
+    <script>
+        (function () {
+            try {
+                var raw = localStorage.getItem('tanks.settings.v1');
+                if (!raw) return;
+                var o = JSON.parse(raw);
+                var th = o && o.appearance && o.appearance.theme;
+                if (th === 'light' || th === 'dark') {
+                    document.documentElement.setAttribute('data-theme', th);
+                    var m = document.querySelector('meta[name="theme-color"]');
+                    if (m) m.setAttribute('content', th === 'light' ? '#e8e2d8' : '#0c0a08');
+                }
+            } catch (e) {
+                /* ignore */
+            }
+        })();
+    </script>
 
     <!-- Preload critical images -->
     <link rel="preload" href="/src/img/tanks/Bullets/Bullet_0.png" as="image">

@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Oswald:wght@500;600;700&display=swap');
+
 :root {
-    --font-family-base: 'Inter', 'Segoe UI', Arial, sans-serif;
+    --font-family-base: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-family-display: 'Oswald', 'Arial Narrow', 'Helvetica Condensed', sans-serif;
     --text-xs: 12px;
     --text-sm: 14px;
     --text-md: 16px;

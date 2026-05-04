@@ -38,3 +38,20 @@ export function notifyUserSockets(userId: string, payload: Record<string, unknow
         }
     }
 }
+
+export function isUserOnline(userId: string): boolean {
+    const set = socketsByUserId.get(userId);
+    if (!set || set.size === 0) {
+        return false;
+    }
+    for (const socket of set) {
+        if (socket.readyState === WebSocket.OPEN) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export function listOnlineUserIds(userIds: string[]): string[] {
+    return userIds.filter((userId) => isUserOnline(userId));
+}

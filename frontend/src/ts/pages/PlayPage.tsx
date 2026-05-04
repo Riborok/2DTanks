@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import PlayHubScreen from '../components/ui/PlayHubScreen';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import PlayHubScreen, { type PlayHubGameMode, type PlayHubTab } from '../components/ui/PlayHubScreen';
+import PlayFlowStepper from '../components/ui/PlayFlowStepper';
 import OnlineTankCustomizer from '../components/ui/OnlineTankCustomizer';
 import LobbyScreen from '../components/ui/LobbyScreen';
 import GameScreen from '../components/ui/GameScreen';
@@ -42,9 +44,39 @@ function enrichMatchStats(
     }));
 }
 
+const VALID_HUB_MODES = new Set<PlayHubGameMode>(['standard', 'practice', 'deathmatch', 'solo']);
+
+function hubModeFromSearchParams(search: URLSearchParams): PlayHubGameMode | undefined {
+    const raw = search.get('mode');
+    if (!raw) return undefined;
+    const m = raw.toLowerCase();
+    return VALID_HUB_MODES.has(m as PlayHubGameMode) ? (m as PlayHubGameMode) : undefined;
+}
+
 const PlayPage: React.FC = () => {
     const { authRestored, accessToken, authUser } = useAuth();
     const { wsClient } = useGameWebSocket();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const hubInitialMode = useMemo(() => hubModeFromSearchParams(searchParams), [searchParams]);
+    const hubTab: PlayHubTab = searchParams.get('tab') === 'join' ? 'join' : 'create';
+
+    const setHubTab = useCallback(
+        (tab: PlayHubTab) => {
+            setSearchParams(
+                (prev) => {
+                    const next = new URLSearchParams(prev);
+                    if (tab === 'join') {
+                        next.set('tab', 'join');
+                    } else {
+                        next.delete('tab');
+                    }
+                    return next;
+                },
+                { replace: true }
+            );
+        },
+        [setSearchParams]
+    );
     const [screen, setScreen] = useState<PlayScreen>('hub');
 
     const [roomId, setRoomId] = useState<string>('');
@@ -352,6 +384,19 @@ const PlayPage: React.FC = () => {
         setPracticeRoom(false);
     };
 
+    const handleStepperBackToHub = () => {
+        if (myPlayerIdRef.current || screen === 'game') {
+            const msg =
+                screen === 'game'
+                    ? 'Покинуть матч и вернуться к экрану выбора комнаты?'
+                    : 'Выйти из комнаты и вернуться к экрану выбора комнаты?';
+            if (!window.confirm(msg)) {
+                return;
+            }
+        }
+        handleBackToMenu();
+    };
+
     const handleLeaveGame = () => {
         if (myPlayerIdRef.current) {
             wsClient.send({ type: 'leaveGame' });
@@ -380,8 +425,21 @@ const PlayPage: React.FC = () => {
 
     return (
         <div className={rootClassName}>
+            {(screen === 'tankSelection' || screen === 'lobby' || screen === 'game') && (
+                <PlayFlowStepper screen={screen} onBackToHub={handleStepperBackToHub} />
+            )}
+
             {screen === 'hub' && (
-                <PlayHubScreen onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} error={error} />
+                <PlayHubScreen
+                    onCreateRoom={handleCreateRoom}
+                    onJoinRoom={handleJoinRoom}
+                    error={error}
+                    onClearError={() => setError('')}
+                    initialSelectedMode={hubInitialMode}
+                    hubTab={hubTab}
+                    onHubTabChange={setHubTab}
+                    wsClient={wsClient}
+                />
             )}
 
             {screen === 'tankSelection' && (

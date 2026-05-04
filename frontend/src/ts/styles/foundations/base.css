@@ -3,6 +3,7 @@ body {
     background: var(--color-bg-900);
     color: var(--color-text-100);
     font-family: var(--font-family-base);
+    font-optical-sizing: auto;
 }
 
 button,

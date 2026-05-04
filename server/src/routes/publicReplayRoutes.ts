@@ -109,4 +109,32 @@ router.get('/gallery', async (req, res) => {
     }
 });
 
+/**
+ * Публичная статистика матча по реплею из галереи (только is_public).
+ */
+router.get('/gallery/replay/:replayId/stats', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const replayId = String(req.params.replayId || '').trim();
+    if (!replayId) {
+        res.status(400).json({ error: 'Не указан реплей' });
+        return;
+    }
+    try {
+        const row = await replayRepo.getMatchStatsForPublicReplay(pool, replayId);
+        if (!row) {
+            res.status(404).json({ error: 'Реплей не найден или не публичный' });
+            return;
+        }
+        res.json({
+            matchId: row.match_id,
+            roomCode: row.room_code,
+            matchStats: row.match_stats
+        });
+    } catch (e) {
+        console.error('[public/gallery/replay/stats]', e);
+        res.status(500).json({ error: 'Ошибка загрузки статистики' });
+    }
+});
+
 export default router;

@@ -1,4 +1,4 @@
-﻿.app-container {
+.app-container {
     width: 99vw;
     height: 90vh;
     display: flex;
@@ -271,7 +271,7 @@
 }
 
 .accept-button {
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    background: var(--gradient-cta);
     border: none;
     border-radius: 15px;
     padding: 15px 40px;

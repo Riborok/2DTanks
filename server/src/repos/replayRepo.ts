@@ -417,6 +417,37 @@ export async function enrichMatchStatsDisplayNames(
     });
 }
 
+/** Статистика матча для публичного реплея (только is_public). */
+export async function getMatchStatsForPublicReplay(
+    pool: Pool,
+    replayId: string
+): Promise<{ match_id: string; room_code: string | null; match_stats: unknown[] } | null> {
+    const r = await pool.query<{
+        match_id: string;
+        room_code: string | null;
+        match_stats: unknown;
+    }>(
+        `SELECT m.match_id, m.room_code, m.match_stats
+         FROM replays r
+         INNER JOIN matches m ON m.match_id = r.match_id
+         WHERE r.replay_id = $1 AND r.is_public = TRUE
+         LIMIT 1`,
+        [replayId]
+    );
+    const row = r.rows[0];
+    if (!row) {
+        return null;
+    }
+    const raw = row.match_stats;
+    const stats = Array.isArray(raw) ? raw : [];
+    const enriched = await enrichMatchStatsDisplayNames(pool, row.match_id, stats);
+    return {
+        match_id: row.match_id,
+        room_code: row.room_code,
+        match_stats: enriched
+    };
+}
+
 export type MatchHistoryRow = {
     match_id: string;
     room_code: string | null;
@@ -443,4 +474,22 @@ export async function listMatchHistoryForUser(pool: Pool, userId: string, limit 
         [userId, limit]
     );
     return r.rows;
+}
+
+export type LatestMatchModeRow = {
+    match_type_code: string;
+};
+
+export async function getLatestMatchModeForUser(pool: Pool, userId: string): Promise<string | null> {
+    const r = await pool.query<LatestMatchModeRow>(
+        `SELECT mt.code AS match_type_code
+         FROM match_participants mp
+         INNER JOIN matches m ON m.match_id = mp.match_id
+         INNER JOIN match_types mt ON mt.match_type_id = m.match_type_id
+         WHERE mp.user_id = $1
+         ORDER BY m.ended_at DESC NULLS LAST, m.created_at DESC
+         LIMIT 1`,
+        [userId]
+    );
+    return r.rows[0]?.match_type_code ?? null;
 }

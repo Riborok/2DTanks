@@ -67,7 +67,16 @@ const WatchPage: React.FC = () => {
     };
 
     const listBody = useMemo(() => {
-        if (loading) return <div className="watch-empty">Загрузка…</div>;
+        if (loading) {
+            return (
+                <div className="watch-loading" aria-busy="true">
+                    <span className="watch-loading-dot" />
+                    <span className="watch-loading-dot" />
+                    <span className="watch-loading-dot" />
+                    <span className="watch-loading-text">Загрузка…</span>
+                </div>
+            );
+        }
         if (rooms.length === 0) {
             return <div className="watch-empty">Сейчас нет активных комнат для просмотра.</div>;
         }
@@ -76,7 +85,7 @@ const WatchPage: React.FC = () => {
                 {rooms.map((r) => (
                     <li key={r.code} className="watch-card">
                         <div className="watch-card-title">
-                            <code>{r.code}</code>
+                            <code className="watch-room-code">{r.code}</code>
                             {r.hasActiveGame ? (
                                 <span className="watch-status watch-status--live">LIVE</span>
                             ) : (
@@ -89,7 +98,11 @@ const WatchPage: React.FC = () => {
                             {r.practiceMode && <span>режим: тренировка</span>}
                             {r.deathmatchMode && <span>режим: арена</span>}
                         </div>
-                        <button type="button" className="watch-btn" onClick={() => joinRoom(r.code)}>
+                        <button
+                            type="button"
+                            className="ui-btn ui-btn-primary watch-card-cta"
+                            onClick={() => joinRoom(r.code)}
+                        >
                             Смотреть
                         </button>
                     </li>
@@ -103,43 +116,60 @@ const WatchPage: React.FC = () => {
     }
 
     return (
-        <div className="watch-page">
-            <h1 className="watch-title">Смотреть матч</h1>
-            <p className="watch-hint">
-                Вы видите все идущие игры на этом сервере. Подключение не занимает слот в комнате и не мешает игрокам.
-            </p>
+        <div className="page-watch">
+            <div className="watch-screen">
+                <div className="watch-panel">
+                    <header className="watch-header">
+                        <h1 className="watch-page-title">Смотреть</h1>
+                        <p className="watch-lead">
+                            Активные комнаты на сервере. Подключение не занимает слот и не мешает игрокам.
+                        </p>
+                    </header>
 
-            <div className="watch-controls">
-                <button type="button" className="watch-refresh" onClick={() => void refresh()} disabled={loading}>
-                    Обновить
-                </button>
-                <form
-                    className="watch-join-form"
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        const code = manualCode.trim().toUpperCase();
-                        if (code.length > 0) {
-                            joinRoom(code);
-                        }
-                    }}
-                >
-                    <input
-                        className="watch-join-input"
-                        type="text"
-                        placeholder="Код комнаты"
-                        value={manualCode}
-                        onChange={(e) => setManualCode(e.target.value)}
-                        maxLength={16}
-                    />
-                    <button type="submit" className="watch-btn">
-                        Подключиться
-                    </button>
-                </form>
+                    <div className="watch-controls">
+                        <button
+                            type="button"
+                            className="ui-btn ui-btn-secondary watch-refresh-btn"
+                            onClick={() => void refresh()}
+                            disabled={loading}
+                        >
+                            Обновить
+                        </button>
+                        <form
+                            className="watch-join-form"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const code = manualCode.trim().toUpperCase();
+                                if (code.length > 0) {
+                                    joinRoom(code);
+                                }
+                            }}
+                        >
+                            <input
+                                className="watch-join-input"
+                                type="text"
+                                placeholder="Код комнаты"
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value)}
+                                maxLength={16}
+                                autoCapitalize="characters"
+                                autoCorrect="off"
+                            />
+                            <button type="submit" className="ui-btn ui-btn-primary watch-join-submit">
+                                Подключиться
+                            </button>
+                        </form>
+                    </div>
+
+                    {error && (
+                        <div className="watch-error" role="alert">
+                            {error}
+                        </div>
+                    )}
+
+                    {listBody}
+                </div>
             </div>
-
-            {error && <div className="watch-error">{error}</div>}
-
-            {listBody}
         </div>
     );
 };

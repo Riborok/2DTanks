@@ -1,5 +1,11 @@
 :root {
-    --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.2);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.28);
-    --shadow-glow-cyan: none;
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-medium: 0 8px 28px rgba(0, 0, 0, 0.45);
+    --shadow-glow-cyan: 0 0 22px rgba(224, 144, 46, 0.28);
+}
+
+html[data-theme='light'] {
+    --shadow-soft: 0 2px 8px rgba(40, 30, 20, 0.08);
+    --shadow-medium: 0 8px 24px rgba(40, 30, 20, 0.12);
+    --shadow-glow-cyan: 0 0 16px rgba(184, 90, 10, 0.15);
 }

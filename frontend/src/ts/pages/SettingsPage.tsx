@@ -65,96 +65,137 @@ const SettingsPage: React.FC = () => {
     }, [update]);
 
     return (
-        <div className="settings-page">
-            <h1 className="settings-title">Настройки</h1>
+        <div className="page-settings">
+            <div className="settings-screen">
+                <div className="settings-panel">
+                    <header className="settings-header">
+                        <h1 className="settings-page-title">Настройки</h1>
+                        <p className="settings-lead">
+                            Параметры интерфейса, звука и управления сохраняются в этом браузере на вашем устройстве.
+                        </p>
+                    </header>
 
-            <section className="settings-section">
-                <h2>Аудио</h2>
-                <Slider label="Общая громкость" value={settings.audio.master} onChange={onAudioChange('master')} />
-                <Slider label="Звуки в бою" value={settings.audio.sfx} onChange={onAudioChange('sfx')} />
-                <Slider label="Интерфейс" value={settings.audio.ui} onChange={onAudioChange('ui')} />
-                <Slider label="Музыка" value={settings.audio.music} onChange={onAudioChange('music')} />
-                <button className="settings-btn" type="button" onClick={previewClick}>
-                    Проверить звук
-                </button>
-            </section>
-
-            {!touchGameUi && (
-                <section className="settings-section">
-                    <h2>Клавиатура (ПК)</h2>
-                    <p className="settings-lede">
-                        В бою клавиша <kbd>V</kbd> зарезервирована под колесо пингов. Нажмите поле и нажмите новую
-                        клавишу; <kbd>Esc</kbd> — отмена записи.
-                    </p>
-                    <div className="settings-key-grid">
-                        {CONTROL_ACTION_ORDER.map((action) => (
-                            <div key={action} className="settings-key-row">
-                                <span className="settings-key-label">{CONTROL_ACTION_LABELS[action]}</span>
+                    <section className="settings-section" aria-labelledby="settings-appearance-heading">
+                        <h2 id="settings-appearance-heading">Внешний вид</h2>
+                        <p className="settings-lede">Цветовая схема интерфейса сохраняется на этом устройстве.</p>
+                        <div className="settings-row">
+                            <label>Тема</label>
+                            <div className="settings-seg settings-seg--theme">
                                 <button
                                     type="button"
-                                    className={
-                                        capturing === action ? 'settings-key-cap settings-key-cap--active' : 'settings-key-cap'
-                                    }
-                                    onClick={() => setCapturing((c) => (c === action ? null : action))}
+                                    className={settings.appearance.theme === 'dark' ? 'active' : ''}
+                                    onClick={() => update('appearance', { theme: 'dark' })}
                                 >
-                                    {capturing === action ? '… нажмите клавишу' : formatKeyCode(settings.controls.keyBindings[action])}
+                                    Тёмная
+                                </button>
+                                <button
+                                    type="button"
+                                    className={settings.appearance.theme === 'light' ? 'active' : ''}
+                                    onClick={() => update('appearance', { theme: 'light' })}
+                                >
+                                    Светлая
                                 </button>
                             </div>
-                        ))}
-                    </div>
-                    <button className="settings-btn" type="button" onClick={resetKeys}>
-                        Сбросить клавиши по умолчанию
-                    </button>
-                </section>
-            )}
-
-            {touchGameUi && (
-                <section className="settings-section">
-                    <h2>Мобильное управление</h2>
-                    <p className="settings-lede">
-                        Только для сенсорного режима игры (как на телефоне). Подсказка повернуть устройство в бою в
-                        этом режиме всегда включена.
-                    </p>
-                    <div className="settings-row">
-                        <label>Сторона джойстика</label>
-                        <div className="settings-seg">
-                            <button
-                                type="button"
-                                className={settings.mobile.touchSide === 'left' ? 'active' : ''}
-                                onClick={() => update('mobile', { touchSide: 'left' })}
-                            >
-                                Слева (правша)
-                            </button>
-                            <button
-                                type="button"
-                                className={settings.mobile.touchSide === 'right' ? 'active' : ''}
-                                onClick={() => update('mobile', { touchSide: 'right' })}
-                            >
-                                Справа (левша)
-                            </button>
                         </div>
-                    </div>
-                    <Slider
-                        label={`Размер кнопок: ${settings.mobile.touchScale.toFixed(2)}×`}
-                        value={(settings.mobile.touchScale - 0.7) / 0.6}
-                        onChange={(e) => update('mobile', { touchScale: 0.7 + (Number(e.target.value) / 100) * 0.6 })}
-                    />
-                    <Checkbox
-                        label="Удержание кнопки стреляет очередью"
-                        checked={settings.mobile.holdToFire}
-                        onChange={(v) => update('mobile', { holdToFire: v })}
-                    />
-                    <Checkbox
-                        label="Вибрация при выстреле и попадании"
-                        checked={settings.mobile.haptics}
-                        onChange={(v) => update('mobile', { haptics: v })}
-                    />
-                </section>
-            )}
+                    </section>
 
-            <button type="button" className="settings-reset" onClick={reset}>
-                Сбросить к стандартным
-            </button>
+                    <section className="settings-section" aria-labelledby="settings-audio-heading">
+                        <h2 id="settings-audio-heading">Аудио</h2>
+                        <Slider label="Общая громкость" value={settings.audio.master} onChange={onAudioChange('master')} />
+                        <Slider label="Звуки в бою" value={settings.audio.sfx} onChange={onAudioChange('sfx')} />
+                        <Slider label="Интерфейс" value={settings.audio.ui} onChange={onAudioChange('ui')} />
+                        <Slider label="Музыка" value={settings.audio.music} onChange={onAudioChange('music')} />
+                        <button
+                            type="button"
+                            className="ui-btn ui-btn-secondary settings-action-btn"
+                            onClick={previewClick}
+                        >
+                            Проверить звук
+                        </button>
+                    </section>
+
+                    {!touchGameUi && (
+                        <section className="settings-section" aria-labelledby="settings-keys-heading">
+                            <h2 id="settings-keys-heading">Клавиатура (ПК)</h2>
+                            <p className="settings-lede">
+                                В бою клавиша <kbd>V</kbd> зарезервирована под колесо пингов. Нажмите поле и нажмите
+                                новую клавишу; <kbd>Esc</kbd> — отмена записи.
+                            </p>
+                            <div className="settings-key-grid">
+                                {CONTROL_ACTION_ORDER.map((action) => (
+                                    <div key={action} className="settings-key-row">
+                                        <span className="settings-key-label">{CONTROL_ACTION_LABELS[action]}</span>
+                                        <button
+                                            type="button"
+                                            className={
+                                                capturing === action
+                                                    ? 'settings-key-cap settings-key-cap--active'
+                                                    : 'settings-key-cap'
+                                            }
+                                            onClick={() => setCapturing((c) => (c === action ? null : action))}
+                                        >
+                                            {capturing === action
+                                                ? '… нажмите клавишу'
+                                                : formatKeyCode(settings.controls.keyBindings[action])}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button type="button" className="ui-btn ui-btn-secondary settings-action-btn" onClick={resetKeys}>
+                                Сбросить клавиши по умолчанию
+                            </button>
+                        </section>
+                    )}
+
+                    {touchGameUi && (
+                        <section className="settings-section" aria-labelledby="settings-touch-heading">
+                            <h2 id="settings-touch-heading">Мобильное управление</h2>
+                            <p className="settings-lede">
+                                Только для сенсорного режима игры (как на телефоне). Подсказка повернуть устройство в бою
+                                в этом режиме всегда включена.
+                            </p>
+                            <div className="settings-row">
+                                <label>Сторона джойстика</label>
+                                <div className="settings-seg">
+                                    <button
+                                        type="button"
+                                        className={settings.mobile.touchSide === 'left' ? 'active' : ''}
+                                        onClick={() => update('mobile', { touchSide: 'left' })}
+                                    >
+                                        Слева (правша)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={settings.mobile.touchSide === 'right' ? 'active' : ''}
+                                        onClick={() => update('mobile', { touchSide: 'right' })}
+                                    >
+                                        Справа (левша)
+                                    </button>
+                                </div>
+                            </div>
+                            <Slider
+                                label={`Размер кнопок: ${settings.mobile.touchScale.toFixed(2)}×`}
+                                value={(settings.mobile.touchScale - 0.7) / 0.6}
+                                onChange={(e) => update('mobile', { touchScale: 0.7 + (Number(e.target.value) / 100) * 0.6 })}
+                            />
+                            <Checkbox
+                                label="Удержание кнопки стреляет очередью"
+                                checked={settings.mobile.holdToFire}
+                                onChange={(v) => update('mobile', { holdToFire: v })}
+                            />
+                            <Checkbox
+                                label="Вибрация при выстреле и попадании"
+                                checked={settings.mobile.haptics}
+                                onChange={(v) => update('mobile', { haptics: v })}
+                            />
+                        </section>
+                    )}
+
+                    <button type="button" className="ui-btn ui-btn-secondary settings-reset-btn" onClick={reset}>
+                        Сбросить к стандартным
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

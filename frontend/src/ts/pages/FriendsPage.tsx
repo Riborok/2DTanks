@@ -73,7 +73,6 @@ const FriendsPage: React.FC = () => {
         [data]
     );
 
-    // Поиск с дебаунсом, чтобы не долбить API
     useEffect(() => {
         if (tab !== 'search' || !accessToken) return;
         const q = searchQuery.trim();
@@ -116,143 +115,199 @@ const FriendsPage: React.FC = () => {
     if (!accessToken) return null;
 
     return (
-        <div className="friends-page">
-            <h1 className="friends-title">Друзья</h1>
-
-            {error && (
-                <div className="friends-error" role="alert">
-                    {error}
-                </div>
-            )}
+        <div className="page-friends">
             {toast && <div className="friends-toast">{toast}</div>}
+            <div className="friends-screen">
+                <div className="friends-panel">
+                    <header className="friends-header">
+                        <h1 className="friends-page-title">Друзья</h1>
+                        <p className="friends-lead">
+                            Список друзей, заявки и поиск игроков. Действия синхронизируются с сервером.
+                        </p>
+                    </header>
 
-            <div className="friends-tabs">
-                <TabBtn active={tab === 'friends'} onClick={() => setTab('friends')}>
-                    Мои друзья ({counts.friends})
-                </TabBtn>
-                <TabBtn active={tab === 'incoming'} onClick={() => setTab('incoming')}>
-                    Входящие ({counts.incoming})
-                </TabBtn>
-                <TabBtn active={tab === 'outgoing'} onClick={() => setTab('outgoing')}>
-                    Отправленные ({counts.outgoing})
-                </TabBtn>
-                <TabBtn active={tab === 'blocked'} onClick={() => setTab('blocked')}>
-                    Заблокированы ({counts.blocked})
-                </TabBtn>
-                <TabBtn active={tab === 'search'} onClick={() => setTab('search')}>
-                    Найти друга
-                </TabBtn>
-            </div>
-
-            {loading && <div className="friends-loading">Загрузка…</div>}
-
-            {!loading && tab === 'friends' && (
-                <FriendList
-                    items={data.friends}
-                    emptyText="У вас пока нет друзей. Найдите и добавьте игроков во вкладке «Найти друга»."
-                    renderActions={(f) => (
-                        <>
-                            <button className="friends-btn" onClick={() => doAction(removeFriendApi, f.userId, 'Удалён из друзей')}>
-                                Удалить
-                            </button>
-                            <button
-                                className="friends-btn friends-btn--danger"
-                                onClick={() => doAction(blockUserApi, f.userId, 'Заблокирован')}
-                            >
-                                Заблокировать
-                            </button>
-                        </>
+                    {error && (
+                        <div className="friends-error" role="alert">
+                            {error}
+                        </div>
                     )}
-                />
-            )}
 
-            {!loading && tab === 'incoming' && (
-                <FriendList
-                    items={data.incoming}
-                    emptyText="Нет входящих запросов."
-                    renderActions={(f) => (
-                        <>
-                            <button className="friends-btn friends-btn--primary" onClick={() => doAction(acceptFriendApi, f.userId, 'Запрос принят')}>
-                                Принять
-                            </button>
-                            <button className="friends-btn" onClick={() => doAction(rejectFriendApi, f.userId, 'Запрос отклонён')}>
-                                Отклонить
-                            </button>
-                        </>
-                    )}
-                />
-            )}
+                    <div className="friends-tabs" role="tablist" aria-label="Разделы друзей">
+                        <TabBtn selected={tab === 'friends'} onClick={() => setTab('friends')}>
+                            Мои друзья ({counts.friends})
+                        </TabBtn>
+                        <TabBtn selected={tab === 'incoming'} onClick={() => setTab('incoming')}>
+                            Входящие ({counts.incoming})
+                        </TabBtn>
+                        <TabBtn selected={tab === 'outgoing'} onClick={() => setTab('outgoing')}>
+                            Отправленные ({counts.outgoing})
+                        </TabBtn>
+                        <TabBtn selected={tab === 'blocked'} onClick={() => setTab('blocked')}>
+                            Заблокированы ({counts.blocked})
+                        </TabBtn>
+                        <TabBtn selected={tab === 'search'} onClick={() => setTab('search')}>
+                            Найти друга
+                        </TabBtn>
+                    </div>
 
-            {!loading && tab === 'outgoing' && (
-                <FriendList
-                    items={data.outgoing}
-                    emptyText="Нет исходящих запросов."
-                    renderActions={(f) => (
-                        <button className="friends-btn" onClick={() => doAction(removeFriendApi, f.userId, 'Отменено')}>
-                            Отменить
-                        </button>
+                    {loading && (
+                        <div className="friends-loading" aria-busy="true">
+                            <span className="friends-loading-dot" />
+                            <span className="friends-loading-dot" />
+                            <span className="friends-loading-dot" />
+                            <span className="friends-loading-text">Загрузка…</span>
+                        </div>
                     )}
-                />
-            )}
 
-            {!loading && tab === 'blocked' && (
-                <FriendList
-                    items={data.blocked}
-                    emptyText="Вы никого не заблокировали."
-                    renderActions={(f) => (
-                        <button className="friends-btn" onClick={() => doAction(unblockUserApi, f.userId, 'Разблокирован')}>
-                            Разблокировать
-                        </button>
-                    )}
-                />
-            )}
-
-            {!loading && tab === 'search' && (
-                <div className="friends-search">
-                    <input
-                        className="friends-search-input"
-                        type="text"
-                        placeholder="Введите логин или имя (от 2 символов)"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        autoFocus
-                    />
-                    {searching && <div className="friends-loading">Поиск…</div>}
-                    {!searching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-                        <div className="friends-empty">Никого не нашлось.</div>
-                    )}
-                    <ul className="friends-list">
-                        {searchResults.map((u) => (
-                            <li key={u.userId} className="friends-item">
-                                <div className="friends-item-name">
-                                    <strong>{u.displayName || u.login}</strong>
-                                    <span className="friends-item-login">@{u.login}</span>
-                                </div>
-                                <div className="friends-item-actions">
+                    {!loading && tab === 'friends' && (
+                        <FriendList
+                            items={data.friends}
+                            emptyText="У вас пока нет друзей. Найдите и добавьте игроков во вкладке «Найти друга»."
+                            renderActions={(f) => (
+                                <>
                                     <button
-                                        className="friends-btn friends-btn--primary"
-                                        onClick={() => doAction(sendFriendRequestApi, u.userId, 'Запрос отправлен')}
+                                        type="button"
+                                        className="ui-btn ui-btn-secondary friends-row-btn"
+                                        onClick={() => void doAction(removeFriendApi, f.userId, 'Удалён из друзей')}
                                     >
-                                        Добавить
+                                        Удалить
                                     </button>
                                     <button
-                                        className="friends-btn friends-btn--danger"
-                                        onClick={() => doAction(blockUserApi, u.userId, 'Заблокирован')}
+                                        type="button"
+                                        className="ui-btn ui-btn-secondary friends-row-btn friends-row-btn--danger"
+                                        onClick={() => void doAction(blockUserApi, f.userId, 'Заблокирован')}
                                     >
                                         Заблокировать
                                     </button>
+                                </>
+                            )}
+                        />
+                    )}
+
+                    {!loading && tab === 'incoming' && (
+                        <FriendList
+                            items={data.incoming}
+                            emptyText="Нет входящих запросов."
+                            renderActions={(f) => (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="ui-btn ui-btn-primary friends-row-btn"
+                                        onClick={() => void doAction(acceptFriendApi, f.userId, 'Запрос принят')}
+                                    >
+                                        Принять
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="ui-btn ui-btn-secondary friends-row-btn"
+                                        onClick={() => void doAction(rejectFriendApi, f.userId, 'Запрос отклонён')}
+                                    >
+                                        Отклонить
+                                    </button>
+                                </>
+                            )}
+                        />
+                    )}
+
+                    {!loading && tab === 'outgoing' && (
+                        <FriendList
+                            items={data.outgoing}
+                            emptyText="Нет исходящих запросов."
+                            renderActions={(f) => (
+                                <button
+                                    type="button"
+                                    className="ui-btn ui-btn-secondary friends-row-btn"
+                                    onClick={() => void doAction(removeFriendApi, f.userId, 'Отменено')}
+                                >
+                                    Отменить
+                                </button>
+                            )}
+                        />
+                    )}
+
+                    {!loading && tab === 'blocked' && (
+                        <FriendList
+                            items={data.blocked}
+                            emptyText="Вы никого не заблокировали."
+                            renderActions={(f) => (
+                                <button
+                                    type="button"
+                                    className="ui-btn ui-btn-secondary friends-row-btn"
+                                    onClick={() => void doAction(unblockUserApi, f.userId, 'Разблокирован')}
+                                >
+                                    Разблокировать
+                                </button>
+                            )}
+                        />
+                    )}
+
+                    {!loading && tab === 'search' && (
+                        <div className="friends-search">
+                            <input
+                                className="friends-search-input"
+                                type="text"
+                                placeholder="Введите логин или имя (от 2 символов)"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                autoFocus
+                            />
+                            {searching && (
+                                <div className="friends-search-loading" aria-busy="true">
+                                    <span className="friends-loading-dot" />
+                                    <span className="friends-loading-dot" />
+                                    <span className="friends-loading-dot" />
+                                    <span className="friends-loading-text">Поиск…</span>
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
+                            )}
+                            {!searching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                                <div className="friends-empty">Никого не нашлось.</div>
+                            )}
+                            <ul className="friends-list">
+                                {searchResults.map((u) => (
+                                    <li key={u.userId} className="friends-item">
+                                        <div className="friends-item-name">
+                                            <strong>{u.displayName || u.login}</strong>
+                                            <span className="friends-item-login">@{u.login}</span>
+                                        </div>
+                                        <div className="friends-item-actions">
+                                            <button
+                                                type="button"
+                                                className="ui-btn ui-btn-primary friends-row-btn"
+                                                onClick={() => void doAction(sendFriendRequestApi, u.userId, 'Запрос отправлен')}
+                                            >
+                                                Добавить
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="ui-btn ui-btn-secondary friends-row-btn friends-row-btn--danger"
+                                                onClick={() => void doAction(blockUserApi, u.userId, 'Заблокирован')}
+                                            >
+                                                Заблокировать
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
 
-const TabBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-    <button type="button" className={`friends-tab${active ? ' friends-tab--active' : ''}`} onClick={onClick}>
+const TabBtn: React.FC<{ selected: boolean; onClick: () => void; children: React.ReactNode }> = ({
+    selected,
+    onClick,
+    children
+}) => (
+    <button
+        type="button"
+        role="tab"
+        aria-selected={selected}
+        className={selected ? 'friends-tab friends-tab--active' : 'friends-tab'}
+        onClick={onClick}
+    >
         {children}
     </button>
 );

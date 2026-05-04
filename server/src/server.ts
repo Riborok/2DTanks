@@ -9,6 +9,7 @@ import { getPool } from './db/pool';
 import * as friendshipsRepo from './repos/friendshipsRepo';
 import { registerUserSocket, unregisterUserSocket, notifyUserSockets } from './ws/userSocketRegistry';
 import { createHttpApp } from './createHttpApp';
+import { setRoomManager } from './room/roomManagerRuntime';
 
 const PORT = resolveListenPort();
 
@@ -17,6 +18,7 @@ const app = createHttpApp();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
+setRoomManager(roomManager);
 
 // Rate-limit для социальных сообщений (пинги 2 msg/sec, чат 1 msg/sec).
 // Хранится в памяти — при рестарте сбрасывается, чего достаточно для

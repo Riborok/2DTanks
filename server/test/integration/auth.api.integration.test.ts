@@ -316,4 +316,11 @@ describe('Protected game API', () => {
         const res = await request(app).get('/api/public/replays/by-slug/nosuchslug999/playback');
         expect(res.status).toBe(404);
     });
+
+    it('GET /api/public/gallery/replay/:id/stats returns 404 for unknown replay', async () => {
+        const res = await request(app).get(
+            '/api/public/gallery/replay/00000000-0000-0000-0000-000000000000/stats'
+        );
+        expect(res.status).toBe(404);
+    });
 });

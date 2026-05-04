@@ -1,17 +1,62 @@
-.settings-page {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 16px 0 32px;
+/* Хаб «Настройки»: как профиль/статистика (page-settings + settings-screen) */
+
+.settings-screen {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: clamp(8px, 1.8vw, 18px) clamp(10px, 2.5vw, 18px) calc(10px + env(safe-area-inset-bottom, 0px));
     color: var(--color-text-100);
 }
 
-.settings-title {
-    margin: 0 0 16px;
-    font-size: 1.5rem;
+.settings-panel {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    width: min(920px, 100%);
+    max-width: 100%;
+    margin: 0 auto;
+    padding: clamp(14px, 2.5vw, 22px);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-300);
+    background: var(--color-surface-700);
+    box-shadow: var(--shadow-medium);
+    backdrop-filter: blur(10px);
+    box-sizing: border-box;
+}
+
+.settings-header {
+    margin-bottom: 16px;
+}
+
+.settings-page-title {
+    margin: 0;
+    font-family: var(--font-family-display);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: clamp(1.1rem, 1.6vw + 0.45rem, 1.55rem);
+    color: var(--color-page-hero);
+}
+
+.settings-lead {
+    margin: 6px 0 0;
+    color: var(--color-page-hero-muted);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    max-width: 42rem;
 }
 
 .settings-section {
-    background: var(--color-surface-700);
+    background: color-mix(in srgb, var(--color-pill-surface) 88%, transparent);
     border: 1px solid var(--color-border-300);
     border-radius: var(--radius-lg);
     padding: 14px 18px;
@@ -21,14 +66,14 @@
 .settings-section h2 {
     margin: 0 0 12px;
     font-size: 1.05rem;
-    color: rgba(235, 243, 255, 0.92);
+    color: var(--color-settings-heading);
 }
 
 .settings-lede {
     margin: 0 0 14px;
     font-size: 0.88rem;
     line-height: 1.45;
-    color: rgba(235, 243, 255, 0.68);
+    color: var(--color-settings-muted);
 }
 
 .settings-lede kbd {
@@ -37,10 +82,10 @@
     margin: 0 2px;
     font-size: 0.82rem;
     font-family: ui-monospace, monospace;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: var(--color-settings-kbd-bg);
+    border: 1px solid var(--color-settings-kbd-border);
     border-radius: 4px;
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--color-text-100);
 }
 
 .settings-key-grid {
@@ -61,7 +106,7 @@
 .settings-key-label {
     flex: 1 1 200px;
     font-size: 0.9rem;
-    color: rgba(235, 243, 255, 0.82);
+    color: var(--color-text-200);
 }
 
 .settings-key-cap {
@@ -71,20 +116,20 @@
     font-size: 0.88rem;
     font-family: ui-monospace, monospace;
     text-align: center;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: var(--color-nav-pill-bg);
+    border: 1px solid var(--color-border-300);
     border-radius: 8px;
-    color: #fff;
+    color: var(--color-text-100);
     cursor: pointer;
 }
 
 .settings-key-cap:hover {
-    border-color: rgba(77, 163, 255, 0.45);
+    border-color: var(--color-accent-cyan);
 }
 
 .settings-key-cap--active {
-    border-color: rgba(77, 163, 255, 0.75);
-    background: rgba(77, 163, 255, 0.15);
+    border-color: var(--color-accent-cyan-strong);
+    background: color-mix(in srgb, var(--color-accent-cyan) 18%, transparent);
     animation: settings-key-pulse 1.2s ease-in-out infinite;
 }
 
@@ -108,7 +153,7 @@
 
 .settings-row label {
     flex: 0 0 220px;
-    color: rgba(235, 243, 255, 0.82);
+    color: var(--color-text-200);
     font-size: 0.92rem;
 }
 
@@ -124,7 +169,7 @@
     margin-bottom: 8px;
     cursor: pointer;
     font-size: 0.92rem;
-    color: rgba(235, 243, 255, 0.82);
+    color: var(--color-text-200);
 }
 
 .settings-checkbox input {
@@ -138,37 +183,41 @@
 }
 
 .settings-seg button {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(235, 243, 255, 0.82);
+    background: var(--color-nav-pill-bg);
+    border: 1px solid var(--color-border-300);
+    color: var(--color-text-200);
     padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
 }
 
 .settings-seg button.active {
-    background: rgba(77, 163, 255, 0.22);
-    border-color: rgba(77, 163, 255, 0.65);
-    color: #fff;
+    background: color-mix(in srgb, var(--color-accent-cyan) 22%, transparent);
+    border-color: var(--color-accent-cyan-strong);
+    color: var(--color-text-100);
 }
 
-.settings-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 10px;
-    cursor: pointer;
+.settings-seg--theme button {
+    min-width: 108px;
 }
 
-.settings-reset {
-    background: rgba(255, 107, 129, 0.12);
-    border: 1px solid rgba(255, 107, 129, 0.4);
-    color: #ffc7d1;
-    padding: 8px 14px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-top: 8px;
+.settings-action-btn {
+    margin-top: 6px;
+    align-self: flex-start;
+}
+
+.settings-reset-btn {
+    margin-top: 4px;
+    align-self: flex-start;
+    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border-300));
+    background: color-mix(in srgb, var(--color-danger) 14%, var(--color-pill-surface));
+    color: color-mix(in srgb, var(--color-danger) 85%, var(--color-text-100));
+}
+
+.settings-reset-btn:hover {
+    border-color: color-mix(in srgb, var(--color-danger) 65%, var(--color-border-400));
+    background: color-mix(in srgb, var(--color-danger) 22%, var(--color-pill-surface));
+    color: var(--color-text-100);
 }
 
 @media (max-width: 640px) {
@@ -178,13 +227,21 @@
 }
 
 @media (max-width: 520px) {
-    .settings-page {
-        padding: 8px 0 20px;
+    .settings-screen {
+        padding: 8px clamp(8px, 2vw, 14px) calc(12px + env(safe-area-inset-bottom, 0px));
     }
 
-    .settings-title {
-        font-size: 1.3rem;
+    .settings-panel {
+        padding: 14px 14px;
+        border-radius: var(--radius-lg);
+    }
+
+    .settings-header {
         margin-bottom: 12px;
+    }
+
+    .settings-page-title {
+        font-size: 1.3rem;
     }
 
     .settings-section {
@@ -220,17 +277,29 @@
         width: 100%;
     }
 
-    .settings-btn,
-    .settings-reset {
+    .settings-action-btn,
+    .settings-reset-btn {
         width: 100%;
+        align-self: stretch;
         text-align: center;
-        padding: 10px 14px;
     }
 }
 
 @media (max-height: 480px) and (orientation: landscape) {
-    .settings-page {
-        padding: 4px 0 12px;
+    .settings-screen {
+        padding: 4px clamp(8px, 2vw, 14px) calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .settings-header {
+        margin-bottom: 10px;
+    }
+
+    .settings-page-title {
+        font-size: 1.1rem;
+    }
+
+    .settings-panel {
+        padding: 12px 14px;
     }
 
     .settings-section {

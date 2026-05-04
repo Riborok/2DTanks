@@ -12,11 +12,13 @@ const ReplaysPage: React.FC = () => {
     }
 
     return (
-        <ReplaysScreen
-            accessToken={accessToken}
-            onBack={() => navigate('/home')}
-            onPlayReplay={(replayId) => navigate(`/replays/watch/${encodeURIComponent(replayId)}`)}
-        />
+        <div className="page-replays">
+            <ReplaysScreen
+                accessToken={accessToken}
+                onBack={() => navigate('/home')}
+                onPlayReplay={(replayId) => navigate(`/replays/watch/${encodeURIComponent(replayId)}`)}
+            />
+        </div>
     );
 };
 

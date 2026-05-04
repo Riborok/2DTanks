@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useState
+} from 'react';
 import { DEFAULT_KEY_BINDINGS, type KeyBindings } from '../utils/keyBindings';
 
 /**
@@ -7,7 +15,12 @@ import { DEFAULT_KEY_BINDINGS, type KeyBindings } from '../utils/keyBindings';
  * подписчики читают напрямую при каждом render; «звуковые» значения подхватываются
  * менеджером звука при проигрывании.
  */
+export type UiTheme = 'dark' | 'light';
+
 export interface GameSettings {
+    appearance: {
+        theme: UiTheme;
+    };
     audio: {
         master: number;
         music: number;
@@ -26,6 +39,9 @@ export interface GameSettings {
 }
 
 const DEFAULT_SETTINGS: GameSettings = {
+    appearance: {
+        theme: 'dark'
+    },
     audio: {
         master: 0.8,
         music: 0.4,
@@ -56,11 +72,19 @@ function loadSettings(): GameSettings {
     }
 }
 
+function normalizeTheme(t: unknown): UiTheme {
+    return t === 'light' ? 'light' : 'dark';
+}
+
 function mergeWithDefaults(v: any): GameSettings {
     const s = v && typeof v === 'object' ? v : {};
     const rawControls = s.controls && typeof s.controls === 'object' ? s.controls : {};
     const kb = rawControls.keyBindings && typeof rawControls.keyBindings === 'object' ? rawControls.keyBindings : {};
+    const rawAppearance = s.appearance && typeof s.appearance === 'object' ? s.appearance : {};
     return {
+        appearance: {
+            theme: normalizeTheme(rawAppearance.theme)
+        },
         audio: { ...DEFAULT_SETTINGS.audio, ...(s.audio || {}) },
         mobile: { ...DEFAULT_SETTINGS.mobile, ...(s.mobile || {}) },
         controls: {
@@ -85,8 +109,20 @@ interface SettingsContextValue {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
+function applyThemeToDocument(theme: UiTheme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+        meta.setAttribute('content', theme === 'light' ? '#e8e2d8' : '#0c0a08');
+    }
+}
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [settings, setSettings] = useState<GameSettings>(() => loadSettings());
+
+    useLayoutEffect(() => {
+        applyThemeToDocument(settings.appearance.theme);
+    }, [settings.appearance.theme]);
 
     useEffect(() => {
         saveSettings(settings);

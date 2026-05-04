@@ -22,6 +22,11 @@
 @import './pages/game.css';
 @import './pages/game-end.css';
 @import './pages/replays.css';
+@import './pages/gallery.css';
+@import './pages/watch.css';
+@import './pages/friends.css';
+@import './pages/stats.css';
+@import './pages/profile.css';
 @import './pages/tank-customizer.css';
 @import './pages/settings.css';
 @import './pages/hud.css';

@@ -10,6 +10,27 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Хаб «Игра»: без лишнего внутреннего скролла, компактный блок */
+.playhub-screen.connection-screen {
+    min-height: 0;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .connection-screen::before {
     content: none;
 }
@@ -26,31 +47,223 @@
     backdrop-filter: blur(10px);
 }
 
+.playhub-container.connection-container {
+    width: 100%;
+    max-width: min(520px, 96vw);
+    padding: 20px 18px 22px;
+}
+
 .playhub-header {
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
-.playhub-layout {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 14px;
+.playhub-header-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 12px;
 }
 
-.playhub-main,
-.playhub-side {
+.playhub-page-title {
+    margin: 0;
+    font-family: var(--font-family-display);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: clamp(1.15rem, 1.8vw + 0.5rem, 1.55rem);
+    color: var(--color-page-hero);
+}
+
+.playhub-lead {
+    margin: 6px 0 0;
+    color: var(--color-page-hero-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+.playhub-ws-badge {
+    font-size: var(--text-xs);
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-300);
+    white-space: nowrap;
+}
+
+.playhub-ws-badge--online {
+    color: var(--color-accent-green);
+    border-color: color-mix(in srgb, var(--color-accent-green) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent-green) 12%, transparent);
+}
+
+.playhub-ws-badge--connecting {
+    color: var(--color-text-300);
+    border-color: var(--color-border-400);
+    background: var(--color-pill-surface);
+}
+
+.playhub-ws-badge--offline {
+    color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+.playhub-tabs {
     display: grid;
-    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.playhub-tab {
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    background: var(--color-pill-surface);
+    color: var(--color-text-200);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.playhub-tab:hover {
+    border-color: var(--color-border-400);
+    color: var(--color-text-100);
+}
+
+.playhub-tab--active {
+    border-color: color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
+    background: color-mix(in srgb, var(--color-accent-cyan) 10%, transparent);
+    color: var(--color-text-100);
+}
+
+.playhub-error-banner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    color: var(--color-text-100);
+    font-size: var(--text-sm);
+}
+
+.playhub-error-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.playhub-error-dismiss {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+    background: transparent;
+    color: var(--color-danger);
+    font-size: var(--text-xs);
+    cursor: pointer;
+}
+
+.playhub-error-dismiss:hover {
+    background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+}
+
+.playhub-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+.playhub-mode-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.playhub-chip {
+    position: relative;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-300);
+    background: var(--color-pill-surface);
+    color: var(--color-text-200);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.playhub-chip:hover {
+    border-color: var(--color-border-400);
+    color: var(--color-text-100);
+}
+
+.playhub-chip--active {
+    border-color: color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
+    background: color-mix(in srgb, var(--color-accent-cyan) 12%, transparent);
+    color: var(--color-text-100);
+}
+
+.playhub-chip-badge {
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: color-mix(in srgb, var(--color-accent-cyan) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent-cyan) 45%, transparent);
+    color: var(--color-accent-cyan);
+}
+
+.playhub-mode-details {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    background: var(--color-pill-surface);
+    padding: 0 10px;
+}
+
+.playhub-mode-details-summary {
+    cursor: pointer;
+    padding: 8px 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-200);
+    list-style: none;
+}
+
+.playhub-mode-details-summary::-webkit-details-marker {
+    display: none;
+}
+
+.playhub-mode-details-body {
+    margin: 0 0 10px;
+    padding-top: 2px;
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+    line-height: 1.45;
 }
 
 .playhub-quick-start {
     display: grid;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
 }
 
 .playhub-primary-cta {
-    min-height: 56px;
-    font-size: 1.05rem;
+    min-height: 48px;
+    font-size: 1rem;
 }
 
 .playhub-quick-hint {
@@ -58,64 +271,10 @@
     font-size: var(--text-sm);
 }
 
-.playhub-mode-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.playhub-mode-card {
-    text-align: left;
-    min-height: 88px;
-    display: grid;
-    align-content: start;
-    gap: 4px;
-    padding: 12px 14px;
-    cursor: pointer;
-    position: relative;
-    transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.playhub-mode-card:hover {
-    border-color: var(--color-border-400);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.playhub-mode-card--active {
-    border-color: rgba(0, 214, 211, 0.6) !important;
-    background: rgba(0, 214, 211, 0.08) !important;
-}
-
-.playhub-mode-card strong {
-    font-size: var(--text-md);
-    font-weight: var(--weight-semibold);
-}
-
-.playhub-mode-card span {
-    color: var(--color-text-300);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-regular);
-}
-
-.playhub-mode-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 2px 7px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(0, 214, 211, 0.18);
-    border: 1px solid rgba(0, 214, 211, 0.45);
-    color: #00d6d3;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
 .playhub-join-card {
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border-300);
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--color-pill-surface);
     padding: 12px;
 }
 
@@ -130,25 +289,6 @@
     margin: 8px 0 0;
     color: var(--color-text-300);
     font-size: var(--text-xs);
-}
-
-.playhub-tips-card {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border-300);
-    background: rgba(255, 255, 255, 0.02);
-    padding: 12px;
-}
-
-.playhub-tips-card h3 {
-    margin: 0 0 8px;
-    font-size: var(--text-sm);
-}
-
-.playhub-tips-card p {
-    margin: 0;
-    color: var(--color-text-300);
-    line-height: 1.45;
-    font-size: var(--text-sm);
 }
 
 .game-title {
@@ -270,12 +410,8 @@
         width: 100%;
     }
 
-    .playhub-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .playhub-mode-grid {
-        grid-template-columns: 1fr;
+    .playhub-container.connection-container {
+        padding: 16px 12px 18px;
     }
 
     .join-section {
@@ -300,4 +436,98 @@
     .page-play-hub .page-subtitle {
         margin-bottom: 12px;
     }
+}
+
+/* Степпер этапов: танк → лобби → бой */
+.play-flow-stepper {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-300);
+    background: var(--color-surface-700);
+    box-sizing: border-box;
+}
+
+.play-flow-stepper-back {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-400);
+    background: var(--color-pill-surface);
+    color: var(--color-text-200);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.play-flow-stepper-back:hover {
+    border-color: var(--color-ui-chrome-strong);
+    color: var(--color-text-100);
+}
+
+.play-flow-stepper-track {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.play-flow-step {
+    display: flex;
+    align-items: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-400);
+}
+
+.play-flow-step::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--color-border-400);
+}
+
+.play-flow-step--done {
+    color: var(--color-text-300);
+}
+
+.play-flow-step--done::before {
+    background: var(--color-accent-green);
+}
+
+.play-flow-step--active {
+    color: var(--color-page-hero);
+    font-weight: var(--weight-semibold);
+}
+
+.play-flow-step--active::before {
+    background: var(--color-accent-cyan);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-cyan) 35%, transparent);
+}
+
+.play-flow-step--todo::before {
+    background: var(--color-border-300);
+}
+
+.play-flow-step-label {
+    margin-right: 8px;
+}
+
+.play-flow-step:not(:last-child) .play-flow-step-label::after {
+    content: '›';
+    margin-left: 8px;
+    color: var(--color-text-400);
+    font-weight: var(--weight-regular);
 }

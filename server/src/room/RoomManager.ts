@@ -111,6 +111,35 @@ export class RoomManager {
         return this.rooms.get(code);
     }
 
+    getUserRoomSummary(userId: string):
+        | {
+              code: string;
+              playerCount: number;
+              spectatorCount: number;
+              hasActiveGame: boolean;
+              singlePlayerTest: boolean;
+              practiceMode: boolean;
+              deathmatchMode: boolean;
+          }
+        | null {
+        for (const [code, room] of this.rooms.entries()) {
+            if (!room.hasUser(userId)) {
+                continue;
+            }
+            const info = room.getPublicInfo();
+            return {
+                code,
+                playerCount: info.playerCount,
+                spectatorCount: info.spectatorCount,
+                hasActiveGame: info.hasActiveGame,
+                singlePlayerTest: info.singlePlayerTest,
+                practiceMode: info.practiceMode,
+                deathmatchMode: info.deathmatchMode
+            };
+        }
+        return null;
+    }
+
     /**
      * Список активных комнат (с идущей игрой) для страницы «Смотреть матч».
      * Возвращаем только то, что не помечено как singlePlayerTest, и где реально

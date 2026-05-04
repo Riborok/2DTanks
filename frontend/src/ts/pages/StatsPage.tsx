@@ -10,6 +10,7 @@ const StatsPage: React.FC = () => {
 
     useEffect(() => {
         if (!accessToken) {
+            setLoading(false);
             return;
         }
         let cancelled = false;
@@ -118,72 +119,94 @@ const StatsPage: React.FC = () => {
         return best;
     }, [matches]);
 
+    if (!accessToken) {
+        return null;
+    }
+
     return (
         <div className="page-stats">
-            <h1 className="page-stats-title">Статистика</h1>
-            <p className="page-stats-lead">История матчей по вашему аккаунту</p>
+            <div className="stats-screen">
+                <div className="stats-panel">
+                    <header className="stats-header">
+                        <h1 className="stats-page-title">Статистика</h1>
+                        <p className="stats-lead">История матчей по вашему аккаунту: сводка и показатели за всё время.</p>
+                    </header>
 
-            {loading && <div className="replays-loading">Загрузка…</div>}
-            {error && <div className="auth-form-error">{error}</div>}
+                    {loading && (
+                        <div className="stats-loading" aria-busy="true">
+                            <span className="stats-loading-dot" />
+                            <span className="stats-loading-dot" />
+                            <span className="stats-loading-dot" />
+                            <span className="stats-loading-text">Загрузка…</span>
+                        </div>
+                    )}
 
-            {!loading && !error && (
-                <>
-                    <div className="page-stats-summary page-stats-summary-grid">
-                        <div className="page-stats-chip wins">Побед: {wins}</div>
-                        <div className="page-stats-chip losses">Поражений: {losses}</div>
-                        <div className="page-stats-chip total">Винрейт: {winRate.toFixed(1)}%</div>
-                        <div className="page-stats-chip total">Точность: {accuracy.toFixed(1)}%</div>
-                        <div className="page-stats-chip total">Матчей: {matches.length}</div>
-                    </div>
+                    {error && (
+                        <div className="stats-error" role="alert">
+                            {error}
+                        </div>
+                    )}
 
-                    {matches.length === 0 ? (
-                        <p className="page-stats-empty">Пока нет завершённых матчей в базе для вашего аккаунта.</p>
-                    ) : (
-                        <div className="page-stats-analytics-grid">
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">Средний урон за матч</div>
-                                <div className="page-stats-analytics-value">{avgDamagePerMatch.toFixed(0)}</div>
+                    {!loading && !error && (
+                        <>
+                            <div className="stats-summary stats-summary-grid">
+                                <div className="stats-chip wins">Побед: {wins}</div>
+                                <div className="stats-chip losses">Поражений: {losses}</div>
+                                <div className="stats-chip total">Винрейт: {winRate.toFixed(1)}%</div>
+                                <div className="stats-chip total">Точность: {accuracy.toFixed(1)}%</div>
+                                <div className="stats-chip total">Матчей: {matches.length}</div>
                             </div>
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">Последние 10 матчей</div>
-                                <div className="page-stats-analytics-value">{lastTenWinRate.toFixed(1)}% побед</div>
-                            </div>
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">K / D</div>
-                                <div className="page-stats-analytics-value">
-                                    {totals.kills} / {totals.deaths}
+
+                            {matches.length === 0 ? (
+                                <p className="stats-empty">Пока нет завершённых матчей в базе для вашего аккаунта.</p>
+                            ) : (
+                                <div className="stats-analytics-grid">
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">Средний урон за матч</div>
+                                        <div className="stats-analytics-value">{avgDamagePerMatch.toFixed(0)}</div>
+                                    </div>
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">Последние 10 матчей</div>
+                                        <div className="stats-analytics-value">{lastTenWinRate.toFixed(1)}% побед</div>
+                                    </div>
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">K / D</div>
+                                        <div className="stats-analytics-value">
+                                            {totals.kills} / {totals.deaths}
+                                        </div>
+                                    </div>
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">Суммарный урон</div>
+                                        <div className="stats-analytics-value">{totals.damageDealt}</div>
+                                    </div>
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">Полученный урон</div>
+                                        <div className="stats-analytics-value">{totals.damageTaken}</div>
+                                    </div>
+                                    <div className="stats-analytics-card">
+                                        <div className="stats-analytics-label">Подборы бонусов</div>
+                                        <div className="stats-analytics-value">{totals.pickups}</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">Суммарный урон</div>
-                                <div className="page-stats-analytics-value">{totals.damageDealt}</div>
-                            </div>
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">Полученный урон</div>
-                                <div className="page-stats-analytics-value">{totals.damageTaken}</div>
-                            </div>
-                            <div className="page-stats-analytics-card">
-                                <div className="page-stats-analytics-label">Подборы бонусов</div>
-                                <div className="page-stats-analytics-value">{totals.pickups}</div>
-                            </div>
-                        </div>
-                    )}
+                            )}
 
-                    {matches.length > 0 && (
-                        <div className="page-stats-insights">
-                            <p>
-                                Лучший матч по нанесенному урону:{' '}
-                                <strong>
-                                    {bestDamageMatch?.roomCode ?? '—'} ({bestDamageMatch?.damage ?? 0})
-                                </strong>
-                            </p>
-                            <p className="page-stats-note">
-                                Детали по каждому матчу смотри в разделе <strong>«Реплеи и история»</strong>.
-                            </p>
-                        </div>
+                            {matches.length > 0 && (
+                                <div className="stats-insights">
+                                    <p>
+                                        Лучший матч по нанесенному урону:{' '}
+                                        <strong>
+                                            {bestDamageMatch?.roomCode ?? '—'} ({bestDamageMatch?.damage ?? 0})
+                                        </strong>
+                                    </p>
+                                    <p className="stats-note">
+                                        Детали по каждому матчу смотри в разделе <strong>«Реплеи и история»</strong>.
+                                    </p>
+                                </div>
+                            )}
+                        </>
                     )}
-                </>
-            )}
+                </div>
+            </div>
         </div>
     );
 };

@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     background: var(--color-bg-900);
-    color: #e8e8f0;
+    color: var(--color-text-100);
     font-family: var(--font-family-base);
     /** Запас под шапку (перенос строк навигации) + safe-area */
     --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 112px);
@@ -12,6 +12,23 @@
      * Шапка + перенос навигации — запас по вертикали.
      */
     --game-hud-top: calc(env(safe-area-inset-top, 0px) + 76px);
+}
+
+/* Главная: без внутреннего скролла — main и дашборд заполняют остаток окна под шапкой */
+.app-shell:has(.page-home) {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+.app-shell-main:has(.page-home) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 16px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    max-width: 1200px;
 }
 
 /**
@@ -29,6 +46,10 @@
     .app-shell-main {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .app-shell-main:has(.page-home) {
+        overflow: hidden;
     }
 }
 
@@ -50,7 +71,7 @@
     align-items: center;
     gap: 10px 20px;
     padding: 12px 18px;
-    border-bottom: 1px solid rgba(176, 195, 230, 0.16);
+    border-bottom: 1px solid var(--color-shell-header-border);
     background: var(--color-surface-700);
     position: relative;
     z-index: 5;
@@ -58,13 +79,16 @@
 }
 
 .app-shell-brand {
-    font-weight: 700;
-    font-size: 1.05rem;
+    font-family: var(--font-family-display);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 1rem;
     color: var(--color-text-100);
     text-decoration: none;
     margin-right: 4px;
     padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border-300);
     background: var(--color-surface-600);
 }
@@ -82,7 +106,7 @@
 }
 
 .app-shell-nav .nav-link {
-    color: rgba(228, 239, 255, 0.74);
+    color: var(--color-nav-muted);
     text-decoration: none;
     font-size: 0.93rem;
     padding: 8px 12px;
@@ -92,12 +116,12 @@
 }
 
 .app-shell-nav .nav-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-nav-link-active);
+    background: var(--color-nav-pill-bg);
 }
 
 .app-shell-nav .nav-link.active {
-    color: #fff;
+    color: var(--color-nav-link-active);
     border-color: var(--color-border-400);
     background: var(--color-surface-600);
 }
@@ -111,13 +135,13 @@
 
 .app-shell-user-name {
     font-size: 0.9rem;
-    color: rgba(224, 236, 255, 0.9);
+    color: var(--color-text-200);
 }
 
 .app-shell-logout {
-    background: rgba(255, 107, 129, 0.16);
-    border: 1px solid rgba(255, 107, 129, 0.46);
-    color: #ffc7d1;
+    background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 50%, transparent);
+    color: var(--color-danger);
     padding: 8px 12px;
     border-radius: 10px;
     cursor: pointer;
@@ -125,7 +149,7 @@
 }
 
 .app-shell-logout:hover {
-    background: rgba(255, 107, 129, 0.26);
+    background: color-mix(in srgb, var(--color-danger) 28%, transparent);
 }
 
 .app-shell-main {
@@ -144,11 +168,279 @@
 }
 
 /**
- * Реплеи / «История матчей» на этой странице: в OnlineApp заданы 100vw и min-height 100vh.
- * Внутри shell main уже ниже шапки и с overflow-x: hidden — 100vw даёт горизонтальное обрезание,
- * а лишняя высота — проблемы с прокруткой. Ограничиваем ширину/высоту контентом.
+ * Реплеи: фиксированное окно shell + скролл внутри .replays-screen (как у главной),
+ * чтобы список и кнопки не обрезались на 100dvh / таче.
  */
+.app-shell:has(.page-replays) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-replays {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-replays) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
 .app-shell .replays-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Галерея: тот же каркас, что у реплеев (фиксированное окно + скролл внутри gallery-screen).
+ */
+.app-shell:has(.page-gallery) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-gallery {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-gallery) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .gallery-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Смотреть: тот же каркас, что галерея/реплеи.
+ */
+.app-shell:has(.page-watch) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-watch {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-watch) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .watch-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Друзья: тот же каркас, что галерея/смотреть.
+ */
+.app-shell:has(.page-friends) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-friends {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-friends) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .friends-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Статистика: тот же каркас, что галерея/друзья.
+ */
+.app-shell:has(.page-stats) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-stats {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-stats) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .stats-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Профиль: тот же каркас, что статистика/друзья.
+ */
+.app-shell:has(.page-profile) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-profile {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-profile) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .profile-screen {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/**
+ * Настройки: тот же каркас, что профиль/статистика.
+ */
+.app-shell:has(.page-settings) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell .page-settings {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.app-shell-main:has(.page-settings) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell .settings-screen {
     width: 100%;
     max-width: 100%;
     min-height: 0;
@@ -232,7 +524,7 @@
 }
 
 .page-loading-text {
-    color: rgba(235, 243, 255, 0.85);
+    color: var(--color-text-300);
     font-size: 1.1rem;
 }
 
@@ -296,6 +588,39 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .app-shell-main:has(.page-home) {
+        overflow: hidden;
+        padding: 10px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-replays) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-gallery) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-watch) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-friends) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-stats) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-profile) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-shell-main:has(.page-settings) {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
     .app-shell {
         --app-shell-play-chrome: calc(env(safe-area-inset-top, 0px) + 64px);
         --game-hud-top: calc(env(safe-area-inset-top, 0px) + 60px);
@@ -339,6 +664,11 @@
     .app-shell-main:has(.play-page-root:not(.app-container)) {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* Компактный хаб: одна прокрутка страницы, без лишнего внутреннего скролла main */
+    .app-shell-main:has(.play-page-root--hub) {
+        overflow-y: visible;
     }
 }
 
@@ -399,6 +729,12 @@ html.is-browser-fullscreen[data-fullscreen-header-open="true"] .app-shell-header
 html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .app-shell-main {
     height: 100dvh;
     max-height: 100dvh;
+}
+
+html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .app-shell-main:has(.page-home) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 html.is-browser-fullscreen[data-fullscreen-header-open="true"] .app-shell-main {

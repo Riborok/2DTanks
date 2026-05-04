@@ -351,6 +351,11 @@ export class WebSocketClient {
         return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
     }
 
+    /** WebSocket.CONNECTING | OPEN | CLOSING | CLOSED или CLOSED, если сокета нет */
+    public getReadyState(): number {
+        return this.ws ? this.ws.readyState : WebSocket.CLOSED;
+    }
+
     public getServerUrl(): string {
         return this.baseUrl;
     }

@@ -232,7 +232,7 @@
 }
 
 .connection-button {
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    background: var(--gradient-cta);
     border: none;
     border-radius: 15px;
     padding: 15px 40px;
@@ -413,7 +413,7 @@
 
 .ready-button {
     padding: 10px 30px;
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    background: var(--gradient-cta);
     border: none;
     border-radius: 10px;
     color: white;
@@ -498,44 +498,10 @@
     font-weight: normal;
 }
 
-.profile-mini {
-    padding-top: 4px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.profile-mini-label {
-    display: block;
-    font-size: 13px;
-    margin-bottom: 6px;
-    opacity: 0.9;
-}
-
-.profile-mini-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.profile-select {
-    flex: 1;
-    min-width: 160px;
-}
-
-.profile-save {
-    flex-shrink: 0;
-    padding: 10px 16px !important;
-}
-
-.profile-msg {
-    margin-top: 8px !important;
-    margin-bottom: 0 !important;
-}
-
 .connection-button.secondary-outline {
     background: transparent;
     border: 2px solid rgba(0, 206, 201, 0.55);
-    color: #00cec9;
+    color: var(--color-accent-cyan);
     margin-bottom: 8px;
 }
 
@@ -553,125 +519,7 @@
     cursor: not-allowed;
 }
 
-.replays-screen {
-    width: 100vw;
-    min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 32px 16px 48px;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
-}
-
-.replays-panel {
-    background: rgba(20, 20, 30, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 28px 32px;
-    max-width: 640px;
-    width: 100%;
-    color: #fff;
-    text-align: left;
-}
-
-.replays-sub {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 20px;
-    line-height: 1.45;
-}
-
-.replays-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.replays-tab {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.25);
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.replays-tab.active {
-    border-color: rgba(0, 206, 201, 0.55);
-    background: rgba(0, 206, 201, 0.15);
-    color: #fff;
-}
-
-.replays-loading {
-    padding: 16px 0;
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.replays-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.replays-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.replays-item-main {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.replays-meta {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
-    overflow-wrap: anywhere;
-}
-
-.replays-play-btn {
-    flex-shrink: 0;
-    padding: 8px 16px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.replays-play-btn:disabled {
-    opacity: 0.5;
-    cursor: wait;
-}
-
-.replays-empty {
-    padding: 20px 0;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 15px;
-}
-
-.replays-back-btn {
-    margin-top: 24px;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
-    cursor: pointer;
-}
-
-/* Стили .replay-playback-* живут в styles/pages/replays.css */
+/* Список реплеев: styles/pages/replays.css. Стили .replay-playback-* — там же. */
 
 /* Game End Screen */
 .game-end-screen {
@@ -698,7 +546,7 @@
 
 .game-end-screen button {
     padding: 15px 40px;
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    background: var(--gradient-cta);
     border: none;
     border-radius: 15px;
     color: white;

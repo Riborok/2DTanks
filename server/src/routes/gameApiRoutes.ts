@@ -5,9 +5,10 @@ import * as replayRepo from '../repos/replayRepo';
 import * as tankPresetRepo from '../repos/tankPresetRepo';
 import * as friendshipsRepo from '../repos/friendshipsRepo';
 import * as replayLikesRepo from '../repos/replayLikesRepo';
-import { notifyUserSockets } from '../ws/userSocketRegistry';
+import { listOnlineUserIds, notifyUserSockets } from '../ws/userSocketRegistry';
 import * as userRepo from '../repos/userRepo';
 import { parseTankPresetPayload } from '../gameApi/parseTankPresetPayload';
+import { getRoomManager } from '../room/roomManagerRuntime';
 const router = Router();
 router.use(requireBearerAuth);
 
@@ -318,6 +319,79 @@ function mapFriendRow(row: friendshipsRepo.FriendRow) {
         createdAt: row.created_at
     };
 }
+
+type DashboardMode = 'standard' | 'practice' | 'deathmatch' | 'solo';
+
+function modeFromRoomFlags(params: {
+    singlePlayerTest: boolean;
+    practiceMode: boolean;
+    deathmatchMode: boolean;
+}): DashboardMode {
+    if (params.singlePlayerTest) return 'solo';
+    if (params.practiceMode) return 'practice';
+    if (params.deathmatchMode) return 'deathmatch';
+    return 'standard';
+}
+
+function modeFromMatchTypeCode(matchTypeCode: string | null): DashboardMode | null {
+    if (!matchTypeCode) return null;
+    if (matchTypeCode === 'kill_time') return 'deathmatch';
+    return 'standard';
+}
+
+router.get('/dashboard', async (req, res) => {
+    if (noDb(res)) return;
+    const pool = getPool()!;
+    const userId = req.auth!.sub;
+    try {
+        const roomManager = getRoomManager();
+        const roomSummary = roomManager?.getUserRoomSummary(userId) ?? null;
+        const [replayRows, friendRows, latestMatchModeCode] = await Promise.all([
+            replayRepo.listReplaysForUser(pool, userId),
+            friendshipsRepo.listFriends(pool, userId),
+            replayRepo.getLatestMatchModeForUser(pool, userId)
+        ]);
+        const onlineFriendIds = new Set(listOnlineUserIds(friendRows.map((f) => f.other_user_id)));
+        const onlineFriends = friendRows
+            .filter((f) => onlineFriendIds.has(f.other_user_id))
+            .slice(0, 8)
+            .map((f) => ({
+                userId: f.other_user_id,
+                login: f.other_login,
+                displayName: f.other_display_name
+            }));
+        const resumePayload = roomSummary
+            ? {
+                  roomCode: roomSummary.code,
+                  mode: modeFromRoomFlags(roomSummary),
+                  hasActiveGame: roomSummary.hasActiveGame
+              }
+            : null;
+        const lastMode = resumePayload?.mode ?? modeFromMatchTypeCode(latestMatchModeCode);
+        res.json({
+            lastMode,
+            canResume: Boolean(resumePayload),
+            resumePayload,
+            onlineFriends,
+            onlineFriendsCount: onlineFriendIds.size,
+            friendsCount: friendRows.length,
+            recentReplays: replayRows.slice(0, 5).map((r) => ({
+                replayId: r.replay_id,
+                matchId: r.match_id,
+                title: r.title,
+                isPublic: r.is_public,
+                createdAt: r.created_at,
+                endedAt: r.ended_at,
+                roomCode: r.room_code,
+                winnerRole: r.winner_role,
+                matchStatus: r.match_status
+            }))
+        });
+    } catch (e) {
+        console.error('[game/dashboard]', e);
+        res.status(500).json({ error: 'Ошибка загрузки дашборда' });
+    }
+});
 
 router.get('/friends', async (req, res) => {
     if (noDb(res)) return;

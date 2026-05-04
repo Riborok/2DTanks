@@ -318,6 +318,47 @@ export interface FriendsListDto {
     blocked: FriendDto[];
 }
 
+export type DashboardMode = 'standard' | 'practice' | 'deathmatch' | 'solo';
+
+export interface DashboardResumePayloadDto {
+    roomCode: string;
+    mode: DashboardMode;
+    hasActiveGame: boolean;
+}
+
+export interface DashboardFriendOnlineDto {
+    userId: string;
+    login: string;
+    displayName: string | null;
+}
+
+export interface DashboardDto {
+    lastMode: DashboardMode | null;
+    canResume: boolean;
+    resumePayload: DashboardResumePayloadDto | null;
+    onlineFriends: DashboardFriendOnlineDto[];
+    onlineFriendsCount: number;
+    friendsCount: number;
+    recentReplays: ReplayListItemDto[];
+}
+
+export async function getDashboard(token: string): Promise<DashboardDto> {
+    const res = await fetch(`${getApiOrigin()}/api/game/dashboard`, { headers: headers(token) });
+    const data = await parseJson<Partial<DashboardDto> & { error?: string }>(res);
+    if (!res.ok) {
+        throw new Error(data.error || 'Не удалось загрузить дашборд');
+    }
+    return {
+        lastMode: data.lastMode ?? null,
+        canResume: Boolean(data.canResume),
+        resumePayload: data.resumePayload ?? null,
+        onlineFriends: data.onlineFriends ?? [],
+        onlineFriendsCount: Number(data.onlineFriendsCount ?? 0),
+        friendsCount: Number(data.friendsCount ?? 0),
+        recentReplays: data.recentReplays ?? []
+    };
+}
+
 export async function getFriends(token: string): Promise<FriendsListDto> {
     const res = await fetch(`${getApiOrigin()}/api/game/friends`, { headers: headers(token) });
     const data = await parseJson<Partial<FriendsListDto> & { error?: string }>(res);
@@ -398,6 +439,45 @@ export async function getPublicGallery(params: {
     const data = await parseJson<{ replays?: GalleryReplayDto[]; error?: string }>(res);
     if (!res.ok) throw new Error(data.error || 'Ошибка загрузки галереи');
     return data.replays ?? [];
+}
+
+/** Строка таблицы статистики (публичный эндпоинт галереи). */
+export interface GalleryMatchStatRowDto {
+    playerId: string;
+    displayName?: string | null;
+    role: string;
+    kills: number;
+    deaths: number;
+    shotsFired: number;
+    shotsHit: number;
+    damageDealt: number;
+    damageTaken: number;
+    keyPickups: number;
+    ammoPickups: number;
+}
+
+export async function getPublicGalleryReplayStats(replayId: string): Promise<{
+    matchId: string;
+    roomCode: string | null;
+    matchStats: GalleryMatchStatRowDto[];
+}> {
+    const res = await fetch(
+        `${getApiOrigin()}/api/public/gallery/replay/${encodeURIComponent(replayId)}/stats`
+    );
+    const data = await parseJson<{
+        matchId?: string;
+        roomCode?: string | null;
+        matchStats?: GalleryMatchStatRowDto[];
+        error?: string;
+    }>(res);
+    if (!res.ok) {
+        throw new Error(data.error || 'Не удалось загрузить статистику');
+    }
+    return {
+        matchId: String(data.matchId ?? ''),
+        roomCode: data.roomCode ?? null,
+        matchStats: Array.isArray(data.matchStats) ? data.matchStats : []
+    };
 }
 
 export async function likeReplay(
