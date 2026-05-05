@@ -1,4 +1,5 @@
 import { Canvas } from '../game/processors/ICanvas';
+import { DoublyLinkedList } from '../additionally/data structures/IDoublyLinkedList';
 import { Size } from '../additionally/type';
 import { GameWorldSnapshot } from './types';
 import { Point } from '../geometry/Point';
@@ -20,6 +21,7 @@ import { Rectangle } from '../game/processors/shapes/IRectangle';
 import { calcDistance, calcMidBetweenTwoPoint } from '../geometry/additionalFunc';
 import { ServerTank, ServerExplosion, ServerGrenadeExplosion, ServerBulletImpact, ServerCrate } from './types';
 import { tankVisualFromSnapshot } from './tankVisualFromSnapshot';
+import type { TirePair } from '../sprite/tank/tank effects/TankTireTrack';
 import { TankExplosionAnimation } from '../sprite/animation/TankExplosionAnimation';
 import { GrenadeExplosionAnimation } from '../sprite/animation/GrenadeExplosionAnimation';
 import { BulletImpactAnimation } from '../sprite/animation/BulletImpactAnimation';
@@ -59,6 +61,9 @@ interface RenderableItem {
 export class OnlineGameRenderer {
     private canvas: Canvas;
     private animationManager: AnimationManager;
+    /** Пары следов шин, которые плавно исчезают (как в офлайн-логике TankTireTrack). */
+    private readonly vanishingTirePairs = new DoublyLinkedList<TirePair>();
+    private static readonly TIRE_VANISH_OPACITY_PER_MS = 1 / 1800;
     /** Данные танков для полос HP/брони каждый кадр (updateFromSnapshot обновляет). */
     private tanksDataForHealthBars: ServerTank[] = [];
     private tanks: Map<string, RenderableTank> = new Map();
@@ -195,6 +200,7 @@ export class OnlineGameRenderer {
         // Remove tanks that no longer exist
         for (const [id, tank] of this.tanks.entries()) {
             if (!currentTankIds.has(id)) {
+                tank.sprite.vanishTireTracks();
                 // Remove tank sprites
                 const parts = tank.sprite.tankSpriteParts;
                 this.canvas.removeById(parts.topTrackSprite);
@@ -231,10 +237,10 @@ export class OnlineGameRenderer {
                 
                 // Initialize drift smoke (as in original TankHandlingManager.add)
                 sprite.spawnDriftSmoke(this.animationManager);
-                
+
                 renderableTank = { id: serverTank.id, sprite, config };
                 this.tanks.set(serverTank.id, renderableTank);
-                
+
                 // Insert sprites into canvas
                 const parts = sprite.tankSpriteParts;
                 this.canvas.insert(parts.topTrackSprite);
@@ -242,6 +248,12 @@ export class OnlineGameRenderer {
                 this.canvas.insert(parts.hullSprite);
                 this.canvas.insert(parts.turretSprite);
                 this.canvas.insert(parts.weaponSprite);
+
+                const spawnPoint = new Point(
+                    ResolutionManager.worldToCanvasX(serverTank.x),
+                    ResolutionManager.worldToCanvasY(serverTank.y)
+                );
+                sprite.spawnTireTracks(this.canvas, spawnPoint, serverTank.angle, this.vanishingTirePairs);
             }
             
             // Update tank position and angles
@@ -580,15 +592,42 @@ export class OnlineGameRenderer {
         }
     }
 
+    private processVanishingTireTracks(deltaTimeMs: number): void {
+        this.vanishingTirePairs.applyAndRemove(
+            (pair, dt) => {
+                const step = OnlineGameRenderer.TIRE_VANISH_OPACITY_PER_MS * dt;
+                pair.topTire.opacity = Math.max(0, pair.topTire.opacity - step);
+                pair.bottomTire.opacity = Math.max(0, pair.bottomTire.opacity - step);
+            },
+            (pair) => {
+                const gone = pair.topTire.opacity <= 0.02 && pair.bottomTire.opacity <= 0.02;
+                if (gone) {
+                    this.canvas.removeById(pair.topTire as unknown as ISprite);
+                    this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+                }
+                return gone;
+            },
+            deltaTimeMs
+        );
+    }
+
     public render(): void {
+        const dt = 16;
+        this.processVanishingTireTracks(dt);
         // Update animations (for drift smoke)
-        this.animationManager.handle(16); // Approximate deltaTime
+        this.animationManager.handle(dt); // Approximate deltaTime
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
         this.drawTankNamesOnTop();
     }
 
     public clear(): void {
+        const lingering = [...this.vanishingTirePairs];
+        for (const pair of lingering) {
+            this.canvas.removeById(pair.topTire as unknown as ISprite);
+            this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+        }
+        this.vanishingTirePairs.clear();
         this.canvas.clear();
         this.tanksDataForHealthBars = [];
         this.tanks.clear();

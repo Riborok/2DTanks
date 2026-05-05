@@ -57,6 +57,9 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
 
     useEffect(() => {
         if (!accessToken) {
+            setLoading(false);
+            setPresets([]);
+            setError('');
             return;
         }
         let cancelled = false;

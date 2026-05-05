@@ -307,7 +307,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             applyTankConfigs(renderer, initial);
             snapshotRef.current = initial;
             lastDisplayFrameRef.current = 0;
-            replayKeyframeIdxRef.current = 0;
+            // −1: первый проход raf-loop обработает idx=0 как смену кадра и подмешает эффекты из frames[0].
+            replayKeyframeIdxRef.current = -1;
             renderer.updateFromSnapshot(initial);
             setDisplayFrame(0);
         }

@@ -66,7 +66,8 @@ export class Room {
     private replayEvents: replayRepo.ReplayEvent[] = [];
     private replayStartMeta: replayRepo.ReplayStartMeta | null = null;
     private replayRngSeed: number = 0;
-    private static readonly REPLAY_MAX_ACTIONS = 20000;
+    /** Журнал: world_init, item_spawn, player_input (~60 Гц на клиента при зажатых клавишах). 20000 хватало лишь на несколько минут и реплей «немел». */
+    private static readonly REPLAY_MAX_ACTIONS = 500000;
 
     constructor(code: string, options?: RoomCreateOptions) {
         this.code = code;

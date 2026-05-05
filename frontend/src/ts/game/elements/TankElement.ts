@@ -48,7 +48,7 @@ export class TankElement implements IElement, IPositionAdjustable {
         this._sprite.updateAfterAction(entity.points[0], entity.angle, this._model.turretAngle);
     }
     public terminate(spriteStorage: IStorage<ISprite>, entityStorage: IStorage<IEntity>) {
-        this._sprite.tankTireTrack.vanishFullTrack();
+        this._sprite.vanishTireTracks();
         this._sprite.removeAcceleration();
         const tankSpriteParts = this._sprite.tankSpriteParts;
 

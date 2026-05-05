@@ -12,9 +12,9 @@ import {ISprite, ISpritePart, ISpriteParts} from "../ISprite";
 
 export class TankSprite implements ISpriteParts {
     private readonly _tankSpriteParts: ITankSpriteParts;
-    private _tankTireTrack!: TankTireTrack;
-    private _tankAcceleration!: TankAcceleration;
-    private _tankDrift!: TankDrift;
+    private _tankTireTrack?: TankTireTrack;
+    private _tankAcceleration?: TankAcceleration;
+    private _tankDrift?: TankDrift;
     private readonly _tankTrackEffect: TankTrackEffect;
     public constructor(tankSpriteParts: ITankSpriteParts, forwardData: MotionData, backwardData: MotionData) {
         this._tankSpriteParts = tankSpriteParts;
@@ -23,11 +23,18 @@ export class TankSprite implements ISpriteParts {
     public get getParts(): Iterable<ISpritePart> { return Object.values(this._tankSpriteParts) }
     public get tankSpriteParts(): ITankSpriteParts { return this._tankSpriteParts }
     public get tankTrackEffect(): TankTrackEffect { return this._tankTrackEffect }
-    public get tankTireTrack(): TankTireTrack { return  this._tankTireTrack }
+    public get tankTireTrack(): TankTireTrack | undefined { return this._tankTireTrack }
     public spawnTankAcceleration(storage: IStorage<ISprite>, indentX: number, tankHeight: number) {
         this._tankAcceleration = new TankAcceleration(storage, indentX, tankHeight);
     }
-    public removeAcceleration() { this._tankAcceleration.removeAcceleration() }
+    public removeAcceleration(): void {
+        this._tankAcceleration?.removeAcceleration();
+    }
+
+    /** Скрывает активную цепочку следов; безопасно, если следы не создавали. */
+    public vanishTireTracks(): void {
+        this._tankTireTrack?.vanishFullTrack();
+    }
     public spawnTireTracks(storage: IStorage<ISprite>, point: Point, hullAngle: number, vanishingListOfTirePairs: IDoublyLinkedList<TirePair>){
         this._tankTireTrack = new TankTireTrack(storage, this._tankSpriteParts.topTrackSprite, vanishingListOfTirePairs);
 
@@ -45,6 +52,9 @@ export class TankSprite implements ISpriteParts {
             this._tankSpriteParts.topTrackSprite.width, this._tankSpriteParts.topTrackSprite.height)
     }
     private updateTireTrack(point: Point, hullAngle: number, sin: number, cos: number){
+        if (!this._tankTireTrack) {
+            return;
+        }
         const firstPoints = this._tankTireTrack.calcFirstTopBottomChainPoints(
             this._tankSpriteParts, point, sin, cos);
         const lastPoints = this._tankTireTrack.calcLastTopBottomChainPoints(
@@ -71,6 +81,9 @@ export class TankSprite implements ISpriteParts {
         }
     }
     private updateDriftSmoke(topTrackPoint: Point, hullAngle: number, sin: number, cos: number){
+        if (!this._tankDrift) {
+            return;
+        }
         let bottomTrackPoint: Point = this._tankSpriteParts.hullSprite.calcPosition(topTrackPoint, sin, cos);
         bottomTrackPoint = this._tankSpriteParts.bottomTrackSprite.calcPosition(bottomTrackPoint, sin, cos);
         const rotateDirection: number = this._tankDrift.detectRotateDirection(hullAngle);
@@ -90,7 +103,7 @@ export class TankSprite implements ISpriteParts {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
         this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint, false);
 
-        this._tankAcceleration.setPosition(hullDefaultPoint, sin, cos, hullAngle);
+        this._tankAcceleration?.setPosition(hullDefaultPoint, sin, cos, hullAngle);
 
         this.updateTireTrack(point, hullAngle, sin, cos);
         this.updateDriftSmoke(point, hullAngle, sin, cos);
@@ -117,6 +130,7 @@ export class TankSprite implements ISpriteParts {
     public updateAfterAction(point: Point, hullAngle: number, turretAngle: number, isIdle: boolean = false) {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
+        this.updateTireTrack(point, hullAngle, sin, cos);
         // Update drift smoke (as in original preUpdateAction)
         this.updateDriftSmoke(point, hullAngle, sin, cos);
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos, isIdle);
