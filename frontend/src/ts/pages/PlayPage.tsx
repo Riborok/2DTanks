@@ -104,6 +104,8 @@ const PlayPage: React.FC = () => {
     const [practiceRoom, setPracticeRoom] = useState(false);
     const [deathmatchRoom, setDeathmatchRoom] = useState(false);
 
+    const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+
     const myPlayerIdRef = useRef<string>('');
     const screenRef = useRef<PlayScreen>('hub');
     const pendingInviteJoinCodeRef = useRef<string | null>(null);
@@ -114,7 +116,11 @@ const PlayPage: React.FC = () => {
         }
 
         let cancelled = false;
-        void wsClient.connect().catch((err) => {
+        void wsClient.connect().then(() => {
+            if (!cancelled) {
+                wsClient.send({ type: 'requestGameState' } as any);
+            }
+        }).catch((err) => {
             console.error('Failed to connect:', err);
             if (!cancelled) {
                 setError(
@@ -383,7 +389,12 @@ const PlayPage: React.FC = () => {
         setPracticeRoom(false);
     };
 
-    const handleLeaveGame = () => {
+    const handleLeaveGameClick = () => {
+        setLeaveConfirmOpen(true);
+    };
+
+    const confirmLeaveGame = () => {
+        setLeaveConfirmOpen(false);
         if (myPlayerIdRef.current) {
             wsClient.send({ type: 'leaveGame' });
         }
@@ -399,6 +410,10 @@ const PlayPage: React.FC = () => {
         setSinglePlayerRoom(false);
         setPracticeRoom(false);
         setDeathmatchRoom(false);
+    };
+
+    const cancelLeaveGame = () => {
+        setLeaveConfirmOpen(false);
     };
 
     const rootClassName = [
@@ -457,7 +472,7 @@ const PlayPage: React.FC = () => {
                     isDeathmatch={deathmatchRoom}
                     onGameEnd={handleGameEnd}
                     onDisconnect={handleDisconnect}
-                    onLeaveGame={handleLeaveGame}
+                    onLeaveGame={handleLeaveGameClick}
                 />
             )}
 
@@ -479,6 +494,34 @@ const PlayPage: React.FC = () => {
                               winnerPlayerIds: gameEndReason.winnerPlayerIds
                           })}
                 />
+            )}
+
+            {leaveConfirmOpen && (
+                <div className="leave-confirm-overlay" onClick={cancelLeaveGame}>
+                    <div className="leave-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="leave-confirm-icon">⚠️</div>
+                        <h4 className="leave-confirm-title">Покинуть бой?</h4>
+                        <p className="leave-confirm-text">
+                            Вы собираетесь выйти из текущего боя. Вернуться обратно будет невозможно.
+                        </p>
+                        <div className="leave-confirm-actions">
+                            <button
+                                type="button"
+                                className="ui-btn ui-btn-secondary"
+                                onClick={cancelLeaveGame}
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                type="button"
+                                className="ui-btn ui-btn-primary leave-confirm-danger-btn"
+                                onClick={confirmLeaveGame}
+                            >
+                                Покинуть бой
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

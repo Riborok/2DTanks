@@ -83,6 +83,33 @@ export class Room {
         }
     }
 
+    public get roomCode(): string {
+        return this.code;
+    }
+
+    public getPlayer(playerId: string): { id: string; role: PlayerRole | null } | undefined {
+        const p = this.players.get(playerId);
+        if (!p) return undefined;
+        return { id: p.id, role: p.role };
+    }
+
+    public getPublicState(): any {
+        const playersArray = Array.from(this.players.values()).map(player => ({
+            playerId: player.id,
+            role: player.role,
+            tankConfig: player.tankConfig,
+            ready: player.ready,
+            userId: player.userId ?? undefined,
+            displayName: player.displayName ?? undefined
+        }));
+        return {
+            players: playersArray,
+            singlePlayerTest: this.singlePlayerTest,
+            practiceMode: this.practiceMode,
+            deathmatchMode: this.deathmatchMode
+        };
+    }
+
     addPlayer(ws: WebSocket | null, auth: WsAuthUser | null = null): string | null {
         if (this.players.size >= this.maxPlayers) {
             return null;

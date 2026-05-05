@@ -305,6 +305,32 @@ wss.on('connection', (ws: WebSocket, req) => {
                     spectatorRoomCode = null;
                     ws.send(JSON.stringify({ type: 'spectate:left' }));
                 }
+            } else if (data.type === 'requestGameState') {
+                if (roomCode && playerId) {
+                    const room = roomManager.getRoom(roomCode);
+                    if (room) {
+                        const player = room.getPlayer(playerId);
+                        if (player) {
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'joined',
+                                    roomId: room.roomCode,
+                                    playerId: player.id,
+                                    role: player.role
+                                })
+                            );
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'roomUpdate',
+                                    ...room.getPublicState()
+                                })
+                            );
+                            if (room.hasActiveGame()) {
+                                ws.send(JSON.stringify({ type: 'gameStart' }));
+                            }
+                        }
+                    }
+                }
             } else if (data.type === 'leaveGame') {
                 if (roomCode && playerId) {
                     roomManager.leaveRoom(roomCode, playerId);

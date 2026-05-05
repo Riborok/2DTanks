@@ -63,7 +63,7 @@ export interface ServerMessage {
 }
 
 export interface ClientMessage {
-    type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action' | 'leaveGame';
+    type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action' | 'leaveGame' | 'requestGameState';
     singlePlayer?: boolean;
     practice?: boolean;
     deathmatch?: boolean;

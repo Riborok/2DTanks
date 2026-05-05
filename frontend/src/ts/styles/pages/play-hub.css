@@ -433,7 +433,85 @@
         font-size: clamp(24px, 6vh, 34px);
     }
 
-    .page-play-hub .page-subtitle {
-        margin-bottom: 12px;
-    }
+}
+
+/* ============================================================
+   Модальное окно выхода из игры
+   ============================================================ */
+.leave-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.leave-confirm-modal {
+    background: linear-gradient(180deg, var(--color-surface-800) 0%, var(--color-bg-900) 100%);
+    border: 1px solid var(--color-border-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xlarge), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 24px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: slideUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.leave-confirm-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.leave-confirm-title {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-text-100);
+}
+
+.leave-confirm-text {
+    margin: 0 0 24px;
+    font-size: 13.5px;
+    color: var(--color-text-300);
+    line-height: 1.45;
+}
+
+.leave-confirm-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.leave-confirm-actions .ui-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.leave-confirm-danger-btn {
+    background: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+.leave-confirm-danger-btn:hover {
+    background: #ff6b81;
+    border-color: #ff6b81;
+}
+
+.leave-confirm-danger-btn:active {
+    transform: translateY(1px);
 }
