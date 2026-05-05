@@ -11,7 +11,7 @@
     box-sizing: border-box;
 }
 
-.play-page-root.app-container:has(.tank-customizer) {
+.play-page-root--tankSelection.app-container {
     min-height: 0;
     height: 100%;
     align-items: stretch;
@@ -65,6 +65,11 @@
 .tank-customizer__topbar-main {
     min-width: 0;
     flex: 1 1 240px;
+}
+
+.tank-customizer__leave-hub {
+    flex-shrink: 0;
+    align-self: center;
 }
 
 .tank-customizer__eyebrow {

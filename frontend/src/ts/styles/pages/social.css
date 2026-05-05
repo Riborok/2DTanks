@@ -73,8 +73,8 @@
     justify-content: space-between;
     gap: 10px;
     flex-wrap: wrap;
-    margin: 12px 0;
-    padding: 10px 12px;
+    margin: 8px 0;
+    padding: 8px 10px;
     border-radius: 8px;
     background: #331818;
     border: 1px solid #582222;
@@ -92,22 +92,23 @@
 }
 
 .lobby-invite-block {
-    margin: 16px 0;
-    padding: 14px;
-    border-radius: 10px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-md, 10px);
     border: 1px solid #2b3a55;
     background: #121a2a;
+    flex-shrink: 0;
 }
 
 .lobby-invite-title {
-    font-size: 16px;
-    margin: 0 0 6px;
+    font-size: 0.95rem;
+    margin: 0 0 4px;
 }
 
 .lobby-invite-hint {
-    font-size: 12px;
+    font-size: 11px;
     opacity: 0.75;
-    margin: 0 0 10px;
+    margin: 0 0 6px;
 }
 
 .lobby-invite-ok {
@@ -141,9 +142,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
-    padding: 8px 10px;
+    padding: 6px 8px;
     background: #171f30;
     border-radius: 8px;
     border: 1px solid #253149;

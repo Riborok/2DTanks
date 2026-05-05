@@ -459,8 +459,9 @@
     min-height: 0;
 }
 
-.app-shell-main:has(.play-page-root.app-container:has(.game-screen)) {
+.app-shell-main:has(.play-page-root--game) {
     overflow: hidden;
+    padding: 0;
 }
 
 /* HUD игры выше шапки по z-index, позиция по --game-hud-top из .app-shell */
@@ -483,36 +484,36 @@
 }
 
 .play-page-root.app-container:has(.lobby-screen) {
-    align-items: stretch;
-    min-height: calc(100dvh - var(--app-shell-play-chrome));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.play-page-root.app-container:has(.game-screen) {
+    flex: 1;
+    min-height: 0;
     align-self: stretch;
     align-items: stretch;
-    height: calc(100dvh - var(--app-shell-play-chrome));
-    min-height: calc(100dvh - var(--app-shell-play-chrome));
+    overflow: hidden;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.play-page-root--game.app-container {
+    flex: 1;
+    min-height: 0;
+    align-self: stretch;
+    align-items: stretch;
     overflow: hidden;
     padding: 0;
 }
 
 /* Выбор танка: ровно остаток окна под шапкой, без «вылезания» за экран */
-.play-page-root.app-container:has(.tank-customizer) {
+.play-page-root--tankSelection.app-container {
     flex: 1;
     min-height: 0;
     align-self: stretch;
     align-items: stretch;
     justify-content: flex-start;
-    height: calc(100dvh - var(--app-shell-play-chrome));
-    max-height: calc(100dvh - var(--app-shell-play-chrome));
     overflow: hidden;
     padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Один скролл внутри кастомайзера, а не у всего main */
-.app-shell-main:has(.play-page-root.app-container:has(.tank-customizer)) {
+.app-shell-main:has(.play-page-root--tankSelection) {
     overflow-y: hidden;
 }
 
@@ -656,7 +657,9 @@
 }
 
 @media (max-width: 720px), (max-height: 480px) {
-    .play-page-root.app-container:not(:has(.game-screen)):not(:has(.tank-customizer)) {
+    .play-page-root.app-container:not(.play-page-root--game):not(.play-page-root--tankSelection):not(
+            .play-page-root--lobby
+        ) {
         min-height: auto;
         overflow: visible;
     }
@@ -673,37 +676,36 @@
 }
 
 @media (pointer: coarse) {
-    .app-shell-main:has(.game-screen) {
+    .app-shell-main:has(.play-page-root--game) {
         padding: 0;
     }
 }
 
-/* Надёжный fallback без :has(): лобби на телефоне должно скроллиться всегда. */
+/* Лобби: без скролла всего main — только внутренняя область карточки при необходимости */
 .play-page-root--lobby.app-container {
     align-self: stretch;
     align-items: stretch;
     justify-content: flex-start;
-    height: calc(100dvh - var(--app-shell-play-chrome));
-    max-height: calc(100dvh - var(--app-shell-play-chrome));
+    flex: 1;
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+    overflow: hidden;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 .play-page-root--lobby .lobby-screen {
-    flex: 0 0 auto;
-    min-height: auto;
-    height: auto;
-    overflow: visible;
-    align-items: flex-start;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.app-shell-main:has(.play-page-root--lobby.app-container) {
+    overflow-y: hidden;
 }
 
 @media (max-width: 720px), (max-height: 520px) {
     .play-page-root--lobby.app-container {
-        padding: 6px 6px calc(12px + env(safe-area-inset-bottom, 0px));
+        padding: 4px 6px calc(6px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -744,15 +746,14 @@ html.is-browser-fullscreen[data-fullscreen-header-open="true"] .app-shell-main {
     max-height: none;
 }
 
-html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .play-page-root.app-container:has(.game-screen) {
+html.is-browser-fullscreen:not([data-fullscreen-header-open="true"]) .play-page-root--game.app-container {
     height: 100dvh;
     min-height: 100dvh;
 }
 
-html.is-browser-fullscreen[data-fullscreen-header-open="true"] .play-page-root.app-container:has(.game-screen) {
-    height: calc(100dvh - var(--app-shell-play-chrome));
-    min-height: calc(100dvh - var(--app-shell-play-chrome));
-    max-height: calc(100dvh - var(--app-shell-play-chrome));
+html.is-browser-fullscreen[data-fullscreen-header-open="true"] .play-page-root--game.app-container {
+    flex: 1;
+    min-height: 0;
 }
 
 /* Запасной вариант без JS-класса */

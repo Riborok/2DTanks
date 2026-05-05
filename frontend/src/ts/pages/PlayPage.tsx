@@ -206,15 +206,27 @@ const PlayPage: React.FC = () => {
         };
 
         const onLeftGame = () => {
-            // Сервер подтвердил выход — на всякий случай гасим возможный
-            // «прилипший» экран, если локальный handleLeaveGame по
-            // какой-то причине не был вызван (например, выход инициирован
-            // не кнопкой, а дисконнектом из комнаты).
+            // Сервер подтвердил выход — синхронизируем UI (в т.ч. лобби / выбор танка).
+            const pendingCode = pendingInviteJoinCodeRef.current;
+            const prevScreen = screenRef.current;
             myPlayerIdRef.current = '';
             setMyPlayerId('');
-            setScreen((prev) => (prev === 'game' ? 'hub' : prev));
+            if (prevScreen === 'gameEnd') {
+                if (pendingCode) {
+                    pendingInviteJoinCodeRef.current = null;
+                    wsClient.send({ type: 'joinRoom', code: pendingCode });
+                }
+                return;
+            }
             screenRef.current = 'hub';
-            const pendingCode = pendingInviteJoinCodeRef.current;
+            setScreen('hub');
+            setRoomId('');
+            setPlayers([]);
+            setMyRole('attacker');
+            setSinglePlayerRoom(false);
+            setPracticeRoom(false);
+            setDeathmatchRoom(false);
+            setError('');
             if (pendingCode) {
                 pendingInviteJoinCodeRef.current = null;
                 wsClient.send({ type: 'joinRoom', code: pendingCode });
@@ -238,6 +250,25 @@ const PlayPage: React.FC = () => {
             wsClient.off('leftGame', onLeftGame);
         };
     }, [authRestored, accessToken, authUser, wsClient]);
+
+    /** Покинуть комнату (лобби / выбор танка / бой) и вернуться к выбору режима на хабе. */
+    const leaveRoomAndReturnToHub = useCallback(() => {
+        if (myPlayerIdRef.current) {
+            wsClient.send({ type: 'leaveGame' });
+        }
+        setRoomId('');
+        setMyPlayerId('');
+        myPlayerIdRef.current = '';
+        setMyRole('attacker');
+        setPlayers([]);
+        setError('');
+        setGameEndReason(null);
+        setSinglePlayerRoom(false);
+        setPracticeRoom(false);
+        setDeathmatchRoom(false);
+        setScreen('hub');
+        screenRef.current = 'hub';
+    }, [wsClient]);
 
     const handleCreateRoom = (mode: 'standard' | 'practice' | 'deathmatch' | 'solo') => {
         setError('');
@@ -373,20 +404,7 @@ const PlayPage: React.FC = () => {
     };
 
     const handleBackToMenu = () => {
-        if (myPlayerIdRef.current) {
-            wsClient.send({ type: 'leaveGame' });
-        }
-        setScreen('hub');
-        screenRef.current = 'hub';
-        setRoomId('');
-        setMyPlayerId('');
-        myPlayerIdRef.current = '';
-        setMyRole('attacker');
-        setPlayers([]);
-        setError('');
-        setGameEndReason(null);
-        setSinglePlayerRoom(false);
-        setPracticeRoom(false);
+        leaveRoomAndReturnToHub();
     };
 
     const handleLeaveGameClick = () => {
@@ -395,21 +413,7 @@ const PlayPage: React.FC = () => {
 
     const confirmLeaveGame = () => {
         setLeaveConfirmOpen(false);
-        if (myPlayerIdRef.current) {
-            wsClient.send({ type: 'leaveGame' });
-        }
-        setScreen('hub');
-        screenRef.current = 'hub';
-        setRoomId('');
-        setMyPlayerId('');
-        myPlayerIdRef.current = '';
-        setMyRole('attacker');
-        setPlayers([]);
-        setError('');
-        setGameEndReason(null);
-        setSinglePlayerRoom(false);
-        setPracticeRoom(false);
-        setDeathmatchRoom(false);
+        leaveRoomAndReturnToHub();
     };
 
     const cancelLeaveGame = () => {
@@ -440,7 +444,12 @@ const PlayPage: React.FC = () => {
             )}
 
             {screen === 'tankSelection' && (
-                <OnlineTankCustomizer onAccept={handleTankConfigAccept} players={players} myPlayerId={myPlayerId} />
+                <OnlineTankCustomizer
+                    onAccept={handleTankConfigAccept}
+                    players={players}
+                    myPlayerId={myPlayerId}
+                    onLeaveToHub={leaveRoomAndReturnToHub}
+                />
             )}
 
             {screen === 'lobby' && (
@@ -454,6 +463,7 @@ const PlayPage: React.FC = () => {
                     deathmatchRoom={deathmatchRoom}
                     onReady={handleReady}
                     onCopyCode={() => {}}
+                    onLeaveToHub={leaveRoomAndReturnToHub}
                     wsClient={wsClient}
                     accessToken={accessToken}
                     myAuthUserId={authUser?.userId}

@@ -1,49 +1,82 @@
+/* Лобби: заполняет остаток окна под шапкой; прокрутка только в нижней зоне (приглашения + чат), без скролла всей страницы */
+
 .lobby-screen {
     width: 100%;
-    min-height: 100%;
+    flex: 1;
+    min-height: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
-    padding: 24px 16px;
+    padding: 6px 8px;
     position: relative;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .lobby-container {
-    width: min(820px, 96vw);
-    padding: 28px;
-    border-radius: var(--radius-xl);
+    flex: 0 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: min(800px, 100%);
+    margin: 0 auto;
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border-300);
     background: var(--color-surface-700);
     box-shadow: var(--shadow-medium);
     backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    max-height: 100%;
+    box-sizing: border-box;
+}
+
+.lobby-leave-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.lobby-leave-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: var(--text-sm);
 }
 
 .lobby-title {
-    margin: 0 0 14px;
-    font-size: clamp(26px, 3vw, 38px);
+    margin: 0 0 8px;
+    font-size: clamp(1.05rem, 2.4vw, 1.65rem);
+    line-height: 1.2;
+    flex-shrink: 0;
 }
 
 .lobby-deathmatch-hint {
     color: var(--color-text-300);
-    margin-top: 8px;
-    margin-bottom: 16px;
+    margin: 0 0 8px;
+    font-size: var(--text-sm);
+    line-height: 1.35;
+    flex-shrink: 0;
 }
 
 .room-code-section {
     margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 .room-code-section label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     color: var(--color-text-300);
+    font-size: var(--text-sm);
 }
 
 .room-code-display {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .room-code {
@@ -51,10 +84,11 @@
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border-300);
     background: rgba(255, 255, 255, 0.03);
-    padding: 10px 14px;
-    letter-spacing: 0.2em;
+    padding: 8px 10px;
+    letter-spacing: 0.15em;
     font-weight: var(--weight-bold);
     text-align: center;
+    font-size: var(--text-sm);
 }
 
 .copy-button {
@@ -62,13 +96,17 @@
     border: 1px solid var(--color-border-400);
     background: rgba(255, 255, 255, 0.04);
     color: #fff;
-    padding: 10px 14px;
+    padding: 8px 12px;
     cursor: pointer;
+    font-size: var(--text-sm);
+    flex-shrink: 0;
 }
 
 .players-status {
     display: grid;
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: 8px;
 }
 
 .players-status-grid {
@@ -79,8 +117,9 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 .lobby-mode-chip {
@@ -88,8 +127,8 @@
     border: 1px solid var(--color-border-400);
     background: rgba(255, 255, 255, 0.04);
     color: var(--color-text-200);
-    padding: 7px 12px;
-    font-size: var(--text-sm);
+    padding: 5px 10px;
+    font-size: 11px;
     white-space: nowrap;
 }
 
@@ -99,10 +138,10 @@
 }
 
 .lobby-self-actions {
-    margin-top: 10px;
+    margin-top: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .lobby-ready-pill {
@@ -110,58 +149,83 @@
     border: 1px solid rgba(46, 213, 115, 0.55);
     background: rgba(46, 213, 115, 0.12);
     color: #cbf8d9;
-    font-size: var(--text-sm);
-    padding: 6px 10px;
+    font-size: 11px;
+    padding: 4px 8px;
 }
 
 .player-status {
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border-300);
     background: rgba(255, 255, 255, 0.03);
-    padding: 12px 14px;
+    padding: 8px 10px;
 }
 
 .player-status h3 {
-    margin: 0 0 6px;
+    margin: 0 0 4px;
+    font-size: 0.92rem;
+    line-height: 1.25;
 }
 
 .player-status p {
     margin: 0;
     color: var(--color-text-300);
+    font-size: var(--text-sm);
 }
 
 .ready-button.ready-button-prominent {
-    padding: 10px 22px;
-    font-size: 16px;
+    padding: 8px 16px;
+    font-size: var(--text-sm);
     background: var(--color-accent-green);
     color: #fff;
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 6px;
 }
 
 .game-starting {
-    margin-top: 14px;
-    padding: 10px 12px;
+    margin-top: 0;
+    padding: 8px 10px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(46, 213, 115, 0.5);
     background: rgba(46, 213, 115, 0.12);
+    flex-shrink: 0;
+}
+
+.game-starting p {
+    margin: 0;
+    font-size: var(--text-sm);
+}
+
+/* Нижняя колонка: при необходимости одна аккуратная прокрутка */
+.lobby-secondary {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 2px;
+    overflow: visible;
+    max-height: none;
+}
+
+.lobby-invite-list-scroll {
+    max-height: min(112px, 22vh);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 4px;
 }
 
 @media (max-width: 900px) {
     .lobby-screen {
-        align-items: flex-start;
-        min-height: auto;
-        overflow: visible;
-        padding: 4px 2px calc(18px + env(safe-area-inset-bottom, 0px));
+        justify-content: flex-start;
+        padding: 4px 6px;
     }
 
     .lobby-container {
-        width: 100%;
-        padding: 16px 12px;
-        border-radius: 12px;
-        margin-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
     }
 
     .players-status-grid {
@@ -191,22 +255,75 @@
     }
 }
 
+/* Узкое окно по высоте: блок статусов может занять несколько рядов (арена 2–5 игроков) */
+@media (max-height: 700px) {
+    .players-status {
+        max-height: min(36vh, 220px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 @media (orientation: landscape) and (max-height: 520px) {
     .lobby-screen {
-        align-items: flex-start;
-        padding: 2px 2px calc(12px + env(safe-area-inset-bottom, 0px));
+        justify-content: flex-start;
+        padding: 2px 4px;
     }
 
     .lobby-container {
-        padding: 10px;
+        padding: 8px 10px;
     }
 
     .lobby-title {
-        margin-bottom: 8px;
-        font-size: clamp(22px, 7vh, 30px);
+        margin-bottom: 6px;
+        font-size: clamp(1rem, 4vh, 1.35rem);
     }
 
-    .lobby-topbar {
-        margin-bottom: 10px;
+    .lobby-leave-row {
+        margin-bottom: 4px;
+    }
+
+    .players-status {
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .lobby-secondary {
+        gap: 6px;
+        margin-top: 6px;
+        max-height: none;
+    }
+
+    .lobby-invite-list-scroll {
+        max-height: min(72px, 18vh);
+    }
+}
+
+/* Чат в лобби — компактнее, без лишнего отступа сверху */
+.lobby-secondary .chat-panel {
+    margin-top: 0;
+    height: 140px;
+    min-height: 140px;
+    max-height: 140px;
+    flex-shrink: 0;
+    padding: 8px;
+}
+
+.lobby-secondary .chat-input-row input {
+    padding: 6px 8px;
+    font-size: var(--text-sm);
+}
+
+.lobby-secondary .chat-input-row button {
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .lobby-secondary .chat-panel {
+        height: 112px;
+        min-height: 112px;
+        max-height: 112px;
     }
 }

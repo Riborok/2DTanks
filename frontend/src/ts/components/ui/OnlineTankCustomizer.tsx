@@ -27,9 +27,17 @@ interface OnlineTankCustomizerProps {
     occupiedColors?: number[]; // Массив индексов занятых цветов
     myPlayerId?: string; // ID текущего игрока для исключения своего цвета из занятых
     players?: Array<{ playerId: string; tankConfig?: { color: number } }>; // Список игроков
+    /** Вернуться к выбору режима без подтверждения сборки. */
+    onLeaveToHub?: () => void;
 }
 
-const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, occupiedColors, myPlayerId, players }) => {
+const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
+    onAccept,
+    occupiedColors,
+    myPlayerId,
+    players,
+    onLeaveToHub
+}) => {
     const { accessToken } = useAuth();
     const [config, setConfig] = useState<TankConfig>({
         hullIndex: 0,
@@ -104,6 +112,15 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                     <p className="tank-customizer__eyebrow">Подготовка к бою</p>
                     <h1 className="tank-customizer__page-title">Сборка танка</h1>
                 </div>
+                {onLeaveToHub && (
+                    <button
+                        type="button"
+                        className="ui-btn ui-btn-secondary tank-customizer__leave-hub"
+                        onClick={onLeaveToHub}
+                    >
+                        ← К выбору режима
+                    </button>
+                )}
             </header>
 
             <div className="tank-customizer__body">

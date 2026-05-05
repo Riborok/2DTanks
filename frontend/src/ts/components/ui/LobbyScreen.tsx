@@ -25,6 +25,8 @@ interface LobbyScreenProps {
     deathmatchRoom?: boolean;
     onReady: () => void;
     onCopyCode: () => void;
+    /** Вернуться к экрану выбора режима (покинуть комнату). */
+    onLeaveToHub: () => void;
     /** Если передан — в лобби отрисовывается блок чата (не в соло) */
     wsClient?: WebSocketClient;
     /** Для загрузки списка друзей и кнопок «Пригласить» */
@@ -45,6 +47,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     deathmatchRoom = false,
     onReady,
     onCopyCode,
+    onLeaveToHub,
     wsClient,
     accessToken,
     myAuthUserId,
@@ -111,6 +114,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return (
         <div className="lobby-screen">
             <div className="lobby-container">
+                <div className="lobby-leave-row">
+                    <button
+                        type="button"
+                        className="ui-btn ui-btn-secondary lobby-leave-btn"
+                        onClick={onLeaveToHub}
+                    >
+                        ← К выбору режима
+                    </button>
+                </div>
                 <h1 className="lobby-title">
                     {singlePlayerRoom
                         ? 'Режим теста (1 игрок)'
@@ -155,44 +167,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                             <button type="button" className="lobby-server-error-dismiss" onClick={onClearServerError}>
                                 Закрыть
                             </button>
-                        )}
-                    </div>
-                )}
-
-                {!singlePlayerRoom && accessToken && wsClient && (
-                    <div className="lobby-invite-block">
-                        <h3 className="lobby-invite-title">Пригласить друга в эту комнату</h3>
-                        <p className="lobby-invite-hint">Уведомление придёт по WebSocket всем вкладкам друга.</p>
-                        {inviteOk && <p className="lobby-invite-ok">{inviteOk}</p>}
-                        {friendsErr && <p className="lobby-invite-error">{friendsErr}</p>}
-                        {friendsLoading && <p className="lobby-invite-loading">Загрузка списка друзей…</p>}
-                        {!friendsLoading && !friendsErr && friends.length === 0 && (
-                            <p className="lobby-invite-empty">Пока нет друзей — добавьте их в разделе «Друзья».</p>
-                        )}
-                        {!friendsLoading && friends.length > 0 && (
-                            <ul className="lobby-invite-list">
-                                {friends.map((f) => {
-                                    const inRoom = players.some((p) => p.userId && p.userId === f.userId);
-                                    const isSelf = myAuthUserId && f.userId === myAuthUserId;
-                                    return (
-                                        <li key={f.userId} className="lobby-invite-row">
-                                            <span className="lobby-invite-name">
-                                                {f.displayName || f.login}
-                                                <span className="lobby-invite-login">@{f.login}</span>
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="lobby-invite-btn"
-                                                disabled={inRoom || Boolean(isSelf)}
-                                                title={inRoom ? 'Уже в комнате' : undefined}
-                                                onClick={() => sendInvite(f.userId)}
-                                            >
-                                                Пригласить
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
                         )}
                     </div>
                 )}
@@ -287,21 +261,63 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     )}
                 </div>
 
-                {!singlePlayerRoom && wsClient && (
-                    <LobbyChat wsClient={wsClient} myPlayerId={myPlayerId} />
-                )}
+                <div className="lobby-secondary">
+                    {!singlePlayerRoom && accessToken && wsClient && (
+                        <div className="lobby-invite-block">
+                            <h3 className="lobby-invite-title">Пригласить друга в эту комнату</h3>
+                            <p className="lobby-invite-hint">Уведомление придёт по WebSocket всем вкладкам друга.</p>
+                            {inviteOk && <p className="lobby-invite-ok">{inviteOk}</p>}
+                            {friendsErr && <p className="lobby-invite-error">{friendsErr}</p>}
+                            {friendsLoading && <p className="lobby-invite-loading">Загрузка списка друзей…</p>}
+                            {!friendsLoading && !friendsErr && friends.length === 0 && (
+                                <p className="lobby-invite-empty">Пока нет друзей — добавьте их в разделе «Друзья».</p>
+                            )}
+                            {!friendsLoading && friends.length > 0 && (
+                                <div className="lobby-invite-list-scroll">
+                                    <ul className="lobby-invite-list">
+                                        {friends.map((f) => {
+                                            const inRoom = players.some((p) => p.userId && p.userId === f.userId);
+                                            const isSelf = myAuthUserId && f.userId === myAuthUserId;
+                                            return (
+                                                <li key={f.userId} className="lobby-invite-row">
+                                                    <span className="lobby-invite-name">
+                                                        {f.displayName || f.login}
+                                                        <span className="lobby-invite-login">@{f.login}</span>
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        className="lobby-invite-btn"
+                                                        disabled={inRoom || Boolean(isSelf)}
+                                                        title={inRoom ? 'Уже в комнате' : undefined}
+                                                        onClick={() => sendInvite(f.userId)}
+                                                    >
+                                                        Пригласить
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                {bothReady && (
-                    <div className="game-starting">
-                        <p>
-                            {singlePlayerRoom
-                                ? 'Игра начинается...'
-                                : deathmatchRoom
-                                  ? 'Все готовы! Матч начинается...'
-                                  : 'Оба игрока готовы! Игра начинается...'}
-                        </p>
-                    </div>
-                )}
+                    {!singlePlayerRoom && wsClient && (
+                        <LobbyChat wsClient={wsClient} myPlayerId={myPlayerId} />
+                    )}
+
+                    {bothReady && (
+                        <div className="game-starting">
+                            <p>
+                                {singlePlayerRoom
+                                    ? 'Игра начинается...'
+                                    : deathmatchRoom
+                                      ? 'Все готовы! Матч начинается...'
+                                      : 'Оба игрока готовы! Игра начинается...'}
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
