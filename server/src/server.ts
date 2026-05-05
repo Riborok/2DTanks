@@ -7,7 +7,7 @@ import type { WsAuthUser } from './auth/types';
 import { resolveListenPort } from './serverPort';
 import { getPool } from './db/pool';
 import * as friendshipsRepo from './repos/friendshipsRepo';
-import { registerUserSocket, unregisterUserSocket, notifyUserSockets } from './ws/userSocketRegistry';
+import { registerUserSocket, unregisterUserSocket, notifyUserSockets, isUserOnline, getUserSocketCount } from './ws/userSocketRegistry';
 import { createHttpApp } from './createHttpApp';
 import { setRoomManager } from './room/roomManagerRuntime';
 
@@ -54,6 +54,23 @@ wss.on('connection', (ws: WebSocket, req) => {
     console.log('New client connected from', req.socket.remoteAddress, `(user ${wsUser.login})`);
 
     registerUserSocket(wsUser.userId, ws);
+
+    // Уведомляем друзей о том, что пользователь вошел в сеть
+    const pool = getPool();
+    if (pool) {
+        // Если это первое соединение (то есть только что стал online)
+        if (isUserOnline(wsUser.userId) && getUserSocketCount(wsUser.userId) === 1) {
+            void friendshipsRepo.listFriends(pool, wsUser.userId).then((friends) => {
+                for (const f of friends) {
+                    notifyUserSockets(f.other_user_id, {
+                        type: 'friends:status_change',
+                        userId: wsUser.userId,
+                        isOnline: true
+                    });
+                }
+            }).catch((err) => console.error('[SERVER] Failed to notify online status:', err));
+        }
+    }
 
     let playerId: string | null = null;
     let roomCode: string | null = null;
@@ -364,6 +381,23 @@ wss.on('connection', (ws: WebSocket, req) => {
 
     ws.on('close', (code, reason) => {
         unregisterUserSocket(wsUser.userId, ws);
+        
+        const pool = getPool();
+        if (pool) {
+            // Если соединений больше нет, значит ушел в оффлайн
+            if (!isUserOnline(wsUser.userId)) {
+                void friendshipsRepo.listFriends(pool, wsUser.userId).then((friends) => {
+                    for (const f of friends) {
+                        notifyUserSockets(f.other_user_id, {
+                            type: 'friends:status_change',
+                            userId: wsUser.userId,
+                            isOnline: false
+                        });
+                    }
+                }).catch((err) => console.error('[SERVER] Failed to notify offline status:', err));
+            }
+        }
+
         if (roomCode && playerId) {
             console.log(`[SERVER] Player ${playerId} disconnected from room ${roomCode}`);
             roomManager.handleDisconnect(roomCode, playerId);

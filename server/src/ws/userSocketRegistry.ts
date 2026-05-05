@@ -52,6 +52,11 @@ export function isUserOnline(userId: string): boolean {
     return false;
 }
 
+export function getUserSocketCount(userId: string): number {
+    const set = socketsByUserId.get(userId);
+    return set ? set.size : 0;
+}
+
 export function listOnlineUserIds(userIds: string[]): string[] {
     return userIds.filter((userId) => isUserOnline(userId));
 }

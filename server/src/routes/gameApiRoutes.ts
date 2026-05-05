@@ -403,11 +403,26 @@ router.get('/friends', async (req, res) => {
             friendshipsRepo.listOutgoingRequests(pool, req.auth!.sub),
             friendshipsRepo.listBlocked(pool, req.auth!.sub)
         ]);
+        
+        const allUserIds = [
+            ...friends,
+            ...incoming,
+            ...outgoing,
+            ...blocked
+        ].map(f => f.other_user_id);
+        
+        const onlineIds = new Set(listOnlineUserIds(allUserIds));
+        
+        const mapFriendRowWithOnline = (row: friendshipsRepo.FriendRow) => ({
+            ...mapFriendRow(row),
+            isOnline: onlineIds.has(row.other_user_id)
+        });
+
         res.json({
-            friends: friends.map(mapFriendRow),
-            incoming: incoming.map(mapFriendRow),
-            outgoing: outgoing.map(mapFriendRow),
-            blocked: blocked.map(mapFriendRow)
+            friends: friends.map(mapFriendRowWithOnline),
+            incoming: incoming.map(mapFriendRowWithOnline),
+            outgoing: outgoing.map(mapFriendRowWithOnline),
+            blocked: blocked.map(mapFriendRowWithOnline)
         });
     } catch (e) {
         console.error('[game/friends list]', e);
@@ -587,11 +602,15 @@ router.get('/users/search', async (req, res) => {
     }
     try {
         const rows = await friendshipsRepo.searchUsers(pool, req.auth!.sub, q, 20);
+        const allUserIds = rows.map((u) => u.user_id);
+        const onlineIds = new Set(listOnlineUserIds(allUserIds));
+
         res.json({
             users: rows.map((u) => ({
                 userId: u.user_id,
                 login: u.login,
-                displayName: u.display_name
+                displayName: u.display_name,
+                isOnline: onlineIds.has(u.user_id)
             }))
         });
     } catch (e) {

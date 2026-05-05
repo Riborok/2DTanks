@@ -15,13 +15,15 @@ export type FriendsListSyncReason =
     | 'friends:accepted'
     | 'friends:incoming'
     | 'friends:became_friends'
-    | 'friends:you_accepted';
+    | 'friends:you_accepted'
+    | 'friends:status_change';
 
 export interface FriendsListSyncDetail {
     reason: FriendsListSyncReason;
     userId?: string;
     login?: string;
     displayName?: string;
+    isOnline?: boolean;
 }
 
 export interface FriendInviteToast {
@@ -177,17 +179,32 @@ const GlobalWsToasts: React.FC = () => {
             pushSocialToast('you_accepted', primary);
         };
 
+        const onFriendsStatusChange = (message: any) => {
+            if (message.type !== 'friends:status_change') return;
+            const userId = String(message.userId || '');
+            const isOnline = Boolean(message.isOnline);
+            if (userId) {
+                dispatchFriendsListSync({
+                    reason: 'friends:status_change',
+                    userId,
+                    isOnline
+                });
+            }
+        };
+
         wsClient.on('invite:msg', onInviteMsg as any);
         wsClient.on('friends:accepted', onFriendsAccepted as any);
         wsClient.on('friends:incoming', onFriendsIncoming as any);
         wsClient.on('friends:became_friends', onFriendsBecame as any);
         wsClient.on('friends:you_accepted', onFriendsYouAccepted as any);
+        wsClient.on('friends:status_change', onFriendsStatusChange as any);
         return () => {
             wsClient.off('invite:msg', onInviteMsg as any);
             wsClient.off('friends:accepted', onFriendsAccepted as any);
             wsClient.off('friends:incoming', onFriendsIncoming as any);
             wsClient.off('friends:became_friends', onFriendsBecame as any);
             wsClient.off('friends:you_accepted', onFriendsYouAccepted as any);
+            wsClient.off('friends:status_change', onFriendsStatusChange as any);
         };
     }, [wsClient]);
 

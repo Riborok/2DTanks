@@ -309,6 +309,7 @@ export interface FriendDto {
     status: FriendshipStatus;
     requestedByMe: boolean;
     createdAt: string;
+    isOnline?: boolean;
 }
 
 export interface FriendsListDto {
@@ -396,6 +397,7 @@ export interface UserSearchDto {
     userId: string;
     login: string;
     displayName: string | null;
+    isOnline?: boolean;
 }
 
 export async function searchUsers(token: string, query: string): Promise<UserSearchDto[]> {

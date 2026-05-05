@@ -50,8 +50,29 @@ const FriendsPage: React.FC = () => {
     }, [reload]);
 
     useEffect(() => {
-        const onFriendsListSync = () => {
-            void reload();
+        const onFriendsListSync = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (detail?.reason === 'friends:status_change') {
+                const { userId, isOnline } = detail;
+                setData(prev => {
+                    const updateList = (list: FriendDto[]) => list.map(f => 
+                        f.userId === userId ? { ...f, isOnline } : f
+                    );
+                    return {
+                        ...prev,
+                        friends: updateList(prev.friends),
+                        incoming: updateList(prev.incoming),
+                        outgoing: updateList(prev.outgoing),
+                        blocked: updateList(prev.blocked)
+                    };
+                });
+                
+                setSearchResults(prev => prev.map(u => 
+                    u.userId === userId ? { ...u, isOnline } : u
+                ));
+            } else {
+                void reload();
+            }
         };
         window.addEventListener(TANKS_FRIENDS_LIST_SYNC_EVENT, onFriendsListSync);
         return () => window.removeEventListener(TANKS_FRIENDS_LIST_SYNC_EVENT, onFriendsListSync);
@@ -266,7 +287,14 @@ const FriendsPage: React.FC = () => {
                                 {searchResults.map((u) => (
                                     <li key={u.userId} className="friends-item">
                                         <div className="friends-item-name">
-                                            <strong>{u.displayName || u.login}</strong>
+                                            <div className="friends-item-name-header">
+                                                <strong>{u.displayName || u.login}</strong>
+                                                {(u as any).isOnline ? (
+                                                    <span className="friends-item-online-badge">В сети</span>
+                                                ) : (
+                                                    <span className="friends-item-offline-badge">Не в сети</span>
+                                                )}
+                                            </div>
                                             <span className="friends-item-login">@{u.login}</span>
                                         </div>
                                         <div className="friends-item-actions">
@@ -324,7 +352,14 @@ const FriendList: React.FC<FriendListProps> = ({ items, emptyText, renderActions
             {items.map((f) => (
                 <li key={f.userId + f.status} className="friends-item">
                     <div className="friends-item-name">
-                        <strong>{f.displayName || f.login}</strong>
+                        <div className="friends-item-name-header">
+                            <strong>{f.displayName || f.login}</strong>
+                            {f.isOnline ? (
+                                <span className="friends-item-online-badge">В сети</span>
+                            ) : (
+                                <span className="friends-item-offline-badge">Не в сети</span>
+                            )}
+                        </div>
                         <span className="friends-item-login">@{f.login}</span>
                     </div>
                     <div className="friends-item-actions">{renderActions(f)}</div>
