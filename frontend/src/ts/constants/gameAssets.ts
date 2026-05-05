@@ -21,3 +21,18 @@ export function gameImg(relativePath: string): string {
     p = p.replace(/^\/+/, '').replace(/^(src\/)?img\//i, '');
     return `${prefix}/${p}`;
 }
+
+/**
+ * Слот палитры 0–3 (устойчиво к отрицательным/большим индексам `color`).
+ * Совпадает с суффиксом файлов в старом нейминге: `Hull_0…3`, `Turret_0…3`.
+ */
+export function tankHullTurretPaletteSlot(colorIndex: number): number {
+    return ((Math.trunc(colorIndex) % 4) + 4) % 4;
+}
+
+/**
+ * Основной суффикс файла Hull_/Turret_: типичный арт `Hull_4…Hull_7`, `Turret_4…Turret_7`.
+ */
+export function tankHullTurretSpriteSuffix(colorIndex: number): number {
+    return 4 + tankHullTurretPaletteSlot(colorIndex);
+}

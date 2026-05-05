@@ -1,4 +1,8 @@
-import { gameImg } from '../../../constants/gameAssets';
+import {
+    gameImg,
+    tankHullTurretPaletteSlot,
+    tankHullTurretSpriteSuffix,
+} from '../../../constants/gameAssets';
 import {ISpritePart, Sprite} from "../../ISprite";
 import {Point} from "../../../geometry/Point";
 import {ResolutionManager} from "../../../constants/gameConstants";
@@ -9,7 +13,18 @@ export class TurretSprite extends Sprite implements ISpritePart {
     public constructor(color: number, num: number, indentX: number, indentY: number) {
         const zIndex: number = 5;
         super(ResolutionManager.TURRET_WIDTH[num], ResolutionManager.TURRET_HEIGHT[num], zIndex);
-        this._imgSprite.src = gameImg(`tanks/Turrets/Turret_${num}/Turret_${color}.png`);
+        const primary = tankHullTurretSpriteSuffix(color);
+        const legacy = tankHullTurretPaletteSlot(color);
+        const primaryUrl = gameImg(`tanks/Turrets/Turret_${num}/Turret_${primary}.png`);
+        const legacyUrl = gameImg(`tanks/Turrets/Turret_${num}/Turret_${legacy}.png`);
+        let loadAttempt = 0;
+        this._imgSprite.onerror = () => {
+            loadAttempt += 1;
+            if (loadAttempt === 1 && primary !== legacy) {
+                this._imgSprite.src = primaryUrl;
+            }
+        };
+        this._imgSprite.src = legacyUrl;
         this._indentX = indentX;
         this._indentY = indentY;
     }

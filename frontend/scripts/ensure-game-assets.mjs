@@ -1,6 +1,6 @@
 /**
  * Создаёт недостающие PNG под пути из ImagePreloader и UI,
- * копируя шаблон (item/Perk_Shield.png). Нужен после клонирования репозитория,
+ * копируя нейтральную заглушку (1x1 transparent). Нужен после клонирования репозитория,
  * если полный пакет арта не приложен к проекту.
  *
  * Запуск из каталога frontend: npm run ensure-assets
@@ -34,14 +34,15 @@ function collectRelativePaths() {
         rel.push(`blocks/${material}_0.png`);
         rel.push(`blocks/${material}_1.png`);
     }
+    const hullTurretColors = [0, 1, 2, 3, 4, 5, 6, 7];
     for (let hullNum = 0; hullNum < 8; hullNum++) {
-        for (let color = 0; color < 8; color++) {
-            rel.push(`tanks/Hulls/Hull_${hullNum}/Hull_${color}.png`);
+        for (const c of hullTurretColors) {
+            rel.push(`tanks/Hulls/Hull_${hullNum}/Hull_${c}.png`);
         }
     }
     for (let turretNum = 0; turretNum < 8; turretNum++) {
-        for (let color = 0; color < 8; color++) {
-            rel.push(`tanks/Turrets/Turret_${turretNum}/Turret_${color}.png`);
+        for (const c of hullTurretColors) {
+            rel.push(`tanks/Turrets/Turret_${turretNum}/Turret_${c}.png`);
         }
     }
     for (let weaponNum = 0; weaponNum < 8; weaponNum++) {
@@ -78,16 +79,14 @@ function collectRelativePaths() {
         'tanks/Effects/Sprites/Sprite_Fire_Shots_Impact_1.png'
     );
 
-    rel.push('GUI/prev.png', 'GUI/next.png', 'GUI/ok.png', 'icon.png');
+    rel.push('icon.png');
 
     return [...new Set(rel)];
 }
 
 function main() {
-    const templatePath = path.join(imgRoot, 'item/Perk_Shield.png');
-    const template = fs.existsSync(templatePath)
-        ? fs.readFileSync(templatePath)
-        : FALLBACK_PNG;
+    // Нейтральный шаблон: не маскируем отсутствие арта под "щит" в UI.
+    const template = FALLBACK_PNG;
 
     let created = 0;
     let skipped = 0;
@@ -102,7 +101,7 @@ function main() {
         created++;
     }
     console.log(
-        `[ensure-game-assets] template=${fs.existsSync(templatePath) ? 'item/Perk_Shield.png' : 'embedded 1x1 PNG'} created=${created} skipped(existing)=${skipped}`
+        `[ensure-game-assets] template=embedded 1x1 PNG created=${created} skipped(existing)=${skipped}`
     );
 }
 

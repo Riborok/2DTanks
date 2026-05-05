@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { gameImg } from '../../constants/gameAssets';
+﻿import React, { useEffect, useState } from 'react';
+import { gameImg, tankHullTurretPaletteSlot, tankHullTurretSpriteSuffix } from '../../constants/gameAssets';
 
 interface TankConfig {
     hullIndex: number;
@@ -26,15 +26,23 @@ const WEAPON_PREVIEW_OFFSETS: Array<[number, number]> = [
 
 const TankPreview: React.FC<TankPreviewProps> = ({ config }) => {
     const { hullIndex, trackIndex, turretIndex, weaponIndex, colorIndex } = config;
-    
+    const primarySuffix = tankHullTurretSpriteSuffix(colorIndex);
+    const legacySuffix = tankHullTurretPaletteSlot(colorIndex);
+
+    const [hullSpriteSuffix, setHullSpriteSuffix] = useState(legacySuffix);
+    const [turretSpriteSuffix, setTurretSpriteSuffix] = useState(legacySuffix);
+
+    useEffect(() => {
+        setHullSpriteSuffix(legacySuffix);
+        setTurretSpriteSuffix(legacySuffix);
+    }, [legacySuffix, hullIndex, turretIndex]);
+
     // Базовая позиция пушки из CSS (для turret 0, weapon 0)
     const baseWeaponLeft = 300;
     const baseWeaponTop = 165;
-    
-    // Получаем отступы для текущей пушки
+
     const [offsetX, offsetY] = WEAPON_PREVIEW_OFFSETS[weaponIndex] || [0, 0];
-    
-    // Вычисляем позицию пушки: базовая позиция + отступ
+
     const weaponLeft = baseWeaponLeft + offsetX;
     const weaponTop = baseWeaponTop + offsetY;
 
@@ -51,9 +59,12 @@ const TankPreview: React.FC<TankPreviewProps> = ({ config }) => {
                 className="track-bottom-view"
             />
             <img
-                src={gameImg(`tanks/Hulls/Hull_${hullIndex}/Hull_${colorIndex % 4}.png`)}
+                src={gameImg(`tanks/Hulls/Hull_${hullIndex}/Hull_${hullSpriteSuffix}.png`)}
                 alt="Hull"
                 className="hull-view"
+                onError={() =>
+                    setHullSpriteSuffix((s) => (s === legacySuffix ? primarySuffix : s))
+                }
             />
             <img
                 src={gameImg(`tanks/Weapons/Weapon_${weaponIndex}.png`)}
@@ -62,13 +73,15 @@ const TankPreview: React.FC<TankPreviewProps> = ({ config }) => {
                 style={{ left: `${weaponLeft}px`, top: `${weaponTop}px` }}
             />
             <img
-                src={gameImg(`tanks/Turrets/Turret_${turretIndex}/Turret_${colorIndex % 4}.png`)}
+                src={gameImg(`tanks/Turrets/Turret_${turretIndex}/Turret_${turretSpriteSuffix}.png`)}
                 alt="Turret"
                 className="turret-view"
+                onError={() =>
+                    setTurretSpriteSuffix((s) => (s === legacySuffix ? primarySuffix : s))
+                }
             />
         </div>
     );
 };
 
 export default TankPreview;
-

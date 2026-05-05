@@ -46,17 +46,17 @@ export class ImagePreloader {
             imagePaths.push(gameImg(`blocks/${material}_1.png`));
         }
 
-        // Tank hull images (8 hulls x 8 colors = 64)
+        // Tank hull / turret: в репозитории только спрайты Hull_4…7 / Turret_4…7 на каждую модель
+        const hullTurretSpriteSuffixes = [0, 1, 2, 3, 4, 5, 6, 7];
         for (let hullNum = 0; hullNum < 8; hullNum++) {
-            for (let color = 0; color < 8; color++) {
-                imagePaths.push(gameImg(`tanks/Hulls/Hull_${hullNum}/Hull_${color}.png`));
+            for (const suffix of hullTurretSpriteSuffixes) {
+                imagePaths.push(gameImg(`tanks/Hulls/Hull_${hullNum}/Hull_${suffix}.png`));
             }
         }
 
-        // Tank turret images (8 turrets x 8 colors = 64)
         for (let turretNum = 0; turretNum < 8; turretNum++) {
-            for (let color = 0; color < 8; color++) {
-                imagePaths.push(gameImg(`tanks/Turrets/Turret_${turretNum}/Turret_${color}.png`));
+            for (const suffix of hullTurretSpriteSuffixes) {
+                imagePaths.push(gameImg(`tanks/Turrets/Turret_${turretNum}/Turret_${suffix}.png`));
             }
         }
 
@@ -65,9 +65,10 @@ export class ImagePreloader {
             imagePaths.push(gameImg(`tanks/Weapons/Weapon_${weaponNum}.png`));
         }
 
-        // Track images (4 tracks)
+        // Track images (4 tracks + превью гусениц в кастомайзере)
         for (let trackNum = 0; trackNum < 4; trackNum++) {
             imagePaths.push(gameImg(`tanks/Tracks/Track_${trackNum}.png`));
+            imagePaths.push(gameImg(`tanks/Tracks/Track_${trackNum}_Solo.png`));
         }
         // Item images
         imagePaths.push(gameImg('item/Key.png'));

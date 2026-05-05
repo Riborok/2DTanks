@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { gameImg } from '../../constants/gameAssets';
 import TankPartSelector from './TankPartSelector';
 import TankPreview from './TankPreview';
 import ColorSelector from './ColorSelector';
@@ -136,6 +135,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
                                 type="hull"
                                 currentIndex={config.hullIndex}
                                 maxIndex={7}
+                                colorIndex={config.colorIndex}
                                 onChange={(index) => updateConfig('hullIndex', index)}
                             />
                             <TankPartSelector
@@ -143,6 +143,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
                                 type="track"
                                 currentIndex={config.trackIndex}
                                 maxIndex={3}
+                                colorIndex={config.colorIndex}
                                 onChange={(index) => updateConfig('trackIndex', index)}
                             />
                             <TankPartSelector
@@ -150,6 +151,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
                                 type="turret"
                                 currentIndex={config.turretIndex}
                                 maxIndex={7}
+                                colorIndex={config.colorIndex}
                                 onChange={(index) => updateConfig('turretIndex', index)}
                             />
                             <TankPartSelector
@@ -157,6 +159,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
                                 type="weapon"
                                 currentIndex={config.weaponIndex}
                                 maxIndex={7}
+                                colorIndex={config.colorIndex}
                                 onChange={(index) => updateConfig('weaponIndex', index)}
                             />
                         </div>
@@ -222,7 +225,12 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({
                 </div>
                 <button type="button" className="ui-btn ui-btn-primary tank-customizer__cta" onClick={handleAccept}>
                     <span>Подтвердить</span>
-                    <img src={gameImg('GUI/ok.png')} alt="" className="tank-customizer__cta-icon" />
+                    <svg className="tank-customizer__cta-icon" viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+                        <path
+                            fill="currentColor"
+                            d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                        />
+                    </svg>
                 </button>
             </footer>
         </div>
