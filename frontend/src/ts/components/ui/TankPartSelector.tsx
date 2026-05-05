@@ -43,13 +43,13 @@ const TankPartSelector: React.FC<TankPartSelectorProps> = ({
         <div className="tank-part-selector">
             <p className="tank-part-selector__label">{title}</p>
             <div className="selector-view">
-                <button type="button" className="nav-button" onClick={handlePrev} aria-label="Предыдущий вариант">
+                <button type="button" className="nav-button" onClick={handlePrev} aria-label={`Предыдущий вариант: ${title}`}>
                     <img src={gameImg('GUI/prev.png')} alt="" className="btn-img" />
                 </button>
                 <div className="part-display">
                     <img src={getImagePath()} alt="" className={`part-img ${type}`} />
                 </div>
-                <button type="button" className="nav-button" onClick={handleNext} aria-label="Следующий вариант">
+                <button type="button" className="nav-button" onClick={handleNext} aria-label={`Следующий вариант: ${title}`}>
                     <img src={gameImg('GUI/next.png')} alt="" className="btn-img" />
                 </button>
             </div>

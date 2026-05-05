@@ -59,13 +59,6 @@ const TankSetStats: React.FC<TankSetStatsProps> = ({ hullIndex, trackIndex, turr
 
     return (
         <div className="tank-set-stats">
-            <h3 className="tank-set-stats__title">Параметры сета</h3>
-            <div className="tank-set-stats__parts">
-                <span>Корпус {hullIndex}</span>
-                <span>Гусеницы {trackIndex}</span>
-                <span>Башня {turretIndex}</span>
-                <span>Орудие {weaponIndex}</span>
-            </div>
             <div className="tank-set-stats__rows">
                 {stats.map((stat) => (
                     <div key={stat.label} className="tank-set-stats__row">

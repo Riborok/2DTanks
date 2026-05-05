@@ -47,6 +47,7 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
     const [error, setError] = useState<string>('');
     const [name, setName] = useState('');
     const [saveMode, setSaveMode] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ type: 'overwrite' | 'delete'; preset: TankPresetDto } | null>(null);
 
     const occupiedSet = useMemo(() => new Set(occupiedColors ?? []), [occupiedColors]);
 
@@ -124,47 +125,46 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
         }
     }, [accessToken, name, presets.length, current]);
 
-    const handleOverwrite = useCallback(
-        async (preset: TankPresetDto) => {
-            if (!accessToken) {
-                return;
-            }
-            setBusyId(preset.presetId);
-            setError('');
-            try {
-                const payload: TankPresetInputDto = { name: preset.name, ...current };
-                const { preset: updated } = await updateTankPreset(accessToken, preset.presetId, payload);
-                setPresets((prev) => prev.map((p) => (p.presetId === updated.presetId ? updated : p)));
-            } catch (e) {
-                setError(e instanceof Error ? e.message : 'Ошибка обновления');
-            } finally {
-                setBusyId(null);
-            }
-        },
-        [accessToken, current]
-    );
+    const handleOverwrite = useCallback((preset: TankPresetDto) => {
+        setConfirmAction({ type: 'overwrite', preset });
+    }, []);
 
-    const handleDelete = useCallback(
-        async (preset: TankPresetDto) => {
-            if (!accessToken) {
-                return;
-            }
-            if (!window.confirm(`Удалить сет «${preset.name}»?`)) {
-                return;
-            }
-            setBusyId(preset.presetId);
-            setError('');
-            try {
-                await deleteTankPreset(accessToken, preset.presetId);
-                setPresets((prev) => prev.filter((p) => p.presetId !== preset.presetId));
-            } catch (e) {
-                setError(e instanceof Error ? e.message : 'Ошибка удаления');
-            } finally {
-                setBusyId(null);
-            }
-        },
-        [accessToken]
-    );
+    const handleDelete = useCallback((preset: TankPresetDto) => {
+        setConfirmAction({ type: 'delete', preset });
+    }, []);
+
+    const executeOverwrite = useCallback(async () => {
+        if (!accessToken || !confirmAction || confirmAction.type !== 'overwrite') return;
+        const { preset } = confirmAction;
+        setBusyId(preset.presetId);
+        setError('');
+        setConfirmAction(null);
+        try {
+            const payload: TankPresetInputDto = { name: preset.name, ...current };
+            const { preset: updated } = await updateTankPreset(accessToken, preset.presetId, payload);
+            setPresets((prev) => prev.map((p) => (p.presetId === updated.presetId ? updated : p)));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Ошибка обновления');
+        } finally {
+            setBusyId(null);
+        }
+    }, [accessToken, current, confirmAction]);
+
+    const executeDelete = useCallback(async () => {
+        if (!accessToken || !confirmAction || confirmAction.type !== 'delete') return;
+        const { preset } = confirmAction;
+        setBusyId(preset.presetId);
+        setError('');
+        setConfirmAction(null);
+        try {
+            await deleteTankPreset(accessToken, preset.presetId);
+            setPresets((prev) => prev.filter((p) => p.presetId !== preset.presetId));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Ошибка удаления');
+        } finally {
+            setBusyId(null);
+        }
+    }, [accessToken, confirmAction]);
 
     if (!accessToken) {
         return null;
@@ -182,7 +182,7 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
                 {!saveMode ? (
                     <button
                         type="button"
-                        className="tank-presets__save-btn"
+                        className="ui-btn ui-btn-secondary tank-presets__save-btn"
                         onClick={() => {
                             setSaveMode(true);
                             setError('');
@@ -219,7 +219,7 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
                         />
                         <button
                             type="button"
-                            className="tank-presets__save-confirm"
+                            className="ui-btn ui-btn-primary tank-presets__save-confirm"
                             onClick={() => void handleSave()}
                             disabled={busyId === '__new__' || !name.trim()}
                         >
@@ -227,7 +227,7 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
                         </button>
                         <button
                             type="button"
-                            className="tank-presets__save-cancel"
+                            className="ui-btn ui-btn-secondary tank-presets__save-cancel"
                             onClick={() => {
                                 setSaveMode(false);
                                 setName('');
@@ -302,6 +302,42 @@ const TankPresetBar: React.FC<TankPresetBarProps> = ({ current, onApply, occupie
                         );
                     })}
                 </ul>
+            )}
+
+            {confirmAction && (
+                <div className="tank-presets__modal-overlay" onClick={() => setConfirmAction(null)}>
+                    <div className="tank-presets__modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="tank-presets__modal-icon">
+                            {confirmAction.type === 'delete' ? '🗑️' : '⟳'}
+                        </div>
+                        <h4 className="tank-presets__modal-title">
+                            {confirmAction.type === 'delete' ? 'Удалить сет?' : 'Перезаписать сет?'}
+                        </h4>
+                        <p className="tank-presets__modal-text">
+                            {confirmAction.type === 'delete'
+                                ? `Вы уверены, что хотите безвозвратно удалить «${confirmAction.preset.name}»?`
+                                : `Заменить «${confirmAction.preset.name}» на текущую сборку?`}
+                        </p>
+                        <div className="tank-presets__modal-actions">
+                            <button
+                                type="button"
+                                className="ui-btn ui-btn-secondary tank-presets__modal-btn"
+                                onClick={() => setConfirmAction(null)}
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                type="button"
+                                className={`ui-btn tank-presets__modal-btn ${
+                                    confirmAction.type === 'delete' ? 'tank-presets__modal-btn--danger' : 'ui-btn-primary'
+                                }`}
+                                onClick={confirmAction.type === 'delete' ? executeDelete : executeOverwrite}
+                            >
+                                {confirmAction.type === 'delete' ? 'Удалить' : 'Перезаписать'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

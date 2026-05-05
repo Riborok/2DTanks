@@ -38,13 +38,16 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({ currentIndex, onChange, o
 
     return (
         <div className="color-selector">
-            <div className="color-list">
+            <div className="color-list" role="listbox" aria-label="Выбор цвета">
                 {colors.map((color, index) => (
-                    <div
+                    <button
                         key={index}
+                        type="button"
                         className={`color-item ${index === currentIndex ? 'color-selected' : ''} ${occupiedColors.includes(index) ? 'color-occupied' : ''}`}
                         style={{ backgroundColor: color }}
                         onClick={() => handleColorClick(index)}
+                        aria-selected={index === currentIndex}
+                        role="option"
                         title={occupiedColors.includes(index) ? 'Цвет уже выбран другим игроком' : `Цвет ${index + 1}`}
                     />
                 ))}

@@ -104,20 +104,16 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                     <p className="tank-customizer__eyebrow">Подготовка к бою</p>
                     <h1 className="tank-customizer__page-title">Сборка танка</h1>
                 </div>
-                <p className="tank-customizer__topbar-lede">
-                    Выберите модули и свободную окраску. Занятые цвета других игроков недоступны.
-                </p>
             </header>
 
             <div className="tank-customizer__body">
                 <div className="tank-customizer__grid">
                     {/* Колонка 1 — модули */}
-                    <aside className="tank-customizer__panel tank-customizer__parts">
+                    <aside className="tank-customizer__panel tank-customizer__parts tank-customizer__grid-col tank-customizer__grid-col--parts">
                         <header className="tank-customizer__panel-head">
                             <h2 className="tank-customizer__panel-title">Модули</h2>
-                            <p className="tank-customizer__lede">Корпус · ходовая · башня · орудие</p>
                         </header>
-                        <div className="selectors-panel">
+                        <div className="tank-customizer__parts-grid">
                             <TankPartSelector
                                 title="Корпус"
                                 type="hull"
@@ -150,9 +146,11 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                     </aside>
 
                     {/* Колонка 2 — превью танка */}
-                    <section className="tank-customizer__stage">
+                    <section className="tank-customizer__stage tank-customizer__grid-col tank-customizer__grid-col--stage">
                         <div className="tank-customizer__preview-card">
-                            <span className="tank-customizer__preview-badge">Превью</span>
+                            <header className="tank-customizer__preview-head">
+                                <h2 className="tank-customizer__panel-title">Превью</h2>
+                            </header>
                             <div className="tank-customizer__preview-frame">
                                 <div className="tank-customizer__preview-scale">
                                     <TankPreview config={config} />
@@ -168,7 +166,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                     </section>
 
                     {/* Колонка 3 — сайдбар: параметры сверху, сеты снизу (видны одновременно) */}
-                    <aside className="tank-customizer__side">
+                    <aside className="tank-customizer__side tank-customizer__grid-col tank-customizer__grid-col--side">
                         <div className="tank-customizer__side-slot tank-customizer__side-slot--stats">
                             <TankSetStats
                                 hullIndex={config.hullIndex}
@@ -205,7 +203,7 @@ const OnlineTankCustomizer: React.FC<OnlineTankCustomizerProps> = ({ onAccept, o
                         occupiedColors={occupiedColorList}
                     />
                 </div>
-                <button type="button" className="tank-customizer__cta" onClick={handleAccept}>
+                <button type="button" className="ui-btn ui-btn-primary tank-customizer__cta" onClick={handleAccept}>
                     <span>Подтвердить</span>
                     <img src={gameImg('GUI/ok.png')} alt="" className="tank-customizer__cta-icon" />
                 </button>
