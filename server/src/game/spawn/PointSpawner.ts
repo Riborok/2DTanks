@@ -12,10 +12,17 @@ export class PointSpawner implements IPointSpawner{
     private _spawnPoints: Point[][] = [];
     private readonly _spawnGridsLinesAmount: number;
     private readonly _spawnGridsColumnsAmount: number;
+    private readonly _randomInt: (min: number, max: number) => number;
 
-    public constructor(point: Point, spawnGridsLinesAmount: number, spawnGridsColumnsAmount: number) {
+    public constructor(
+        point: Point,
+        spawnGridsLinesAmount: number,
+        spawnGridsColumnsAmount: number,
+        randomInt?: (min: number, max: number) => number
+    ) {
         this._spawnGridsLinesAmount = spawnGridsLinesAmount;
         this._spawnGridsColumnsAmount = spawnGridsColumnsAmount;
+        this._randomInt = randomInt ?? getRandomInt;
         this.calcSpawnPoints(point);
     }
 
@@ -42,8 +49,8 @@ export class PointSpawner implements IPointSpawner{
     public getRandomSpawnPoint(width: number, height: number,
                                minLine: number = 0, maxLine: number = this._spawnGridsLinesAmount - 1,
                                minColumn: number = 0, maxColumn: number = this._spawnGridsColumnsAmount - 1): Point {
-        const line = getRandomInt(minLine, maxLine);
-        const column = getRandomInt(minColumn, maxColumn);
+        const line = this._randomInt(minLine, maxLine);
+        const column = this._randomInt(minColumn, maxColumn);
 
         const point = this._spawnPoints[line][column];
 

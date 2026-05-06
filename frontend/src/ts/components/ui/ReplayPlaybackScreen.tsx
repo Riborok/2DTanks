@@ -4,6 +4,13 @@ import type { GameWorldSnapshot, ServerTank } from '../../online/types';
 import { tankVisualFromSnapshot } from '../../online/tankVisualFromSnapshot';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { ImagePreloader } from '../../utils/ImagePreloader';
+import { useSettings } from '../../context/SettingsContext';
+import { SoundManager, spatial } from '../../utils/SoundManager';
+import {
+    hitMetalPlaybackRateForBulletType,
+    shotSfxIdForBulletType,
+    wallHitPlaybackRateForBulletType
+} from '../../utils/bulletAudio';
 import type {
     ReplayActionDto,
     ReplayEventDto,
@@ -88,11 +95,20 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const lastDisplayFrameRef = useRef(-1);
     /** Последний индекс ключевого кадра — чтобы взрывы/импакты сработали один раз на кадр записи. */
     const replayKeyframeIdxRef = useRef(-1);
+    /** Последний keyframe-индекс, при котором обновлялись процедурные следы. -1 = начальное состояние. */
+    const lastKeyframeForTracksRef = useRef(-1);
+    /** Дедуп one-shot аудио-эффектов в реплее; очищаем при seek/jump/backward. */
+    const replayAudioOneShotKeysRef = useRef<Set<string>>(new Set());
 
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const [playing, setPlaying] = useState(true);
     const [displayFrame, setDisplayFrame] = useState(0);
     const [speed, setSpeed] = useState(1);
+
+    const resetReplayOneShotState = useCallback(() => {
+        replayAudioOneShotKeysRef.current.clear();
+        rendererRef.current?.resetOneShotEffectsState();
+    }, []);
 
     // Free-cam (пан+зум поверх canvas через CSS transform).
     // Это чисто визуальное преобразование, не влияющее на данные кадра, чтобы не
@@ -108,6 +124,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const [recording, setRecording] = useState<null | { startedAt: number; secondsLeft: number }>(null);
     const recorderRef = useRef<MediaRecorder | null>(null);
     const recordingChunksRef = useRef<BlobPart[]>([]);
+    const { settings } = useSettings();
 
     const frameMs = useMemo(() => {
         const hz = startMeta.tickRate > 0 ? startMeta.tickRate : 60;
@@ -138,6 +155,10 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     }, [speed]);
 
     useEffect(() => {
+        SoundManager.setVolumes(settings.audio);
+    }, [settings.audio]);
+
+    useEffect(() => {
         ImagePreloader.preloadAll()
             .then(() => setImagesLoaded(true))
             .catch(() => setImagesLoaded(true));
@@ -148,12 +169,14 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         lastRafTimeRef.current = 0;
         lastDisplayFrameRef.current = -1;
         replayKeyframeIdxRef.current = -1;
+        lastKeyframeForTracksRef.current = -1;
+        resetReplayOneShotState();
         setDisplayFrame(0);
         setPlaying(true);
         playingRef.current = true;
         setSpeed(1);
         speedRef.current = 1;
-    }, [meta.replayId]);
+    }, [meta.replayId, resetReplayOneShotState]);
 
     const bumpDisplayFromPosition = useCallback(() => {
         const maxIdx = Math.max(0, framesRef.current.length - 1);
@@ -177,9 +200,11 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                 Math.min(span, replayPositionFrameRef.current + deltaFrames)
             );
             replayKeyframeIdxRef.current = -1;
+            lastKeyframeForTracksRef.current = -1;
+            resetReplayOneShotState();
             bumpDisplayFromPosition();
         },
-        [bumpDisplayFromPosition, frameMs]
+        [bumpDisplayFromPosition, frameMs, resetReplayOneShotState]
     );
 
     const stepReplayFrame = useCallback((delta: -1 | 1) => {
@@ -191,8 +216,10 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             Math.min(span, replayPositionFrameRef.current + delta)
         );
         replayKeyframeIdxRef.current = -1;
+        lastKeyframeForTracksRef.current = -1;
+        resetReplayOneShotState();
         bumpDisplayFromPosition();
-    }, [bumpDisplayFromPosition]);
+    }, [bumpDisplayFromPosition, resetReplayOneShotState]);
 
     const handleScrubChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,17 +228,21 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             const next = Math.max(0, Math.min(span, parseInt(e.target.value, 10) || 0));
             replayPositionFrameRef.current = next;
             replayKeyframeIdxRef.current = -1;
+            lastKeyframeForTracksRef.current = -1;
+            resetReplayOneShotState();
             bumpDisplayFromPosition();
         },
-        [bumpDisplayFromPosition]
+        [bumpDisplayFromPosition, resetReplayOneShotState]
     );
 
     const handleRestart = useCallback(() => {
         replayPositionFrameRef.current = 0;
         replayKeyframeIdxRef.current = -1;
+        lastKeyframeForTracksRef.current = -1;
+        resetReplayOneShotState();
         bumpDisplayFromPosition();
         setPlaying(true);
-    }, [bumpDisplayFromPosition]);
+    }, [bumpDisplayFromPosition, resetReplayOneShotState]);
 
     // Клавиатурные шорткаты: пробел — пауза, ←/→ — ±5с, Shift+←/→ — ±10с, J/K/L — YouTube-style.
     useEffect(() => {
@@ -256,6 +287,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                     e.preventDefault();
                     replayPositionFrameRef.current = 0;
                     replayKeyframeIdxRef.current = -1;
+                    lastKeyframeForTracksRef.current = -1;
+                    resetReplayOneShotState();
                     bumpDisplayFromPosition();
                     break;
                 case 'End': {
@@ -263,6 +296,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                     const span = Math.max(0, framesRef.current.length - 1);
                     replayPositionFrameRef.current = span;
                     replayKeyframeIdxRef.current = -1;
+                    lastKeyframeForTracksRef.current = -1;
+                    resetReplayOneShotState();
                     bumpDisplayFromPosition();
                     break;
                 }
@@ -272,7 +307,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
-    }, [bumpDisplayFromPosition, seekBySeconds, stepReplayFrame]);
+    }, [bumpDisplayFromPosition, resetReplayOneShotState, seekBySeconds, stepReplayFrame]);
 
     useEffect(() => {
         if (!canvasRef.current || !imagesLoaded) {
@@ -307,8 +342,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             applyTankConfigs(renderer, initial);
             snapshotRef.current = initial;
             lastDisplayFrameRef.current = 0;
-            // −1: первый проход raf-loop обработает idx=0 как смену кадра и подмешает эффекты из frames[0].
             replayKeyframeIdxRef.current = -1;
+            lastKeyframeForTracksRef.current = -1;
             renderer.updateFromSnapshot(initial);
             setDisplayFrame(0);
         }
@@ -318,6 +353,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             rendererRef.current?.clear();
             rendererRef.current = new OnlineGameRenderer(ctx, newSize);
             rendererRef.current.setPlayerLabels(new Map(Object.entries(playerNames)));
+            lastKeyframeForTracksRef.current = -1;
             const snap = snapshotRef.current;
             if (snap) {
                 applyTankConfigs(rendererRef.current, snap);
@@ -329,73 +365,170 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
 
         let raf = 0;
         const loop = () => {
-            const flist = framesRef.current;
-            const span = Math.max(0, flist.length - 1);
-            const now = performance.now();
-            if (lastRafTimeRef.current === 0) {
-                lastRafTimeRef.current = now;
-            }
-            const dt = now - lastRafTimeRef.current;
-            lastRafTimeRef.current = now;
-
-            if (playingRef.current && span > 0) {
-                replayPositionFrameRef.current += (dt / frameMs) * speedRef.current;
-                // Не зацикливаем: на концах останавливаемся. Пользователь видит, когда матч закончился.
-                if (replayPositionFrameRef.current >= span) {
-                    replayPositionFrameRef.current = span;
-                    playingRef.current = false;
-                    setPlaying(false);
-                } else if (replayPositionFrameRef.current <= 0) {
-                    replayPositionFrameRef.current = 0;
-                    playingRef.current = false;
-                    setPlaying(false);
+            try {
+                const flist = framesRef.current;
+                const span = Math.max(0, flist.length - 1);
+                const now = performance.now();
+                if (lastRafTimeRef.current === 0) {
+                    lastRafTimeRef.current = now;
                 }
-            }
+                const dt = now - lastRafTimeRef.current;
+                lastRafTimeRef.current = now;
 
-            if (flist.length > 0) {
-                const spanIdx = Math.max(0, flist.length - 1);
-                const idx = Math.max(0, Math.min(spanIdx, Math.floor(replayPositionFrameRef.current)));
-                const alpha = replayPositionFrameRef.current - idx;
-                const wA = flist[idx].world as GameWorldSnapshot;
-                const wB = flist[Math.min(idx + 1, spanIdx)].world as GameWorldSnapshot;
-                const merged = interpolateReplaySnapshots(wA, wB, alpha);
-
-                if (idx !== replayKeyframeIdxRef.current) {
-                    // Эффекты (взрывы/импакты) проигрываем только при движении вперёд, иначе
-                    // на перемотке назад эффекты будут срабатывать повторно — это визуально странно.
-                    const forward = idx > replayKeyframeIdxRef.current;
-                    replayKeyframeIdxRef.current = idx;
-                    if (forward) {
-                        const landed = flist[idx].world as GameWorldSnapshot;
-                        merged.explosions = landed.explosions ? [...landed.explosions] : [];
-                        merged.grenadeExplosions = landed.grenadeExplosions
-                            ? [...landed.grenadeExplosions]
-                            : [];
-                        merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
-                        merged.hullCollisions = landed.hullCollisions ? [...landed.hullCollisions] : [];
-                    } else {
-                        merged.explosions = [];
-                        merged.grenadeExplosions = [];
-                        merged.bulletImpacts = [];
-                        merged.hullCollisions = [];
+                if (playingRef.current && span > 0) {
+                    replayPositionFrameRef.current += (dt / frameMs) * speedRef.current;
+                    // Не зацикливаем: на концах останавливаемся. Пользователь видит, когда матч закончился.
+                    if (replayPositionFrameRef.current >= span) {
+                        replayPositionFrameRef.current = span;
+                        playingRef.current = false;
+                        setPlaying(false);
+                    } else if (replayPositionFrameRef.current <= 0) {
+                        replayPositionFrameRef.current = 0;
+                        playingRef.current = false;
+                        setPlaying(false);
                     }
                 }
 
-                snapshotRef.current = merged;
-                if (idx !== lastDisplayFrameRef.current) {
-                    lastDisplayFrameRef.current = idx;
-                    setDisplayFrame(idx);
-                }
-                if (rendererRef.current) {
-                    rendererRef.current.updateFromSnapshot(merged);
-                }
-            } else {
-                snapshotRef.current = null;
-                replayKeyframeIdxRef.current = -1;
-            }
+                if (flist.length > 0) {
+                    const spanIdx = Math.max(0, flist.length - 1);
+                    const idx = Math.max(0, Math.min(spanIdx, Math.floor(replayPositionFrameRef.current)));
+                    const alpha = replayPositionFrameRef.current - idx;
+                    const wA = flist[idx].world as GameWorldSnapshot;
+                    const wB = flist[Math.min(idx + 1, spanIdx)].world as GameWorldSnapshot;
+                    const merged = interpolateReplaySnapshots(wA, wB, alpha);
 
-            if (rendererRef.current && snapshotRef.current) {
-                rendererRef.current.render();
+                    // Heuristic seek-detection: |diff| > 30 означает большой прыжок.
+                    const prevTrackKeyframe = lastKeyframeForTracksRef.current;
+                    const idxDiff = Math.abs(idx - prevTrackKeyframe);
+                    
+                    const isReversing = prevTrackKeyframe >= 0 && (idx < prevTrackKeyframe || speedRef.current < 0);
+                    if (rendererRef.current) {
+                        rendererRef.current.setReversing(isReversing);
+                    }
+                    if (prevTrackKeyframe >= 0 && (isReversing || idxDiff > 1)) {
+                        resetReplayOneShotState();
+                    }
+                    lastKeyframeForTracksRef.current = idx;
+
+                    if (idx !== replayKeyframeIdxRef.current) {
+                        // Эффекты (взрывы/импакты) проигрываем только при движении вперёд.
+                        const forward = idx > replayKeyframeIdxRef.current;
+                        replayKeyframeIdxRef.current = idx;
+                        if (forward) {
+                            const landed = flist[idx].world as GameWorldSnapshot;
+                            const prevLanded = idx > 0 ? (flist[idx - 1].world as GameWorldSnapshot) : null;
+                            const playSpatial = (
+                                id: Parameters<typeof SoundManager.play>[0],
+                                x: number,
+                                y: number,
+                                maxDist: number,
+                                extra?: { playbackRate?: number }
+                            ) => {
+                                const s = spatial(x, y, 960, 540, 2500);
+                                if (s.volume <= 0) return;
+                                SoundManager.play(id, { ...s, ...extra });
+                            };
+                            const playOneShotSpatial = (
+                                key: string,
+                                id: Parameters<typeof SoundManager.play>[0],
+                                x: number,
+                                y: number,
+                                maxDist: number,
+                                extra?: { playbackRate?: number }
+                            ) => {
+                                if (replayAudioOneShotKeysRef.current.has(key)) {
+                                    return;
+                                }
+                                replayAudioOneShotKeysRef.current.add(key);
+                                if (replayAudioOneShotKeysRef.current.size > 2048) {
+                                    replayAudioOneShotKeysRef.current.clear();
+                                }
+                                playSpatial(id, x, y, maxDist, extra);
+                            };
+                            // Новые пули на ключевом кадре = выстрелы.
+                            const prevBulletIds = new Set((prevLanded?.bullets ?? []).map((b) => b.id));
+                            for (const b of landed.bullets ?? []) {
+                                if (prevBulletIds.has(b.id)) continue;
+                                playSpatial(shotSfxIdForBulletType(b.type), b.x, b.y, 1700);
+                            }
+                            // Разрушение ящиков между keyframe-ами.
+                            if (prevLanded?.crates) {
+                                const currentCrates = new Map((landed.crates ?? []).map((c) => [c.id, c]));
+                                for (const prevCrate of prevLanded.crates) {
+                                    const curr = currentCrates.get(prevCrate.id);
+                                    if (!curr || (prevCrate.hp > 0 && curr.hp <= 0)) {
+                                        playSpatial('game:crateBreak', prevCrate.x, prevCrate.y, 1500);
+                                    }
+                                }
+                            }
+                            merged.explosions = landed.explosions ? [...landed.explosions] : [];
+                            merged.grenadeExplosions = landed.grenadeExplosions
+                                ? [...landed.grenadeExplosions]
+                                : [];
+                            merged.bulletImpacts = landed.bulletImpacts ? [...landed.bulletImpacts] : [];
+                            merged.hullCollisions = landed.hullCollisions ? [...landed.hullCollisions] : [];
+                            for (const ex of merged.explosions) {
+                                const key = `exp|${Math.round(ex.x)}|${Math.round(ex.y)}|${Number(ex.angle || 0).toFixed(4)}`;
+                                playOneShotSpatial(key, 'game:explosion', ex.x, ex.y, 1600);
+                            }
+                            for (const ex of merged.grenadeExplosions) {
+                                const key =
+                                    `gren|${Math.round(ex.x)}|${Math.round(ex.y)}|` +
+                                    `${Number(ex.angle || 0).toFixed(4)}|${Math.round(ex.size ?? 0)}`;
+                                playOneShotSpatial(key, 'game:explosion', ex.x, ex.y, 1500);
+                            }
+                            const HIT_RADIUS = 70;
+                            for (const im of merged.bulletImpacts) {
+                                let hitTank = false;
+                                for (const t of landed.tanks ?? []) {
+                                    if (Math.hypot(t.x - im.x, t.y - im.y) < HIT_RADIUS) {
+                                        hitTank = true;
+                                        break;
+                                    }
+                                }
+                                if (hitTank) {
+                                    const key = `hit|${Math.round(im.x)}|${Math.round(im.y)}|${im.bulletType}`;
+                                    playOneShotSpatial(key, 'game:hit', im.x, im.y, 1400, {
+                                        playbackRate: hitMetalPlaybackRateForBulletType(im.bulletType)
+                                    });
+                                } else {
+                                    const key = `wall|${Math.round(im.x)}|${Math.round(im.y)}|${im.bulletType}`;
+                                    playOneShotSpatial(key, 'game:wallHit', im.x, im.y, 1400, {
+                                        playbackRate: wallHitPlaybackRateForBulletType(im.bulletType)
+                                    });
+                                }
+                            }
+                            for (const hc of merged.hullCollisions) {
+                                const key = `coll|${Math.round(hc.x)}|${Math.round(hc.y)}|${hc.playerId || ''}`;
+                                playOneShotSpatial(key, 'game:collision', hc.x, hc.y, 1300);
+                            }
+                        } else {
+                            merged.explosions = [];
+                            merged.grenadeExplosions = [];
+                            merged.bulletImpacts = [];
+                            merged.hullCollisions = [];
+                        }
+                    }
+
+                    snapshotRef.current = merged;
+                    if (idx !== lastDisplayFrameRef.current) {
+                        lastDisplayFrameRef.current = idx;
+                        setDisplayFrame(idx);
+                    }
+                    if (rendererRef.current) {
+                        rendererRef.current.updateFromSnapshot(merged);
+                    }
+                } else {
+                    snapshotRef.current = null;
+                    replayKeyframeIdxRef.current = -1;
+                }
+
+                if (rendererRef.current && snapshotRef.current) {
+                    rendererRef.current.render();
+                }
+            } catch (err) {
+                // Не даем ошибке оборвать RAF-цепочку: иначе replay «замирает» без видимой причины.
+                console.error('[replay] loop error', err);
             }
             raf = requestAnimationFrame(loop);
         };

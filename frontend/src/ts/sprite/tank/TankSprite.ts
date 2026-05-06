@@ -127,11 +127,12 @@ export class TankSprite implements ISpriteParts {
 
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
     }
-    public updateAfterAction(point: Point, hullAngle: number, turretAngle: number, isIdle: boolean = false) {
+    public updateAfterAction(point: Point, hullAngle: number, turretAngle: number, isIdle: boolean = false, isReversing: boolean = false) {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
-        this.updateTireTrack(point, hullAngle, sin, cos);
-        // Update drift smoke (as in original preUpdateAction)
+        if (!isReversing) {
+            this.updateTireTrack(point, hullAngle, sin, cos);
+        }
         this.updateDriftSmoke(point, hullAngle, sin, cos);
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos, isIdle);
     }

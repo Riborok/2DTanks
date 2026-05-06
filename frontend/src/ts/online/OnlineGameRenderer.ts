@@ -36,6 +36,7 @@ interface RenderableTank {
         weaponNum: number;
         color: number;
     };
+    lastPoint?: Point;
 }
 
 interface RenderableBullet {
@@ -87,12 +88,21 @@ export class OnlineGameRenderer {
      */
     private recentOneShotEffectKeys = new Set<string>();
     private static readonly ONE_SHOT_EFFECT_KEYS_CAP = 2048;
+    private isReversing: boolean = false;
+
+    private wasReversing: boolean = false;
+
+    public setReversing(val: boolean): void {
+        this.isReversing = val;
+    }
+
+    public resetOneShotEffectsState(): void {
+        this.recentOneShotEffectKeys.clear();
+    }
 
     constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this.canvas = new Canvas(ctx, size);
         this.animationManager = new AnimationManager(this.canvas);
-        // Background will be set when first snapshot arrives with level info
-        // Don't set up background here - wait for snapshot with level info
     }
 
     public setTankConfig(tankId: string, config: {
@@ -154,6 +164,10 @@ export class OnlineGameRenderer {
     }
 
     public updateFromSnapshot(snapshot: GameWorldSnapshot): void {
+        if (this.isReversing) {
+            this.recentOneShotEffectKeys.clear();
+        }
+
         const snapLevel =
             typeof snapshot.currentLevel === 'number' && Number.isFinite(snapshot.currentLevel)
                 ? Math.max(1, Math.min(3, Math.floor(snapshot.currentLevel)))
@@ -208,7 +222,6 @@ export class OnlineGameRenderer {
         for (const [id, tank] of this.tanks.entries()) {
             if (!currentTankIds.has(id)) {
                 tank.sprite.vanishTireTracks();
-                // Remove tank sprites
                 const parts = tank.sprite.tankSpriteParts;
                 this.canvas.removeById(parts.topTrackSprite);
                 this.canvas.removeById(parts.bottomTrackSprite);
@@ -226,7 +239,6 @@ export class OnlineGameRenderer {
             const config = tankVisualFromSnapshot(serverTank as ServerTank, this.tankConfigs.get(serverTank.id));
             
             if (!renderableTank) {
-                // Create new tank sprite
                 const tankParts = TankPartsCreator.create(
                     config.hullNum,
                     config.trackNum,
@@ -242,13 +254,11 @@ export class OnlineGameRenderer {
                 );
                 const sprite = new TankSprite(spriteParts, tankParts.track.forwardData, tankParts.track.backwardData);
                 
-                // Initialize drift smoke (as in original TankHandlingManager.add)
                 sprite.spawnDriftSmoke(this.animationManager);
 
                 renderableTank = { id: serverTank.id, sprite, config };
                 this.tanks.set(serverTank.id, renderableTank);
 
-                // Insert sprites into canvas
                 const parts = sprite.tankSpriteParts;
                 this.canvas.insert(parts.topTrackSprite);
                 this.canvas.insert(parts.bottomTrackSprite);
@@ -263,18 +273,53 @@ export class OnlineGameRenderer {
                 sprite.spawnTireTracks(this.canvas, spawnPoint, serverTank.angle, this.vanishingTirePairs);
             }
             
-            // Update tank position and angles
-            // Scale coordinates from server (1920x1080) to current canvas size
             const centerPoint = new Point(ResolutionManager.worldToCanvasX(serverTank.x), ResolutionManager.worldToCanvasY(serverTank.y));
+
+            let teleported = false;
+            if (renderableTank.lastPoint) {
+                const dist = Math.hypot(renderableTank.lastPoint.x - centerPoint.x, renderableTank.lastPoint.y - centerPoint.y);
+                if (dist > 150) {
+                    teleported = true;
+                }
+            }
+
+            if (teleported || (this.wasReversing && !this.isReversing)) {
+                renderableTank.sprite.vanishTireTracks();
+                
+                // Limit the size of vanishing list to avoid lag on long scrubs
+                let size = 0;
+                for (const _ of this.vanishingTirePairs) size++;
+                if (size > 200) {
+                    let removed = 0;
+                    this.vanishingTirePairs.applyAndRemove(() => {}, (pair) => {
+                        if (removed < 50) {
+                            this.canvas.removeById(pair.topTire as unknown as ISprite);
+                            this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+                            removed++;
+                            return true;
+                        }
+                        return false;
+                    }, 0);
+                }
+
+                if (!this.isReversing) {
+                    renderableTank.sprite.spawnTireTracks(this.canvas, centerPoint, serverTank.angle, this.vanishingTirePairs);
+                } else {
+                    renderableTank.sprite.spawnTireTracks(this.canvas, centerPoint, serverTank.angle, this.vanishingTirePairs);
+                }
+            }
+
+            renderableTank.lastPoint = centerPoint;
+
             const isIdle = serverTank.isIdle !== undefined ? serverTank.isIdle : false;
             
-            // Stop track animation if tank is idle (as in original TankMovementManager.residualMovement)
             if (isIdle) {
                 renderableTank.sprite.tankTrackEffect.stopped();
             }
             
-            renderableTank.sprite.updateAfterAction(centerPoint, serverTank.angle, serverTank.turretAngle, isIdle);
+            renderableTank.sprite.updateAfterAction(centerPoint, serverTank.angle, serverTank.turretAngle, isIdle, this.isReversing);
         }
+        this.wasReversing = this.isReversing;
         this.tanksDataForHealthBars =
             serverTanks.length > 0 ? serverTanks.map((t) => ({ ...(t as ServerTank) } as ServerTank)) : [];
     }
@@ -648,8 +693,7 @@ export class OnlineGameRenderer {
     public render(): void {
         const dt = 16;
         this.processVanishingTireTracks(dt);
-        // Update animations (for drift smoke)
-        this.animationManager.handle(dt); // Approximate deltaTime
+        this.animationManager.handle(dt);
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
         this.drawTankNamesOnTop();
@@ -669,6 +713,6 @@ export class OnlineGameRenderer {
         this.walls.clear();
         this.crates.clear();
         this.items.clear();
-        this.backgroundMaterial = 1; // Reset to default
+        this.backgroundMaterial = undefined;
     }
 }

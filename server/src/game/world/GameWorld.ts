@@ -89,7 +89,7 @@ export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
     private elapsedMs: number = 0;
-    private readonly FINISH_TIME = 1 * 60 * 1000; // 300 seconds in milliseconds
+    private readonly FINISH_TIME = 30 * 1000;
     private readonly SIZE: Size = { width: 1920, height: 1080 };
     
     // Number of keys to spawn and collect per level
@@ -133,7 +133,7 @@ export class GameWorld {
     private readonly rngSeed: number;
     /** Ячейки статичных стен deathmatch (пресет от rngSeed). Вне DM — пустой массив. */
     private readonly deathmatchArenaWallCells: ReadonlyArray<{ line: number; col: number }>;
-    private static readonly DEATHMATCH_DURATION_SEC = 60;
+    private static readonly DEATHMATCH_DURATION_SEC = 30;
 
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
@@ -306,7 +306,12 @@ export class GameWorld {
         }
         
         // Create point spawner
-        this.pointSpawner = new PointSpawner(point, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
+        this.pointSpawner = new PointSpawner(
+            point,
+            SPAWN_GRIDS_LINES_AMOUNT,
+            SPAWN_GRIDS_COLUMNS_AMOUNT,
+            (min, max) => this.randomInt(min, max)
+        );
         
         const mapWalls: ServerWall[] = this.deathmatchMode
             ? this.createDeathmatchArenaWalls(point)
@@ -1252,9 +1257,6 @@ export class GameWorld {
     }
     
     private spawnRandomBox(): void {
-        if (this.replayPlaybackSuppressRandomBonusSpawns) {
-            return;
-        }
         if (!this.pointSpawner) {
             return;
         }
@@ -1263,6 +1265,11 @@ export class GameWorld {
         const sz = ResolutionManager.BOX_SIZE;
         const slots = this.buildSpawnGridSlots(this.getDeathmatchSpawnCellBanned());
         this.shuffleSpawnSlots(slots);
+
+        if (this.replayPlaybackSuppressRandomBonusSpawns) {
+            return;
+        }
+
         const probeId = ModelIDTracker.otherId;
         for (const { line, col } of slots) {
             const spawnPoint = this.pointSpawner.getSpawnPoint(sz, sz, line, col);
@@ -1665,7 +1672,12 @@ export class GameWorld {
 
         const origin = new Point(ev.spawnOrigin.x, ev.spawnOrigin.y);
         this.levelSpawnOrigin = origin.clone();
-        this.pointSpawner = new PointSpawner(origin, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT);
+        this.pointSpawner = new PointSpawner(
+            origin,
+            SPAWN_GRIDS_LINES_AMOUNT,
+            SPAWN_GRIDS_COLUMNS_AMOUNT,
+            (min, max) => this.randomInt(min, max)
+        );
 
         if (ev.aux) {
             this.elapsedMs = ev.aux.elapsedMs;
@@ -1752,7 +1764,6 @@ export class GameWorld {
             y: item.y,
             type: item.type
         }));
-
         const elapsed = this.elapsedMs / 1000;
         const base: Record<string, unknown> = {
             backgroundMaterial: this.backgroundMaterial,
