@@ -81,6 +81,12 @@ export class OnlineGameRenderer {
         color: number;
     }> = new Map();
     private playerLabels: Map<string, string> = new Map();
+    /**
+     * Сервер держит эффекты в снимке несколько тиков подряд — иначе они теряются в батче update().
+     * Без дедупа клиент запускал бы одну и ту же анимацию по разу на каждый повтор снимка.
+     */
+    private recentOneShotEffectKeys = new Set<string>();
+    private static readonly ONE_SHOT_EFFECT_KEYS_CAP = 2048;
 
     constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this.canvas = new Canvas(ctx, size);
@@ -159,6 +165,7 @@ export class OnlineGameRenderer {
             const materialNum = snapLevel === 3 ? 0 : snapLevel - 1;
             this.setupBackground(materialNum);
             this.currentLevel = snapLevel;
+            this.recentOneShotEffectKeys.clear();
         }
 
         this.updateTanks(snapshot.tanks ?? []);
@@ -423,10 +430,27 @@ export class OnlineGameRenderer {
         else
             return HEALTH_BAR_LOW_HP_COLOR;
     }
+
+    /** true — ключ новый, можно проиграть эффект; false — тот же эффект уже шли в прошлом снимке. */
+    private consumeOneShotEffectKey(key: string): boolean {
+        if (this.recentOneShotEffectKeys.has(key)) {
+            return false;
+        }
+        this.recentOneShotEffectKeys.add(key);
+        if (this.recentOneShotEffectKeys.size > OnlineGameRenderer.ONE_SHOT_EFFECT_KEYS_CAP) {
+            this.recentOneShotEffectKeys.clear();
+        }
+        return true;
+    }
     
     private handleExplosions(explosions: ServerExplosion[]): void {
         // Create explosion animations for each explosion (like original AnimationMaker.playDeathAnimation)
         for (const explosion of explosions) {
+            const ak = Number(explosion.angle || 0).toFixed(4);
+            const key = `exp|${Math.round(explosion.x)}|${Math.round(explosion.y)}|${ak}`;
+            if (!this.consumeOneShotEffectKey(key)) {
+                continue;
+            }
             // Scale coordinates from server (1920x1080) to current canvas size
             const explosionPoint = new Point(ResolutionManager.worldToCanvasX(explosion.x), ResolutionManager.worldToCanvasY(explosion.y));
             const animation = new TankExplosionAnimation(explosionPoint, explosion.angle || 0);
@@ -436,6 +460,10 @@ export class OnlineGameRenderer {
     
     private handleBulletImpacts(impacts: ServerBulletImpact[]): void {
         for (const imp of impacts) {
+            const key = `imp|${Math.round(imp.x)}|${Math.round(imp.y)}|${Number(imp.angle).toFixed(4)}|${imp.bulletType}`;
+            if (!this.consumeOneShotEffectKey(key)) {
+                continue;
+            }
             const bt = Math.min(Math.max(imp.bulletType, 0), ResolutionManager.BULLET_WIDTH.length - 1);
             const w = ResolutionManager.BULLET_WIDTH[bt] * BULLET_ANIMATION_SIZE_INCREASE_COEFF;
             const h = ResolutionManager.BULLET_HEIGHT[bt] * BULLET_ANIMATION_SIZE_INCREASE_COEFF;
@@ -449,6 +477,12 @@ export class OnlineGameRenderer {
         // Create grenade explosion animations (like original AnimationMaker.playGrenadeExplosionAnimation)
         console.log(`[CLIENT] handleGrenadeExplosions: received ${explosions.length} grenade explosions`);
         for (const explosion of explosions) {
+            const szRaw =
+                explosion.size !== undefined && explosion.size !== null ? Math.round(explosion.size) : 0;
+            const key = `gren|${Math.round(explosion.x)}|${Math.round(explosion.y)}|${Number(explosion.angle || 0).toFixed(4)}|${szRaw}`;
+            if (!this.consumeOneShotEffectKey(key)) {
+                continue;
+            }
             // Scale coordinates from server (1920x1080) to current canvas size
             const explosionPoint = new Point(ResolutionManager.worldToCanvasX(explosion.x), ResolutionManager.worldToCanvasY(explosion.y));
             const explosionSize =

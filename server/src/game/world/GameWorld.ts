@@ -139,10 +139,12 @@ export class GameWorld {
     private tanksWithActionsThisTick: Set<string> = new Set();
     
     /**
-     * Эффекты держим несколько тиков, чтобы не терялись при пропуске одного snapshot на клиенте.
-     * Клиент может перезаписать буфер последним снапшотом до рендера предыдущего.
+     * Эффекты держим несколько тиков, чтобы они попали хотя бы в один snapshot.
+     * Room за один таймер может вызвать до maxTicksPerFrame update() подряд и только
+     * затем broadcastSnapshot(); при окне в 2 тика взрыв/импакт на первом тике пачки
+     * успевал вычиститься prune до отправки — клиент и реплей иногда не видели анимацию.
      */
-    private static readonly EFFECT_RETENTION_TICKS = 2;
+    private static readonly EFFECT_RETENTION_TICKS = 12;
     private explosionsRecent: TimedExplosionEvent[] = [];
     private grenadeExplosionsRecent: TimedGrenadeExplosionEvent[] = [];
     private bulletImpactsRecent: TimedBulletImpactEvent[] = [];
