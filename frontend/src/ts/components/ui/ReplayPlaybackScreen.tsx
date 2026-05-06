@@ -120,16 +120,15 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const [camY, setCamY] = useState(0);
     const [camZoom, setCamZoom] = useState(1);
 
-    // Состояние записи клипа
-    const [recording, setRecording] = useState<null | { startedAt: number; secondsLeft: number }>(null);
-    const recorderRef = useRef<MediaRecorder | null>(null);
-    const recordingChunksRef = useRef<BlobPart[]>([]);
     const { settings } = useSettings();
 
     const frameMs = useMemo(() => {
         const hz = startMeta.tickRate > 0 ? startMeta.tickRate : 60;
         return (1000 / hz) * STORED_FRAME_STEP_TICKS;
     }, [startMeta.tickRate]);
+
+    const frameMsRef = useRef(frameMs);
+    frameMsRef.current = frameMs;
 
     const totalReplayActions = actions.length;
     const totalReplayEvents = events.length;
@@ -605,74 +604,6 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         setCamZoom(1);
     }, []);
 
-    // Тиковый таймер оставшихся секунд записи
-    useEffect(() => {
-        if (!recording) return;
-        const id = setInterval(() => {
-            setRecording((r) => {
-                if (!r) return r;
-                const elapsed = (performance.now() - r.startedAt) / 1000;
-                const left = Math.max(0, 10 - elapsed);
-                if (left <= 0) return r;
-                return { ...r, secondsLeft: Math.ceil(left) };
-            });
-        }, 200);
-        return () => clearInterval(id);
-    }, [recording]);
-
-    const startClipRecording = useCallback(async () => {
-        const c = canvasRef.current;
-        if (!c) return;
-        if (recorderRef.current) return;
-        if (typeof MediaRecorder === 'undefined' || typeof c.captureStream !== 'function') {
-            alert('Ваш браузер не поддерживает запись клипов (MediaRecorder).');
-            return;
-        }
-        try {
-            const stream = c.captureStream(60);
-            const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
-                .find((m) => MediaRecorder.isTypeSupported(m));
-            const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4_000_000 } : undefined);
-            recordingChunksRef.current = [];
-            rec.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) {
-                    recordingChunksRef.current.push(e.data);
-                }
-            };
-            rec.onstop = () => {
-                const blob = new Blob(recordingChunksRef.current, { type: mime ?? 'video/webm' });
-                recordingChunksRef.current = [];
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `replay_${meta.replayId.slice(0, 8)}_${Date.now()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 2000);
-                recorderRef.current = null;
-                setRecording(null);
-            };
-            rec.start();
-            recorderRef.current = rec;
-            setRecording({ startedAt: performance.now(), secondsLeft: 10 });
-            setTimeout(() => {
-                try {
-                    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
-                        recorderRef.current.stop();
-                    }
-                } catch {
-                    /* ignore */
-                }
-            }, 10_000);
-        } catch (e) {
-            console.error('[clip record]', e);
-            alert('Не удалось начать запись клипа.');
-            recorderRef.current = null;
-            setRecording(null);
-        }
-    }, [meta.replayId]);
-
     if (!builtFrames.length) {
         return (
             <div className="replay-playback-screen">
@@ -865,15 +796,6 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                             <span className="replay-playback-zoom-label">{(camZoom * 100).toFixed(0)}%</span>
                         </>
                     )}
-                    <button
-                        type="button"
-                        className={recording ? 'active' : ''}
-                        disabled={!!recording}
-                        onClick={startClipRecording}
-                        title="Записать следующие 10 секунд в webm-клип"
-                    >
-                        {recording ? `⏺ ${recording.secondsLeft}с` : '⏺ Записать 10с'}
-                    </button>
                 </div>
             </div>
         </div>
