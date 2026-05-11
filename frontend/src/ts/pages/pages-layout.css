@@ -290,6 +290,45 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 430px) {
+    .page-home-dashboard-grid {
+        gap: 6px;
+    }
+
+    .page-home-dashboard-card {
+        padding: 8px 9px;
+    }
+
+    .page-home-dashboard-title {
+        font-size: 0.84rem;
+    }
+
+    .page-home-dashboard-text,
+    .page-home-mini-link {
+        font-size: 0.76rem;
+    }
+
+    .page-home-mini-meta {
+        font-size: 0.64rem;
+    }
+
+    .page-home-dashboard-big,
+    .page-home-mode-to-play {
+        font-size: 1rem;
+    }
+}
+
+@media (pointer: coarse) and (max-width: 390px) {
+    .page-home-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-home-dashboard-card--continue,
+    .page-home-dashboard-card--friends-span {
+        grid-column: 1 / -1;
+    }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
     .page-home-lead {
         margin: 2px 0 4px;

@@ -315,6 +315,42 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .friends-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .friends-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .friends-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .friends-tab {
+        text-align: center;
+    }
+
+    .friends-item {
+        padding: 9px 10px;
+        gap: 8px;
+    }
+
+    .friends-item-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .friends-row-btn {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
 @media (max-width: 520px) {
     .friends-tabs {
         gap: 4px;

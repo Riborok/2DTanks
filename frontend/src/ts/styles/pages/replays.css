@@ -786,6 +786,55 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .replays-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .replays-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .replays-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .replays-kpi-card--accent {
+        grid-column: 1 / -1;
+    }
+
+    .replays-item {
+        gap: 8px;
+        padding: 10px 0;
+    }
+
+    .replays-item-card {
+        padding: 9px 10px;
+    }
+
+    .replays-item-main {
+        gap: 5px;
+    }
+
+    .replays-item-title {
+        font-size: var(--text-sm);
+    }
+
+    .replays-meta {
+        font-size: var(--text-xs);
+    }
+
+    .replays-item-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .replays-item-cta {
+        min-width: 0;
+    }
+}
+
 /* В альбомной на низких экранах убираем верхний информационный блок, чтобы поле было выше */
 @media (max-height: 460px) and (orientation: landscape) {
     .replay-playback-info {

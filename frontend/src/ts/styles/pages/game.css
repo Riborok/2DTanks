@@ -94,6 +94,63 @@
     }
 }
 
+/* Телефоны: HUD сверху в 2 ряда, без горизонтального скролла. */
+@media (pointer: coarse) and (max-width: 900px) {
+    .game-ui-modern {
+        top: calc(env(safe-area-inset-top, 0px) + 6px);
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+        min-width: 0;
+        padding: 6px 8px;
+        border-radius: 10px;
+    }
+
+    .game-stats-modern {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .hud-card {
+        width: 100%;
+        min-width: 0;
+        padding: 6px 8px;
+    }
+
+    .hud-label {
+        font-size: 9px;
+    }
+
+    .hud-value {
+        font-size: 16px;
+    }
+
+    .hud-card-level {
+        min-width: 0;
+    }
+
+    .hud-card-timer {
+        grid-column: 1 / -1;
+    }
+
+    .hud-card-exit-with-fs {
+        grid-column: 1 / -1;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    .hud-card-exit .replays-back-btn {
+        max-width: 48vw;
+        padding: 5px 9px;
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 /* Портрет телефона — подсказка повернуть */
 .mobile-orientation-hint {
     display: none;

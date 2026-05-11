@@ -285,6 +285,66 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .settings-screen {
+        padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .settings-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .settings-header {
+        margin-bottom: 12px;
+    }
+
+    .settings-section {
+        padding: 10px 10px;
+        margin-bottom: 10px;
+    }
+
+    .settings-row {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .settings-row label {
+        flex: 1 1 100%;
+        font-size: 0.86rem;
+    }
+
+    .settings-row input[type='range'] {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .settings-key-row {
+        gap: 8px;
+    }
+
+    .settings-key-label {
+        flex-basis: 100%;
+        font-size: 0.84rem;
+    }
+
+    .settings-key-cap {
+        width: 100%;
+        min-width: 0;
+        padding: 8px 10px;
+    }
+
+    .settings-seg {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .settings-seg button {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
     .settings-screen {
         padding: 4px clamp(8px, 2vw, 14px) calc(10px + env(safe-area-inset-bottom, 0px));

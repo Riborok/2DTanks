@@ -216,6 +216,34 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .profile-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .profile-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .profile-identity {
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+    }
+
+    .profile-avatar-wrap,
+    .profile-avatar-placeholder {
+        width: 48px;
+        height: 48px;
+    }
+
+    .profile-form,
+    .profile-fields {
+        gap: 12px;
+    }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
     .profile-header {
         margin-bottom: 10px;

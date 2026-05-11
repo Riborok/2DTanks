@@ -99,3 +99,26 @@
     padding: 11px 18px;
     cursor: pointer;
 }
+
+@media (pointer: coarse) and (max-width: 900px) {
+    .game-end-screen {
+        width: min(100%, 96vw);
+        padding: 18px 12px;
+        border-radius: var(--radius-lg);
+    }
+
+    .game-end-top-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .game-end-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .game-end-primary-btn,
+    .game-end-toggle-btn {
+        min-width: 0;
+        width: 100%;
+    }
+}

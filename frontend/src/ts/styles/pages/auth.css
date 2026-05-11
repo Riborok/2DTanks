@@ -93,3 +93,19 @@
 .auth-hint a:hover {
     text-decoration: underline;
 }
+
+@media (pointer: coarse) and (max-width: 900px) {
+    .page-auth {
+        padding: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .page-auth .connection-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 14px 12px;
+    }
+
+    .auth-input {
+        font-size: 16px;
+    }
+}

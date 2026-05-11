@@ -275,6 +275,30 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .watch-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .watch-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .watch-list {
+        gap: 8px;
+    }
+
+    .watch-card {
+        padding: 10px 10px;
+        gap: 6px;
+    }
+
+    .watch-card-title {
+        font-size: var(--text-sm);
+    }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
     .watch-list {
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));

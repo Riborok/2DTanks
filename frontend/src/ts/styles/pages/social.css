@@ -249,3 +249,29 @@
         max-width: none;
     }
 }
+
+@media (pointer: coarse) and (max-width: 900px) {
+    .spectate-hud {
+        top: calc(env(safe-area-inset-top, 0px) + 8px);
+        left: 8px;
+        right: 8px;
+        gap: 8px;
+    }
+
+    .spectate-hud-left {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .spectate-leave {
+        padding: 8px 12px;
+    }
+
+    .lobby-invite-block {
+        padding: 8px 9px;
+    }
+
+    .lobby-invite-row {
+        padding: 6px 7px;
+    }
+}

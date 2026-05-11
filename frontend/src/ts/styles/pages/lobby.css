@@ -255,6 +255,60 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .lobby-container {
+        padding: 10px 10px;
+    }
+
+    .lobby-title {
+        font-size: clamp(1rem, 3.8vw, 1.25rem);
+        margin-bottom: 6px;
+    }
+
+    .lobby-deathmatch-hint {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .room-code {
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        padding: 7px 8px;
+    }
+
+    .copy-button {
+        min-height: 34px;
+        padding: 7px 10px;
+    }
+
+    .player-status {
+        padding: 7px 8px;
+    }
+
+    .player-status h3 {
+        font-size: 0.86rem;
+    }
+
+    .player-status p {
+        font-size: 12px;
+    }
+
+    .lobby-secondary {
+        margin-top: 6px;
+        gap: 6px;
+    }
+
+    .lobby-invite-list-scroll {
+        max-height: min(96px, 20vh);
+    }
+
+    .lobby-secondary .chat-panel {
+        height: 124px;
+        min-height: 124px;
+        max-height: 124px;
+    }
+}
+
 /* Узкое окно по высоте: блок статусов может занять несколько рядов (арена 2–5 игроков) */
 @media (max-height: 700px) {
     .players-status {

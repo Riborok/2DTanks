@@ -1150,3 +1150,37 @@
         justify-content: center;
     }
 }
+
+@media (pointer: coarse) and (max-width: 900px) {
+    .play-page-root--tankSelection.app-container {
+        padding: 6px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .tank-customizer__topbar {
+        padding: 10px 10px 9px;
+        gap: 8px 10px;
+    }
+
+    .tank-customizer__topbar-lede {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    .tank-customizer__body {
+        padding: 10px 8px 10px;
+    }
+
+    .tank-customizer__panel {
+        padding: 10px 10px;
+        gap: 8px;
+    }
+
+    .tank-customizer__preview-card {
+        padding: 8px 10px 10px;
+    }
+
+    .tank-customizer__footer {
+        gap: 10px;
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+}

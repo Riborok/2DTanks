@@ -890,7 +890,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                     <div className="hud-card hud-card-exit hud-card-exit-with-fs">
                         <FullscreenToggle variant="toolbar" />
                         <button type="button" className="replays-back-btn" onClick={onLeaveGame}>
-                            Выйти из матча
+                            {useTouchUi ? 'Выйти' : 'Выйти из матча'}
                         </button>
                     </div>
                 </div>

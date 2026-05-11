@@ -245,6 +245,30 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .stats-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .stats-panel {
+        padding: 12px 10px;
+        border-radius: var(--radius-lg);
+    }
+
+    .stats-summary {
+        margin-bottom: 12px;
+        gap: 6px;
+    }
+
+    .stats-chip {
+        padding: 6px 10px;
+    }
+
+    .stats-analytics-card {
+        padding: 10px;
+    }
+}
+
 @media (max-width: 360px) {
     .stats-analytics-grid {
         grid-template-columns: 1fr;

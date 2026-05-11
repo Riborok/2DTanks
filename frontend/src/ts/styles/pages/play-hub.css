@@ -419,6 +419,44 @@
     }
 }
 
+@media (pointer: coarse) and (max-width: 900px) {
+    .playhub-screen.connection-screen {
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .playhub-container.connection-container {
+        max-width: 100%;
+        padding: 14px 12px 16px;
+        border-radius: var(--radius-lg);
+    }
+
+    .playhub-header-top {
+        align-items: flex-start;
+        gap: 6px 8px;
+    }
+
+    .playhub-tabs {
+        gap: 4px;
+    }
+
+    .playhub-tab {
+        padding: 8px 8px;
+    }
+
+    .playhub-mode-chips {
+        gap: 6px;
+    }
+
+    .playhub-chip {
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+
+    .playhub-primary-cta {
+        min-height: 44px;
+    }
+}
+
 @media (orientation: landscape) and (max-height: 520px) {
     .connection-screen {
         align-items: flex-start;
