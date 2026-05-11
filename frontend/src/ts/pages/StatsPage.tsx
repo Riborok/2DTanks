@@ -199,7 +199,7 @@ const StatsPage: React.FC = () => {
                                         </strong>
                                     </p>
                                     <p className="stats-note">
-                                        Детали по каждому матчу смотри в разделе <strong>«Реплеи и история»</strong>.
+                                        Детали по каждому матчу смотри в разделе <strong>«Повтор и история»</strong>.
                                     </p>
                                 </div>
                             )}

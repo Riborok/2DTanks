@@ -67,7 +67,7 @@
     flex-direction: column;
 }
 
-/* Реплеи + друзья: ссылка внизу карточки на одной линии с соседней ячейкой сетки */
+/* Повтор + друзья: ссылка внизу карточки на одной линии с соседней ячейкой сетки */
 .page-home-dashboard-card--footer-cta .page-home-dashboard-card-body {
     flex: 1;
     min-height: 0;

@@ -141,7 +141,7 @@ const GalleryPage: React.FC = () => {
                     <header className="gallery-header">
                         <h1 className="gallery-page-title">Галерея</h1>
                         <p className="gallery-lead">
-                            Публичные реплеи с включённой публикацией. Просмотр — по короткой ссылке.
+                            Публичные повторы с включённой публикацией. Просмотр — по короткой ссылке.
                         </p>
                     </header>
 

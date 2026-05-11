@@ -177,7 +177,7 @@ const HomePage: React.FC = () => {
                 </section>
 
                 <section className="page-home-dashboard-card page-home-dashboard-card--footer-cta">
-                    <h2 className="page-home-dashboard-title">Последние реплеи</h2>
+                    <h2 className="page-home-dashboard-title">Последние повторы</h2>
                     <div className="page-home-dashboard-card-body">
                         {dashboard?.recentReplays?.length ? (
                             <ul className="page-home-mini-list">
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
                         )}
                     </div>
                     <Link className="page-home-mini-cta" to="/replays">
-                        Открыть реплеи
+                        Открыть повторы
                     </Link>
                 </section>
 

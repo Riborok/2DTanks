@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { TANKS_FRIENDS_LIST_SYNC_EVENT } from '../context/GameSocketContext';
+import { UserAvatar } from '../components/ui/UserAvatar';
 import {
     getFriends,
     sendFriendRequestApi,
@@ -286,16 +287,23 @@ const FriendsPage: React.FC = () => {
                             <ul className="friends-list">
                                 {searchResults.map((u) => (
                                     <li key={u.userId} className="friends-item">
+                                        <div className="friends-item-main">
+                                        <UserAvatar
+                                            className="friends-item-avatar"
+                                            avatarUrl={u.avatarUrl}
+                                            displayName={u.displayName || u.login}
+                                        />
                                         <div className="friends-item-name">
                                             <div className="friends-item-name-header">
                                                 <strong>{u.displayName || u.login}</strong>
-                                                {(u as any).isOnline ? (
+                                                {u.isOnline ? (
                                                     <span className="friends-item-online-badge">В сети</span>
                                                 ) : (
                                                     <span className="friends-item-offline-badge">Не в сети</span>
                                                 )}
                                             </div>
                                             <span className="friends-item-login">@{u.login}</span>
+                                        </div>
                                         </div>
                                         <div className="friends-item-actions">
                                             <button
@@ -351,6 +359,12 @@ const FriendList: React.FC<FriendListProps> = ({ items, emptyText, renderActions
         <ul className="friends-list">
             {items.map((f) => (
                 <li key={f.userId + f.status} className="friends-item">
+                    <div className="friends-item-main">
+                    <UserAvatar
+                        className="friends-item-avatar"
+                        avatarUrl={f.avatarUrl}
+                        displayName={f.displayName || f.login}
+                    />
                     <div className="friends-item-name">
                         <div className="friends-item-name-header">
                             <strong>{f.displayName || f.login}</strong>
@@ -361,6 +375,7 @@ const FriendList: React.FC<FriendListProps> = ({ items, emptyText, renderActions
                             )}
                         </div>
                         <span className="friends-item-login">@{f.login}</span>
+                    </div>
                     </div>
                     <div className="friends-item-actions">{renderActions(f)}</div>
                 </li>

@@ -1,4 +1,4 @@
-/* Список реплеев / история (HUD и др. по-прежнему используют .replays-back-btn).
+/* Список повторов / история (HUD и др. по-прежнему используют .replays-back-btn).
    Скролл здесь: родитель .page-replays в AppShell — flex + min-height 0. */
 .replays-screen {
     flex: 1;

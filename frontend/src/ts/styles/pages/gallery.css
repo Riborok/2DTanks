@@ -1,4 +1,4 @@
-/* Галерея: тот же паттерн, что «Реплеи» (page-gallery + скролл внутри gallery-screen) */
+/* Галерея: тот же паттерн, что «Повтор» (page-gallery + скролл внутри gallery-screen) */
 
 .gallery-screen {
     flex: 1;

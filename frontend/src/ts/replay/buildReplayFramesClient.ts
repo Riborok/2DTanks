@@ -1,5 +1,5 @@
 /**
- * Симуляция реплея в браузере из тех же модулей, что и на сервере (без сохранённых кадров в БД).
+ * Симуляция повтора в браузере из тех же модулей, что и на сервере (без сохранённых кадров в БД).
  */
 import { buildReplayFramesFromActions } from '../../../../server/src/game/world/replaySimulator';
 import type { ReplayActionsRow } from '../../../../server/src/repos/replayRepo';

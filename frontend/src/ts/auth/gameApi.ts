@@ -70,7 +70,7 @@ export interface ReplayActionDto {
     };
 }
 
-/** События реплея (серверный журнал). */
+/** События повтора (серверный журнал). */
 export type ReplayEventDto =
     | {
           kind: 'world_init';
@@ -115,7 +115,7 @@ export async function listReplays(token: string): Promise<{ replays: ReplayListI
     const res = await fetch(`${getApiOrigin()}/api/game/replays`, { headers: headers(token) });
     const data = await parseJson<{ replays?: ReplayListItemDto[]; error?: string }>(res);
     if (!res.ok) {
-        throw new Error(data.error || 'Не удалось загрузить реплеи');
+        throw new Error(data.error || 'Не удалось загрузить повторы');
     }
     return { replays: data.replays ?? [] };
 }
@@ -306,6 +306,7 @@ export interface FriendDto {
     userId: string;
     login: string;
     displayName: string | null;
+    avatarUrl?: string | null;
     status: FriendshipStatus;
     requestedByMe: boolean;
     createdAt: string;
@@ -397,6 +398,7 @@ export interface UserSearchDto {
     userId: string;
     login: string;
     displayName: string | null;
+    avatarUrl?: string | null;
     isOnline?: boolean;
 }
 

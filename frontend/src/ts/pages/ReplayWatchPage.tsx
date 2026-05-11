@@ -31,7 +31,7 @@ const ReplayWatchPage: React.FC = () => {
             })
             .catch((e) => {
                 if (!cancelled) {
-                    setError(e instanceof Error ? e.message : 'Не удалось открыть реплей');
+                    setError(e instanceof Error ? e.message : 'Не удалось открыть повтор');
                 }
             })
             .finally(() => {
@@ -47,7 +47,7 @@ const ReplayWatchPage: React.FC = () => {
     if (!replayId) {
         return (
             <div className="page-replay-watch page-message">
-                <p>Не указан реплей.</p>
+                <p>Не указан повтор.</p>
                 <button type="button" className="auth-submit" onClick={() => navigate('/replays')}>
                     К списку
                 </button>

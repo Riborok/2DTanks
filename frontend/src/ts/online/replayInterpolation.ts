@@ -76,7 +76,7 @@ function lerpBullet(prev: ServerBullet | undefined, next: ServerBullet, t: numbe
 }
 
 /**
- * Плавный кадр между двумя сохранёнными снимками реплея (0 = from, 1 = to).
+ * Плавный кадр между двумя сохранёнными снимками повтора (0 = from, 1 = to).
  * Взрывы/импакты не копируются — их подмешивает вызывающий при смене ключевого кадра.
  */
 export function interpolateReplaySnapshots(

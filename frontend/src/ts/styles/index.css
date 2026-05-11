@@ -12,6 +12,7 @@
 @import './components/card.css';
 @import './components/table.css';
 @import './components/chip.css';
+@import './components/user-avatar.css';
 
 @import '../layout/AppShell.css';
 @import '../pages/pages-layout.css';

@@ -4,7 +4,7 @@ import { getPublicReplayPlayback } from '../auth/gameApi';
 import ReplayPlaybackScreen from '../components/ui/ReplayPlaybackScreen';
 
 /**
- * Публичная страница просмотра реплея по короткой ссылке /s/:slug.
+ * Публичная страница просмотра повтора по короткой ссылке /s/:slug.
  * Не требует авторизации — данные берутся из открытого API /api/public/replays/by-slug/:slug.
  */
 const SharedReplayPage: React.FC = () => {
@@ -24,7 +24,7 @@ const SharedReplayPage: React.FC = () => {
                 if (!cancelled) setPlayback(data);
             })
             .catch((e) => {
-                if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось открыть реплей');
+                if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось открыть повтор');
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);

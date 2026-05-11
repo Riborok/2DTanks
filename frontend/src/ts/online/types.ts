@@ -28,7 +28,7 @@ export interface ServerBullet {
     y: number;
     angle: number;
     type: number;
-    /** id танка-источника (сервер `sourceId`) — для SFX своего выстрела; в старых реплеях может отсутствовать */
+    /** id танка-источника (сервер `sourceId`) — для SFX своего выстрела; в старых повторах может отсутствовать */
     sourceTankId?: string;
 }
 

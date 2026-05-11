@@ -43,7 +43,7 @@ function enrichMatchStats(
     }));
 }
 
-const VALID_HUB_MODES = new Set<PlayHubGameMode>(['standard', 'practice', 'deathmatch', 'solo']);
+const VALID_HUB_MODES = new Set<PlayHubGameMode>(['standard', 'practice', 'deathmatch']);
 
 function hubModeFromSearchParams(search: URLSearchParams): PlayHubGameMode | undefined {
     const raw = search.get('mode');
@@ -209,15 +209,25 @@ const PlayPage: React.FC = () => {
             // Сервер подтвердил выход — синхронизируем UI (в т.ч. лобби / выбор танка).
             const pendingCode = pendingInviteJoinCodeRef.current;
             const prevScreen = screenRef.current;
-            myPlayerIdRef.current = '';
-            setMyPlayerId('');
             if (prevScreen === 'gameEnd') {
+                // После матча отправляем leaveGame, чтобы снять привязку к комнате на сервере
+                // (иначе при следующем заходе на /play requestGameState снова пришлёт joined).
+                // myPlayerId не трогаем — нужен для блока статистики на экране итогов.
                 if (pendingCode) {
                     pendingInviteJoinCodeRef.current = null;
                     wsClient.send({ type: 'joinRoom', code: pendingCode });
                 }
+                setRoomId('');
+                setPlayers([]);
+                setSinglePlayerRoom(false);
+                setPracticeRoom(false);
+                setDeathmatchRoom(false);
+                setMyTankConfig(null);
+                setError('');
                 return;
             }
+            myPlayerIdRef.current = '';
+            setMyPlayerId('');
             screenRef.current = 'hub';
             setScreen('hub');
             setRoomId('');
@@ -270,9 +280,9 @@ const PlayPage: React.FC = () => {
         screenRef.current = 'hub';
     }, [wsClient]);
 
-    const handleCreateRoom = (mode: 'standard' | 'practice' | 'deathmatch' | 'solo') => {
+    const handleCreateRoom = (mode: PlayHubGameMode) => {
         setError('');
-        setSinglePlayerRoom(mode === 'solo');
+        setSinglePlayerRoom(false);
         setPracticeRoom(mode === 'practice');
         setDeathmatchRoom(mode === 'deathmatch');
         wsClient.send({ type: 'createRoom', mode } as any);
@@ -392,6 +402,9 @@ const PlayPage: React.FC = () => {
         setGameEndReason(result);
         setScreen('gameEnd');
         screenRef.current = 'gameEnd';
+        // Снять привязку сокета к комнате на сервере, иначе при повторном открытии «Игра»
+        // requestGameState снова получит joined и вернёт в комнату.
+        wsClient.send({ type: 'leaveGame' } as any);
     };
 
     const handleDisconnect = () => {

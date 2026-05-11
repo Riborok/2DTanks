@@ -25,7 +25,7 @@ function pickColor(primary: unknown, secondary: unknown): number {
     return tryVal(primary) ?? tryVal(secondary) ?? 0;
 }
 
-/** Внешний вид танка из снимка (реплей / сервер) с запасным конфигом с лобби. */
+/** Внешний вид танка из снимка (повтор / сервер) с запасным конфигом с лобби. */
 export function tankVisualFromSnapshot(
     tank: Partial<ServerTank>,
     fallback?: Partial<TankVisualConfig>

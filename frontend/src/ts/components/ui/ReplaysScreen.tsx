@@ -150,9 +150,9 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
             <div className="replays-panel">
                 <header className="replays-header">
                     <div className="replays-header-text">
-                        <h1 className="replays-page-title">Реплеи</h1>
+                        <h1 className="replays-page-title">Повторы</h1>
                         <p className="replays-lead">
-                            Записи после завершённых матчей. Воспроизведение по журналу действий и событий.
+                            Записи после завершённых матчей.
                         </p>
                     </div>
                     <button type="button" className="ui-btn ui-btn-secondary replays-header-back" onClick={onBack}>
@@ -162,7 +162,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
 
                 <div className="replays-kpi-grid" aria-hidden="true">
                     <div className="replays-kpi-card">
-                        <div className="replays-kpi-label">Реплеи</div>
+                        <div className="replays-kpi-label">Повторы</div>
                         <div className="replays-kpi-value">{replaysCount}</div>
                     </div>
                     <div className="replays-kpi-card">
@@ -175,7 +175,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                     </div>
                 </div>
 
-                <div className="replays-tabs" role="tablist" aria-label="Раздел реплеев">
+                <div className="replays-tabs" role="tablist" aria-label="Раздел повторов">
                     <button
                         type="button"
                         role="tab"
@@ -183,7 +183,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                         className={tab === 'replays' ? 'replays-tab replays-tab--active' : 'replays-tab'}
                         onClick={() => setTab('replays')}
                     >
-                        Мои реплеи
+                        Мои повторы
                     </button>
                     <button
                         type="button"
@@ -364,7 +364,7 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                         {shareDialog.kind === 'manual' && (
                             <>
                                 <h2 id="replays-share-title" className="replays-share-title">
-                                    Ссылка на реплей
+                                    Ссылка на повтор
                                 </h2>
                                 <p className="replays-share-lead">
                                     Автоматическое копирование недоступно. Скопируйте вручную или нажмите кнопку ниже.

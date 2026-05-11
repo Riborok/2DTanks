@@ -237,7 +237,7 @@ export function useHudEvents(snapshotRef: React.MutableRefObject<GameWorldSnapsh
                 }
 
                 // Свой выстрел: новая пуля в снапшоте с sourceTankId === id своего танка
-                // (сервер присылает sourceTankId; без него — тихо пропускаем, см. старые реплеи).
+                // (сервер присылает sourceTankId; без него — тихо пропускаем, см. старые повторы).
                 const myTankId = myTank?.id;
                 const currBulletIdSet = new Set<number>();
                 for (const b of snap.bullets) {

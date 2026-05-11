@@ -314,6 +314,7 @@ function mapFriendRow(row: friendshipsRepo.FriendRow) {
         userId: row.other_user_id,
         login: row.other_login,
         displayName: row.other_display_name,
+        avatarUrl: row.other_avatar_url ?? null,
         status: row.status,
         requestedByMe: row.requested_by_me,
         createdAt: row.created_at
@@ -610,6 +611,7 @@ router.get('/users/search', async (req, res) => {
                 userId: u.user_id,
                 login: u.login,
                 displayName: u.display_name,
+                avatarUrl: u.avatar_url ?? null,
                 isOnline: onlineIds.has(u.user_id)
             }))
         });

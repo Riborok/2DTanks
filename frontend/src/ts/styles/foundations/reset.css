@@ -20,7 +20,7 @@ html {
     touch-action: manipulation;
 }
 
-/* На экранах игры/реплея скролл body запрещён — всё fullscreen-оверлеи */
+/* На экранах игры/повтора скролл body запрещён — всё fullscreen-оверлеи */
 body {
     overscroll-behavior: none;
 }

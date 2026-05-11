@@ -165,15 +165,27 @@
 }
 
 .friends-item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     padding: 10px 12px;
     border: 1px solid var(--color-border-300);
     border-radius: var(--radius-md);
     background: color-mix(in srgb, var(--color-pill-surface) 85%, transparent);
-    flex-wrap: wrap;
+    gap: 10px 12px;
+}
+
+.friends-item-main {
+    display: flex;
+    align-items: center;
     gap: 10px;
+    min-width: 0;
+}
+
+.friends-item-avatar.user-avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
 .friends-item-name {
@@ -187,6 +199,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.friends-item-name-header strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .friends-item-login {
@@ -194,50 +214,51 @@
     color: var(--color-text-400);
 }
 
-.friends-item-online-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--color-accent-green);
-    background: color-mix(in srgb, var(--color-accent-green) 12%, transparent);
-    padding: 2px 6px;
-    border-radius: 6px;
-    border: 1px solid color-mix(in srgb, var(--color-accent-green) 25%, transparent);
-    line-height: 1;
-}
-
-.friends-item-online-badge::before {
-    content: '';
-    display: block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-accent-green);
-}
-
+.friends-item-online-badge,
 .friends-item-offline-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
     font-size: 11px;
     font-weight: 600;
-    color: var(--color-text-400);
-    background: rgba(255, 255, 255, 0.05);
     padding: 2px 6px;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     line-height: 1;
 }
 
+.friends-item-online-badge::before,
 .friends-item-offline-badge::before {
     content: '';
-    display: block;
+    flex: 0 0 6px;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--color-text-500);
+}
+
+.friends-item-online-badge {
+    color: var(--color-accent-green);
+    background: color-mix(in srgb, var(--color-accent-green) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent-green) 25%, transparent);
+}
+
+.friends-item-online-badge::before {
+    background: var(--color-accent-green);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent-green) 30%, transparent),
+        0 0 3px 1px color-mix(in srgb, var(--color-accent-green) 28%, transparent);
+}
+
+.friends-item-offline-badge {
+    color: var(--color-text-400);
+    background: color-mix(in srgb, var(--color-text-400) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-text-400) 18%, transparent);
+}
+
+.friends-item-offline-badge::before {
+    background: var(--color-text-300);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-text-300) 35%, transparent);
 }
 
 .friends-item-actions {
@@ -306,8 +327,7 @@
 
 @media (max-width: 640px) {
     .friends-item {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: 1fr;
     }
 
     .friends-item-actions {

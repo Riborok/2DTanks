@@ -519,7 +519,7 @@
     cursor: not-allowed;
 }
 
-/* Список реплеев: styles/pages/replays.css. Стили .replay-playback-* — там же. */
+/* Список повторов: styles/pages/replays.css. Стили .replay-playback-* — там же. */
 
 /* Game End Screen */
 .game-end-screen {
@@ -597,4 +597,3 @@
 .game-end-scoreboard-table .game-end-me {
     background: rgba(0, 206, 201, 0.14);
 }
-

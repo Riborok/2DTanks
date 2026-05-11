@@ -38,7 +38,7 @@ const AppShell: React.FC = () => {
                         Игра
                     </NavLink>
                     <NavLink to="/replays" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-                        Реплеи
+                        Повторы
                     </NavLink>
                     <NavLink to="/gallery" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
                         Галерея

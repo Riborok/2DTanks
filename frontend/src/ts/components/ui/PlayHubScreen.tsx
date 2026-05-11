@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { WebSocketClient } from '../../online/WebSocketClient';
 
-export type PlayHubGameMode = 'standard' | 'practice' | 'deathmatch' | 'solo';
+export type PlayHubGameMode = 'standard' | 'practice' | 'deathmatch';
 
 export type PlayHubTab = 'create' | 'join';
 
@@ -16,8 +16,7 @@ const MODES: ModeDef[] = [
     {
         mode: 'deathmatch',
         title: 'Арена',
-        desc: 'FFA до 5 бойцов, 1 минута, побеждает лидер по фрагам.',
-        badge: 'популярно'
+        desc: 'FFA до 5 бойцов, 1 минута, побеждает лидер по фрагам.'
     },
     {
         mode: 'standard',
@@ -28,11 +27,6 @@ const MODES: ModeDef[] = [
         mode: 'practice',
         title: 'Тренировка',
         desc: 'Два игрока, без записи статистики и без лимита времени.'
-    },
-    {
-        mode: 'solo',
-        title: 'Соло',
-        desc: 'Один игрок против компьютера — для проверки механик.'
     }
 ];
 

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { SoundManager } from '../utils/SoundManager';
 import {
     CONTROL_ACTION_LABELS,
     CONTROL_ACTION_ORDER,
@@ -52,14 +51,6 @@ const SettingsPage: React.FC = () => {
         return () => window.removeEventListener('keydown', onKey, true);
     }, [capturing, settings.controls.keyBindings, update]);
 
-    const onAudioChange = (key: 'master' | 'music' | 'sfx' | 'ui') => (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = Number(e.target.value) / 100;
-        update('audio', { [key]: v } as any);
-        SoundManager.setVolumes({ ...settings.audio, [key]: v });
-    };
-
-    const previewClick = () => SoundManager.play('ui:click');
-
     const resetKeys = useCallback(() => {
         update('controls', { keyBindings: { ...DEFAULT_KEY_BINDINGS } });
     }, [update]);
@@ -71,7 +62,7 @@ const SettingsPage: React.FC = () => {
                     <header className="settings-header">
                         <h1 className="settings-page-title">Настройки</h1>
                         <p className="settings-lead">
-                            Параметры интерфейса, звука и управления сохраняются в этом браузере на вашем устройстве.
+                            Параметры интерфейса и управления сохраняются в этом браузере на вашем устройстве.
                         </p>
                     </header>
 
@@ -97,21 +88,6 @@ const SettingsPage: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                    </section>
-
-                    <section className="settings-section" aria-labelledby="settings-audio-heading">
-                        <h2 id="settings-audio-heading">Аудио</h2>
-                        <Slider label="Общая громкость" value={settings.audio.master} onChange={onAudioChange('master')} />
-                        <Slider label="Звуки в бою" value={settings.audio.sfx} onChange={onAudioChange('sfx')} />
-                        <Slider label="Интерфейс" value={settings.audio.ui} onChange={onAudioChange('ui')} />
-                        <Slider label="Музыка" value={settings.audio.music} onChange={onAudioChange('music')} />
-                        <button
-                            type="button"
-                            className="ui-btn ui-btn-secondary settings-action-btn"
-                            onClick={previewClick}
-                        >
-                            Проверить звук
-                        </button>
                     </section>
 
                     {!touchGameUi && (

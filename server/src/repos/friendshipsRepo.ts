@@ -35,6 +35,7 @@ export interface FriendRow {
     other_user_id: string;
     other_login: string;
     other_display_name: string | null;
+    other_avatar_url: string | null;
     status: FriendshipStatus;
     requested_by_me: boolean;
     created_at: Date;
@@ -215,11 +216,13 @@ export async function listFriends(pool: Pool, meId: string): Promise<FriendRow[]
             CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END AS other_user_id,
             u.login AS other_login,
             u.display_name AS other_display_name,
+            p.avatar_url AS other_avatar_url,
             f.status,
             (f.requested_by = $1) AS requested_by_me,
             f.created_at
          FROM friendships f
          INNER JOIN users u ON u.user_id = (CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END)
+         LEFT JOIN user_profiles p ON p.user_id = u.user_id
          WHERE (f.user_a = $1 OR f.user_b = $1) AND f.status = 'accepted'
          ORDER BY u.display_name NULLS LAST, u.login`,
         [meId]
@@ -234,11 +237,13 @@ export async function listIncomingRequests(pool: Pool, meId: string): Promise<Fr
             f.requested_by AS other_user_id,
             u.login AS other_login,
             u.display_name AS other_display_name,
+            p.avatar_url AS other_avatar_url,
             f.status,
             FALSE AS requested_by_me,
             f.created_at
          FROM friendships f
          INNER JOIN users u ON u.user_id = f.requested_by
+         LEFT JOIN user_profiles p ON p.user_id = u.user_id
          WHERE (f.user_a = $1 OR f.user_b = $1) AND f.status = 'pending' AND f.requested_by <> $1
          ORDER BY f.created_at DESC`,
         [meId]
@@ -253,11 +258,13 @@ export async function listOutgoingRequests(pool: Pool, meId: string): Promise<Fr
             CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END AS other_user_id,
             u.login AS other_login,
             u.display_name AS other_display_name,
+            p.avatar_url AS other_avatar_url,
             f.status,
             TRUE AS requested_by_me,
             f.created_at
          FROM friendships f
          INNER JOIN users u ON u.user_id = (CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END)
+         LEFT JOIN user_profiles p ON p.user_id = u.user_id
          WHERE (f.user_a = $1 OR f.user_b = $1) AND f.status = 'pending' AND f.requested_by = $1
          ORDER BY f.created_at DESC`,
         [meId]
@@ -272,11 +279,13 @@ export async function listBlocked(pool: Pool, meId: string): Promise<FriendRow[]
             CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END AS other_user_id,
             u.login AS other_login,
             u.display_name AS other_display_name,
+            p.avatar_url AS other_avatar_url,
             f.status,
             TRUE AS requested_by_me,
             f.created_at
          FROM friendships f
          INNER JOIN users u ON u.user_id = (CASE WHEN f.user_a = $1 THEN f.user_b ELSE f.user_a END)
+         LEFT JOIN user_profiles p ON p.user_id = u.user_id
          WHERE f.status = 'blocked' AND f.requested_by = $1`,
         [meId]
     );
@@ -314,12 +323,18 @@ export async function searchUsers(
     meId: string,
     query: string,
     limit = 20
-): Promise<Array<{ user_id: string; login: string; display_name: string | null }>> {
+): Promise<Array<{ user_id: string; login: string; display_name: string | null; avatar_url: string | null }>> {
     const q = query.trim();
     if (q.length < 2) return [];
-    const r = await pool.query<{ user_id: string; login: string; display_name: string | null }>(
-        `SELECT u.user_id, u.login, u.display_name
+    const r = await pool.query<{
+        user_id: string;
+        login: string;
+        display_name: string | null;
+        avatar_url: string | null;
+    }>(
+        `SELECT u.user_id, u.login, u.display_name, p.avatar_url
          FROM users u
+         LEFT JOIN user_profiles p ON p.user_id = u.user_id
          WHERE u.user_id <> $1
            AND (
                LOWER(u.login) LIKE LOWER($2) OR
