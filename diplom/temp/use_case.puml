@@ -1,0 +1,115 @@
+@startuml 2DTanks_UseCase_v2
+title 2DTanks — варианты использования (по функционалу приложения)
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+left to right direction
+
+actor "Пользователь" as U
+
+package "Доступ к системе и профиль" {
+  usecase "Зарегистрироваться" as UC_REG
+  usecase "Войти в систему" as UC_LOGIN
+  usecase "Выйти из системы" as UC_LOGOUT
+  usecase "Просмотреть профиль" as UC_PROF_V
+  usecase "Изменить профиль" as UC_PROF_E
+}
+
+package "Друзья и приглашения в игру" {
+  usecase "Управлять списком друзей" as UC_FR
+  usecase "Найти пользователя" as UC_SEARCH
+  usecase "Отправить приглашение в комнату" as UC_INV
+  usecase "Принять приглашение в комнату" as UC_ACCINV
+}
+
+package "Организация игровой сессии" {
+  usecase "Подключиться к игровому серверу" as UC_CONN
+  usecase "Создать игровую комнату" as UC_CREATE
+  usecase "Подключиться к игровой комнате" as UC_JOIN
+  usecase "Покинуть игровую комнату" as UC_LEAVE
+  usecase "Отключиться от игрового сервера" as UC_DISC
+}
+
+package "Наблюдение за игрой" {
+  usecase "Просмотреть список комнат для наблюдения" as UC_SPEC_L
+  usecase "Наблюдать за игрой" as UC_SPEC
+}
+
+package "Игровое взаимодействие" {
+  usecase "Визуализировать игровой процесс" as UC_VIS
+  usecase "Получить состояние игрового мира" as UC_SNAP
+  usecase "Выполнить игровые действия" as UC_ACT
+  usecase "Управлять игровым объектом" as UC_CTRL
+}
+
+package "Реплеи и история" {
+  usecase "Просмотреть историю матчей" as UC_HIST
+  usecase "Просмотреть реплей матча" as UC_REPL
+}
+
+package "Итоги матча" {
+  usecase "Просмотреть результат матча" as UC_RES
+  usecase "Просмотреть статистику игрока" as UC_STAT
+}
+
+package "Настройки клиента" {
+  usecase "Изменить настройки игры" as UC_SET
+}
+
+' --- Актор ---
+U --> UC_REG
+U --> UC_LOGIN
+U --> UC_LOGOUT
+U --> UC_PROF_V
+U --> UC_PROF_E
+
+U --> UC_FR
+U --> UC_SEARCH
+U --> UC_INV
+U --> UC_ACCINV
+
+U --> UC_CONN
+U --> UC_CREATE
+U --> UC_JOIN
+U --> UC_LEAVE
+
+U --> UC_SPEC_L
+U --> UC_SPEC
+
+U --> UC_VIS
+U --> UC_ACT
+
+U --> UC_HIST
+U --> UC_REPL
+
+U --> UC_RES
+U --> UC_SET
+
+' --- Профиль ---
+UC_PROF_E .> UC_PROF_V : <<extend>>
+
+' --- Сессия (как в коде: leaveGame не закрывает WebSocket) ---
+UC_CREATE ..> UC_CONN : <<include>>
+UC_JOIN ..> UC_CONN : <<include>>
+UC_INV ..> UC_CONN : <<include>>
+UC_ACCINV ..> UC_CONN : <<include>>
+UC_ACCINV ..> UC_JOIN : <<include>>
+UC_LOGOUT ..> UC_DISC : <<include>>
+
+' --- Наблюдение ---
+UC_SPEC ..> UC_CONN : <<include>>
+UC_SPEC ..> UC_SPEC_L : <<include>>
+
+' --- Бой ---
+UC_VIS ..> UC_SNAP : <<include>>
+UC_ACT ..> UC_CTRL : <<include>>
+
+' --- Экран конца матча ---
+UC_STAT .> UC_RES : <<extend>>
+
+note bottom of UC_LEAVE
+  Покидание комнаты: игрок выходит из комнаты,
+  соединение с сервером сохраняется (лобби).
+end note
+
+@enduml

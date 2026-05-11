@@ -1,0 +1,258 @@
+// 2DTanks — схема для https://dbdiagram.io
+// Собрано из: server/sql/*.sql и ленивых CREATE/ALTER в
+// friendshipsRepo.ts, replayRepo.ts, replayLikesRepo.ts, matchRepo.ts
+// Нет в приложении: seasons, user_ratings, match_tank_spawns, match_key_spawns, match_ammo_box_spawns
+
+Project "2DTanks (app PostgreSQL)" {
+  database_type: "PostgreSQL"
+  Note: '''
+  Расширение: pgcrypto (gen_random_uuid).
+  matches.season_id — колонка есть, FK на seasons в миграциях не задан.
+
+  Ограничения «полного» соответствия PostgreSQL ↔ DBML:
+  - Индексы с DESC (matches.created_at, match_replay_actions.created_at,
+    user_tank_presets user_id+created_at) в DBML не помечены как DESC.
+  - Частичные индексы (replays: is_public; shared_slug) в DBML отображены
+    как обычные — см. Note у таблицы replays.
+  - Таблицы/колонки из ленивого ensure* появляются после первого вызова API,
+    а не только из .sql: friendships, replay_likes; replays.shared_slug;
+    match_replay_actions (дублирует 004, если миграции не гоняли);
+    колонка events (ещё и 006.sql); match_stats (ещё и 007.sql + finalizeMatch).
+  '''
+}
+
+Table users {
+  user_id uuid [pk, not null, default: `gen_random_uuid()`]
+  login varchar(50) [not null, unique]
+  email varchar(255) [not null, unique]
+  password_hash varchar(255) [not null]
+  display_name varchar(100) [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    login [name: "idx_users_login"]
+    email [name: "idx_users_email"]
+  }
+}
+
+Table user_profiles {
+  profile_id uuid [pk, not null, default: `gen_random_uuid()`]
+  user_id uuid [not null, unique]
+  avatar_url varchar(500)
+  preferred_role varchar(20)
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    user_id [name: "idx_user_profiles_user_id", unique]
+  }
+
+  Note: "CHECK: preferred_role IS NULL OR preferred_role IN ('attacker', 'defender')"
+}
+
+Table match_types {
+  match_type_id uuid [pk, not null, default: `gen_random_uuid()`]
+  code varchar(50) [not null, unique]
+  name varchar(100) [not null]
+  description text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table matches {
+  match_id uuid [pk, not null, default: `gen_random_uuid()`]
+  match_type_id uuid [not null]
+  season_id uuid
+  room_code varchar(20)
+  match_status varchar(20) [not null]
+  winner_role varchar(20)
+  end_reason varchar(50)
+  duration_ticks integer
+  match_stats jsonb
+  started_at timestamptz
+  ended_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    match_type_id [name: "idx_matches_match_type_id"]
+    season_id [name: "idx_matches_season_id"]
+    match_status [name: "idx_matches_status"]
+    created_at [name: "idx_matches_created_at"]
+  }
+
+  Note: '''
+  CHECK: match_status IN ('waiting', 'in_progress', 'completed', 'aborted')
+  CHECK: winner_role IS NULL OR winner_role IN ('attacker', 'defender')
+  match_stats добавляется кодом finalizeMatch (JSONB).
+  '''
+}
+
+Table match_participants {
+  participant_id uuid [pk, not null, default: `gen_random_uuid()`]
+  match_id uuid [not null]
+  user_id uuid
+  role varchar(20) [not null]
+  tank_color varchar(20)
+  tank_hull_num smallint
+  tank_track_num smallint
+  tank_turret_num smallint
+  tank_weapon_num smallint
+  kills_count integer [not null, default: 0]
+  deaths_count integer [not null, default: 0]
+  is_winner boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    match_id [name: "idx_match_participants_match_id"]
+    user_id [name: "idx_match_participants_user_id"]
+  }
+
+  Note: '''
+  CHECK: role IN ('attacker', 'defender', 'spectator', 'fighter')
+  CHECK: kills_count >= 0
+  CHECK: deaths_count >= 0
+  '''
+}
+
+Table match_inputs {
+  input_id uuid [pk, not null, default: `gen_random_uuid()`]
+  match_id uuid [not null]
+  tick_number integer [not null]
+  player_id varchar(50) [not null]
+  action_type varchar(30) [not null]
+  is_pressed boolean [not null]
+
+  indexes {
+    (match_id, tick_number) [name: "idx_match_inputs_match_tick"]
+  }
+
+  Note: '''
+  CHECK: action_type IN (
+    'forward', 'backward', 'turn_left', 'turn_right',
+    'turret_left', 'turret_right', 'shoot'
+  )
+  '''
+}
+
+Table replays {
+  replay_id uuid [pk, not null, default: `gen_random_uuid()`]
+  match_id uuid [not null]
+  created_by_user_id uuid
+  title varchar(200) [not null]
+  is_public boolean [not null, default: false]
+  shared_slug text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    match_id [name: "idx_replays_match_id"]
+    created_by_user_id [name: "idx_replays_created_by"]
+    is_public [name: "idx_replays_is_public"]
+    shared_slug [name: "idx_replays_shared_slug", unique]
+  }
+
+  Note: '''
+  shared_slug и idx_replays_shared_slug — только после ensureSharedSlugColumn (replayRepo);
+  в PostgreSQL: CREATE UNIQUE INDEX ... (shared_slug) WHERE shared_slug IS NOT NULL.
+  idx_replays_is_public в 003.sql: CREATE INDEX ... (is_public) WHERE is_public = TRUE.
+  В блоке indexes ниже оба индекса показаны без WHERE (ограничение dbdiagram.io).
+  '''
+}
+
+Table match_replay_actions {
+  match_id uuid [pk, not null]
+  start_meta jsonb [not null]
+  actions jsonb [not null]
+  duration_ticks integer
+  events jsonb
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    created_at [name: "idx_match_replay_actions_created_at"]
+  }
+
+  Note: "Одна строка на матч; events — JSONB, колонка из 006 / replayRepo."
+}
+
+Table user_tank_presets {
+  preset_id uuid [pk, not null, default: `gen_random_uuid()`]
+  user_id uuid [not null]
+  name varchar(40) [not null]
+  tank_color smallint [not null]
+  tank_hull_num smallint [not null]
+  tank_track_num smallint [not null]
+  tank_turret_num smallint [not null]
+  tank_weapon_num smallint [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at) [name: "idx_user_tank_presets_user_id"]
+  }
+
+  Note: '''
+  CHECK: tank_color BETWEEN 0 AND 7
+  CHECK: tank_hull_num, tank_track_num, tank_turret_num, tank_weapon_num BETWEEN 0 AND 15
+  '''
+}
+
+Table friendships {
+  user_a uuid [not null]
+  user_b uuid [not null]
+  status text [not null]
+  requested_by uuid [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_a, user_b, status) [pk]
+    user_a [name: "idx_friendships_user_a"]
+    user_b [name: "idx_friendships_user_b"]
+  }
+
+  Note: '''
+  CHECK: user_a <> user_b
+  CHECK: status IN ('pending', 'accepted', 'blocked')
+  Ref ниже — логическая модель для диаграммы; в репозитории таблица
+  создаётся без REFERENCES (см. friendshipsRepo.ensureSchema).
+  '''
+}
+
+Table replay_likes {
+  replay_id uuid [not null]
+  user_id uuid [not null]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (replay_id, user_id) [pk]
+    replay_id [name: "idx_replay_likes_replay"]
+    user_id [name: "idx_replay_likes_user"]
+  }
+}
+
+// --- Relationships (как в FK приложения) ---
+
+Ref: user_profiles.user_id - users.user_id [delete: cascade]
+
+Ref: matches.match_type_id > match_types.match_type_id [delete: restrict]
+
+Ref: match_participants.match_id > matches.match_id [delete: cascade]
+Ref: match_participants.user_id > users.user_id [delete: set null]
+
+Ref: match_inputs.match_id > matches.match_id [delete: cascade]
+
+Ref: replays.match_id > matches.match_id [delete: cascade]
+Ref: replays.created_by_user_id > users.user_id [delete: set null]
+
+Ref: match_replay_actions.match_id - matches.match_id [delete: cascade]
+
+Ref: user_tank_presets.user_id > users.user_id [delete: cascade]
+
+Ref: friendships.user_a > users.user_id [delete: cascade]
+Ref: friendships.user_b > users.user_id [delete: cascade]
+Ref: friendships.requested_by > users.user_id [delete: cascade]
+
+Ref: replay_likes.replay_id > replays.replay_id [delete: cascade]
+Ref: replay_likes.user_id > users.user_id [delete: cascade]
