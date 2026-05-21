@@ -113,6 +113,21 @@ export class Room {
     }
 
     addPlayer(ws: WebSocket | null, auth: WsAuthUser | null = null): string | null {
+        if (auth?.userId) {
+            for (const player of this.players.values()) {
+                if (player.userId === auth.userId) {
+                    player.ws = ws;
+                    player.displayName = auth.displayName ?? player.displayName;
+                    if (ws) {
+                        this.sendJoinedState(ws, player);
+                        console.log(`[ROOM ${this.code}] User ${auth.userId} reattached as ${player.id}`);
+                    }
+                    this.broadcastRoomUpdate();
+                    return player.id;
+                }
+            }
+        }
+
         if (this.players.size >= this.maxPlayers) {
             return null;
         }
@@ -138,12 +153,7 @@ export class Room {
 
         // Send join confirmation
         if (ws) {
-            ws.send(JSON.stringify({
-                type: 'joined',
-                roomId: this.code,
-                playerId: playerId,
-                role: role
-            }));
+            this.sendJoinedState(ws, player);
             console.log(
                 `[ROOM ${this.code}] Player ${playerId} joined as ${role} (total: ${this.players.size}/${this.maxPlayers})`
             );
@@ -160,24 +170,7 @@ export class Room {
             if (player.userId && player.userId === auth.userId) {
                 player.ws = ws;
                 player.displayName = auth.displayName ?? player.displayName;
-                ws.send(
-                    JSON.stringify({
-                        type: 'joined',
-                        roomId: this.code,
-                        playerId: player.id,
-                        role: player.role
-                    })
-                );
-                if (this.gameWorld) {
-                    ws.send(JSON.stringify({ type: 'gameStart' }));
-                    ws.send(
-                        JSON.stringify({
-                            type: 'snapshot',
-                            tick: this.gameWorld.getTick(),
-                            world: this.gameWorld.getSnapshot()
-                        })
-                    );
-                }
+                this.sendJoinedState(ws, player);
                 this.broadcastRoomUpdate();
                 return { playerId: player.id, role: player.role };
             }
@@ -199,6 +192,10 @@ export class Room {
             // Broadcast room update to all players
             this.broadcastRoomUpdate();
         }
+    }
+
+    isPlayerCurrentSocket(playerId: string, ws: WebSocket): boolean {
+        return this.players.get(playerId)?.ws === ws;
     }
 
     setTankConfig(playerId: string, config: TankConfig): { success: boolean; message?: string } {
@@ -493,9 +490,12 @@ export class Room {
         }
     }
 
-    handleDisconnect(playerId: string): void {
+    handleDisconnect(playerId: string, ws?: WebSocket): void {
         const player = this.players.get(playerId);
         if (player && player.ws) {
+            if (ws && player.ws !== ws) {
+                return;
+            }
             player.ws = null;
         }
         this.broadcastRoomUpdate();
@@ -511,6 +511,15 @@ export class Room {
         this.broadcastRoomUpdate();
         if (this.players.size === 0) {
             this.forceCloseDueToEmpty();
+        }
+    }
+
+    leaveUser(userId: string): void {
+        const playerIds = Array.from(this.players.values())
+            .filter((player) => player.userId === userId)
+            .map((player) => player.id);
+        for (const id of playerIds) {
+            this.leavePlayer(id);
         }
     }
 
@@ -771,6 +780,25 @@ export class Room {
                 console.error(`[ROOM ${this.code}] Failed to record match end / replay:`, err);
             }
         })();
+    }
+
+    private sendJoinedState(ws: WebSocket, player: Player): void {
+        ws.send(JSON.stringify({
+            type: 'joined',
+            roomId: this.code,
+            playerId: player.id,
+            role: player.role
+        }));
+        if (this.gameWorld) {
+            ws.send(JSON.stringify({ type: 'gameStart' }));
+            ws.send(
+                JSON.stringify({
+                    type: 'snapshot',
+                    tick: this.gameWorld.getTick(),
+                    world: this.gameWorld.getSnapshot()
+                })
+            );
+        }
     }
 
     private endGame(result: GameWorldEndResult): void {

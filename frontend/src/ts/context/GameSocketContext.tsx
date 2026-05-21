@@ -286,6 +286,7 @@ const GlobalWsToasts: React.FC = () => {
 export const GameSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { tokenRef, authRestored, accessToken, authUser } = useAuth();
     const wsClientRef = useRef<WebSocketClient | null>(null);
+    const wsAuthKeyRef = useRef<string | null>(null);
     if (!wsClientRef.current) {
         wsClientRef.current = new WebSocketClient(undefined, () => tokenRef.current);
     }
@@ -301,7 +302,13 @@ export const GameSocketProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             // closeSocket, а не disconnect — сохраняем подписчиков (тосты, PlayPage)
             // и корректно закрываем сокет на сервере (снятие из реестра по userId).
             wsClient.closeSocket();
+            wsAuthKeyRef.current = null;
             return;
+        }
+        const authKey = `${authUser.userId}:${accessToken}`;
+        if (wsAuthKeyRef.current !== authKey) {
+            wsClient.closeSocket();
+            wsAuthKeyRef.current = authKey;
         }
         void wsClient.connect().catch((err) => {
             console.error('[GameSocket] connect failed', err);

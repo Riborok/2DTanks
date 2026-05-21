@@ -125,6 +125,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     );
                 }
             } else if (data.type === 'tankConfig' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} selected tank config`);
                 const result = roomManager.setTankConfig(roomCode, playerId, data.data);
                 if (!result.success) {
@@ -136,6 +139,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     );
                 }
             } else if (data.type === 'ready' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
                 console.log(`[SERVER] Player ${playerId} in room ${roomCode} is ready: ${data.ready}`);
                 const result = roomManager.setReady(roomCode, playerId, data.ready);
                 if (!result.success) {
@@ -148,6 +154,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                 }
             } else if (data.type === 'action') {
                 if (roomCode && playerId) {
+                    if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                        return;
+                    }
                     const action = data.action || data;
                     const hasAction =
                         action.forward ||
@@ -163,6 +172,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     roomManager.handlePlayerAction(roomCode, playerId, action);
                 }
             } else if (data.type === 'ping:send' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
                 const allowed: Array<'careful' | 'enemy' | 'attack' | 'retreat'> = ['careful', 'enemy', 'attack', 'retreat'];
                 const pingType = allowed.includes(data.pingType) ? data.pingType : null;
                 const x = Number(data.x);
@@ -185,6 +197,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     }
                 }
             } else if (data.type === 'chat:send' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
                 const text = String(data.text ?? '')
                     .trim()
                     .slice(0, 200);
@@ -204,6 +219,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                     }
                 }
             } else if (data.type === 'invite:send' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
                 const targetUserId = String(data.targetUserId ?? '').trim();
                 if (!targetUserId || targetUserId === wsUser.userId) {
                     ws.send(JSON.stringify({ type: 'error', message: 'Укажите друга' }));
@@ -324,6 +342,9 @@ wss.on('connection', (ws: WebSocket, req) => {
                 }
             } else if (data.type === 'requestGameState') {
                 if (roomCode && playerId) {
+                    if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                        return;
+                    }
                     const room = roomManager.getRoom(roomCode);
                     if (room) {
                         const player = room.getPlayer(playerId);
@@ -350,6 +371,11 @@ wss.on('connection', (ws: WebSocket, req) => {
                 }
             } else if (data.type === 'leaveGame') {
                 if (roomCode && playerId) {
+                    if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                        roomCode = null;
+                        playerId = null;
+                        return;
+                    }
                     roomManager.leaveRoom(roomCode, playerId);
                     roomCode = null;
                     playerId = null;
@@ -400,7 +426,7 @@ wss.on('connection', (ws: WebSocket, req) => {
 
         if (roomCode && playerId) {
             console.log(`[SERVER] Player ${playerId} disconnected from room ${roomCode}`);
-            roomManager.handleDisconnect(roomCode, playerId);
+            roomManager.handleDisconnect(roomCode, playerId, ws);
         } else if (spectatorId && spectatorRoomCode) {
             roomManager.handleSpectatorDisconnect(spectatorRoomCode, spectatorId);
         } else {

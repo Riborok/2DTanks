@@ -6,3 +6,6 @@ bundle.js
 .env
 .env.test
 .env.*.local
+
+# Local defense notes
+help/

@@ -172,9 +172,11 @@ export class WebSocketClient {
                 this.isConnecting = true;
                 const connectUrl = this.buildConnectUrl();
                 console.log('[WS] Connecting to', connectUrl.replace(/token=[^&]+/, 'token=***'));
-                this.ws = new WebSocket(connectUrl);
+                const socket = new WebSocket(connectUrl);
+                this.ws = socket;
 
-                this.ws.onopen = () => {
+                socket.onopen = () => {
+                    if (this.ws !== socket) return;
                     console.log('WebSocket connected');
                     this.wasConnected = true;
                     this.reconnectAttempts = 0;
@@ -182,7 +184,8 @@ export class WebSocketClient {
                     finishOk();
                 };
 
-                this.ws.onmessage = (event) => {
+                socket.onmessage = (event) => {
+                    if (this.ws !== socket) return;
                     try {
                         const message: ServerMessage = JSON.parse(event.data);
                         this.emit(message.type, message);
@@ -192,11 +195,13 @@ export class WebSocketClient {
                     }
                 };
 
-                this.ws.onerror = () => {
+                socket.onerror = () => {
+                    if (this.ws !== socket) return;
                     console.error('WebSocket error (см. onclose для деталей)');
                 };
 
-                this.ws.onclose = (event) => {
+                socket.onclose = (event) => {
+                    if (this.ws !== socket) return;
                     console.log('WebSocket closed', event.code, event.reason || '');
                     this.isConnecting = false;
 

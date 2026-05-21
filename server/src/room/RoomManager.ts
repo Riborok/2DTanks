@@ -12,6 +12,10 @@ export class RoomManager {
         practiceMode = false,
         deathmatchMode = false
     ): { code: string; playerId: string } {
+        if (auth?.userId) {
+            this.leaveUserRooms(auth.userId);
+        }
+
         let code: string;
         do {
             code = RoomCodeGenerator.generate();
@@ -35,6 +39,10 @@ export class RoomManager {
             return null;
         }
 
+        if (auth?.userId) {
+            this.leaveUserRooms(auth.userId, code);
+        }
+
         const result = room.addPlayer(ws, auth);
         if (!result) {
             return null;
@@ -47,6 +55,16 @@ export class RoomManager {
         // 1) Priority: active in-game room for exact user.
         for (const [code, room] of this.rooms.entries()) {
             if (!room.hasActiveGame() || !room.hasUser(auth.userId)) {
+                continue;
+            }
+            const restored = room.reconnectPlayerByUserId(ws, auth);
+            if (restored) {
+                return { code, playerId: restored.playerId };
+            }
+        }
+        // 2) Lobby/tank-selection rooms also must reattach instead of creating duplicates.
+        for (const [code, room] of this.rooms.entries()) {
+            if (room.hasActiveGame() || !room.hasUser(auth.userId)) {
                 continue;
             }
             const restored = room.reconnectPlayerByUserId(ws, auth);
@@ -80,10 +98,15 @@ export class RoomManager {
         }
     }
 
-    handleDisconnect(roomCode: string, playerId: string): void {
+    isPlayerCurrentSocket(roomCode: string, playerId: string, ws: WebSocket): boolean {
+        const room = this.rooms.get(roomCode);
+        return room?.isPlayerCurrentSocket(playerId, ws) === true;
+    }
+
+    handleDisconnect(roomCode: string, playerId: string, ws?: WebSocket): void {
         const room = this.rooms.get(roomCode);
         if (room) {
-            room.handleDisconnect(playerId);
+            room.handleDisconnect(playerId, ws);
             if (room.isEmpty()) {
                 // Clean up empty room after delay
                 setTimeout(() => {
@@ -104,6 +127,21 @@ export class RoomManager {
         room.leavePlayer(playerId);
         if (room.isEmpty()) {
             this.rooms.delete(roomCode);
+        }
+    }
+
+    leaveUserRooms(userId: string, exceptCode?: string): void {
+        for (const [code, room] of this.rooms.entries()) {
+            if (exceptCode && code === exceptCode) {
+                continue;
+            }
+            if (!room.hasUser(userId)) {
+                continue;
+            }
+            room.leaveUser(userId);
+            if (room.isEmpty()) {
+                this.rooms.delete(code);
+            }
         }
     }
 

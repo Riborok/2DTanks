@@ -111,6 +111,23 @@ const PlayPage: React.FC = () => {
     const pendingInviteJoinCodeRef = useRef<string | null>(null);
 
     useEffect(() => {
+        setRoomId('');
+        setMyPlayerId('');
+        myPlayerIdRef.current = '';
+        setMyRole('attacker');
+        setPlayers([]);
+        setError('');
+        setGameEndReason(null);
+        setMyTankConfig(null);
+        setSinglePlayerRoom(false);
+        setPracticeRoom(false);
+        setDeathmatchRoom(false);
+        setScreen('hub');
+        screenRef.current = 'hub';
+        pendingInviteJoinCodeRef.current = null;
+    }, [authUser?.userId]);
+
+    useEffect(() => {
         if (!authRestored || !accessToken || !authUser) {
             return;
         }
