@@ -7,6 +7,11 @@ import type { Pool } from 'pg';
  */
 
 async function ensureSchema(pool: Pool): Promise<void> {
+    await pool.query(`ALTER TABLE replays ADD COLUMN IF NOT EXISTS shared_slug TEXT`);
+    await pool.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_replays_shared_slug
+         ON replays (shared_slug) WHERE shared_slug IS NOT NULL`
+    );
     await pool.query(`
         CREATE TABLE IF NOT EXISTS replay_likes (
             replay_id uuid NOT NULL REFERENCES replays(replay_id) ON DELETE CASCADE,

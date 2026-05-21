@@ -4,7 +4,7 @@ import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../../polygon/entity/IEntity";
 import {ILandModel, LandModel} from "../IModel";
 import {Point, Vector} from "../../geometry/Point";
-import {PHYSICS_REFERENCE_DELTA_MS} from "../../constants/gameConstants";
+import {DEFAULT_BULLET_NUM as INITIAL_BULLET_NUM, PHYSICS_REFERENCE_DELTA_MS} from "../../constants/gameConstants";
 import {IArmor, IBulletReceiver, IBulletShooter, ILandMovement, MotionData} from "../../utils/types";
 import {PointRotator} from "../../geometry/PointRotator";
 import {shortestAngleDelta} from "../../geometry/additionalFunc";
@@ -39,7 +39,7 @@ export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletSh
 }
 
 export class TankModel extends LandModel implements ITankModel {
-    private static readonly DEFAULT_BULLET_NUM: number = 4;
+    private static readonly DEFAULT_BULLET_NUM: number = INITIAL_BULLET_NUM;
     /**
      * Насколько быстро вектор скорости подтягивается к направлению корпуса (гусеницы тянут вдоль корпуса).
      * Умножается на (1 - k·slip); не путать со старым микроскопическим коэффициентом — там получался «лед».
@@ -417,5 +417,3 @@ export class TankModel extends LandModel implements ITankModel {
         super.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
     }
 }
-
-

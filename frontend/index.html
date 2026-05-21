@@ -85,9 +85,14 @@
     <div id="root"></div>
     <script src="/src/js/bundle.js"></script>
     <script>
-        // Регистрируем service worker для PWA-кэширования. Работает только в prod-сборке
-        // под HTTPS (или localhost в dev). В hot-reload dev-сервере может быть нежелателен.
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        // На webpack-dev-server service worker мешает: он может держать старый bundle.
+        if ('serviceWorker' in navigator && location.port === '8081') {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.getRegistrations().then(function (items) {
+                    items.forEach(function (r) { r.unregister(); });
+                }).catch(function () { /* ignore */ });
+            });
+        } else if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/sw.js').catch(function () { /* ignore */ });
             });

@@ -1,16 +1,25 @@
 /*
  * Минимальный service worker: кэширует shell (HTML + бандл + иконка) через
  * install/activate и отдаёт его в офлайне/медленной сети. Запросы к /api/*
- * НЕ кэшируются — всегда идём в сеть. Ассеты /src/* кэшируем по принципу
- * stale-while-revalidate, чтобы не тормозить повторный вход, но получать
- * обновления картинок в фоне.
- *
- * Важно: в dev-режиме с рекомпиляцией бандла sw может отдать устаревший JS.
- * Поэтому имя кэша версионируем (CACHE_VERSION) — меняем при релизе.
+ * НЕ кэшируются — всегда идём в сеть. HTML и bundle берём network-first,
+ * чтобы после матча пользователь не оставался на старом JS из PWA-кэша.
  */
 
-const CACHE_VERSION = 'tanks-shell-v1';
+const CACHE_VERSION = 'tanks-shell-v2';
 const SHELL_URLS = ['/', '/index.html', '/src/js/bundle.js', '/src/img/icon.png', '/manifest.webmanifest'];
+
+async function networkFirst(req, fallbackUrl) {
+    const cache = await caches.open(CACHE_VERSION);
+    try {
+        const resp = await fetch(req);
+        if (resp && resp.ok) {
+            await cache.put(req, resp.clone());
+        }
+        return resp;
+    } catch {
+        return (await cache.match(req)) || (fallbackUrl ? caches.match(fallbackUrl) : undefined);
+    }
+}
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -46,8 +55,14 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Stale-while-revalidate для медиа/JS/CSS из /src/
-    if (url.pathname.startsWith('/src/') || url.pathname === '/src/js/bundle.js') {
+    // Bundle должен обновляться сразу; иначе UI может жить на старом коде.
+    if (url.pathname === '/src/js/bundle.js') {
+        event.respondWith(networkFirst(req));
+        return;
+    }
+
+    // Stale-while-revalidate только для статичных медиа из /src/.
+    if (url.pathname.startsWith('/src/')) {
         event.respondWith(
             caches.open(CACHE_VERSION).then(async (cache) => {
                 const cached = await cache.match(req);
@@ -63,13 +78,8 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Shell: сначала кэш, потом сеть
+    // Shell: сеть сначала, кэш только как offline fallback.
     if (req.mode === 'navigate' || SHELL_URLS.includes(url.pathname)) {
-        event.respondWith(
-            caches.match(req).then((cached) =>
-                cached ||
-                fetch(req).catch(() => caches.match('/index.html'))
-            )
-        );
+        event.respondWith(networkFirst(req, '/index.html'));
     }
 });

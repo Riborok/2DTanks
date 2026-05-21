@@ -121,6 +121,11 @@ export async function saveMatchReplayActions(
 
 export async function createReplaysForParticipants(pool: Pool, matchId: string): Promise<void> {
     await pool.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_replays_match_user_unique
+         ON replays (match_id, created_by_user_id)
+         WHERE created_by_user_id IS NOT NULL`
+    );
+    await pool.query(
         `INSERT INTO replays (match_id, created_by_user_id, title, is_public)
          SELECT m.match_id, mp.user_id,
                 'Матч ' || COALESCE(NULLIF(TRIM(m.room_code), ''), '?') || ' · ' ||
@@ -128,7 +133,8 @@ export async function createReplaysForParticipants(pool: Pool, matchId: string):
                 FALSE
          FROM matches m
          INNER JOIN match_participants mp ON mp.match_id = m.match_id
-         WHERE m.match_id = $1 AND mp.user_id IS NOT NULL`,
+         WHERE m.match_id = $1 AND mp.user_id IS NOT NULL
+         ON CONFLICT (match_id, created_by_user_id) WHERE created_by_user_id IS NOT NULL DO NOTHING`,
         [matchId]
     );
 }

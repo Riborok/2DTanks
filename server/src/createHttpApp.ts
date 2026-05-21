@@ -40,6 +40,10 @@ export function createHttpApp(): express.Application {
         })
     );
     app.use(express.json());
+    app.use('/api', (_req, res, next) => {
+        res.setHeader('Cache-Control', 'no-store');
+        next();
+    });
     app.use('/api/auth', authRoutes);
     app.use('/api/public', publicReplayRoutes);
     app.use('/api/game', gameApiRoutes);

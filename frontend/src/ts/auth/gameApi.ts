@@ -112,7 +112,10 @@ function headers(token: string): HeadersInit {
 }
 
 export async function listReplays(token: string): Promise<{ replays: ReplayListItemDto[] }> {
-    const res = await fetch(`${getApiOrigin()}/api/game/replays`, { headers: headers(token) });
+    const res = await fetch(`${getApiOrigin()}/api/game/replays`, {
+        headers: headers(token),
+        cache: 'no-store'
+    });
     const data = await parseJson<{ replays?: ReplayListItemDto[]; error?: string }>(res);
     if (!res.ok) {
         throw new Error(data.error || 'Не удалось загрузить повторы');
@@ -121,7 +124,10 @@ export async function listReplays(token: string): Promise<{ replays: ReplayListI
 }
 
 export async function listMatchHistory(token: string): Promise<{ matches: MatchHistoryItemDto[] }> {
-    const res = await fetch(`${getApiOrigin()}/api/game/matches/history`, { headers: headers(token) });
+    const res = await fetch(`${getApiOrigin()}/api/game/matches/history`, {
+        headers: headers(token),
+        cache: 'no-store'
+    });
     const data = await parseJson<{ matches?: MatchHistoryItemDto[]; error?: string }>(res);
     if (!res.ok) {
         throw new Error(data.error || 'Не удалось загрузить историю');
@@ -345,7 +351,10 @@ export interface DashboardDto {
 }
 
 export async function getDashboard(token: string): Promise<DashboardDto> {
-    const res = await fetch(`${getApiOrigin()}/api/game/dashboard`, { headers: headers(token) });
+    const res = await fetch(`${getApiOrigin()}/api/game/dashboard`, {
+        headers: headers(token),
+        cache: 'no-store'
+    });
     const data = await parseJson<Partial<DashboardDto> & { error?: string }>(res);
     if (!res.ok) {
         throw new Error(data.error || 'Не удалось загрузить дашборд');

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     listReplays,
     listMatchHistory,
@@ -13,6 +13,36 @@ type ShareDialogState =
     | { kind: 'copied'; url: string }
     | { kind: 'manual'; url: string }
     | { kind: 'error'; message: string };
+
+type ReplayDisplayItem =
+    | { kind: 'ready'; replay: ReplayListItemDto }
+    | { kind: 'pending'; match: MatchHistoryItemDto };
+
+function pendingReplayTitle(match: MatchHistoryItemDto): string {
+    const room = match.roomCode ? `Комната ${match.roomCode}` : 'Матч';
+    const rawDate = match.endedAt ?? match.startedAt;
+    if (!rawDate) {
+        return room;
+    }
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) {
+        return room;
+    }
+    return `${room} · ${date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })}`;
+}
+
+function matchStatusLabel(status: string | null): string {
+    if (status === 'completed') return 'завершён';
+    if (status === 'aborted') return 'прерван';
+    if (status === 'in_progress') return 'идёт сохранение';
+    return status ?? '—';
+}
 
 function matchHistoryPlayerLabel(row: {
     displayName?: string | null;
@@ -49,7 +79,19 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const [shareDialog, setShareDialog] = useState<ShareDialogState | null>(null);
     const shareUrlInputRef = useRef<HTMLInputElement>(null);
-    const replaysCount = replays.length;
+    const replayMatchIds = useMemo(() => new Set(replays.map((r) => r.matchId)), [replays]);
+    const replayItems = useMemo<ReplayDisplayItem[]>(() => {
+        const readyItems: ReplayDisplayItem[] = replays.map((replay) => ({ kind: 'ready', replay }));
+        const pendingItems: ReplayDisplayItem[] = matches
+            .filter((match) => match.matchStatus === 'completed' && !replayMatchIds.has(match.matchId))
+            .map((match) => ({ kind: 'pending', match }));
+        return [...readyItems, ...pendingItems].sort((a, b) => {
+            const aDate = a.kind === 'ready' ? a.replay.createdAt : (a.match.endedAt ?? a.match.startedAt ?? '');
+            const bDate = b.kind === 'ready' ? b.replay.createdAt : (b.match.endedAt ?? b.match.startedAt ?? '');
+            return new Date(bDate).getTime() - new Date(aDate).getTime();
+        });
+    }, [matches, replayMatchIds, replays]);
+    const replaysCount = replayItems.length;
     const matchesCount = matches.length;
 
     const closeShareDialog = useCallback(() => {
@@ -119,9 +161,13 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
         const run = async () => {
             try {
                 if (tab === 'replays') {
-                    const { replays: r } = await listReplays(accessToken);
+                    const [{ replays: r }, { matches: m }] = await Promise.all([
+                        listReplays(accessToken),
+                        listMatchHistory(accessToken)
+                    ]);
                     if (!cancelled) {
                         setReplays(r);
+                        setMatches(m);
                     }
                 } else {
                     const { matches: m } = await listMatchHistory(accessToken);
@@ -212,39 +258,46 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
 
                 {!loading && tab === 'replays' && (
                     <ul className="replays-list replays-cards-list">
-                        {replays.length === 0 && <li className="replays-empty">Пока нет записей. Сыграйте матч до конца.</li>}
-                        {replays.map((r) => (
-                            <li key={r.replayId} className="replays-item replays-item-card">
+                        {replayItems.length === 0 && <li className="replays-empty">Пока нет записей. Сыграйте матч до конца.</li>}
+                        {replayItems.map((item) => {
+                            const r = item.kind === 'ready' ? item.replay : null;
+                            const m = item.kind === 'pending' ? item.match : null;
+                            return (
+                            <li key={r ? r.replayId : `pending-${m!.matchId}`} className="replays-item replays-item-card">
                                 <div className="replays-item-main">
-                                    <strong className="replays-item-title">{r.title}</strong>
+                                    <strong className="replays-item-title">{r ? r.title : pendingReplayTitle(m!)}</strong>
                                     <span className="replays-meta">
-                                        {r.roomCode ? `Комната ${r.roomCode}` : 'Матч'} ·{' '}
-                                        {r.matchStatus === 'completed'
-                                            ? 'завершён'
-                                            : r.matchStatus === 'aborted'
-                                              ? 'прерван'
-                                              : r.matchStatus ?? '—'}
-                                        {r.winnerRole ? ` · победитель: ${r.winnerRole}` : ''}
+                                        {r
+                                            ? `${r.roomCode ? `Комната ${r.roomCode}` : 'Матч'} · ${matchStatusLabel(r.matchStatus)}`
+                                            : `${m!.roomCode ? `Комната ${m!.roomCode}` : 'Матч'} · ${matchStatusLabel(m!.matchStatus)}`}
+                                        {r?.winnerRole ? ` · победитель: ${r.winnerRole}` : ''}
                                     </span>
                                 </div>
                                 <div className="replays-item-actions">
-                                    <button
-                                        type="button"
-                                        className="ui-btn ui-btn-primary replays-item-cta"
-                                        onClick={() => onPlayReplay(r.replayId)}
-                                    >
-                                        Смотреть
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="ui-btn ui-btn-secondary replays-item-cta"
-                                        onClick={() => void handleShareReplay(r.replayId)}
-                                    >
-                                        Поделиться
-                                    </button>
+                                    {r ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="ui-btn ui-btn-primary replays-item-cta"
+                                                onClick={() => onPlayReplay(r.replayId)}
+                                            >
+                                                Смотреть
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="ui-btn ui-btn-secondary replays-item-cta"
+                                                onClick={() => void handleShareReplay(r.replayId)}
+                                            >
+                                                Поделиться
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <span className="replays-item-status">Повтор сохраняется</span>
+                                    )}
                                 </div>
                             </li>
-                        ))}
+                            );
+                        })}
                     </ul>
                 )}
 

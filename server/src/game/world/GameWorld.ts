@@ -4,7 +4,7 @@ import { TankModel, ITankModel } from '../../model/tank/ITankModel';
 import { IBulletModel } from '../../model/bullet/IBulletModel';
 import { TankPartsCreator } from '../../components/tank_parts/TankPartsCreator';
 import { RectangularEntity } from '../../polygon/entity/IEntity';
-import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS, dynamicCrateMass, SHIELD_DURATION_MS } from '../../constants/gameConstants';
+import { ResolutionManager, RESISTANCE_COEFFICIENT, AIR_RESISTANCE_COEFFICIENT, OBSTACLE_WALL_WIDTH_AMOUNT, OBSTACLE_WALL_HEIGHT_AMOUNT, SPAWN_GRIDS_LINES_AMOUNT, SPAWN_GRIDS_COLUMNS_AMOUNT, Bonus, PHYSICS_REFERENCE_DELTA_MS, WALL_MASS, dynamicCrateMass, SHIELD_DURATION_MS, GAMEPLAY_CONFIG } from '../../constants/gameConstants';
 import { ModelIDTracker } from '../../utils/IDTracker';
 import { EntityManipulator } from '../../polygon/entity/EntityManipulator';
 import { Quadtree, ICollisionSystem } from '../../polygon/ICollisionSystem';
@@ -89,16 +89,16 @@ export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
     private elapsedMs: number = 0;
-    private readonly FINISH_TIME = 30 * 1000;
+    private readonly FINISH_TIME = GAMEPLAY_CONFIG.MAZE.MATCH_DURATION_SEC * 1000;
     private readonly SIZE: Size = { width: 1920, height: 1080 };
     
     // Number of keys to spawn and collect per level
-    private static readonly REQUIRED_KEYS_PER_LEVEL: number = 1;
+    private static readonly REQUIRED_KEYS_PER_LEVEL: number = GAMEPLAY_CONFIG.MAZE.REQUIRED_KEYS_PER_LEVEL;
     private static readonly COLLISION_RESOLVE_ITERATIONS: number = 3;
-    private static readonly DESTRUCTIBLE_CRATE_COUNT: number = 6;
-    private static readonly DESTRUCTIBLE_CRATE_MAX_HP: number = 90;
-    private static readonly DESTRUCTIBLE_CRATE_SPAWN_TRIES: number = 30;
-    private static readonly ARENA_DESTRUCTIBLE_CRATE_COUNT: number = 10;
+    private static readonly DESTRUCTIBLE_CRATE_COUNT: number = GAMEPLAY_CONFIG.MAZE.DESTRUCTIBLE_CRATE_COUNT;
+    private static readonly DESTRUCTIBLE_CRATE_MAX_HP: number = GAMEPLAY_CONFIG.COMMON.DESTRUCTIBLE_CRATE_MAX_HP;
+    private static readonly DESTRUCTIBLE_CRATE_SPAWN_TRIES: number = GAMEPLAY_CONFIG.COMMON.DESTRUCTIBLE_CRATE_SPAWN_TRIES;
+    private static readonly ARENA_DESTRUCTIBLE_CRATE_COUNT: number = GAMEPLAY_CONFIG.ARENA.DESTRUCTIBLE_CRATE_COUNT;
 
     private tanks: Map<string, ServerTank> = new Map();
     private bullets: Map<number, ServerBullet> = new Map();
@@ -109,13 +109,13 @@ export class GameWorld {
     
     private currentLevel: number = 1;
     private keysCollected: number = 0;
-    private backgroundMaterial: number = 1;
+    private backgroundMaterial: number = GAMEPLAY_CONFIG.MAZE.INITIAL_BACKGROUND_MATERIAL;
     
     // Bonus box spawning (like BonusSpawnManager)
-    private ammoSpawnInterval: number = 5000; // Start with 5 seconds
+    private ammoSpawnInterval: number = GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS;
     private ammoSpawnTimer: number = 0;
-    private static readonly MAX_AMMO_SPAWN_INTERVAL: number = 60000; // 60 seconds max
-    private wallMaterial: number = 2;
+    private static readonly MAX_AMMO_SPAWN_INTERVAL: number = GAMEPLAY_CONFIG.COMMON.MAX_AMMO_SPAWN_INTERVAL_MS;
+    private wallMaterial: number = GAMEPLAY_CONFIG.MAZE.INITIAL_WALL_MATERIAL;
     private pointSpawner: PointSpawner | null = null;
     
     private attackerConfig: TankConfig;
@@ -133,7 +133,7 @@ export class GameWorld {
     private readonly rngSeed: number;
     /** Ячейки статичных стен deathmatch (пресет от rngSeed). Вне DM — пустой массив. */
     private readonly deathmatchArenaWallCells: ReadonlyArray<{ line: number; col: number }>;
-    private static readonly DEATHMATCH_DURATION_SEC = 30;
+    private static readonly DEATHMATCH_DURATION_SEC = GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC;
 
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
@@ -273,19 +273,14 @@ export class GameWorld {
         }
         // Reset bonus box spawn timer when level changes
         this.ammoSpawnTimer = 0;
-        this.ammoSpawnInterval = 5000; // Reset to initial interval
+        this.ammoSpawnInterval = GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS;
         
         // Determine materials based on level
-        if (level === 1) {
-            this.backgroundMaterial = 1;
-            this.wallMaterial = 2;
-        } else if (level === 2) {
-            this.backgroundMaterial = 2;
-            this.wallMaterial = 1;
-        } else {
-            this.backgroundMaterial = 0;
-            this.wallMaterial = 0;
-        }
+        const materialPreset =
+            GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS[level - 1] ??
+            GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS[GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS.length - 1];
+        this.backgroundMaterial = materialPreset.background;
+        this.wallMaterial = materialPreset.wall;
 
         if (this.deathmatchMode && this.deathmatchSpec) {
             const s = Math.min(2, Math.max(0, this.deathmatchSpec.surfaceMaterial));
@@ -1217,7 +1212,10 @@ export class GameWorld {
             
             // Increase interval for next spawn (like original)
             if (this.ammoSpawnInterval < GameWorld.MAX_AMMO_SPAWN_INTERVAL) {
-                const increaseAmount = this.randomInt(1000, 5000); // Random between 1000-5000
+                const increaseAmount = this.randomInt(
+                    GAMEPLAY_CONFIG.COMMON.AMMO_SPAWN_INTERVAL_INCREASE_MIN_MS,
+                    GAMEPLAY_CONFIG.COMMON.AMMO_SPAWN_INTERVAL_INCREASE_MAX_MS
+                );
                 this.ammoSpawnInterval += increaseAmount;
             }
         }
@@ -1227,30 +1225,32 @@ export class GameWorld {
         const res = this.randomInt(1, 100);
         // Лабиринт (standard): щит должен часто появляться; в deathmatch — реже.
         if (!this.deathmatchMode) {
-            if (res <= 42) {
+            const roll = GAMEPLAY_CONFIG.MAZE.BONUS_ROLL;
+            if (res <= roll.SHIELD_MAX) {
                 return Bonus.perkShield;
             }
-            if (res <= 62) {
+            if (res <= roll.MEDIUM_MAX) {
                 return Bonus.bulMedium;
             }
-            if (res <= 80) {
+            if (res <= roll.SNIPER_MAX) {
                 return Bonus.bulSniper;
             }
-            if (res <= 92) {
+            if (res <= roll.HEAVY_MAX) {
                 return Bonus.bulHeavy;
             }
             return Bonus.bulGrenade;
         }
-        if (res <= 8) {
+        const roll = GAMEPLAY_CONFIG.ARENA.BONUS_ROLL;
+        if (res <= roll.SHIELD_MAX) {
             return Bonus.perkShield;
         }
-        if (res < 45) {
+        if (res <= roll.MEDIUM_MAX) {
             return Bonus.bulMedium;
         }
-        if (res < 72) {
+        if (res <= roll.SNIPER_MAX) {
             return Bonus.bulSniper;
         }
-        if (res < 87) {
+        if (res <= roll.HEAVY_MAX) {
             return Bonus.bulHeavy;
         }
         return Bonus.bulGrenade;

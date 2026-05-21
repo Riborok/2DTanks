@@ -4,7 +4,7 @@ import {BulletModelCreator} from "../bullet/BulletModelCreator";
 import {IEntity} from "../../polygon/entity/IEntity";
 import {ILandModel, LandModel} from "../IModel";
 import {Point, Vector} from "../../geometry/Point";
-import {ANGLE_EPSILON} from "../../constants/gameConstants";
+import {ANGLE_EPSILON, DEFAULT_BULLET_NUM as INITIAL_BULLET_NUM} from "../../constants/gameConstants";
 import {IArmor, IBulletReceiver, IBulletShooter, ILandMovement, MotionData} from "../../additionally/type";
 import {PointRotator} from "../../geometry/PointRotator";
 import {calcTurn, clampAngle, isAngleInQuadrant2or3} from "../../geometry/additionalFunc";
@@ -23,7 +23,7 @@ export interface ITankModel extends ILandModel, IArmor, ILandMovement, IBulletSh
 }
 
 export class TankModel extends LandModel implements ITankModel {
-    private static readonly DEFAULT_BULLET_NUM: number = 4;
+    private static readonly DEFAULT_BULLET_NUM: number = INITIAL_BULLET_NUM;
 
     private readonly _tankParts: TankParts;
 

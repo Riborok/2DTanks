@@ -7,6 +7,7 @@ import * as matchRepo from '../repos/matchRepo';
 import * as replayRepo from '../repos/replayRepo';
 import { getRandomInt } from '../utils/additionalFunc';
 import type { GameWorldEndResult, PlayerMatchStats } from '../game/world/gameWorldEndResult';
+import { GAMEPLAY_CONFIG } from '../constants/gameConstants';
 
 type PlayerRole = 'attacker' | 'defender' | 'fighter';
 
@@ -47,7 +48,7 @@ export class Room {
     /** true между созданием gameWorld и запуском setInterval (внутри await — может зайти наблюдатель). */
     private simulationStarting: boolean = false;
     private lastGameLoopTime: number = 0;
-    private readonly TICK_RATE = 60; // 60 Hz
+    private readonly TICK_RATE = GAMEPLAY_CONFIG.COMMON.SERVER_TICK_RATE;
     private readonly TICK_INTERVAL = 1000 / this.TICK_RATE;
     /**
      * Фиксированный шаг симуляции. Обязательно совпадает с шагом реплея
@@ -76,11 +77,11 @@ export class Room {
         this.practiceMode =
             options?.practiceMode === true && !this.singlePlayerTest && !this.deathmatchMode;
         if (this.singlePlayerTest) {
-            this.maxPlayers = 1;
+            this.maxPlayers = GAMEPLAY_CONFIG.MAZE.SOLO_MAX_PLAYERS;
         } else if (this.deathmatchMode) {
-            this.maxPlayers = 5;
+            this.maxPlayers = GAMEPLAY_CONFIG.ARENA.MAX_PLAYERS;
         } else {
-            this.maxPlayers = 2;
+            this.maxPlayers = GAMEPLAY_CONFIG.MAZE.STANDARD_MAX_PLAYERS;
         }
     }
 
@@ -718,6 +719,12 @@ export class Room {
         const events = [...this.replayEvents];
         const actions = replayRepo.replayEventsToActionRows(events);
         const startMeta = this.replayStartMeta;
+        const rawStats: PlayerMatchStats[] = this.gameWorld?.getPlayerStatsList() ?? [];
+        const playersSnapshot = [...this.players.values()].map((p) => ({
+            playerId: p.id,
+            userId: p.userId,
+            displayName: p.displayName && p.displayName.trim() ? p.displayName.trim() : null
+        }));
         this.replayEvents = [];
         this.replayStartMeta = null;
         this.matchId = null;
@@ -730,13 +737,8 @@ export class Room {
         }
         void (async () => {
             try {
-                const rawStats: PlayerMatchStats[] = this.gameWorld?.getPlayerStatsList() ?? [];
-                const displayByPlayerId = new Map(
-                    [...this.players.values()].map((p) => [
-                        p.id,
-                        p.displayName && p.displayName.trim() ? p.displayName.trim() : null
-                    ])
-                );
+                const displayByPlayerId = new Map(playersSnapshot.map((p) => [p.playerId, p.displayName]));
+                const userByPlayerId = new Map(playersSnapshot.map((p) => [p.playerId, p.userId]));
                 const matchStats: PlayerMatchStats[] = rawStats.map((row) => ({
                     ...row,
                     displayName: displayByPlayerId.get(row.playerId) ?? row.displayName ?? null
@@ -744,7 +746,7 @@ export class Room {
                 const winnerUserIds =
                     params.deathmatchWinnerPlayerIds && params.deathmatchWinnerPlayerIds.length > 0
                         ? params.deathmatchWinnerPlayerIds
-                              .map((pid) => this.players.get(pid)?.userId)
+                              .map((pid) => userByPlayerId.get(pid))
                               .filter((id): id is string => Boolean(id))
                         : null;
                 await matchRepo.finalizeMatch(pool, {

@@ -1,5 +1,59 @@
 import {FieldMap} from "../additionally/type";
 
+export const GAMEPLAY_CONFIG = {
+    COMMON: {
+        DEFAULT_BULLET_NUM: 4, // Base ammo: 0 light, 1 medium, 2 heavy, 3 sniper, 4 grenade
+        SERVER_TICK_RATE: 60, // Server simulation Hz
+        RESISTANCE_COEFFICIENT: [0.6, 0.76, 0.9], // Surface resistance: grass, ground, sandstone
+
+        INITIAL_AMMO_SPAWN_INTERVAL_MS: 5000, // First bonus spawn delay
+        MAX_AMMO_SPAWN_INTERVAL_MS: 60000, // Max bonus spawn delay
+        AMMO_SPAWN_INTERVAL_INCREASE_MIN_MS: 1000, // Min delay increase per spawn
+        AMMO_SPAWN_INTERVAL_INCREASE_MAX_MS: 5000, // Max delay increase per spawn
+        SHIELD_DURATION_MS: 5000, // Shield pickup duration
+
+        DESTRUCTIBLE_CRATE_MAX_HP: 90, // Crate hit points
+        DESTRUCTIBLE_CRATE_SPAWN_TRIES: 30 // Spawn placement attempts
+    },
+
+    ARENA: {
+        MATCH_DURATION_SEC: 30, // Round duration
+        MAX_PLAYERS: 5, // Max arena players
+        DESTRUCTIBLE_CRATE_COUNT: 10, // Initial crate count
+        BONUS_ROLL: {
+            SHIELD_MAX: 8, // Roll <= value
+            MEDIUM_MAX: 44, // Roll <= value
+            SNIPER_MAX: 71, // Roll <= value
+            HEAVY_MAX: 86 // Roll <= value
+        }
+    },
+
+    MAZE: {
+        MATCH_DURATION_SEC: 30, // Match duration
+        SOLO_MAX_PLAYERS: 1, // Solo test players
+        STANDARD_MAX_PLAYERS: 2, // 1v1 players
+        REQUIRED_KEYS_PER_LEVEL: 1, // Keys needed per level
+        DESTRUCTIBLE_CRATE_COUNT: 6, // Initial crate count
+        INITIAL_BACKGROUND_MATERIAL: 1, // Initial floor material
+        INITIAL_WALL_MATERIAL: 2, // Initial wall material
+        LEVEL_MATERIALS: [
+            { background: 1, wall: 2 },
+            { background: 2, wall: 1 },
+            { background: 0, wall: 0 }
+        ], // Per-level materials
+        BONUS_ROLL: {
+            SHIELD_MAX: 42, // Roll <= value
+            MEDIUM_MAX: 62, // Roll <= value
+            SNIPER_MAX: 80, // Roll <= value
+            HEAVY_MAX: 92 // Roll <= value
+        }
+    }
+} as const;
+
+export const DEFAULT_BULLET_NUM = GAMEPLAY_CONFIG.COMMON.DEFAULT_BULLET_NUM;
+export const RESISTANCE_COEFFICIENT = GAMEPLAY_CONFIG.COMMON.RESISTANCE_COEFFICIENT;
+export const SHIELD_DURATION_MS = GAMEPLAY_CONFIG.COMMON.SHIELD_DURATION_MS;
+
 export class ResolutionManager {
     /** Логическое поле сервера (совпадает с GameWorld на бэкенде) */
     public static readonly BASE_GAME_WIDTH: number = 1920;
@@ -140,7 +194,6 @@ export const ANGLE_EPSILON: number = Math.PI / 180;
 export const MATERIAL: string[] = ['Grass', 'Ground', 'Sandstone'];
 export const SHAPE: string[] = ['Rect', 'Square'];
 export const WALL_MASS: number[][] = [[4, 2], [5.5, 2.5], [7, 3]];
-export const RESISTANCE_COEFFICIENT: number[] = [0.55, 0.7, 0.85];
 export const AIR_RESISTANCE_COEFFICIENT: number = 0.0000015;
 export const BULLET_ANIMATION_SIZE_INCREASE_COEFF: number = 5;
 export const GRAVITY_ACCELERATION: number = 0.01;
@@ -165,4 +218,3 @@ export enum Bonus {
     key = 5,
     perkShield = 6
 }
-

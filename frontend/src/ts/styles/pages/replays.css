@@ -261,6 +261,22 @@
     min-width: min(140px, 100%);
 }
 
+.replays-item-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: min(180px, 100%);
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 6px;
+    color: var(--color-text-300);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: center;
+    background: var(--color-surface-200);
+}
+
 .replays-stat-toggle {
     margin-top: 4px;
     align-self: flex-start;
