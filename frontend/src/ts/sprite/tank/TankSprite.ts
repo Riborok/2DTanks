@@ -127,18 +127,42 @@ export class TankSprite implements ISpriteParts {
 
         this.defaultUpdate(point, hullAngle, turretAngle, sin, cos);
     }
-    public updateAfterAction(point: Point, hullAngle: number, turretAngle: number, isIdle: boolean = false, isReversing: boolean = false) {
+    /** Один шаг процедурного следа (для детерминированной симуляции реплея по ключевым кадрам). */
+    public applyTireTrackStep(point: Point, hullAngle: number): void {
         const sin = Math.sin(hullAngle);
         const cos = Math.cos(hullAngle);
-        if (!isReversing) {
+        this.updateTireTrack(point, hullAngle, sin, cos);
+    }
+
+    public updateAfterAction(
+        point: Point,
+        hullAngle: number,
+        turretAngle: number,
+        isIdle: boolean = false,
+        isReversing: boolean = false,
+        skipTireTracks: boolean = false
+    ) {
+        const sin = Math.sin(hullAngle);
+        const cos = Math.cos(hullAngle);
+        if (!isReversing && !skipTireTracks) {
             this.updateTireTrack(point, hullAngle, sin, cos);
         }
-        this.updateDriftSmoke(point, hullAngle, sin, cos);
-        this.defaultUpdate(point, hullAngle, turretAngle, sin, cos, isIdle);
+        if (!skipTireTracks) {
+            this.updateDriftSmoke(point, hullAngle, sin, cos);
+        }
+        this.defaultUpdate(point, hullAngle, turretAngle, sin, cos, isIdle, skipTireTracks);
     }
-    private defaultUpdate(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number, isIdle: boolean = false) {
+    private defaultUpdate(
+        point: Point,
+        hullAngle: number,
+        turretAngle: number,
+        sin: number,
+        cos: number,
+        isIdle: boolean = false,
+        skipTrackAnimation: boolean = false
+    ) {
         const hullDefaultPoint = this._tankSpriteParts.hullSprite.calcPosition(point, sin, cos);
-        this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint, isIdle);
+        this.updateSprite(point, hullAngle, turretAngle, sin, cos, hullDefaultPoint, isIdle, skipTrackAnimation);
     }
     public rotateTurretUpdate(hullDefaultPoint: Point, turretAngle: number, hullSin: number, hullCos: number) {
         const turretSin = Math.sin(turretAngle);
@@ -155,8 +179,16 @@ export class TankSprite implements ISpriteParts {
         let position = this._tankSpriteParts.weaponSprite.calcPosition(turretDefPoint, turretSin, turretCos);
         SpriteManipulator.updateSpritePart(this._tankSpriteParts.weaponSprite, position, turretSin, turretCos, turretAngle);
     }
-    private updateSprite(point: Point, hullAngle: number, turretAngle: number, sin: number, cos: number,
-                         hullDefaultPoint: Point, isIdle: boolean = false) {
+    private updateSprite(
+        point: Point,
+        hullAngle: number,
+        turretAngle: number,
+        sin: number,
+        cos: number,
+        hullDefaultPoint: Point,
+        isIdle: boolean = false,
+        skipTrackAnimation: boolean = false
+    ) {
         const topTrackSprite = this._tankSpriteParts.topTrackSprite;
         const bottomTrackSprite = this._tankSpriteParts.bottomTrackSprite;
         const hullSprite = this._tankSpriteParts.hullSprite;
@@ -173,7 +205,7 @@ export class TankSprite implements ISpriteParts {
         this.rotateTurretUpdate(hullDefaultPoint, turretAngle, sin, cos);
         
         // Only change frame if tank is not idle (as in original TankMovementManager.residualMovement)
-        if (!isIdle) {
+        if (!isIdle && !skipTrackAnimation) {
             this._tankTrackEffect.changeFrame(topTrackSprite, bottomTrackSprite);
         }
     }

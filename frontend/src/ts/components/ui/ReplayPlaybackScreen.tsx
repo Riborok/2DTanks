@@ -333,6 +333,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
 
         const size = resizeCanvas();
         const renderer = new OnlineGameRenderer(ctx, size);
+        renderer.setReplayMode(true);
         renderer.setPlayerLabels(new Map(Object.entries(playerNames)));
         rendererRef.current = renderer;
 
@@ -344,6 +345,11 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             replayKeyframeIdxRef.current = -1;
             lastKeyframeForTracksRef.current = -1;
             renderer.updateFromSnapshot(initial);
+            const flist = framesRef.current;
+            if (flist.length > 0) {
+                renderer.syncReplayTireTracksToKeyframe(flist, 0, -1);
+                lastKeyframeForTracksRef.current = 0;
+            }
             setDisplayFrame(0);
         }
 
@@ -351,12 +357,19 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
             const newSize = resizeCanvas();
             rendererRef.current?.clear();
             rendererRef.current = new OnlineGameRenderer(ctx, newSize);
+            rendererRef.current.setReplayMode(true);
             rendererRef.current.setPlayerLabels(new Map(Object.entries(playerNames)));
             lastKeyframeForTracksRef.current = -1;
             const snap = snapshotRef.current;
             if (snap) {
                 applyTankConfigs(rendererRef.current, snap);
                 rendererRef.current.updateFromSnapshot(snap);
+                const flist = framesRef.current;
+                const idx = Math.max(0, Math.min(flist.length - 1, Math.floor(replayPositionFrameRef.current)));
+                if (flist.length > 0) {
+                    rendererRef.current.syncReplayTireTracksToKeyframe(flist, idx, -1);
+                    lastKeyframeForTracksRef.current = idx;
+                }
             }
         };
 
@@ -396,18 +409,18 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                     const wB = flist[Math.min(idx + 1, spanIdx)].world as GameWorldSnapshot;
                     const merged = interpolateReplaySnapshots(wA, wB, alpha);
 
-                    // Heuristic seek-detection: |diff| > 30 означает большой прыжок.
                     const prevTrackKeyframe = lastKeyframeForTracksRef.current;
-                    const idxDiff = Math.abs(idx - prevTrackKeyframe);
-                    
                     const isReversing = prevTrackKeyframe >= 0 && (idx < prevTrackKeyframe || speedRef.current < 0);
                     if (rendererRef.current) {
                         rendererRef.current.setReversing(isReversing);
                     }
-                    if (prevTrackKeyframe >= 0 && (isReversing || idxDiff > 1)) {
+                    if (prevTrackKeyframe >= 0 && (isReversing || Math.abs(idx - prevTrackKeyframe) > 1)) {
                         resetReplayOneShotState();
                     }
-                    lastKeyframeForTracksRef.current = idx;
+                    if (idx !== prevTrackKeyframe && rendererRef.current) {
+                        rendererRef.current.syncReplayTireTracksToKeyframe(flist, idx, prevTrackKeyframe);
+                        lastKeyframeForTracksRef.current = idx;
+                    }
 
                     if (idx !== replayKeyframeIdxRef.current) {
                         // Эффекты (взрывы/импакты) проигрываем только при движении вперёд.
@@ -523,6 +536,10 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                 }
 
                 if (rendererRef.current && snapshotRef.current) {
+                    rendererRef.current.setReplayPlaybackClock(
+                        replayPositionFrameRef.current,
+                        frameMsRef.current
+                    );
                     rendererRef.current.render();
                 }
             } catch (err) {

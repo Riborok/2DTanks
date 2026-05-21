@@ -21,6 +21,7 @@ import { Rectangle } from '../game/processors/shapes/IRectangle';
 import { calcDistance, calcMidBetweenTwoPoint } from '../geometry/additionalFunc';
 import { ServerTank, ServerExplosion, ServerGrenadeExplosion, ServerBulletImpact, ServerCrate } from './types';
 import { tankVisualFromSnapshot } from './tankVisualFromSnapshot';
+import { resolveReplayTankIdle } from './replayInterpolation';
 import type { TirePair } from '../sprite/tank/tank effects/TankTireTrack';
 import { TankExplosionAnimation } from '../sprite/animation/TankExplosionAnimation';
 import { GrenadeExplosionAnimation } from '../sprite/animation/GrenadeExplosionAnimation';
@@ -65,6 +66,12 @@ export class OnlineGameRenderer {
     /** Пары следов шин, которые плавно исчезают (как в офлайн-логике TankTireTrack). */
     private readonly vanishingTirePairs = new DoublyLinkedList<TirePair>();
     private static readonly TIRE_VANISH_OPACITY_PER_MS = 1 / 1800;
+    private static readonly TIRE_VANISH_DURATION_MS = 1800;
+    /** В реплее: индекс кадра (дробный), с которого пара ушла в затухание. */
+    private readonly replayVanishStartFrame = new Map<TirePair, number>();
+    private readonly replayTaggedVanishPairs = new WeakSet<TirePair>();
+    private replayPositionFrame = 0;
+    private replayFrameMs = 1000 / 60;
     /** Данные танков для полос HP/брони каждый кадр (updateFromSnapshot обновляет). */
     private tanksDataForHealthBars: ServerTank[] = [];
     private tanks: Map<string, RenderableTank> = new Map();
@@ -92,8 +99,204 @@ export class OnlineGameRenderer {
 
     private wasReversing: boolean = false;
 
+    /**
+     * В реплее следы строятся только по дискретным ключевым кадрам (syncReplayTireTracksToKeyframe),
+     * а не на каждом кадре интерполяции — иначе результат зависит от скорости воспроизведения.
+     */
+    private replayMode = false;
+
+    public setReplayMode(enabled: boolean): void {
+        this.replayMode = enabled;
+        if (!enabled) {
+            this.replayVanishStartFrame.clear();
+        }
+    }
+
+    /** Позиция воспроизведения реплея (дробный индекс кадра) для детерминированного затухания следов. */
+    public setReplayPlaybackClock(positionFrame: number, frameMs: number): void {
+        this.replayPositionFrame = positionFrame;
+        if (frameMs > 0) {
+            this.replayFrameMs = frameMs;
+        }
+    }
+
     public setReversing(val: boolean): void {
         this.isReversing = val;
+    }
+
+    private clearAllTireTracks(): void {
+        for (const tank of this.tanks.values()) {
+            tank.sprite.vanishTireTracks();
+        }
+        const lingering = [...this.vanishingTirePairs];
+        for (const pair of lingering) {
+            this.canvas.removeById(pair.topTire as unknown as ISprite);
+            this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+        }
+        this.vanishingTirePairs.clear();
+        this.replayVanishStartFrame.clear();
+    }
+
+    private tagVanishingPairsForKeyframe(keyframe: number): void {
+        for (const pair of this.vanishingTirePairs) {
+            if (!this.replayTaggedVanishPairs.has(pair)) {
+                this.replayTaggedVanishPairs.add(pair);
+                this.replayVanishStartFrame.set(pair, keyframe);
+            }
+        }
+    }
+
+    private tankCenterFromServer(tank: ServerTank): Point {
+        return new Point(
+            ResolutionManager.worldToCanvasX(tank.x),
+            ResolutionManager.worldToCanvasY(tank.y)
+        );
+    }
+
+    private ensureRenderableTank(serverTank: ServerTank): RenderableTank {
+        let renderableTank = this.tanks.get(serverTank.id);
+        const config = tankVisualFromSnapshot(serverTank, this.tankConfigs.get(serverTank.id));
+        if (!renderableTank) {
+            const tankParts = TankPartsCreator.create(
+                config.hullNum,
+                config.trackNum,
+                config.turretNum,
+                config.weaponNum
+            );
+            const spriteParts = TankSpritePartsCreator.create(
+                config.color,
+                config.hullNum,
+                config.trackNum,
+                config.turretNum,
+                config.weaponNum
+            );
+            const sprite = new TankSprite(spriteParts, tankParts.track.forwardData, tankParts.track.backwardData);
+            sprite.spawnDriftSmoke(this.animationManager);
+            renderableTank = { id: serverTank.id, sprite, config };
+            this.tanks.set(serverTank.id, renderableTank);
+            const parts = sprite.tankSpriteParts;
+            this.canvas.insert(parts.topTrackSprite);
+            this.canvas.insert(parts.bottomTrackSprite);
+            this.canvas.insert(parts.hullSprite);
+            this.canvas.insert(parts.turretSprite);
+            this.canvas.insert(parts.weaponSprite);
+        }
+        return renderableTank;
+    }
+
+    private applyReplayTireSegment(
+        renderableTank: RenderableTank,
+        from: ServerTank,
+        to: ServerTank
+    ): void {
+        const fromPoint = this.tankCenterFromServer(from);
+        const toPoint = this.tankCenterFromServer(to);
+        const chainWidth = renderableTank.sprite.tankTireTrack?.chainWidth ?? 8;
+        const dist = Math.hypot(toPoint.x - fromPoint.x, toPoint.y - fromPoint.y);
+        const steps = Math.max(1, Math.ceil(dist / Math.max(1, chainWidth * 0.85)));
+        const isIdle = resolveReplayTankIdle(from, to);
+
+        for (let step = 1; step <= steps; step++) {
+            const t = step / steps;
+            const x = fromPoint.x + (toPoint.x - fromPoint.x) * t;
+            const y = fromPoint.y + (toPoint.y - fromPoint.y) * t;
+            let angle = to.angle;
+            if (step < steps) {
+                let delta = to.angle - from.angle;
+                while (delta > Math.PI) delta -= 2 * Math.PI;
+                while (delta < -Math.PI) delta += 2 * Math.PI;
+                angle = from.angle + delta * t;
+            }
+            const point = new Point(x, y);
+            renderableTank.sprite.applyTireTrackStep(point, angle);
+            if (step === steps) {
+                renderableTank.sprite.updateAfterAction(point, angle, to.turretAngle, isIdle, false, true);
+                renderableTank.lastPoint = point;
+            }
+        }
+    }
+
+    private applyReplayKeyframeTireStep(prevWorld: GameWorldSnapshot, nextWorld: GameWorldSnapshot): void {
+        const prevTanks = prevWorld.tanks ?? [];
+        const nextTanks = nextWorld.tanks ?? [];
+        const prevById = new Map(prevTanks.map((t) => [t.id, t]));
+
+        for (const nextTank of nextTanks) {
+            const renderableTank = this.ensureRenderableTank(nextTank);
+            const prevTank = prevById.get(nextTank.id);
+            const nextPoint = this.tankCenterFromServer(nextTank);
+
+            if (!prevTank) {
+                renderableTank.sprite.spawnTireTracks(
+                    this.canvas,
+                    nextPoint,
+                    nextTank.angle,
+                    this.vanishingTirePairs
+                );
+                renderableTank.lastPoint = nextPoint;
+                continue;
+            }
+
+            if (!renderableTank.sprite.tankTireTrack) {
+                renderableTank.sprite.spawnTireTracks(
+                    this.canvas,
+                    this.tankCenterFromServer(prevTank),
+                    prevTank.angle,
+                    this.vanishingTirePairs
+                );
+            }
+
+            this.applyReplayTireSegment(renderableTank, prevTank, nextTank);
+        }
+    }
+
+    /**
+     * Синхронизирует следы шин с ключевым кадром реплея (индекс в массиве frames).
+     * Не зависит от скорости воспроизведения и интерполяции между кадрами.
+     */
+    public syncReplayTireTracksToKeyframe(
+        frames: { world: unknown }[],
+        targetIdx: number,
+        prevSyncedIdx: number
+    ): void {
+        if (frames.length === 0 || targetIdx < 0) {
+            return;
+        }
+        const clampedTarget = Math.min(targetIdx, frames.length - 1);
+
+        if (prevSyncedIdx < 0 || clampedTarget < prevSyncedIdx) {
+            this.clearAllTireTracks();
+            const firstWorld = frames[0].world as GameWorldSnapshot;
+            this.updateFromSnapshot(firstWorld);
+            for (const tank of firstWorld.tanks ?? []) {
+                const renderableTank = this.ensureRenderableTank(tank);
+                const point = this.tankCenterFromServer(tank);
+                renderableTank.sprite.spawnTireTracks(this.canvas, point, tank.angle, this.vanishingTirePairs);
+                renderableTank.lastPoint = point;
+            }
+            for (let i = 1; i <= clampedTarget; i++) {
+                this.applyReplayKeyframeTireStep(
+                    frames[i - 1].world as GameWorldSnapshot,
+                    frames[i].world as GameWorldSnapshot
+                );
+                this.tagVanishingPairsForKeyframe(i);
+            }
+            this.applyReplayTireEvaporation(this.replayPositionFrame);
+            return;
+        }
+
+        if (clampedTarget === prevSyncedIdx) {
+            return;
+        }
+
+        for (let i = prevSyncedIdx + 1; i <= clampedTarget; i++) {
+            this.applyReplayKeyframeTireStep(
+                frames[i - 1].world as GameWorldSnapshot,
+                frames[i].world as GameWorldSnapshot
+            );
+            this.tagVanishingPairsForKeyframe(i);
+        }
+        this.applyReplayTireEvaporation(this.replayPositionFrame);
     }
 
     public resetOneShotEffectsState(): void {
@@ -270,41 +473,40 @@ export class OnlineGameRenderer {
                     ResolutionManager.worldToCanvasX(serverTank.x),
                     ResolutionManager.worldToCanvasY(serverTank.y)
                 );
-                sprite.spawnTireTracks(this.canvas, spawnPoint, serverTank.angle, this.vanishingTirePairs);
+                if (!this.replayMode) {
+                    sprite.spawnTireTracks(this.canvas, spawnPoint, serverTank.angle, this.vanishingTirePairs);
+                }
             }
             
             const centerPoint = new Point(ResolutionManager.worldToCanvasX(serverTank.x), ResolutionManager.worldToCanvasY(serverTank.y));
 
-            let teleported = false;
-            if (renderableTank.lastPoint) {
-                const dist = Math.hypot(renderableTank.lastPoint.x - centerPoint.x, renderableTank.lastPoint.y - centerPoint.y);
-                if (dist > 150) {
-                    teleported = true;
-                }
-            }
-
-            if (teleported || (this.wasReversing && !this.isReversing)) {
-                renderableTank.sprite.vanishTireTracks();
-                
-                // Limit the size of vanishing list to avoid lag on long scrubs
-                let size = 0;
-                for (const _ of this.vanishingTirePairs) size++;
-                if (size > 200) {
-                    let removed = 0;
-                    this.vanishingTirePairs.applyAndRemove(() => {}, (pair) => {
-                        if (removed < 50) {
-                            this.canvas.removeById(pair.topTire as unknown as ISprite);
-                            this.canvas.removeById(pair.bottomTire as unknown as ISprite);
-                            removed++;
-                            return true;
-                        }
-                        return false;
-                    }, 0);
+            if (!this.replayMode) {
+                let teleported = false;
+                if (renderableTank.lastPoint) {
+                    const dist = Math.hypot(renderableTank.lastPoint.x - centerPoint.x, renderableTank.lastPoint.y - centerPoint.y);
+                    if (dist > 150) {
+                        teleported = true;
+                    }
                 }
 
-                if (!this.isReversing) {
-                    renderableTank.sprite.spawnTireTracks(this.canvas, centerPoint, serverTank.angle, this.vanishingTirePairs);
-                } else {
+                if (teleported || (this.wasReversing && !this.isReversing)) {
+                    renderableTank.sprite.vanishTireTracks();
+
+                    let size = 0;
+                    for (const _ of this.vanishingTirePairs) size++;
+                    if (size > 200) {
+                        let removed = 0;
+                        this.vanishingTirePairs.applyAndRemove(() => {}, (pair) => {
+                            if (removed < 50) {
+                                this.canvas.removeById(pair.topTire as unknown as ISprite);
+                                this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+                                removed++;
+                                return true;
+                            }
+                            return false;
+                        }, 0);
+                    }
+
                     renderableTank.sprite.spawnTireTracks(this.canvas, centerPoint, serverTank.angle, this.vanishingTirePairs);
                 }
             }
@@ -317,7 +519,14 @@ export class OnlineGameRenderer {
                 renderableTank.sprite.tankTrackEffect.stopped();
             }
             
-            renderableTank.sprite.updateAfterAction(centerPoint, serverTank.angle, serverTank.turretAngle, isIdle, this.isReversing);
+            renderableTank.sprite.updateAfterAction(
+                centerPoint,
+                serverTank.angle,
+                serverTank.turretAngle,
+                isIdle,
+                this.replayMode ? false : this.isReversing,
+                this.replayMode
+            );
         }
         this.wasReversing = this.isReversing;
         this.tanksDataForHealthBars =
@@ -690,9 +899,41 @@ export class OnlineGameRenderer {
         );
     }
 
+    /** Затухание следов по времени реплея (мс), а не по FPS браузера. */
+    private applyReplayTireEvaporation(positionFrame: number): void {
+        const fadeMs = OnlineGameRenderer.TIRE_VANISH_DURATION_MS;
+        const frameMs = this.replayFrameMs;
+        this.vanishingTirePairs.applyAndRemove(
+            (pair) => {
+                const start = this.replayVanishStartFrame.get(pair) ?? 0;
+                const elapsedMs = Math.max(0, (positionFrame - start) * frameMs);
+                const opacity = Math.max(0, 1 - elapsedMs / fadeMs);
+                pair.topTire.opacity = opacity;
+                pair.bottomTire.opacity = opacity;
+            },
+            (pair) => {
+                const start = this.replayVanishStartFrame.get(pair) ?? 0;
+                const elapsedMs = Math.max(0, (positionFrame - start) * frameMs);
+                const opacity = Math.max(0, 1 - elapsedMs / fadeMs);
+                const gone = opacity <= 0.02;
+                if (gone) {
+                    this.canvas.removeById(pair.topTire as unknown as ISprite);
+                    this.canvas.removeById(pair.bottomTire as unknown as ISprite);
+                    this.replayVanishStartFrame.delete(pair);
+                }
+                return gone;
+            },
+            0
+        );
+    }
+
     public render(): void {
         const dt = 16;
-        this.processVanishingTireTracks(dt);
+        if (this.replayMode) {
+            this.applyReplayTireEvaporation(this.replayPositionFrame);
+        } else {
+            this.processVanishingTireTracks(dt);
+        }
         this.animationManager.handle(dt);
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();

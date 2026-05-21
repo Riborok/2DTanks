@@ -495,9 +495,49 @@ export class GameWorld {
                 hp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP,
                 maxHp: GameWorld.DESTRUCTIBLE_CRATE_MAX_HP
             };
+            crate.model.entity.angularVelocity = 0;
             this.crates.set(crate.id, crate);
             this.collisionSystem.insert(crate.model.entity);
             placed++;
+        }
+    }
+
+    /**
+     * Разрушаемые ящики арены: только перенос, без вращения.
+     * Иначе residualAngularMovement и импульсы столкновений крутят entity.angle в снимках и на клиенте.
+     */
+    private stepDestructibleCrates(
+        resistanceCoeff: number,
+        airResistanceCoeff: number,
+        deltaTime: number
+    ): void {
+        for (const crate of this.crates.values()) {
+            const entity = crate.model.entity;
+            try {
+                this.collisionSystem.remove(entity);
+            } catch {
+                /* ignore */
+            }
+            entity.angularVelocity = 0;
+            crate.model.residualMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
+            EntityManipulator.movement(entity, deltaTime);
+            for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
+                const collisions = Array.from(this.collisionSystem.getCollisions(entity)).filter(
+                    (collided) => collided.id !== entity.id
+                );
+                if (collisions.length === 0) {
+                    break;
+                }
+                for (const collided of collisions) {
+                    CollisionResolver.resolveCollision(entity, collided);
+                    entity.angularVelocity = 0;
+                    if (this.crates.has(collided.id)) {
+                        collided.angularVelocity = 0;
+                    }
+                }
+            }
+            entity.angularVelocity = 0;
+            this.collisionSystem.insert(entity);
         }
     }
 
@@ -962,29 +1002,7 @@ export class GameWorld {
         // Reset the set for the next tick
         this.tanksWithActionsThisTick.clear();
 
-        for (const crate of this.crates.values()) {
-            try {
-                this.collisionSystem.remove(crate.model.entity);
-            } catch {
-                /* ignore */
-            }
-            crate.model.residualMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
-            crate.model.residualAngularMovement(resistanceCoeff, airResistanceCoeff, deltaTime);
-            EntityManipulator.movement(crate.model.entity, deltaTime);
-            EntityManipulator.angularMovement(crate.model.entity, deltaTime);
-            for (let iter = 0; iter < GameWorld.COLLISION_RESOLVE_ITERATIONS; iter++) {
-                const collisions = Array.from(this.collisionSystem.getCollisions(crate.model.entity)).filter(
-                    (collided) => collided.id !== crate.model.entity.id
-                );
-                if (collisions.length === 0) {
-                    break;
-                }
-                for (const collided of collisions) {
-                    CollisionResolver.resolveCollision(crate.model.entity, collided);
-                }
-            }
-            this.collisionSystem.insert(crate.model.entity);
-        }
+        this.stepDestructibleCrates(resistanceCoeff, airResistanceCoeff, deltaTime);
 
         // Update bullets (similar to BulletHandlingManager.handle)
         const bulletsToRemove: number[] = [];
@@ -1565,6 +1583,7 @@ export class GameWorld {
                     : (WALL_MASS[materialNum][shapeNum] ?? WALL_MASS[materialNum][0]),
                 c.id
             );
+            ent.angularVelocity = 0;
             const model = new WallModel(ent);
             this.crates.set(c.id, {
                 id: c.id,

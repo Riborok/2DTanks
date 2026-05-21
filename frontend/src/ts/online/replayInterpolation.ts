@@ -1,4 +1,4 @@
-import type { GameWorldSnapshot, ServerBullet, ServerTank } from './types';
+import type { GameWorldSnapshot, ServerBullet, ServerCrate, ServerTank } from './types';
 
 function lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t;
@@ -26,7 +26,7 @@ function normalizeAngleDelta(delta: number): number {
     return d;
 }
 
-function resolveReplayTankIdle(prev: ServerTank | undefined, next: ServerTank): boolean {
+export function resolveReplayTankIdle(prev: ServerTank | undefined, next: ServerTank): boolean {
     if (!prev) {
         return typeof next.isIdle === 'boolean' ? next.isIdle : true;
     }
@@ -48,6 +48,24 @@ function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): Se
     if (!prev) {
         return { ...next, isIdle: resolveReplayTankIdle(undefined, next), shieldActive: next.shieldActive };
     }
+    const idle = resolveReplayTankIdle(prev, next);
+    // Стоящий танк: не интерполируем угол/позицию между ключевыми кадрами.
+    // Иначе lerpAngle даёт медленный «поворот» (в т.ч. при обходе ±π) при неизменной стойке.
+    if (idle) {
+        return {
+            ...next,
+            x: prev.x,
+            y: prev.y,
+            angle: prev.angle,
+            turretAngle: prev.turretAngle,
+            health: next.health,
+            maxHealth: next.maxHealth,
+            armor: next.armor,
+            maxArmor: next.maxArmor,
+            isIdle: true,
+            shieldActive: next.shieldActive
+        };
+    }
     return {
         ...next,
         x: lerp(prev.x, next.x, t),
@@ -58,14 +76,33 @@ function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): Se
         maxHealth: next.maxHealth,
         armor: next.armor,
         maxArmor: next.maxArmor,
-        isIdle: resolveReplayTankIdle(prev, next),
+        isIdle: false,
         shieldActive: next.shieldActive
+    };
+}
+
+function lerpCrate(prev: ServerCrate | undefined, next: ServerCrate, t: number): ServerCrate {
+    if (!prev) {
+        return next;
+    }
+    // Угол на сервере фиксирован (ящик не вращается) — только позиция сглаживается.
+    return {
+        ...next,
+        x: lerp(prev.x, next.x, t),
+        y: lerp(prev.y, next.y, t),
+        angle: next.angle
     };
 }
 
 function lerpBullet(prev: ServerBullet | undefined, next: ServerBullet, t: number): ServerBullet {
     if (!prev) {
         return next;
+    }
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < 0.01) {
+        return { ...next, x: prev.x, y: prev.y, angle: prev.angle };
     }
     return {
         ...next,
@@ -99,12 +136,19 @@ export function interpolateReplaySnapshots(
         return lerpBullet(pb, nb, clamped);
     });
 
+    const prevCrates = (from.crates ?? []) as ServerCrate[];
+    const nextCrates = (to.crates ?? []) as ServerCrate[];
+    const crates: ServerCrate[] = nextCrates.map((nc) => {
+        const pc = prevCrates.find((p) => p.id === nc.id);
+        return lerpCrate(pc, nc, clamped);
+    });
+
     return {
         ...to,
         tanks,
         bullets,
         walls: to.walls,
-        crates: to.crates,
+        crates,
         items: to.items,
         keysCollected: to.keysCollected,
         currentLevel: to.currentLevel,
