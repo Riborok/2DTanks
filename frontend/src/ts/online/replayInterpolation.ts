@@ -26,6 +26,12 @@ function normalizeAngleDelta(delta: number): number {
     return d;
 }
 
+function isReplayTeleport(prev: ServerTank, next: ServerTank): boolean {
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    return dx * dx + dy * dy > 150 * 150;
+}
+
 export function resolveReplayTankIdle(prev: ServerTank | undefined, next: ServerTank): boolean {
     if (!prev) {
         return typeof next.isIdle === 'boolean' ? next.isIdle : true;
@@ -47,6 +53,9 @@ export function resolveReplayTankIdle(prev: ServerTank | undefined, next: Server
 function lerpTank(prev: ServerTank | undefined, next: ServerTank, t: number): ServerTank {
     if (!prev) {
         return { ...next, isIdle: resolveReplayTankIdle(undefined, next), shieldActive: next.shieldActive };
+    }
+    if (isReplayTeleport(prev, next)) {
+        return { ...next, isIdle: true, shieldActive: next.shieldActive };
     }
     const idle = resolveReplayTankIdle(prev, next);
     // Стоящий танк: не интерполируем угол/позицию между ключевыми кадрами.

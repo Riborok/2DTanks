@@ -25,8 +25,6 @@ setRoomManager(roomManager);
 // анти-спама «в рамках сессии». В прод пригодится TTL/cleanup по inactivity.
 const pingRateByPlayer = new Map<string, number>();
 const chatRateByPlayer = new Map<string, number>();
-const inviteRateBySender = new Map<string, number>();
-const inviteRateByPair = new Map<string, number>();
 
 server.listen(PORT, () => {
     console.log(`HTTP + WebSocket on port ${PORT}`);
@@ -262,24 +260,6 @@ wss.on('connection', (ws: WebSocket, req) => {
                             return;
                         }
                         const nowTs = Date.now();
-                        const lastGlobal = inviteRateBySender.get(wsUser.userId) ?? 0;
-                        if (nowTs - lastGlobal < 2000) {
-                            ws.send(JSON.stringify({ type: 'error', message: 'Слишком часто. Подождите пару секунд.' }));
-                            return;
-                        }
-                        const pairKey = `${wsUser.userId}\t${targetUserId}`;
-                        const lastPair = inviteRateByPair.get(pairKey) ?? 0;
-                        if (nowTs - lastPair < 8000) {
-                            ws.send(
-                                JSON.stringify({
-                                    type: 'error',
-                                    message: 'Этому другу уже недавно отправляли приглашение.'
-                                })
-                            );
-                            return;
-                        }
-                        inviteRateBySender.set(wsUser.userId, nowTs);
-                        inviteRateByPair.set(pairKey, nowTs);
 
                         notifyUserSockets(targetUserId, {
                             type: 'invite:msg',

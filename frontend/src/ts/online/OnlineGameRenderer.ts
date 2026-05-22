@@ -6,13 +6,12 @@ import { Point } from '../geometry/Point';
 import { TankSprite } from '../sprite/tank/TankSprite';
 import { TankSpritePartsCreator } from '../sprite/tank/TankSpritePartsCreator';
 import { TankPartsCreator } from '../components/tank parts/TankPartsCreator';
-import { ResolutionManager, Bonus, HEALTH_BAR_WIDTH_COEFF, HEALTH_BAR_HIGH_HP_COLOR, HEALTH_BAR_MEDIUM_HP_COLOR, HEALTH_BAR_LOW_HP_COLOR, ARMOR_BAR_COLOR, BULLET_ANIMATION_SIZE_INCREASE_COEFF } from '../constants/gameConstants';
+import { ResolutionManager, HEALTH_BAR_WIDTH_COEFF, HEALTH_BAR_HIGH_HP_COLOR, HEALTH_BAR_MEDIUM_HP_COLOR, HEALTH_BAR_LOW_HP_COLOR, ARMOR_BAR_COLOR, BULLET_ANIMATION_SIZE_INCREASE_COEFF } from '../constants/gameConstants';
 import { BulletSprite } from '../sprite/bullet/BulletSprite';
 import { WallSprite } from '../sprite/obstacles/WallSprite';
 import { DestructibleCrateSprite } from '../sprite/obstacles/DestructibleCrateSprite';
 import { ISprite } from '../sprite/ISprite';
-import { KeySprite } from '../sprite/collectable/KeySprite';
-import { BoxSprite } from '../sprite/collectable/BoxSprite';
+import { createPickupItemSprite, PickupItemSprite } from '../sprite/collectable/PickupItemSprite';
 import { BackgroundSprite } from '../sprite/background/BackgroundSprite';
 import { SpriteManipulator } from '../sprite/SpriteManipulator';
 import { DecorCreator } from '../game/creators/IDecorCreator';
@@ -67,6 +66,7 @@ export class OnlineGameRenderer {
     private readonly vanishingTirePairs = new DoublyLinkedList<TirePair>();
     private static readonly TIRE_VANISH_OPACITY_PER_MS = 1 / 1800;
     private static readonly TIRE_VANISH_DURATION_MS = 1800;
+    private static readonly TIRE_TRACK_TELEPORT_BREAK_PX = 150;
     /** В реплее: индекс кадра (дробный), с которого пара ушла в затухание. */
     private readonly replayVanishStartFrame = new Map<TirePair, number>();
     private readonly replayTaggedVanishPairs = new WeakSet<TirePair>();
@@ -153,6 +153,11 @@ export class OnlineGameRenderer {
         );
     }
 
+    private isTireTrackTeleport(fromPoint: Point, toPoint: Point): boolean {
+        return Math.hypot(toPoint.x - fromPoint.x, toPoint.y - fromPoint.y) >
+            OnlineGameRenderer.TIRE_TRACK_TELEPORT_BREAK_PX;
+    }
+
     private ensureRenderableTank(serverTank: ServerTank): RenderableTank {
         let renderableTank = this.tanks.get(serverTank.id);
         const config = tankVisualFromSnapshot(serverTank, this.tankConfigs.get(serverTank.id));
@@ -191,6 +196,13 @@ export class OnlineGameRenderer {
     ): void {
         const fromPoint = this.tankCenterFromServer(from);
         const toPoint = this.tankCenterFromServer(to);
+        if (this.isTireTrackTeleport(fromPoint, toPoint)) {
+            renderableTank.sprite.vanishTireTracks();
+            renderableTank.sprite.spawnTireTracks(this.canvas, toPoint, to.angle, this.vanishingTirePairs);
+            renderableTank.sprite.updateAfterAction(toPoint, to.angle, to.turretAngle, true, false, true);
+            renderableTank.lastPoint = toPoint;
+            return;
+        }
         const chainWidth = renderableTank.sprite.tankTireTrack?.chainWidth ?? 8;
         const dist = Math.hypot(toPoint.x - fromPoint.x, toPoint.y - fromPoint.y);
         const steps = Math.max(1, Math.ceil(dist / Math.max(1, chainWidth * 0.85)));
@@ -857,25 +869,29 @@ export class OnlineGameRenderer {
         // Update or create items
         for (const serverItem of serverItems) {
             let renderableItem = this.items.get(serverItem.id);
-            
+            const itemPoint = new Point(
+                ResolutionManager.worldToCanvasX(serverItem.x),
+                ResolutionManager.worldToCanvasY(serverItem.y)
+            );
+
             if (!renderableItem) {
-                let sprite: ISprite;
-                // Scale coordinates from server (1920x1080) to current canvas size
-                const itemPoint = new Point(ResolutionManager.worldToCanvasX(serverItem.x), ResolutionManager.worldToCanvasY(serverItem.y));
-                console.log(`[CLIENT] Creating item sprite: id=${serverItem.id}, type=${serverItem.type}`);
-                if (serverItem.type === Bonus.key) {
-                    sprite = new KeySprite(itemPoint, 0);
-                } else {
-                    sprite = new BoxSprite(serverItem.type, itemPoint, 0);
-                }
+                const sprite = createPickupItemSprite(serverItem.type, itemPoint, serverItem.id);
                 renderableItem = { id: serverItem.id, sprite };
                 this.items.set(serverItem.id, renderableItem);
                 this.canvas.insert(sprite);
+            } else if (renderableItem.sprite instanceof PickupItemSprite) {
+                renderableItem.sprite.setBasePoint(itemPoint);
             } else {
-                // Update item position (scale coordinates from server 1920x1080 to current canvas size)
-                const itemPoint = new Point(ResolutionManager.worldToCanvasX(serverItem.x), ResolutionManager.worldToCanvasY(serverItem.y));
                 renderableItem.sprite.point = itemPoint;
                 renderableItem.sprite.angle = 0;
+            }
+        }
+    }
+
+    private tickPickupItemAnimations(deltaTimeMs: number): void {
+        for (const item of this.items.values()) {
+            if (item.sprite instanceof PickupItemSprite) {
+                item.sprite.tickAnimation(deltaTimeMs);
             }
         }
     }
@@ -934,6 +950,7 @@ export class OnlineGameRenderer {
         } else {
             this.processVanishingTireTracks(dt);
         }
+        this.tickPickupItemAnimations(dt);
         this.animationManager.handle(dt);
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
