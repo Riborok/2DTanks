@@ -150,6 +150,22 @@ wss.on('connection', (ws: WebSocket, req) => {
                         })
                     );
                 }
+            } else if (data.type === 'roomSettings' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
+                const result = roomManager.updateSettings(roomCode, playerId, data.settings ?? {});
+                if (!result.success) {
+                    ws.send(JSON.stringify({ type: 'error', message: result.message || 'Failed to update room settings' }));
+                }
+            } else if (data.type === 'startGame' && roomCode && playerId) {
+                if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
+                    return;
+                }
+                const result = roomManager.startGame(roomCode, playerId);
+                if (!result.success) {
+                    ws.send(JSON.stringify({ type: 'error', message: result.message || 'Failed to start game' }));
+                }
             } else if (data.type === 'action') {
                 if (roomCode && playerId) {
                     if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {

@@ -14,7 +14,7 @@ import { MazeCreator } from './MazeCreator';
 import { CollisionResolver } from '../../geometry/CollisionResolver';
 import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
-import type { DeathmatchInit, GameWorldEndResult, PlayerMatchStats } from './gameWorldEndResult';
+import type { DeathmatchInit, GameWorldEndResult, GameWorldRuntimeSettings, PlayerMatchStats } from './gameWorldEndResult';
 import { SeededRandom } from '../../utils/seededRandom';
 import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
 import { WallModel } from '../../model/obstacle/IWallModel';
@@ -89,7 +89,7 @@ export class GameWorld {
     private tick: number = 0;
     private roomCode: string;
     private elapsedMs: number = 0;
-    private readonly FINISH_TIME = GAMEPLAY_CONFIG.MAZE.MATCH_DURATION_SEC * 1000;
+    private readonly finishTimeMs: number | null;
     private readonly SIZE: Size = { width: 1920, height: 1080 };
     
     // Number of keys to spawn and collect per level
@@ -113,19 +113,21 @@ export class GameWorld {
     
     // Bonus box spawning (like BonusSpawnManager)
     private ammoSpawnInterval: number = GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS;
+    private readonly configuredAmmoSpawnIntervalMs: number;
     private ammoSpawnTimer: number = 0;
-    private static readonly MAX_AMMO_SPAWN_INTERVAL: number = GAMEPLAY_CONFIG.COMMON.MAX_AMMO_SPAWN_INTERVAL_MS;
     private wallMaterial: number = GAMEPLAY_CONFIG.MAZE.INITIAL_WALL_MATERIAL;
     private pointSpawner: PointSpawner | null = null;
     
     private attackerConfig: TankConfig;
     private defenderConfig: TankConfig;
     private readonly singlePlayerTest: boolean;
-    /** Два игрока, но без лимита времени (режим тренировки). */
+    /** Два игрока без записи статистики (режим тренировки). */
     private readonly practiceMode: boolean;
     /** FFA: 2–5 игроков, 60 с, победа по киллам. */
     private readonly deathmatchMode: boolean;
     private readonly deathmatchSpec: DeathmatchInit | null;
+    private readonly matchDurationSec: number | null;
+    private readonly backgroundSequence: number[];
     private readonly killCounts = new Map<string, number>();
     private readonly playerStats = new Map<string, MutablePlayerMatchStats>();
     private readonly tankConfigByTankId = new Map<string, TankConfig>();
@@ -133,7 +135,6 @@ export class GameWorld {
     private readonly rngSeed: number;
     /** Ячейки статичных стен deathmatch (пресет от rngSeed). Вне DM — пустой массив. */
     private readonly deathmatchArenaWallCells: ReadonlyArray<{ line: number; col: number }>;
-    private static readonly DEATHMATCH_DURATION_SEC = GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC;
 
     // Track which tanks received actions in the current tick to avoid double-processing
     private tanksWithActionsThisTick: Set<string> = new Set();
@@ -162,7 +163,8 @@ export class GameWorld {
         singlePlayerTest = false,
         practiceMode = false,
         deathmatch?: DeathmatchInit | null,
-        rngSeed?: number
+        rngSeed?: number,
+        runtimeSettings: GameWorldRuntimeSettings = {}
     ) {
         this.roomCode = roomCode;
         this.attackerConfig = attackerConfig;
@@ -171,12 +173,36 @@ export class GameWorld {
         this.practiceMode = practiceMode;
         this.deathmatchSpec = deathmatch ?? null;
         this.deathmatchMode = Boolean(deathmatch && deathmatch.fighters.length >= 2);
+        const defaultDuration = this.deathmatchMode
+            ? GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC
+            : GAMEPLAY_CONFIG.MAZE.MATCH_DURATION_SEC;
+        const duration = Number(runtimeSettings.matchDurationSec);
+        this.matchDurationSec =
+            Number.isFinite(duration)
+                ? Math.max(15, Math.min(600, Math.floor(duration)))
+                : defaultDuration;
+        this.finishTimeMs = this.matchDurationSec === null ? null : this.matchDurationSec * 1000;
+        const spawnInterval = Number(runtimeSettings.ammoSpawnIntervalMs);
+        this.configuredAmmoSpawnIntervalMs = Number.isFinite(spawnInterval)
+            ? Math.max(3000, Math.min(60000, Math.floor(spawnInterval)))
+            : GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS;
+        this.ammoSpawnInterval = this.configuredAmmoSpawnIntervalMs;
+        const rawBackgrounds = Array.isArray(runtimeSettings.backgroundSequence)
+            ? runtimeSettings.backgroundSequence
+            : [];
+        this.backgroundSequence = rawBackgrounds.length > 0
+            ? rawBackgrounds.map((v) => Math.max(0, Math.min(2, Math.floor(Number(v) || 0)))).slice(0, 3)
+            : [];
         this.rngSeed = Number.isFinite(rngSeed) ? (rngSeed as number) >>> 0 : (Date.now() >>> 0);
         this.rng = new SeededRandom(this.rngSeed);
         this.deathmatchArenaWallCells = this.deathmatchMode
             ? getDeathmatchArenaWallCellsForSeed(this.rngSeed)
             : [];
         if (this.deathmatchMode && deathmatch) {
+            const surface = Number(runtimeSettings.arenaSurfaceMaterial);
+            if (Number.isFinite(surface)) {
+                deathmatch.surfaceMaterial = Math.max(0, Math.min(2, Math.floor(surface)));
+            }
             for (const f of deathmatch.fighters) {
                 this.killCounts.set(f.playerId, 0);
             }
@@ -273,19 +299,19 @@ export class GameWorld {
         }
         // Reset bonus box spawn timer when level changes
         this.ammoSpawnTimer = 0;
-        this.ammoSpawnInterval = GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS;
+        this.ammoSpawnInterval = this.configuredAmmoSpawnIntervalMs;
         
         // Determine materials based on level
         const materialPreset =
             GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS[level - 1] ??
             GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS[GAMEPLAY_CONFIG.MAZE.LEVEL_MATERIALS.length - 1];
-        this.backgroundMaterial = materialPreset.background;
+        this.backgroundMaterial = this.backgroundSequence[level - 1] ?? materialPreset.background;
         this.wallMaterial = materialPreset.wall;
 
         if (this.deathmatchMode && this.deathmatchSpec) {
             const s = Math.min(2, Math.max(0, this.deathmatchSpec.surfaceMaterial));
             this.backgroundMaterial = s;
-            this.wallMaterial = (s + 1) % 3;
+            this.wallMaterial = GAMEPLAY_CONFIG.MAZE.INITIAL_WALL_MATERIAL;
         }
 
         // Create walls
@@ -1228,14 +1254,8 @@ export class GameWorld {
             
             this.ammoSpawnTimer = 0;
             
-            // Increase interval for next spawn (like original)
-            if (this.ammoSpawnInterval < GameWorld.MAX_AMMO_SPAWN_INTERVAL) {
-                const increaseAmount = this.randomInt(
-                    GAMEPLAY_CONFIG.COMMON.AMMO_SPAWN_INTERVAL_INCREASE_MIN_MS,
-                    GAMEPLAY_CONFIG.COMMON.AMMO_SPAWN_INTERVAL_INCREASE_MAX_MS
-                );
-                this.ammoSpawnInterval += increaseAmount;
-            }
+            // Keep the configured cadence instead of ramping the interval during the match.
+            this.ammoSpawnInterval = this.configuredAmmoSpawnIntervalMs;
         }
     }
     
@@ -1817,13 +1837,13 @@ export class GameWorld {
         };
         if (this.deathmatchMode) {
             base.gameMode = 'deathmatch';
-            base.deathmatchDurationSec = GameWorld.DEATHMATCH_DURATION_SEC;
-            base.deathmatchRemainingSec = Math.max(0, GameWorld.DEATHMATCH_DURATION_SEC - elapsed);
+            base.deathmatchDurationSec = this.matchDurationSec ?? GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC;
+            base.deathmatchRemainingSec = Math.max(0, (this.matchDurationSec ?? GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC) - elapsed);
             base.killScores = Object.fromEntries(this.killCounts.entries());
         } else {
             base.gameMode = 'standard';
-            const useStandardTimeLimit = !this.singlePlayerTest && !this.practiceMode;
-            base.standardTimeLimitSec = useStandardTimeLimit ? this.FINISH_TIME / 1000 : null;
+            const useStandardTimeLimit = !this.singlePlayerTest;
+            base.standardTimeLimitSec = useStandardTimeLimit ? this.matchDurationSec : null;
         }
         return base;
     }
@@ -1844,7 +1864,7 @@ export class GameWorld {
         const timeElapsed = this.elapsedMs / 1000;
 
         if (this.deathmatchMode) {
-            if (timeElapsed < GameWorld.DEATHMATCH_DURATION_SEC) {
+            if (timeElapsed < (this.matchDurationSec ?? GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC)) {
                 return null;
             }
             const scores = Array.from(this.killCounts.entries()).map(([playerId, kills]) => ({
@@ -1870,8 +1890,8 @@ export class GameWorld {
             };
         }
 
-        const useTimeLimit = !this.singlePlayerTest && !this.practiceMode;
-        if (useTimeLimit && timeElapsed >= this.FINISH_TIME / 1000) {
+        const useTimeLimit = !this.singlePlayerTest;
+        if (useTimeLimit && this.finishTimeMs !== null && timeElapsed >= this.finishTimeMs / 1000) {
             return { mode: 'standard', winner: 'defender', reason: 'timeLimit', stats: this.buildPlayerStatsList() };
         }
 

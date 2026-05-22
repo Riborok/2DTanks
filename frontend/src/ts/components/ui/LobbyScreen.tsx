@@ -12,6 +12,13 @@ interface Player {
     userId?: string;
 }
 
+interface RoomSettings {
+    matchDurationSec: number;
+    ammoSpawnIntervalSec: number;
+    backgroundSequence: number[];
+    arenaSurfaceMaterial: number;
+}
+
 interface LobbyScreenProps {
     roomId: string;
     myPlayerId: string;
@@ -19,11 +26,16 @@ interface LobbyScreenProps {
     players: Player[];
     /** Комната в режиме одного игрока (нет защитника) */
     singlePlayerRoom?: boolean;
-    /** Тренировка: два игрока, без записи матча и без лимита времени */
+    /** Тренировка: два игрока, без записи матча */
     practiceRoom?: boolean;
     /** Deathmatch: 2–5 бойцов, 1 мин, фраги */
     deathmatchRoom?: boolean;
+    creatorPlayerId?: string;
+    canStart?: boolean;
+    roomSettings: RoomSettings;
     onReady: () => void;
+    onStartGame: () => void;
+    onRoomSettingsChange: (settings: Partial<RoomSettings>) => void;
     onCopyCode: () => void;
     /** Вернуться к экрану выбора режима (покинуть комнату). */
     onLeaveToHub: () => void;
@@ -45,7 +57,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     singlePlayerRoom = false,
     practiceRoom = false,
     deathmatchRoom = false,
+    creatorPlayerId = '',
+    canStart = false,
+    roomSettings,
     onReady,
+    onStartGame,
+    onRoomSettingsChange,
     onCopyCode,
     onLeaveToHub,
     wsClient,
@@ -97,6 +114,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         wsClient.send({ type: 'invite:send', targetUserId } as any);
     };
     const myPlayer = players.find((p) => p.playerId === myPlayerId);
+    const isCreator = myPlayerId === creatorPlayerId;
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const otherPlayers = players.filter((p: Player) => p.playerId !== myPlayerId);
     const otherPlayer = otherPlayers[0];
     const bothReady = singlePlayerRoom
@@ -109,6 +128,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     const handleCopyCode = () => {
         navigator.clipboard.writeText(roomId);
         onCopyCode();
+    };
+
+    const surfaceNames = ['Трава', 'Грунт', 'Песок'];
+    const changeSurface = (index: number, value: number) => {
+        const next = [...roomSettings.backgroundSequence];
+        next[index] = value;
+        onRoomSettingsChange({
+            backgroundSequence: next,
+            arenaSurfaceMaterial: deathmatchRoom ? value : roomSettings.arenaSurfaceMaterial
+        });
     };
 
     return (
@@ -127,15 +156,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     {singlePlayerRoom
                         ? 'Режим теста (1 игрок)'
                         : deathmatchRoom
-                          ? 'Арена: 1 минута, больше фрагов — победа (2–5 игроков)'
+                          ? 'Арена: больше фрагов — победа (2–5 игроков)'
                           : practiceRoom
-                            ? 'Тренировка (без статистики, без лимита времени)'
+                            ? 'Тренировка (без статистики)'
                             : 'Ожидание игроков'}
                 </h1>
                 {deathmatchRoom && (
                     <p className="lobby-deathmatch-hint">
-                        В комнате {players.length} / 5. Нужно от 2 до 5 участников; все нажимают «Готов» — старт.
-                        Поверхность карты случайная.
+                        В комнате {players.length} / 5. Нужно от 2 до 5 участников; все нажимают «Готов», затем создатель запускает матч.
                     </p>
                 )}
                 
@@ -170,6 +198,67 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         )}
                     </div>
                 )}
+
+                <section className="lobby-settings-panel" aria-label="Параметры матча">
+                    <div className="lobby-settings-head">
+                        <div>
+                            <h3>Параметры матча</h3>
+                            <span>{isCreator ? 'Вы создатель' : 'Задаёт создатель'}</span>
+                        </div>
+                        <button
+                            type="button"
+                            className="lobby-settings-toggle"
+                            aria-expanded={settingsOpen}
+                            onClick={() => setSettingsOpen((open) => !open)}
+                        >
+                            {settingsOpen ? 'Скрыть' : 'Показать'}
+                        </button>
+                    </div>
+                    {settingsOpen && (
+                        <div className="lobby-settings-grid">
+                            <label className="lobby-setting">
+                                <span>Длительность, сек</span>
+                                <input
+                                    type="number"
+                                    min={15}
+                                    max={600}
+                                    step={15}
+                                    value={roomSettings.matchDurationSec}
+                                    disabled={!isCreator}
+                                    onChange={(e) => onRoomSettingsChange({ matchDurationSec: Number(e.target.value) })}
+                                />
+                            </label>
+                            <label className="lobby-setting">
+                                <span>Ящики каждые, сек</span>
+                                <input
+                                    type="number"
+                                    min={3}
+                                    max={60}
+                                    step={1}
+                                    value={roomSettings.ammoSpawnIntervalSec}
+                                    disabled={!isCreator}
+                                    onChange={(e) => onRoomSettingsChange({ ammoSpawnIntervalSec: Number(e.target.value) })}
+                                />
+                            </label>
+                            {(deathmatchRoom ? [0] : [0, 1, 2]).map((idx) => (
+                                <label key={idx} className="lobby-setting">
+                                    <span>{deathmatchRoom ? 'Поверхность арены' : `Поверхность ${idx + 1}`}</span>
+                                    <select
+                                        value={roomSettings.backgroundSequence[idx] ?? 0}
+                                        disabled={!isCreator}
+                                        onChange={(e) => changeSurface(idx, Number(e.target.value))}
+                                    >
+                                        {surfaceNames.map((name, materialIdx) => (
+                                            <option key={materialIdx} value={materialIdx}>
+                                                {name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </section>
 
                 <div className="players-status players-status-grid">
                     <div className="player-status player-status-self">
@@ -306,15 +395,22 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         <LobbyChat wsClient={wsClient} myPlayerId={myPlayerId} />
                     )}
 
-                    {bothReady && (
+                    {bothReady && isCreator && (
                         <div className="game-starting">
-                            <p>
-                                {singlePlayerRoom
-                                    ? 'Игра начинается...'
-                                    : deathmatchRoom
-                                      ? 'Все готовы! Матч начинается...'
-                                      : 'Оба игрока готовы! Игра начинается...'}
-                            </p>
+                            <button
+                                type="button"
+                                className="lobby-start-button"
+                                onClick={onStartGame}
+                                disabled={!canStart}
+                            >
+                                Запустить матч
+                            </button>
+                        </div>
+                    )}
+
+                    {bothReady && !isCreator && (
+                        <div className="game-starting">
+                            <p className="lobby-wait-start-text">Все готовы. Ждём запуска от создателя комнаты.</p>
                         </div>
                     )}
                 </div>

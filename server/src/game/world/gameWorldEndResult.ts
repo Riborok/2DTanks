@@ -5,6 +5,13 @@ export type DeathmatchInit = {
     fighters: { playerId: string; config: TankConfig }[];
 };
 
+export type GameWorldRuntimeSettings = {
+    matchDurationSec?: number | null;
+    ammoSpawnIntervalMs?: number;
+    backgroundSequence?: number[];
+    arenaSurfaceMaterial?: number;
+};
+
 export type PlayerMatchStats = {
     playerId: string;
     /** Ник на момент матча (для истории / UI); для старых записей может подставляться с сервера по роли. */

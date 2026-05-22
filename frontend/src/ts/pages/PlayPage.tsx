@@ -23,6 +23,20 @@ interface Player {
     userId?: string;
 }
 
+interface RoomSettings {
+    matchDurationSec: number;
+    ammoSpawnIntervalSec: number;
+    backgroundSequence: number[];
+    arenaSurfaceMaterial: number;
+}
+
+const DEFAULT_ROOM_SETTINGS: RoomSettings = {
+    matchDurationSec: 30,
+    ammoSpawnIntervalSec: 5,
+    backgroundSequence: [1, 2, 0],
+    arenaSurfaceMaterial: 0
+};
+
 function enrichDeathmatchScores(
     scores: DeathmatchScoreRow[],
     players: Player[]
@@ -58,6 +72,7 @@ const PlayPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const hubInitialMode = useMemo(() => hubModeFromSearchParams(searchParams), [searchParams]);
     const hubTab: PlayHubTab = searchParams.get('tab') === 'join' ? 'join' : 'create';
+    const forceHubMenu = searchParams.get('menu') === '1';
 
     const setHubTab = useCallback(
         (tab: PlayHubTab) => {
@@ -103,12 +118,38 @@ const PlayPage: React.FC = () => {
     const [singlePlayerRoom, setSinglePlayerRoom] = useState(false);
     const [practiceRoom, setPracticeRoom] = useState(false);
     const [deathmatchRoom, setDeathmatchRoom] = useState(false);
+    const [creatorPlayerId, setCreatorPlayerId] = useState('');
+    const [canStart, setCanStart] = useState(false);
+    const [roomSettings, setRoomSettings] = useState<RoomSettings>(DEFAULT_ROOM_SETTINGS);
 
     const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
     const myPlayerIdRef = useRef<string>('');
     const screenRef = useRef<PlayScreen>('hub');
     const pendingInviteJoinCodeRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!forceHubMenu) {
+            return;
+        }
+        setRoomId('');
+        setMyPlayerId('');
+        myPlayerIdRef.current = '';
+        setMyRole('attacker');
+        setPlayers([]);
+        setError('');
+        setGameEndReason(null);
+        setMyTankConfig(null);
+        setSinglePlayerRoom(false);
+        setPracticeRoom(false);
+        setDeathmatchRoom(false);
+        setCreatorPlayerId('');
+        setCanStart(false);
+        setRoomSettings(DEFAULT_ROOM_SETTINGS);
+        setScreen('hub');
+        screenRef.current = 'hub';
+        pendingInviteJoinCodeRef.current = null;
+    }, [forceHubMenu]);
 
     useEffect(() => {
         setRoomId('');
@@ -135,7 +176,11 @@ const PlayPage: React.FC = () => {
         let cancelled = false;
         void wsClient.connect().then(() => {
             if (!cancelled) {
-                wsClient.send({ type: 'requestGameState' } as any);
+                if (forceHubMenu) {
+                    wsClient.send({ type: 'leaveGame' } as any);
+                } else {
+                    wsClient.send({ type: 'requestGameState' } as any);
+                }
             }
         }).catch((err) => {
             console.error('Failed to connect:', err);
@@ -157,6 +202,9 @@ const PlayPage: React.FC = () => {
             setScreen('tankSelection');
             screenRef.current = 'tankSelection';
             setError('');
+            setCreatorPlayerId('');
+            setCanStart(false);
+            setRoomSettings(DEFAULT_ROOM_SETTINGS);
         };
 
         const onError = (message: any) => {
@@ -193,6 +241,19 @@ const PlayPage: React.FC = () => {
                     screenRef.current = 'lobby';
                     setError('');
                 }
+            }
+            setCreatorPlayerId(typeof message.creatorPlayerId === 'string' ? message.creatorPlayerId : '');
+            setCanStart(message.canStart === true);
+            if (message.settings && typeof message.settings === 'object') {
+                const s = message.settings;
+                setRoomSettings({
+                    matchDurationSec: Number(s.matchDurationSec) || 30,
+                    ammoSpawnIntervalSec: Number(s.ammoSpawnIntervalSec) || 5,
+                    backgroundSequence: Array.isArray(s.backgroundSequence)
+                        ? s.backgroundSequence.map((v: unknown) => Number(v) || 0)
+                        : [1, 2, 0],
+                    arenaSurfaceMaterial: Number(s.arenaSurfaceMaterial) || 0
+                });
             }
         };
 
@@ -239,6 +300,9 @@ const PlayPage: React.FC = () => {
                 setSinglePlayerRoom(false);
                 setPracticeRoom(false);
                 setDeathmatchRoom(false);
+                setCreatorPlayerId('');
+                setCanStart(false);
+                setRoomSettings(DEFAULT_ROOM_SETTINGS);
                 setMyTankConfig(null);
                 setError('');
                 return;
@@ -253,6 +317,9 @@ const PlayPage: React.FC = () => {
             setSinglePlayerRoom(false);
             setPracticeRoom(false);
             setDeathmatchRoom(false);
+            setCreatorPlayerId('');
+            setCanStart(false);
+            setRoomSettings(DEFAULT_ROOM_SETTINGS);
             setError('');
             if (pendingCode) {
                 pendingInviteJoinCodeRef.current = null;
@@ -276,7 +343,7 @@ const PlayPage: React.FC = () => {
             wsClient.off('snapshot', onSnapshot);
             wsClient.off('leftGame', onLeftGame);
         };
-    }, [authRestored, accessToken, authUser, wsClient]);
+    }, [authRestored, accessToken, authUser, wsClient, forceHubMenu]);
 
     /** Покинуть комнату (лобби / выбор танка / бой) и вернуться к выбору режима на хабе. */
     const leaveRoomAndReturnToHub = useCallback(() => {
@@ -293,6 +360,9 @@ const PlayPage: React.FC = () => {
         setSinglePlayerRoom(false);
         setPracticeRoom(false);
         setDeathmatchRoom(false);
+        setCreatorPlayerId('');
+        setCanStart(false);
+        setRoomSettings(DEFAULT_ROOM_SETTINGS);
         setScreen('hub');
         screenRef.current = 'hub';
     }, [wsClient]);
@@ -302,6 +372,9 @@ const PlayPage: React.FC = () => {
         setSinglePlayerRoom(false);
         setPracticeRoom(mode === 'practice');
         setDeathmatchRoom(mode === 'deathmatch');
+        setCreatorPlayerId('');
+        setCanStart(false);
+        setRoomSettings(DEFAULT_ROOM_SETTINGS);
         wsClient.send({ type: 'createRoom', mode } as any);
     };
 
@@ -310,6 +383,9 @@ const PlayPage: React.FC = () => {
         setSinglePlayerRoom(false);
         setPracticeRoom(false);
         setDeathmatchRoom(false);
+        setCreatorPlayerId('');
+        setCanStart(false);
+        setRoomSettings(DEFAULT_ROOM_SETTINGS);
         wsClient.send({ type: 'joinRoom', code });
     };
 
@@ -347,6 +423,9 @@ const PlayPage: React.FC = () => {
             setSinglePlayerRoom(false);
             setPracticeRoom(false);
             setDeathmatchRoom(false);
+            setCreatorPlayerId('');
+            setCanStart(false);
+            setRoomSettings(DEFAULT_ROOM_SETTINGS);
             setGameEndReason(null);
             // joinRoom отправим только после серверного leftGame (см. onLeftGame).
         },
@@ -398,6 +477,14 @@ const PlayPage: React.FC = () => {
     const handleReady = () => {
         console.log('Sending ready message');
         wsClient.send({ type: 'ready', ready: true });
+    };
+
+    const handleRoomSettingsChange = (settings: Partial<RoomSettings>) => {
+        wsClient.send({ type: 'roomSettings', settings });
+    };
+
+    const handleStartGame = () => {
+        wsClient.send({ type: 'startGame' });
     };
 
     const handleGameEnd = (
@@ -491,7 +578,12 @@ const PlayPage: React.FC = () => {
                     singlePlayerRoom={singlePlayerRoom}
                     practiceRoom={practiceRoom}
                     deathmatchRoom={deathmatchRoom}
+                    creatorPlayerId={creatorPlayerId}
+                    canStart={canStart}
+                    roomSettings={roomSettings}
                     onReady={handleReady}
+                    onStartGame={handleStartGame}
+                    onRoomSettingsChange={handleRoomSettingsChange}
                     onCopyCode={() => {}}
                     onLeaveToHub={leaveRoomAndReturnToHub}
                     wsClient={wsClient}

@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { Room, type RoomCreateOptions } from './Room';
+import { Room, type RoomCreateOptions, type RoomSettings } from './Room';
 import { RoomCodeGenerator } from '../utils/roomCodeGenerator';
 import type { WsAuthUser } from '../auth/types';
 
@@ -87,6 +87,22 @@ export class RoomManager {
         const room = this.rooms.get(roomCode);
         if (room) {
             return room.setReady(playerId, ready);
+        }
+        return { success: false, message: 'Room not found' };
+    }
+
+    updateSettings(roomCode: string, playerId: string, settings: Partial<RoomSettings>): { success: boolean; message?: string } {
+        const room = this.rooms.get(roomCode);
+        if (room) {
+            return room.updateSettings(playerId, settings);
+        }
+        return { success: false, message: 'Room not found' };
+    }
+
+    startGame(roomCode: string, playerId: string): { success: boolean; message?: string } {
+        const room = this.rooms.get(roomCode);
+        if (room) {
+            return room.startGame(playerId);
         }
         return { success: false, message: 'Room not found' };
     }

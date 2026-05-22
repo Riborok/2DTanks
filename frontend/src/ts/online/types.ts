@@ -100,6 +100,8 @@ export interface GameWorldSnapshot {
     grenadeExplosions?: ServerGrenadeExplosion[]; // Optional: grenade explosions from this tick
     bulletImpacts?: ServerBulletImpact[];
     hullCollisions?: ServerHullCollision[];
+    backgroundMaterial?: number;
+    wallMaterial?: number;
     keysCollected: number;
     currentLevel: number;
     timeElapsed: number;

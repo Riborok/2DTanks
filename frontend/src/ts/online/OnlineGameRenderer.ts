@@ -389,9 +389,15 @@ export class OnlineGameRenderer {
                 : 1;
         /** Сравнение до смены this.currentLevel — иначе блок стен никогда не срабатывал. */
         const levelChangedForWalls = snapLevel !== this.currentLevel;
+        const snapshotBackgroundMaterial = Number(snapshot.backgroundMaterial);
+        const materialNum = Number.isFinite(snapshotBackgroundMaterial)
+            ? Math.max(0, Math.min(2, Math.floor(snapshotBackgroundMaterial)))
+            : snapLevel === 3
+              ? 0
+              : snapLevel - 1;
+        const backgroundChanged = this.backgroundMaterial !== materialNum;
 
-        if (levelChangedForWalls || this.backgroundMaterial === undefined) {
-            const materialNum = snapLevel === 3 ? 0 : snapLevel - 1;
+        if (levelChangedForWalls || backgroundChanged) {
             this.setupBackground(materialNum);
             this.currentLevel = snapLevel;
             this.recentOneShotEffectKeys.clear();

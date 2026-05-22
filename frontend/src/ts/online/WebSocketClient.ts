@@ -36,6 +36,14 @@ export interface ServerMessage {
     singlePlayerTest?: boolean;
     practiceMode?: boolean;
     deathmatchMode?: boolean;
+    creatorPlayerId?: string;
+    canStart?: boolean;
+    settings?: {
+        matchDurationSec: number;
+        ammoSpawnIntervalSec: number;
+        backgroundSequence: number[];
+        arenaSurfaceMaterial: number;
+    };
     /** invite:msg — приглашение в комнату от друга */
     roomCode?: string;
     fromUserId?: string;
@@ -63,13 +71,28 @@ export interface ServerMessage {
 }
 
 export interface ClientMessage {
-    type: 'createRoom' | 'joinRoom' | 'tankConfig' | 'ready' | 'action' | 'leaveGame' | 'requestGameState';
+    type:
+        | 'createRoom'
+        | 'joinRoom'
+        | 'tankConfig'
+        | 'ready'
+        | 'action'
+        | 'leaveGame'
+        | 'requestGameState'
+        | 'roomSettings'
+        | 'startGame';
     singlePlayer?: boolean;
     practice?: boolean;
     deathmatch?: boolean;
     code?: string;
     data?: any;
     ready?: boolean;
+    settings?: Partial<{
+        matchDurationSec: number;
+        ammoSpawnIntervalSec: number;
+        backgroundSequence: number[];
+        arenaSurfaceMaterial: number;
+    }>;
     action?: {
         forward?: boolean;
         backward?: boolean;

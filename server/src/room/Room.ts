@@ -6,7 +6,7 @@ import { getPool } from '../db/pool';
 import * as matchRepo from '../repos/matchRepo';
 import * as replayRepo from '../repos/replayRepo';
 import { getRandomInt } from '../utils/additionalFunc';
-import type { GameWorldEndResult, PlayerMatchStats } from '../game/world/gameWorldEndResult';
+import type { GameWorldEndResult, GameWorldRuntimeSettings, PlayerMatchStats } from '../game/world/gameWorldEndResult';
 import { GAMEPLAY_CONFIG } from '../constants/gameConstants';
 
 type PlayerRole = 'attacker' | 'defender' | 'fighter';
@@ -39,10 +39,19 @@ export type RoomCreateOptions = {
     deathmatchMode?: boolean;
 };
 
+export type RoomSettings = {
+    matchDurationSec: number;
+    ammoSpawnIntervalSec: number;
+    backgroundSequence: number[];
+    arenaSurfaceMaterial: number;
+};
+
 export class Room {
     private code: string;
     private players: Map<string, Player> = new Map();
     private spectators: Map<string, Spectator> = new Map();
+    private creatorPlayerId: string | null = null;
+    private settings: RoomSettings;
     private gameWorld: GameWorld | null = null;
     private gameLoopInterval: NodeJS.Timeout | null = null;
     /** true между созданием gameWorld и запуском setInterval (внутри await — может зайти наблюдатель). */
@@ -57,7 +66,7 @@ export class Room {
      */
     private readonly FIXED_DELTA_MS = 1000 / 60;
     private readonly singlePlayerTest: boolean;
-    /** Два игрока: не пишем матч в БД, без лимита времени в мире. */
+    /** Два игрока: не пишем матч в БД. */
     private readonly practiceMode: boolean;
     /** FFA 2–5 игроков, 60 с, киллы. */
     private readonly deathmatchMode: boolean;
@@ -83,6 +92,14 @@ export class Room {
         } else {
             this.maxPlayers = GAMEPLAY_CONFIG.MAZE.STANDARD_MAX_PLAYERS;
         }
+        this.settings = {
+            matchDurationSec: this.deathmatchMode
+                ? GAMEPLAY_CONFIG.ARENA.MATCH_DURATION_SEC
+                : GAMEPLAY_CONFIG.MAZE.MATCH_DURATION_SEC,
+            ammoSpawnIntervalSec: GAMEPLAY_CONFIG.COMMON.INITIAL_AMMO_SPAWN_INTERVAL_MS / 1000,
+            backgroundSequence: this.deathmatchMode ? [0] : [1, 2, 0],
+            arenaSurfaceMaterial: 0
+        };
     }
 
     public get roomCode(): string {
@@ -108,7 +125,10 @@ export class Room {
             players: playersArray,
             singlePlayerTest: this.singlePlayerTest,
             practiceMode: this.practiceMode,
-            deathmatchMode: this.deathmatchMode
+            deathmatchMode: this.deathmatchMode,
+            creatorPlayerId: this.creatorPlayerId,
+            settings: this.getPublicSettings(),
+            canStart: this.areAllPlayersReady()
         };
     }
 
@@ -150,6 +170,9 @@ export class Room {
         };
 
         this.players.set(playerId, player);
+        if (!this.creatorPlayerId) {
+            this.creatorPlayerId = playerId;
+        }
 
         // Send join confirmation
         if (ws) {
@@ -234,13 +257,66 @@ export class Room {
         console.log(`[ROOM ${this.code}] Player ${playerId} (${player.role}) ready status: ${ready}`);
         this.broadcastRoomUpdate();
 
-        // Check if both players are ready
-        if (ready && this.areAllPlayersReady()) {
-            console.log(`[ROOM ${this.code}] All players ready - starting game!`);
-            void this.startGameAsync();
-        }
-
         return { success: true };
+    }
+
+    public updateSettings(playerId: string, patch: Partial<RoomSettings>): { success: boolean; message?: string } {
+        if (playerId !== this.creatorPlayerId) {
+            return { success: false, message: 'Only room creator can change settings' };
+        }
+        if (this.gameWorld || this.simulationStarting) {
+            return { success: false, message: 'Game already started' };
+        }
+        this.settings = this.normalizeSettings({ ...this.settings, ...patch });
+        this.broadcastRoomUpdate();
+        return { success: true };
+    }
+
+    public startGame(playerId: string): { success: boolean; message?: string } {
+        if (playerId !== this.creatorPlayerId) {
+            return { success: false, message: 'Only room creator can start the match' };
+        }
+        if (this.gameWorld || this.simulationStarting) {
+            return { success: false, message: 'Game already started' };
+        }
+        if (!this.areAllPlayersReady()) {
+            return { success: false, message: 'All players must be ready' };
+        }
+        console.log(`[ROOM ${this.code}] Creator ${playerId} started game`);
+        this.simulationStarting = true;
+        void this.startGameAsync();
+        return { success: true };
+    }
+
+    private normalizeSettings(settings: Partial<RoomSettings>): RoomSettings {
+        const duration = Number(settings.matchDurationSec);
+        const spawn = Number(settings.ammoSpawnIntervalSec);
+        const fallbackBg = this.deathmatchMode ? [0] : [1, 2, 0];
+        const rawBg = Array.isArray(settings.backgroundSequence) ? settings.backgroundSequence : fallbackBg;
+        const backgrounds = rawBg
+            .map((v) => Math.max(0, Math.min(2, Math.floor(Number(v) || 0))))
+            .slice(0, this.deathmatchMode ? 1 : 3);
+        while (!this.deathmatchMode && backgrounds.length < 3) {
+            backgrounds.push(fallbackBg[backgrounds.length]);
+        }
+        const arenaSurfaceMaterial = Math.max(
+            0,
+            Math.min(2, Math.floor(Number(settings.arenaSurfaceMaterial ?? backgrounds[0] ?? 0) || 0))
+        );
+        return {
+            matchDurationSec: Number.isFinite(duration)
+                ? Math.max(15, Math.min(600, Math.floor(duration)))
+                : this.settings.matchDurationSec,
+            ammoSpawnIntervalSec: Number.isFinite(spawn)
+                ? Math.max(3, Math.min(60, Math.floor(spawn)))
+                : this.settings.ammoSpawnIntervalSec,
+            backgroundSequence: this.deathmatchMode ? [arenaSurfaceMaterial] : backgrounds,
+            arenaSurfaceMaterial
+        };
+    }
+
+    private getPublicSettings(): RoomSettings {
+        return { ...this.settings, backgroundSequence: [...this.settings.backgroundSequence] };
     }
 
     private areAllPlayersReady(): boolean {
@@ -277,13 +353,19 @@ export class Room {
     }
 
     private async startGameAsync(): Promise<void> {
-        this.simulationStarting = false;
+        this.simulationStarting = true;
         this.matchId = null;
         this.replayEvents = [];
         this.replayStartMeta = null;
         this.replayRngSeed = (Date.now() ^ getRandomInt(1, 2 ** 30 - 1)) >>> 0;
         const playersArray = Array.from(this.players.values());
         const attacker = playersArray.find(p => p.role === 'attacker');
+        const runtimeSettings: GameWorldRuntimeSettings = {
+            matchDurationSec: this.settings.matchDurationSec,
+            ammoSpawnIntervalMs: this.settings.ammoSpawnIntervalSec * 1000,
+            backgroundSequence: this.settings.backgroundSequence,
+            arenaSurfaceMaterial: this.settings.arenaSurfaceMaterial
+        };
 
         if (this.deathmatchMode) {
             const fighters = playersArray
@@ -293,7 +375,7 @@ export class Room {
                 console.log(`[ROOM ${this.code}] Deathmatch: not enough fighters`);
                 return;
             }
-            const surface = getRandomInt(0, 2);
+            const surface = this.settings.arenaSurfaceMaterial;
             const cfg0 = fighters[0].config;
             console.log(`[ROOM ${this.code}] Starting deathmatch (${fighters.length} players), surface ${surface}`);
             this.gameWorld = new GameWorld(
@@ -306,7 +388,8 @@ export class Room {
                     surfaceMaterial: surface,
                     fighters
                 },
-                this.replayRngSeed
+                this.replayRngSeed,
+                runtimeSettings
             );
         } else if (this.singlePlayerTest) {
             if (!attacker || !attacker.tankConfig) {
@@ -314,7 +397,16 @@ export class Room {
                 return;
             }
             console.log(`[ROOM ${this.code}] Starting solo test game for attacker ${attacker.id}`);
-            this.gameWorld = new GameWorld(attacker.tankConfig, attacker.tankConfig, this.code, true, false);
+            this.gameWorld = new GameWorld(
+                attacker.tankConfig,
+                attacker.tankConfig,
+                this.code,
+                true,
+                false,
+                undefined,
+                this.replayRngSeed,
+                runtimeSettings
+            );
             this.gameWorld.setPlayerTankMapping(attacker.id, '');
         } else {
             const defender = playersArray.find(p => p.role === 'defender');
@@ -333,7 +425,8 @@ export class Room {
                 false,
                 this.practiceMode,
                 undefined,
-                this.replayRngSeed
+                this.replayRngSeed,
+                runtimeSettings
             );
             this.gameWorld.setPlayerTankMapping(attacker.id, defender.id);
         }
@@ -508,6 +601,9 @@ export class Room {
         }
         player.ws = null;
         this.players.delete(playerId);
+        if (this.creatorPlayerId === playerId) {
+            this.creatorPlayerId = this.players.values().next().value?.id ?? null;
+        }
         this.broadcastRoomUpdate();
         if (this.players.size === 0) {
             this.forceCloseDueToEmpty();
@@ -582,21 +678,10 @@ export class Room {
         }
         // Отдать сразу last room state + снапшот (если идёт игра)
         try {
-            const playersArray = Array.from(this.players.values()).map((player) => ({
-                playerId: player.id,
-                role: player.role,
-                tankConfig: player.tankConfig,
-                ready: player.ready,
-                userId: player.userId ?? undefined,
-                displayName: player.displayName ?? undefined
-            }));
             ws.send(
                 JSON.stringify({
                     type: 'roomUpdate',
-                    players: playersArray,
-                    singlePlayerTest: this.singlePlayerTest,
-                    practiceMode: this.practiceMode,
-                    deathmatchMode: this.deathmatchMode
+                    ...this.getPublicState()
                 })
             );
             if (this.gameWorld) {
@@ -666,10 +751,7 @@ export class Room {
 
         const roomUpdatePayload = JSON.stringify({
             type: 'roomUpdate',
-            players: playersArray,
-            singlePlayerTest: this.singlePlayerTest,
-            practiceMode: this.practiceMode,
-            deathmatchMode: this.deathmatchMode
+            ...this.getPublicState()
         });
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
