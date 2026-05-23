@@ -5,7 +5,7 @@ import { tankVisualFromSnapshot } from '../../online/tankVisualFromSnapshot';
 import { ResolutionManager } from '../../constants/gameConstants';
 import { ImagePreloader } from '../../utils/ImagePreloader';
 import { useSettings } from '../../context/SettingsContext';
-import { SoundManager, spatial } from '../../utils/SoundManager';
+import { SoundManager, spatial, type ReplaySoundCue } from '../../utils/SoundManager';
 import {
     hitMetalPlaybackRateForBulletType,
     shotSfxIdForBulletType,
@@ -107,6 +107,7 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
 
     const resetReplayOneShotState = useCallback(() => {
         replayAudioOneShotKeysRef.current.clear();
+        SoundManager.stopReplaySounds();
         rendererRef.current?.resetOneShotEffectsState();
     }, []);
 
@@ -133,6 +134,118 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
     const totalReplayActions = actions.length;
     const totalReplayEvents = events.length;
     const totalFrames = builtFrames.length;
+    const replaySoundCues = useMemo(() => {
+        const cues: ReplaySoundCue[] = [];
+        let previousBulletIds = new Set<number>();
+        let previousExplosionKeys = new Set<string>();
+        let previousGrenadeKeys = new Set<string>();
+        let previousImpactKeys = new Set<string>();
+        let previousCollisionKeys = new Set<string>();
+        let previousCrates = new Map<number, { x: number; y: number; hp: number }>();
+        const addSpatialCue = (
+            key: string,
+            id: ReplaySoundCue['id'],
+            frameIndex: number,
+            x: number,
+            y: number,
+            maxDistance: number,
+            playbackRate?: number
+        ) => {
+            const positional = spatial(x, y, 960, 540, maxDistance);
+            if (positional.volume <= 0) {
+                return;
+            }
+            cues.push({ key, id, timeMs: frameIndex * frameMs, ...positional, playbackRate });
+        };
+
+        builtFrames.forEach((frame, frameIndex) => {
+            const world = frame.world as GameWorldSnapshot;
+            const bulletIds = new Set<number>();
+            for (const bullet of world.bullets ?? []) {
+                bulletIds.add(bullet.id);
+                if (!previousBulletIds.has(bullet.id)) {
+                    addSpatialCue(
+                        `shot|${bullet.id}|${frameIndex}`,
+                        shotSfxIdForBulletType(bullet.type),
+                        frameIndex,
+                        bullet.x,
+                        bullet.y,
+                        1700
+                    );
+                }
+            }
+
+            const crates = new Map((world.crates ?? []).map((crate) => [crate.id, crate]));
+            for (const [id, crate] of previousCrates) {
+                const current = crates.get(id);
+                if (!current || (crate.hp > 0 && current.hp <= 0)) {
+                    addSpatialCue(`crate|${id}|${frameIndex}`, 'game:crateBreak', frameIndex, crate.x, crate.y, 1500);
+                }
+            }
+
+            const explosionKeys = new Set<string>();
+            for (const effect of world.explosions ?? []) {
+                const baseKey = `exp|${Math.round(effect.x)}|${Math.round(effect.y)}|${Number(effect.angle || 0).toFixed(4)}`;
+                explosionKeys.add(baseKey);
+                if (!previousExplosionKeys.has(baseKey)) {
+                    addSpatialCue(`${baseKey}|${frameIndex}`, 'game:explosion', frameIndex, effect.x, effect.y, 1600);
+                }
+            }
+
+            const grenadeKeys = new Set<string>();
+            for (const effect of world.grenadeExplosions ?? []) {
+                const baseKey =
+                    `gren|${Math.round(effect.x)}|${Math.round(effect.y)}|` +
+                    `${Number(effect.angle || 0).toFixed(4)}|${Math.round(effect.size ?? 0)}`;
+                grenadeKeys.add(baseKey);
+                if (!previousGrenadeKeys.has(baseKey)) {
+                    addSpatialCue(`${baseKey}|${frameIndex}`, 'game:explosion', frameIndex, effect.x, effect.y, 1500);
+                }
+            }
+
+            const impactKeys = new Set<string>();
+            for (const effect of world.bulletImpacts ?? []) {
+                const baseKey =
+                    `impact|${Math.round(effect.x)}|${Math.round(effect.y)}|` +
+                    `${Number(effect.angle).toFixed(4)}|${effect.bulletType}`;
+                impactKeys.add(baseKey);
+                if (previousImpactKeys.has(baseKey)) {
+                    continue;
+                }
+                const hitTank = (world.tanks ?? []).some(
+                    (tank) => Math.hypot(tank.x - effect.x, tank.y - effect.y) < 70
+                );
+                addSpatialCue(
+                    `${baseKey}|${frameIndex}`,
+                    hitTank ? 'game:hit' : 'game:wallHit',
+                    frameIndex,
+                    effect.x,
+                    effect.y,
+                    1400,
+                    hitTank
+                        ? hitMetalPlaybackRateForBulletType(effect.bulletType)
+                        : wallHitPlaybackRateForBulletType(effect.bulletType)
+                );
+            }
+
+            const collisionKeys = new Set<string>();
+            for (const collision of world.hullCollisions ?? []) {
+                const baseKey = `collision|${collision.tick}|${collision.playerId}|${Math.round(collision.x)}|${Math.round(collision.y)}`;
+                collisionKeys.add(baseKey);
+                if (!previousCollisionKeys.has(baseKey)) {
+                    addSpatialCue(`${baseKey}|${frameIndex}`, 'game:collision', frameIndex, collision.x, collision.y, 1300);
+                }
+            }
+
+            previousBulletIds = bulletIds;
+            previousCrates = new Map((world.crates ?? []).map((crate) => [crate.id, crate]));
+            previousExplosionKeys = explosionKeys;
+            previousGrenadeKeys = grenadeKeys;
+            previousImpactKeys = impactKeys;
+            previousCollisionKeys = collisionKeys;
+        });
+        return cues;
+    }, [builtFrames, frameMs]);
 
     /** Длительность матча из симулированных кадров (а не durationTicks из меты, иногда null). */
     const totalDurationSec = useMemo(() => {
@@ -146,6 +259,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         playingRef.current = playing;
         if (playing) {
             lastRafTimeRef.current = performance.now();
+        } else {
+            SoundManager.stopReplaySounds();
         }
     }, [playing]);
 
@@ -426,7 +541,8 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                         // Эффекты (взрывы/импакты) проигрываем только при движении вперёд.
                         const forward = idx > replayKeyframeIdxRef.current;
                         replayKeyframeIdxRef.current = idx;
-                        if (forward) {
+                        const legacyReplayAudioEnabled = Boolean(0);
+                        if (forward && legacyReplayAudioEnabled) {
                             const landed = flist[idx].world as GameWorldSnapshot;
                             const prevLanded = idx > 0 ? (flist[idx - 1].world as GameWorldSnapshot) : null;
                             const playSpatial = (
@@ -545,6 +661,11 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                         replayPositionFrameRef.current,
                         frameMsRef.current
                     );
+                    SoundManager.syncReplaySounds(
+                        replaySoundCues,
+                        replayPositionFrameRef.current * frameMsRef.current,
+                        playingRef.current && speedRef.current > 0 ? speedRef.current : 0
+                    );
                     rendererRef.current.render(playingRef.current ? Math.min(dt, 100) : 0);
                 }
             } catch (err) {
@@ -558,10 +679,11 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
         return () => {
             window.removeEventListener('resize', handleResize);
             cancelAnimationFrame(raf);
+            SoundManager.stopReplaySounds();
             rendererRef.current?.clear();
             rendererRef.current = null;
         };
-    }, [frameMs, imagesLoaded, meta.replayId, builtFrames, playerNames]);
+    }, [frameMs, imagesLoaded, meta.replayId, builtFrames, playerNames, replaySoundCues]);
 
     // Применяем CSS-трансформацию к canvas при включённом free-cam.
     useEffect(() => {

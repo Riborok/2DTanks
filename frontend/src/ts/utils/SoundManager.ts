@@ -44,6 +44,23 @@ interface Volumes {
     ui: number;
 }
 
+export type ReplaySoundCue = {
+    key: string;
+    id: SfxId;
+    timeMs: number;
+    volume?: number;
+    pan?: number;
+    playbackRate?: number;
+};
+
+type ReplaySoundSource = {
+    source: AudioBufferSourceNode;
+    anchorPositionMs: number;
+    anchorContextTime: number;
+    timelineSpeed: number;
+    playbackRate: number;
+};
+
 class SoundManagerImpl {
     private ctx: AudioContext | null = null;
     private masterGain: GainNode | null = null;
@@ -69,6 +86,7 @@ class SoundManagerImpl {
     private assetUrls: Partial<Record<SfxId, string>> = {};
     private assetBuffers: Partial<Record<SfxId, AudioBuffer>> = {};
     private assetLoading: Partial<Record<SfxId, Promise<AudioBuffer | null>>> = {};
+    private readonly replaySources = new Map<string, ReplaySoundSource>();
 
     /**
      * Браузеры разрешают AudioContext только после user-gesture. Вызываем ensure()
@@ -245,6 +263,123 @@ class SoundManagerImpl {
             case 'game:kill':
                 this.synthKill(out, now);
                 break;
+        }
+    }
+
+    public stopReplaySounds(): void {
+        for (const active of this.replaySources.values()) {
+            try {
+                active.source.stop();
+            } catch {
+                // Already stopped by the audio engine.
+            }
+        }
+        this.replaySources.clear();
+    }
+
+    public syncReplaySounds(cues: ReplaySoundCue[], positionMs: number, timelineSpeed: number): void {
+        if (timelineSpeed <= 0 || !this.ensure() || !this.ctx) {
+            this.stopReplaySounds();
+            return;
+        }
+
+        const ctx = this.ctx;
+        const activeKeys = new Set<string>();
+        let low = 0;
+        let high = cues.length - 1;
+        let lastStartedIndex = -1;
+        while (low <= high) {
+            const middle = Math.floor((low + high) / 2);
+            if (cues[middle].timeMs <= positionMs) {
+                lastStartedIndex = middle;
+                low = middle + 1;
+            } else {
+                high = middle - 1;
+            }
+        }
+        for (let index = lastStartedIndex; index >= 0; index--) {
+            const cue = cues[index];
+            const baseRate = Math.max(0.25, Math.min(4, cue.playbackRate ?? 1));
+            const elapsedMs = positionMs - cue.timeMs;
+            if (elapsedMs > 5000) {
+                break;
+            }
+
+            const buffer = this.assetBuffers[cue.id];
+            if (!buffer) {
+                if (this.assetUrls[cue.id]) {
+                    void this.loadAssetOnce(cue.id);
+                }
+                continue;
+            }
+
+            const offsetSec = (elapsedMs / 1000) * baseRate;
+            if (offsetSec >= buffer.duration) {
+                continue;
+            }
+            activeKeys.add(cue.key);
+
+            const current = this.replaySources.get(cue.key);
+            const expectedElapsedMs = current
+                ? current.anchorPositionMs + (ctx.currentTime - current.anchorContextTime) * 1000 * current.timelineSpeed
+                : 0;
+            const inSync =
+                current &&
+                current.timelineSpeed === timelineSpeed &&
+                current.playbackRate === baseRate &&
+                Math.abs(expectedElapsedMs - positionMs) < 80;
+            if (inSync) {
+                continue;
+            }
+            if (current) {
+                try {
+                    current.source.stop();
+                } catch {
+                    // Already stopped by the audio engine.
+                }
+                this.replaySources.delete(cue.key);
+            }
+
+            const target = cue.id.startsWith('ui:') ? this.uiGain! : this.sfxGain!;
+            const out = ctx.createGain();
+            out.gain.value = Math.max(0, Math.min(1, cue.volume ?? 1));
+            const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+            if (panner) {
+                panner.pan.value = Math.max(-1, Math.min(1, cue.pan ?? 0));
+                out.connect(panner);
+                panner.connect(target);
+            } else {
+                out.connect(target);
+            }
+
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.playbackRate.value = Math.max(0.25, Math.min(4, baseRate * timelineSpeed));
+            source.connect(out);
+            source.start(ctx.currentTime, offsetSec);
+            source.onended = () => {
+                if (this.replaySources.get(cue.key)?.source === source) {
+                    this.replaySources.delete(cue.key);
+                }
+            };
+            this.replaySources.set(cue.key, {
+                source,
+                anchorPositionMs: positionMs,
+                anchorContextTime: ctx.currentTime,
+                timelineSpeed,
+                playbackRate: baseRate
+            });
+        }
+
+        for (const [key, active] of this.replaySources) {
+            if (!activeKeys.has(key)) {
+                try {
+                    active.source.stop();
+                } catch {
+                    // Already stopped by the audio engine.
+                }
+                this.replaySources.delete(key);
+            }
         }
     }
 
