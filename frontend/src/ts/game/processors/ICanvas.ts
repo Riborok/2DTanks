@@ -36,6 +36,7 @@ export class Canvas implements ICanvas {
     private readonly _rectangles: IRectangle[] = new Array<IRectangle>();
     private readonly _shieldRings: { cx: number; cy: number; r: number }[] = [];
     private readonly _sprites: Map<number, ISprite>[] = new Array<Map<number, ISprite>>();
+    private _animationClockMs: number | null = null;
     public constructor(ctx: CanvasRenderingContext2D, size: Size) {
         this._size = size;
         this._ctx = ctx;
@@ -49,6 +50,9 @@ export class Canvas implements ICanvas {
         this._bufferCtx = bufferCtx;
     }
     public get ctx() { return this._ctx }
+    public setAnimationClockMs(value: number | null): void {
+        this._animationClockMs = value;
+    }
     public insert(sprite: ISprite) {
         const zIndex = SpriteIDTracker.extractZIndex(sprite.id);
         for (let i = this._sprites.length; i <= zIndex; i++)
@@ -104,7 +108,7 @@ export class Canvas implements ICanvas {
             return;
         }
         const ctx = this._bufferCtx;
-        const t = performance.now() * 0.005;
+        const t = (this._animationClockMs ?? performance.now()) * 0.005;
         const pulse = 1 + 0.06 * Math.sin(t);
         ctx.save();
         for (const ring of this._shieldRings) {

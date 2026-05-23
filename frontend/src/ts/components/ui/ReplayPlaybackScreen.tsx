@@ -540,7 +540,12 @@ const ReplayPlaybackScreen: React.FC<ReplayPlaybackScreenProps> = ({
                         replayPositionFrameRef.current,
                         frameMsRef.current
                     );
-                    rendererRef.current.render();
+                    rendererRef.current.syncReplayVisualEffects(
+                        flist,
+                        replayPositionFrameRef.current,
+                        frameMsRef.current
+                    );
+                    rendererRef.current.render(playingRef.current ? Math.min(dt, 100) : 0);
                 }
             } catch (err) {
                 // Не даем ошибке оборвать RAF-цепочку: иначе replay «замирает» без видимой причины.

@@ -25,6 +25,7 @@ import type { TirePair } from '../sprite/tank/tank effects/TankTireTrack';
 import { TankExplosionAnimation } from '../sprite/animation/TankExplosionAnimation';
 import { GrenadeExplosionAnimation } from '../sprite/animation/GrenadeExplosionAnimation';
 import { BulletImpactAnimation } from '../sprite/animation/BulletImpactAnimation';
+import { AnimationSprite } from '../sprite/animation/IAnimation';
 
 interface RenderableTank {
     id: string;
@@ -59,6 +60,11 @@ interface RenderableItem {
     sprite: ISprite;
 }
 
+type ReplayVisualEffect =
+    | { key: string; kind: 'explosion'; startFrame: number; effect: ServerExplosion }
+    | { key: string; kind: 'grenadeExplosion'; startFrame: number; effect: ServerGrenadeExplosion }
+    | { key: string; kind: 'bulletImpact'; startFrame: number; effect: ServerBulletImpact };
+
 export class OnlineGameRenderer {
     private canvas: Canvas;
     private animationManager: AnimationManager;
@@ -72,6 +78,10 @@ export class OnlineGameRenderer {
     private readonly replayTaggedVanishPairs = new WeakSet<TirePair>();
     private replayPositionFrame = 0;
     private replayFrameMs = 1000 / 60;
+    private replayEffectSource: { world: unknown }[] | null = null;
+    private replayVisualEffectTimeline: ReplayVisualEffect[] = [];
+    private readonly replayVisualAnimations = new Map<string, AnimationSprite>();
+    private readonly replayItemStartFrames = new Map<number, number>();
     /** Данные танков для полос HP/брони каждый кадр (updateFromSnapshot обновляет). */
     private tanksDataForHealthBars: ServerTank[] = [];
     private tanks: Map<string, RenderableTank> = new Map();
@@ -117,6 +127,153 @@ export class OnlineGameRenderer {
         this.replayPositionFrame = positionFrame;
         if (frameMs > 0) {
             this.replayFrameMs = frameMs;
+        }
+    }
+
+    private clearReplayVisualAnimations(): void {
+        for (const animation of this.replayVisualAnimations.values()) {
+            this.canvas.removeById(animation);
+        }
+        this.replayVisualAnimations.clear();
+    }
+
+    private rebuildReplayVisualEffectTimeline(frames: { world: unknown }[]): void {
+        const timeline: ReplayVisualEffect[] = [];
+        this.replayItemStartFrames.clear();
+        let previousExplosionKeys = new Set<string>();
+        let previousGrenadeKeys = new Set<string>();
+        let previousImpactKeys = new Set<string>();
+
+        for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
+            const world = frames[frameIndex].world as GameWorldSnapshot;
+            const explosionKeys = new Set<string>();
+            const grenadeKeys = new Set<string>();
+            const impactKeys = new Set<string>();
+
+            for (const item of world.items ?? []) {
+                if (!this.replayItemStartFrames.has(item.id)) {
+                    this.replayItemStartFrames.set(item.id, frameIndex);
+                }
+            }
+
+            for (const effect of world.explosions ?? []) {
+                const baseKey = `exp|${Math.round(effect.x)}|${Math.round(effect.y)}|${Number(effect.angle || 0).toFixed(4)}`;
+                explosionKeys.add(baseKey);
+                if (!previousExplosionKeys.has(baseKey)) {
+                    timeline.push({ key: `${baseKey}|${frameIndex}`, kind: 'explosion', startFrame: frameIndex, effect });
+                }
+            }
+            for (const effect of world.grenadeExplosions ?? []) {
+                const baseKey =
+                    `gren|${Math.round(effect.x)}|${Math.round(effect.y)}|` +
+                    `${Number(effect.angle || 0).toFixed(4)}|${Math.round(effect.size ?? 0)}`;
+                grenadeKeys.add(baseKey);
+                if (!previousGrenadeKeys.has(baseKey)) {
+                    timeline.push({
+                        key: `${baseKey}|${frameIndex}`,
+                        kind: 'grenadeExplosion',
+                        startFrame: frameIndex,
+                        effect
+                    });
+                }
+            }
+            for (const effect of world.bulletImpacts ?? []) {
+                const baseKey =
+                    `imp|${Math.round(effect.x)}|${Math.round(effect.y)}|` +
+                    `${Number(effect.angle).toFixed(4)}|${effect.bulletType}`;
+                impactKeys.add(baseKey);
+                if (!previousImpactKeys.has(baseKey)) {
+                    timeline.push({ key: `${baseKey}|${frameIndex}`, kind: 'bulletImpact', startFrame: frameIndex, effect });
+                }
+            }
+
+            previousExplosionKeys = explosionKeys;
+            previousGrenadeKeys = grenadeKeys;
+            previousImpactKeys = impactKeys;
+        }
+
+        this.replayEffectSource = frames;
+        this.replayVisualEffectTimeline = timeline;
+        this.clearReplayVisualAnimations();
+    }
+
+    private replayVisualEffectDurationMs(effect: ReplayVisualEffect): number {
+        if (effect.kind === 'explosion') {
+            return 9 * 90;
+        }
+        if (effect.kind === 'grenadeExplosion') {
+            return 10 * 50;
+        }
+        return 4 * 70;
+    }
+
+    private createReplayVisualAnimation(effect: ReplayVisualEffect): AnimationSprite {
+        if (effect.kind === 'explosion') {
+            const point = new Point(
+                ResolutionManager.worldToCanvasX(effect.effect.x),
+                ResolutionManager.worldToCanvasY(effect.effect.y)
+            );
+            return new TankExplosionAnimation(point, effect.effect.angle || 0);
+        }
+        if (effect.kind === 'grenadeExplosion') {
+            const point = new Point(
+                ResolutionManager.worldToCanvasX(effect.effect.x),
+                ResolutionManager.worldToCanvasY(effect.effect.y)
+            );
+            const size = ResolutionManager.scaleWorldLength(effect.effect.size);
+            return new GrenadeExplosionAnimation(point, effect.effect.angle || 0, size);
+        }
+        const bulletType = Math.min(Math.max(effect.effect.bulletType, 0), ResolutionManager.BULLET_WIDTH.length - 1);
+        const width = ResolutionManager.BULLET_WIDTH[bulletType] * BULLET_ANIMATION_SIZE_INCREASE_COEFF;
+        const height = ResolutionManager.BULLET_HEIGHT[bulletType] * BULLET_ANIMATION_SIZE_INCREASE_COEFF;
+        const point = new Point(
+            ResolutionManager.worldToCanvasX(effect.effect.x),
+            ResolutionManager.worldToCanvasY(effect.effect.y)
+        );
+        return new BulletImpactAnimation(point, effect.effect.angle, width, height, effect.effect.bulletType === 0 ? 0 : 1);
+    }
+
+    public syncReplayVisualEffects(frames: { world: unknown }[], positionFrame: number, frameMs: number): void {
+        if (frames !== this.replayEffectSource) {
+            this.rebuildReplayVisualEffectTimeline(frames);
+        }
+        const activeKeys = new Set<string>();
+        const maxLifetimeMs = 9 * 90;
+        let low = 0;
+        let high = this.replayVisualEffectTimeline.length - 1;
+        let lastStartedIndex = -1;
+        while (low <= high) {
+            const middle = Math.floor((low + high) / 2);
+            if (this.replayVisualEffectTimeline[middle].startFrame <= positionFrame) {
+                lastStartedIndex = middle;
+                low = middle + 1;
+            } else {
+                high = middle - 1;
+            }
+        }
+        for (let index = lastStartedIndex; index >= 0; index--) {
+            const effect = this.replayVisualEffectTimeline[index];
+            const elapsedMs = (positionFrame - effect.startFrame) * frameMs;
+            if (elapsedMs >= maxLifetimeMs) {
+                break;
+            }
+            if (elapsedMs >= this.replayVisualEffectDurationMs(effect)) {
+                continue;
+            }
+            activeKeys.add(effect.key);
+            let animation = this.replayVisualAnimations.get(effect.key);
+            if (!animation) {
+                animation = this.createReplayVisualAnimation(effect);
+                this.replayVisualAnimations.set(effect.key, animation);
+                this.canvas.insert(animation);
+            }
+            animation.seekToElapsedMs(elapsedMs);
+        }
+        for (const [key, animation] of this.replayVisualAnimations) {
+            if (!activeKeys.has(key)) {
+                this.canvas.removeById(animation);
+                this.replayVisualAnimations.delete(key);
+            }
         }
     }
 
@@ -421,17 +578,17 @@ export class OnlineGameRenderer {
 
         this.updateItems(snapshot.items ?? []);
         
-        // Handle explosions (create animations for new explosions)
-        if (snapshot.explosions && snapshot.explosions.length > 0) {
+        // Replay effects are reconstructed from the playback clock so seeks retain their exact animation frame.
+        if (!this.replayMode && snapshot.explosions && snapshot.explosions.length > 0) {
             this.handleExplosions(snapshot.explosions);
         }
         
         // Handle grenade explosions
-        if (snapshot.grenadeExplosions && snapshot.grenadeExplosions.length > 0) {
+        if (!this.replayMode && snapshot.grenadeExplosions && snapshot.grenadeExplosions.length > 0) {
             this.handleGrenadeExplosions(snapshot.grenadeExplosions);
         }
 
-        if (snapshot.bulletImpacts && snapshot.bulletImpacts.length > 0) {
+        if (!this.replayMode && snapshot.bulletImpacts && snapshot.bulletImpacts.length > 0) {
             this.handleBulletImpacts(snapshot.bulletImpacts);
         }
     }
@@ -902,6 +1059,16 @@ export class OnlineGameRenderer {
         }
     }
 
+    private syncReplayPickupItemAnimations(): void {
+        for (const [id, item] of this.items) {
+            if (item.sprite instanceof PickupItemSprite) {
+                const startFrame = this.replayItemStartFrames.get(id) ?? 0;
+                const elapsedMs = Math.max(0, this.replayPositionFrame - startFrame) * this.replayFrameMs;
+                item.sprite.seekAnimation(elapsedMs);
+            }
+        }
+    }
+
     private processVanishingTireTracks(deltaTimeMs: number): void {
         this.vanishingTirePairs.applyAndRemove(
             (pair, dt) => {
@@ -949,14 +1116,17 @@ export class OnlineGameRenderer {
         );
     }
 
-    public render(): void {
-        const dt = 16;
+    public render(deltaTimeMs: number = 16): void {
+        const dt = Math.max(0, deltaTimeMs);
         if (this.replayMode) {
+            this.canvas.setAnimationClockMs(this.replayPositionFrame * this.replayFrameMs);
             this.applyReplayTireEvaporation(this.replayPositionFrame);
+            this.syncReplayPickupItemAnimations();
         } else {
+            this.canvas.setAnimationClockMs(null);
             this.processVanishingTireTracks(dt);
+            this.tickPickupItemAnimations(dt);
         }
-        this.tickPickupItemAnimations(dt);
         this.animationManager.handle(dt);
         this.drawHealthOverlaysFromLastSnapshot();
         this.canvas.drawAll();
@@ -964,6 +1134,10 @@ export class OnlineGameRenderer {
     }
 
     public clear(): void {
+        this.clearReplayVisualAnimations();
+        this.replayVisualEffectTimeline = [];
+        this.replayEffectSource = null;
+        this.replayItemStartFrames.clear();
         const lingering = [...this.vanishingTirePairs];
         for (const pair of lingering) {
             this.canvas.removeById(pair.topTire as unknown as ISprite);

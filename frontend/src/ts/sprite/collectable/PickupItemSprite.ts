@@ -9,6 +9,7 @@ export class PickupItemSprite extends Sprite implements IScalable {
     private static readonly BOB_AMPLITUDE_PX = 2;
 
     private readonly _basePoint: Point;
+    private readonly _phaseSeed: number;
     private _animPhase: number;
     private _displayScale = 1;
 
@@ -17,6 +18,7 @@ export class PickupItemSprite extends Sprite implements IScalable {
         this._basePoint = basePoint.clone();
         this._point = basePoint.clone();
         this._angle = 0;
+        this._phaseSeed = phaseSeed;
         this._animPhase = phaseSeed;
         this._imgSprite.src = imageSrc;
     }
@@ -26,6 +28,15 @@ export class PickupItemSprite extends Sprite implements IScalable {
             return;
         }
         this._animPhase += deltaTimeMs * PickupItemSprite.PHASE_SPEED;
+        this.applyAnimationPhase();
+    }
+
+    public seekAnimation(elapsedTimeMs: number): void {
+        this._animPhase = this._phaseSeed + Math.max(0, elapsedTimeMs) * PickupItemSprite.PHASE_SPEED;
+        this.applyAnimationPhase();
+    }
+
+    private applyAnimationPhase(): void {
         this._displayScale = 1 + PickupItemSprite.PULSE_AMPLITUDE * Math.sin(this._animPhase);
         const bob = PickupItemSprite.BOB_AMPLITUDE_PX * Math.sin(this._animPhase * 1.28);
         this._point = new Point(this._basePoint.x, this._basePoint.y - bob);
