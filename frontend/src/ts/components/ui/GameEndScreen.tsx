@@ -107,19 +107,27 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     );
 
     if (mode === 'deathmatch') {
-        const sorted = [...scores].sort((a, b) => b.kills - a.kills);
+        const damageByPlayerId = new Map(sortedStats.map((row) => [row.playerId, row.damageDealt]));
+        const sorted = [...scores].sort(
+            (a, b) =>
+                b.kills - a.kills ||
+                (damageByPlayerId.get(b.playerId) ?? 0) - (damageByPlayerId.get(a.playerId) ?? 0)
+        );
         const iWon = myPlayerId && winnerPlayerIds.includes(myPlayerId);
         return (
             <div className="game-end-screen">
-                <h1>{iWon ? 'Победа!' : winnerPlayerIds.length ? 'Матч окончен' : 'Матч прерван'}</h1>
-                <p className="game-end-reason">Итог: больше всего фрагов за 1 минуту. Причина: {reason}</p>
+                <h1>{iWon ? 'Победа!' : winnerPlayerIds.length ? 'Матч окончен' : 'Победителей нет'}</h1>
+                <p className="game-end-reason">
+                    Итог: сначала учитываются фраги, при равенстве - нанесенный урон.
+                    {winnerPlayerIds.length === 0 ? ' Показатели лидеров равны.' : ''}
+                </p>
                 <ul className="game-end-scoreboard">
                     {sorted.map((row) => (
                         <li
                             key={row.playerId}
                             className={winnerPlayerIds.includes(row.playerId) ? 'is-winner' : undefined}
                         >
-                            {playerLabel(row)} — {row.kills}{' '}
+                            {playerLabel(row)} - {row.kills} фр., {damageByPlayerId.get(row.playerId) ?? 0} урона{' '}
                             {winnerPlayerIds.includes(row.playerId) ? '★' : ''}
                         </li>
                     ))}

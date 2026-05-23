@@ -15,6 +15,7 @@ import { CollisionResolver } from '../../geometry/CollisionResolver';
 import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
 import type { DeathmatchInit, GameWorldEndResult, GameWorldRuntimeSettings, PlayerMatchStats } from './gameWorldEndResult';
+import { resolveDeathmatchWinnerPlayerIds } from './gameWorldEndResult';
 import { SeededRandom } from '../../utils/seededRandom';
 import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from './replayTypes';
 import { WallModel } from '../../model/obstacle/IWallModel';
@@ -1871,22 +1872,14 @@ export class GameWorld {
                 playerId,
                 kills
             }));
-            let maxK = -1;
-            for (const s of scores) {
-                if (s.kills > maxK) {
-                    maxK = s.kills;
-                }
-            }
-            const winnerPlayerIds =
-                maxK < 0
-                    ? []
-                    : scores.filter((s) => s.kills === maxK).map((s) => s.playerId);
+            const stats = this.buildPlayerStatsList();
+            const winnerPlayerIds = resolveDeathmatchWinnerPlayerIds(scores, stats);
             return {
                 mode: 'deathmatch',
                 reason: 'deathmatchTimeUp',
                 winnerPlayerIds,
                 scores,
-                stats: this.buildPlayerStatsList()
+                stats
             };
         }
 
