@@ -6,8 +6,8 @@ import type {
     ReplayItemSpawnEvent,
     ReplayStartMeta,
     ReplayWorldInitEvent
-} from '../../repos/replayRepo';
-import { replayEventsToActionRows } from '../../repos/replayRepo';
+} from './replayTypes';
+import { replayEventsToActionRows } from './replayTypes';
 
 export type ReplayFrame = { tick: number; world: unknown };
 

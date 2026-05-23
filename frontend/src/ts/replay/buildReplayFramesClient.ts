@@ -2,7 +2,7 @@
  * Симуляция повтора в браузере из тех же модулей, что и на сервере (без сохранённых кадров в БД).
  */
 import { buildReplayFramesFromActions } from '../../../../server/src/game/world/replaySimulator';
-import type { ReplayActionsRow } from '../../../../server/src/repos/replayRepo';
+import type { ReplayActionsRow } from '../../../../server/src/game/world/replayTypes';
 import type { ReplayActionDto, ReplayEventDto, ReplayStartMetaDto } from '../auth/gameApi';
 
 export type ClientReplayFrame = { tick: number; world: unknown };

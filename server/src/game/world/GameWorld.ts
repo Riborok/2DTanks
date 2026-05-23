@@ -16,7 +16,7 @@ import { IEntity } from '../../polygon/entity/IEntity';
 import { CollisionDetector } from '../../geometry/CollisionDetector';
 import type { DeathmatchInit, GameWorldEndResult, GameWorldRuntimeSettings, PlayerMatchStats } from './gameWorldEndResult';
 import { SeededRandom } from '../../utils/seededRandom';
-import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from '../../repos/replayRepo';
+import type { ReplayEvent, ReplayItemSpawnEvent, ReplayWorldInitEvent } from './replayTypes';
 import { WallModel } from '../../model/obstacle/IWallModel';
 import {
     buildFreeSpawnSlots,

@@ -5,8 +5,8 @@
  * чтобы после матча пользователь не оставался на старом JS из PWA-кэша.
  */
 
-const CACHE_VERSION = 'tanks-shell-v2';
-const SHELL_URLS = ['/', '/index.html', '/src/js/bundle.js', '/src/img/icon.png', '/manifest.webmanifest'];
+const CACHE_VERSION = 'tanks-shell-v3';
+const SHELL_URLS = ['/', '/index.html', '/src/js/bundle.js?v=3', '/src/img/icon.png', '/manifest.webmanifest'];
 
 async function networkFirst(req, fallbackUrl) {
     const cache = await caches.open(CACHE_VERSION);

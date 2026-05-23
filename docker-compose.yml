@@ -2,8 +2,6 @@
 #   5173 — фронт (nginx) + прокси /api и WebSocket /game на сервер
 #   3000 — API/WebSocket напрямую (отладка; для игры через браузер достаточно 5173)
 #   5432 — PostgreSQL
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
@@ -53,8 +51,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         GAME_API_ORIGIN: ""
         GAME_WS_PATH: /game
@@ -79,4 +77,3 @@ networks:
 
 volumes:
   postgres_data:
-
