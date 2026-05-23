@@ -27,6 +27,16 @@ export interface GameEndScreenProps {
     myPlayerId?: string;
 }
 
+function playerLabel(row: { displayName?: string; role?: string }): string {
+    const displayName = row.displayName?.trim();
+    if (displayName) {
+        return displayName;
+    }
+    if (row.role === 'attacker') return 'Атакующий';
+    if (row.role === 'defender') return 'Защитник';
+    return 'Игрок';
+}
+
 const GameEndScreen: React.FC<GameEndScreenProps> = ({
     onBackToMenu,
     mode,
@@ -75,7 +85,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                             className={myPlayerId === row.playerId ? 'game-end-me' : undefined}
                         >
                             <td>
-                                {row.displayName ?? row.playerId.slice(0, 12)}{' '}
+                                {playerLabel(row)}{' '}
                                 <span className="game-end-role-tag">
                                     ({row.role === 'attacker' ? 'A' : row.role === 'defender' ? 'D' : 'F'})
                                 </span>
@@ -109,7 +119,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                             key={row.playerId}
                             className={winnerPlayerIds.includes(row.playerId) ? 'is-winner' : undefined}
                         >
-                            {row.displayName ?? row.playerId.slice(0, 12)} — {row.kills}{' '}
+                            {playerLabel(row)} — {row.kills}{' '}
                             {winnerPlayerIds.includes(row.playerId) ? '★' : ''}
                         </li>
                     ))}

@@ -30,9 +30,9 @@ export type PlayerMatchStats = {
 export type GameWorldEndResult =
     | { mode: 'standard'; winner: 'attacker' | 'defender'; reason: string; stats: PlayerMatchStats[] }
     | {
-          mode: 'deathmatch';
-          reason: string;
-          winnerPlayerIds: string[];
-          scores: { playerId: string; kills: number }[];
-          stats: PlayerMatchStats[];
-      };
+      mode: 'deathmatch';
+      reason: string;
+      winnerPlayerIds: string[];
+      scores: { playerId: string; kills: number; displayName?: string | null }[];
+      stats: PlayerMatchStats[];
+  };

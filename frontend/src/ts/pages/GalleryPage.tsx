@@ -38,7 +38,7 @@ function matchStatPlayerLabel(row: GalleryMatchStatRowDto): string {
               : row.role === 'fighter'
                 ? 'Боец'
                 : row.role;
-    return `${roleRu} · ${row.playerId.slice(0, 10)}…`;
+    return roleRu;
 }
 
 const PAGE_SIZE = 30;

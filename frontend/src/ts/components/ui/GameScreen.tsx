@@ -197,7 +197,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
     const playerNameById = useMemo(() => {
         const m = new Map<string, string>();
         for (const p of players) {
-            m.set(p.playerId, (p.displayName || p.playerId).slice(0, 16));
+            m.set(p.playerId, (p.displayName || 'Игрок').slice(0, 16));
         }
         return m;
     }, [players]);
@@ -413,7 +413,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                     const labels = new Map<string, string>();
                     for (const player of players) {
                         if (player.playerId) {
-                            labels.set(player.playerId, player.displayName || player.playerId.slice(0, 12));
+                            labels.set(player.playerId, player.displayName || 'Игрок');
                         }
                     }
                     rendererRef.current.setPlayerLabels(labels);
@@ -446,14 +446,22 @@ const GameScreen: React.FC<GameScreenProps> = ({
                       damageDealt: Number(s.damageDealt) || 0,
                       damageTaken: Number(s.damageTaken) || 0,
                       keyPickups: Number(s.keyPickups) || 0,
-                      ammoPickups: Number(s.ammoPickups) || 0
+                      ammoPickups: Number(s.ammoPickups) || 0,
+                      displayName:
+                          typeof s.displayName === 'string' && s.displayName.trim()
+                              ? s.displayName.trim()
+                              : undefined
                   }))
                 : [];
             if (message.deathmatch) {
                 const scores: DeathmatchScoreRow[] = Array.isArray(message.scores)
                     ? message.scores.map((s: any) => ({
-                          playerId: String(s.playerId),
-                          kills: Number(s.kills) || 0
+                      playerId: String(s.playerId),
+                          kills: Number(s.kills) || 0,
+                          displayName:
+                              typeof s.displayName === 'string' && s.displayName.trim()
+                                  ? s.displayName.trim()
+                                  : undefined
                       }))
                     : [];
                 const winnerPlayerIds: string[] = Array.isArray(message.winnerPlayerIds)

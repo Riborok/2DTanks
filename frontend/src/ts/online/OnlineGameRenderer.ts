@@ -650,7 +650,7 @@ export class OnlineGameRenderer {
         if (!playerId) {
             return;
         }
-        const label = this.playerLabels.get(playerId) || playerId.slice(0, 12);
+        const label = this.playerLabels.get(playerId) || 'Игрок';
         if (!label) {
             return;
         }

@@ -43,7 +43,7 @@ function enrichDeathmatchScores(
 ): DeathmatchScoreRow[] {
     return scores.map((s) => ({
         ...s,
-        displayName: players.find((p) => p.playerId === s.playerId)?.displayName
+        displayName: players.find((p) => p.playerId === s.playerId)?.displayName ?? s.displayName
     }));
 }
 
@@ -53,7 +53,7 @@ function enrichMatchStats(
 ): PlayerMatchStatsRow[] {
     return stats.map((s) => ({
         ...s,
-        displayName: players.find((p) => p.playerId === s.playerId)?.displayName
+        displayName: players.find((p) => p.playerId === s.playerId)?.displayName ?? s.displayName
     }));
 }
 

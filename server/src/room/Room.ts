@@ -883,6 +883,30 @@ export class Room {
         }
     }
 
+    private withPlayerDisplayNames(result: GameWorldEndResult): GameWorldEndResult {
+        const displayByPlayerId = new Map(
+            [...this.players.values()].map((player) => [
+                player.id,
+                player.displayName && player.displayName.trim() ? player.displayName.trim() : null
+            ])
+        );
+        const stats = result.stats.map((row) => ({
+            ...row,
+            displayName: displayByPlayerId.get(row.playerId) ?? row.displayName ?? null
+        }));
+        if (result.mode === 'standard') {
+            return { ...result, stats };
+        }
+        return {
+            ...result,
+            stats,
+            scores: result.scores.map((row) => ({
+                ...row,
+                displayName: displayByPlayerId.get(row.playerId) ?? row.displayName ?? null
+            }))
+        };
+    }
+
     private endGame(result: GameWorldEndResult): void {
         this.simulationStarting = false;
         if (this.gameLoopInterval) {
@@ -904,15 +928,16 @@ export class Room {
             });
         }
 
+        const visibleResult = this.withPlayerDisplayNames(result);
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === WebSocket.OPEN) {
-                if (result.mode === 'standard') {
+                if (visibleResult.mode === 'standard') {
                     player.ws.send(
                         JSON.stringify({
                             type: 'gameEnd',
-                            winner: result.winner,
-                            reason: result.reason,
-                            stats: result.stats
+                            winner: visibleResult.winner,
+                            reason: visibleResult.reason,
+                            stats: visibleResult.stats
                         })
                     );
                 } else {
@@ -920,10 +945,10 @@ export class Room {
                         JSON.stringify({
                             type: 'gameEnd',
                             deathmatch: true,
-                            reason: result.reason,
-                            winnerPlayerIds: result.winnerPlayerIds,
-                            scores: result.scores,
-                            stats: result.stats
+                            reason: visibleResult.reason,
+                            winnerPlayerIds: visibleResult.winnerPlayerIds,
+                            scores: visibleResult.scores,
+                            stats: visibleResult.stats
                         })
                     );
                 }
@@ -932,13 +957,13 @@ export class Room {
         for (const sp of this.spectators.values()) {
             if (sp.ws.readyState !== WebSocket.OPEN) continue;
             try {
-                if (result.mode === 'standard') {
+                if (visibleResult.mode === 'standard') {
                     sp.ws.send(
                         JSON.stringify({
                             type: 'gameEnd',
-                            winner: result.winner,
-                            reason: result.reason,
-                            stats: result.stats
+                            winner: visibleResult.winner,
+                            reason: visibleResult.reason,
+                            stats: visibleResult.stats
                         })
                     );
                 } else {
@@ -946,10 +971,10 @@ export class Room {
                         JSON.stringify({
                             type: 'gameEnd',
                             deathmatch: true,
-                            reason: result.reason,
-                            winnerPlayerIds: result.winnerPlayerIds,
-                            scores: result.scores,
-                            stats: result.stats
+                            reason: visibleResult.reason,
+                            winnerPlayerIds: visibleResult.winnerPlayerIds,
+                            scores: visibleResult.scores,
+                            stats: visibleResult.stats
                         })
                     );
                 }

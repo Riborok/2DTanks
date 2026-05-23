@@ -324,19 +324,37 @@ export async function enrichMatchStatsDisplayNames(
     if (!Array.isArray(stats) || stats.length === 0) {
         return stats;
     }
-    const r = await pool.query<{ role: string; display_name: string | null }>(
-        `SELECT mp.role, u.display_name
+    const r = await pool.query<{ role: string; display_name: string | null; start_meta: ReplayStartMeta | null }>(
+        `SELECT mp.role, u.display_name, mra.start_meta
          FROM match_participants mp
          LEFT JOIN users u ON u.user_id = mp.user_id
-         WHERE mp.match_id = $1 AND mp.role IN ('attacker', 'defender')`,
+         LEFT JOIN match_replay_actions mra ON mra.match_id = mp.match_id
+         WHERE mp.match_id = $1 AND mp.role IN ('attacker', 'defender', 'fighter')
+         ORDER BY mp.created_at ASC`,
         [matchId]
     );
     const byRole = new Map<string, string>();
+    const byPlayerId = new Map<string, string>();
     for (const row of r.rows) {
         const name = row.display_name?.trim();
-        if (name) {
+        if (name && row.role !== 'fighter') {
             byRole.set(row.role, name);
         }
+    }
+    const startMeta = r.rows[0]?.start_meta;
+    if (startMeta?.mode === 'standard') {
+        const attackerName = r.rows.find((row) => row.role === 'attacker')?.display_name?.trim();
+        const defenderName = r.rows.find((row) => row.role === 'defender')?.display_name?.trim();
+        if (attackerName) byPlayerId.set(startMeta.attackerPlayerId, attackerName);
+        if (defenderName) byPlayerId.set(startMeta.defenderPlayerId, defenderName);
+    } else if (startMeta?.mode === 'deathmatch') {
+        const fighters = r.rows.filter((row) => row.role === 'fighter');
+        startMeta.fighters.forEach((fighter, index) => {
+            const name = fighters[index]?.display_name?.trim();
+            if (name) {
+                byPlayerId.set(fighter.playerId, name);
+            }
+        });
     }
     return stats.map((raw) => {
         if (!raw || typeof raw !== 'object') {
@@ -350,8 +368,9 @@ export async function enrichMatchStatsDisplayNames(
         if (existing) {
             return raw;
         }
+        const playerId = typeof o.playerId === 'string' ? o.playerId : '';
         const role = typeof o.role === 'string' ? o.role : '';
-        const fromDb = role ? byRole.get(role) : undefined;
+        const fromDb = (playerId ? byPlayerId.get(playerId) : undefined) ?? (role ? byRole.get(role) : undefined);
         if (fromDb) {
             return { ...o, displayName: fromDb };
         }
