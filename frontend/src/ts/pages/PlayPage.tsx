@@ -394,6 +394,13 @@ const PlayPage: React.FC = () => {
         (code: string) => {
             setError('');
             const c = code.trim().toUpperCase();
+            const joinPendingRoom = (joinCode: string) => {
+                if (pendingInviteJoinCodeRef.current !== joinCode) {
+                    return;
+                }
+                pendingInviteJoinCodeRef.current = null;
+                wsClient.send({ type: 'joinRoom', code: joinCode });
+            };
             const joinAfterConnect = (joinCode: string) => {
                 void wsClient
                     .connect()
@@ -427,6 +434,7 @@ const PlayPage: React.FC = () => {
             setCanStart(false);
             setRoomSettings(DEFAULT_ROOM_SETTINGS);
             setGameEndReason(null);
+            window.setTimeout(() => joinPendingRoom(c), 800);
             // joinRoom отправим только после серверного leftGame (см. onLeftGame).
         },
         [wsClient]

@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { listMatchHistory, type MatchHistoryItemDto } from '../auth/gameApi';
 import { useAuth } from '../context/AuthContext';
+import { formatWholeStat } from '../utils/matchStatsFormat';
+
+function formatPercentStat(value: number): string {
+    if (!Number.isFinite(value)) {
+        return '0%';
+    }
+    const rounded = Math.round(value * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1)}%`;
+}
 
 const StatsPage: React.FC = () => {
     const { accessToken } = useAuth();
@@ -152,8 +161,8 @@ const StatsPage: React.FC = () => {
                             <div className="stats-summary stats-summary-grid">
                                 <div className="stats-chip wins">Побед: {wins}</div>
                                 <div className="stats-chip losses">Поражений: {losses}</div>
-                                <div className="stats-chip total">Винрейт: {winRate.toFixed(1)}%</div>
-                                <div className="stats-chip total">Точность: {accuracy.toFixed(1)}%</div>
+                                <div className="stats-chip total">Винрейт: {formatPercentStat(winRate)}</div>
+                                <div className="stats-chip total">Точность: {formatPercentStat(accuracy)}</div>
                                 <div className="stats-chip total">Матчей: {matches.length}</div>
                             </div>
 
@@ -163,29 +172,29 @@ const StatsPage: React.FC = () => {
                                 <div className="stats-analytics-grid">
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">Средний урон за матч</div>
-                                        <div className="stats-analytics-value">{avgDamagePerMatch.toFixed(0)}</div>
+                                        <div className="stats-analytics-value">{formatWholeStat(avgDamagePerMatch)}</div>
                                     </div>
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">Последние 10 матчей</div>
-                                        <div className="stats-analytics-value">{lastTenWinRate.toFixed(1)}% побед</div>
+                                        <div className="stats-analytics-value">{formatPercentStat(lastTenWinRate)} побед</div>
                                     </div>
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">K / D</div>
                                         <div className="stats-analytics-value">
-                                            {totals.kills} / {totals.deaths}
+                                            {formatWholeStat(totals.kills)} / {formatWholeStat(totals.deaths)}
                                         </div>
                                     </div>
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">Суммарный урон</div>
-                                        <div className="stats-analytics-value">{totals.damageDealt}</div>
+                                        <div className="stats-analytics-value">{formatWholeStat(totals.damageDealt)}</div>
                                     </div>
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">Полученный урон</div>
-                                        <div className="stats-analytics-value">{totals.damageTaken}</div>
+                                        <div className="stats-analytics-value">{formatWholeStat(totals.damageTaken)}</div>
                                     </div>
                                     <div className="stats-analytics-card">
                                         <div className="stats-analytics-label">Подборы бонусов</div>
-                                        <div className="stats-analytics-value">{totals.pickups}</div>
+                                        <div className="stats-analytics-value">{formatWholeStat(totals.pickups)}</div>
                                     </div>
                                 </div>
                             )}
@@ -195,7 +204,7 @@ const StatsPage: React.FC = () => {
                                     <p>
                                         Лучший матч по нанесенному урону:{' '}
                                         <strong>
-                                            {bestDamageMatch?.roomCode ?? '—'} ({bestDamageMatch?.damage ?? 0})
+                                            {bestDamageMatch?.roomCode ?? '—'} ({formatWholeStat(bestDamageMatch?.damage ?? 0)})
                                         </strong>
                                     </p>
                                     <p className="stats-note">

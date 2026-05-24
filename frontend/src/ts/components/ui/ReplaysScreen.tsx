@@ -6,6 +6,7 @@ import {
     type ReplayListItemDto,
     type MatchHistoryItemDto
 } from '../../auth/gameApi';
+import { formatWholeStat } from '../../utils/matchStatsFormat';
 
 type Tab = 'replays' | 'history';
 
@@ -17,6 +18,14 @@ type ShareDialogState =
 type ReplayDisplayItem =
     | { kind: 'ready'; replay: ReplayListItemDto }
     | { kind: 'pending'; match: MatchHistoryItemDto };
+
+function formatPercentStat(value: number): string {
+    if (!Number.isFinite(value)) {
+        return '0%';
+    }
+    const rounded = Math.round(value * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1)}%`;
+}
 
 function pendingReplayTitle(match: MatchHistoryItemDto): string {
     const room = match.roomCode ? `Комната ${match.roomCode}` : 'Матч';
@@ -354,14 +363,14 @@ const ReplaysScreen: React.FC<ReplaysScreenProps> = ({ accessToken, onBack, onPl
                                                         return (
                                                             <tr key={`${m.matchId}_${row.playerId}`}>
                                                                 <td>{matchHistoryPlayerLabel(row)}</td>
-                                                                <td>{row.kills}</td>
-                                                                <td>{row.deaths}</td>
-                                                                <td>{row.damageDealt}</td>
-                                                                <td>{row.damageTaken}</td>
-                                                                <td>{row.shotsFired}</td>
-                                                                <td>{row.shotsHit}</td>
-                                                                <td>{acc.toFixed(1)}%</td>
-                                                                <td>{row.keyPickups + row.ammoPickups}</td>
+                                                                <td>{formatWholeStat(row.kills)}</td>
+                                                                <td>{formatWholeStat(row.deaths)}</td>
+                                                                <td>{formatWholeStat(row.damageDealt)}</td>
+                                                                <td>{formatWholeStat(row.damageTaken)}</td>
+                                                                <td>{formatWholeStat(row.shotsFired)}</td>
+                                                                <td>{formatWholeStat(row.shotsHit)}</td>
+                                                                <td>{formatPercentStat(acc)}</td>
+                                                                <td>{formatWholeStat(row.keyPickups + row.ammoPickups)}</td>
                                                             </tr>
                                                         );
                                                     })}

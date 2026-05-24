@@ -9,6 +9,7 @@ import {
     type GalleryMatchStatRowDto,
     type GalleryReplayDto
 } from '../auth/gameApi';
+import { formatWholeStat } from '../utils/matchStatsFormat';
 
 type SortMode = 'new' | 'top';
 
@@ -16,6 +17,14 @@ type StatsModalState =
     | { phase: 'loading'; replay: GalleryReplayDto }
     | { phase: 'ready'; replay: GalleryReplayDto; stats: GalleryMatchStatRowDto[] }
     | { phase: 'error'; replay: GalleryReplayDto; message: string };
+
+function formatPercentStat(value: number): string {
+    if (!Number.isFinite(value)) {
+        return '0%';
+    }
+    const rounded = Math.round(value * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1)}%`;
+}
 
 function formatDurationMs(durationTicks: number | null): string {
     if (!durationTicks || durationTicks <= 0) return '—';
@@ -323,14 +332,14 @@ const GalleryPage: React.FC = () => {
                                             return (
                                                 <tr key={row.playerId}>
                                                     <td>{matchStatPlayerLabel(row)}</td>
-                                                    <td>{row.kills}</td>
-                                                    <td>{row.deaths}</td>
-                                                    <td>{row.damageDealt}</td>
-                                                    <td>{row.damageTaken}</td>
-                                                    <td>{row.shotsFired}</td>
-                                                    <td>{row.shotsHit}</td>
-                                                    <td>{acc.toFixed(1)}%</td>
-                                                    <td>{row.keyPickups + row.ammoPickups}</td>
+                                                    <td>{formatWholeStat(row.kills)}</td>
+                                                    <td>{formatWholeStat(row.deaths)}</td>
+                                                    <td>{formatWholeStat(row.damageDealt)}</td>
+                                                    <td>{formatWholeStat(row.damageTaken)}</td>
+                                                    <td>{formatWholeStat(row.shotsFired)}</td>
+                                                    <td>{formatWholeStat(row.shotsHit)}</td>
+                                                    <td>{formatPercentStat(acc)}</td>
+                                                    <td>{formatWholeStat(row.keyPickups + row.ammoPickups)}</td>
                                                 </tr>
                                             );
                                         })}

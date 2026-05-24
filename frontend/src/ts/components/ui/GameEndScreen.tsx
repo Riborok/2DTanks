@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { formatWholeStat } from '../../utils/matchStatsFormat';
 
 export type DeathmatchScoreRow = { playerId: string; kills: number; displayName?: string };
 export type PlayerMatchStatsRow = {
@@ -35,6 +36,14 @@ function playerLabel(row: { displayName?: string; role?: string }): string {
     if (row.role === 'attacker') return 'Атакующий';
     if (row.role === 'defender') return 'Защитник';
     return 'Игрок';
+}
+
+function formatPercentStat(value: number): string {
+    if (!Number.isFinite(value)) {
+        return '0%';
+    }
+    const rounded = Math.round(value * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1)}%`;
 }
 
 const GameEndScreen: React.FC<GameEndScreenProps> = ({
@@ -90,14 +99,14 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                                     ({row.role === 'attacker' ? 'A' : row.role === 'defender' ? 'D' : 'F'})
                                 </span>
                             </td>
-                            <td>{row.kills}</td>
-                            <td>{row.deaths}</td>
-                            <td>{row.damageDealt}</td>
-                            <td>{row.damageTaken}</td>
-                            <td>{row.shotsFired}</td>
-                            <td>{row.shotsHit}</td>
-                            <td>{acc.toFixed(1)}%</td>
-                            <td>{row.keyPickups + row.ammoPickups}</td>
+                            <td>{formatWholeStat(row.kills)}</td>
+                            <td>{formatWholeStat(row.deaths)}</td>
+                            <td>{formatWholeStat(row.damageDealt)}</td>
+                            <td>{formatWholeStat(row.damageTaken)}</td>
+                            <td>{formatWholeStat(row.shotsFired)}</td>
+                            <td>{formatWholeStat(row.shotsHit)}</td>
+                            <td>{formatPercentStat(acc)}</td>
+                            <td>{formatWholeStat(row.keyPickups + row.ammoPickups)}</td>
                         </tr>
                     );
                 })}
@@ -127,7 +136,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                             key={row.playerId}
                             className={winnerPlayerIds.includes(row.playerId) ? 'is-winner' : undefined}
                         >
-                            {playerLabel(row)} - {row.kills} фр., {damageByPlayerId.get(row.playerId) ?? 0} урона{' '}
+                            {playerLabel(row)} - {formatWholeStat(row.kills)} фр., {formatWholeStat(damageByPlayerId.get(row.playerId) ?? 0)} урона{' '}
                             {winnerPlayerIds.includes(row.playerId) ? '★' : ''}
                         </li>
                     ))}
@@ -142,14 +151,14 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                         </div>
                         <div className="game-end-top-stat">
                             <div className="game-end-top-stat-label">Ваш урон</div>
-                            <div className="game-end-top-stat-value">{myStats.damageDealt}</div>
+                            <div className="game-end-top-stat-value">{formatWholeStat(myStats.damageDealt)}</div>
                         </div>
                         <div className="game-end-top-stat">
                             <div className="game-end-top-stat-label">Ваша точность</div>
                             <div className="game-end-top-stat-value">
                                 {myStats.shotsFired > 0
-                                    ? `${((myStats.shotsHit / myStats.shotsFired) * 100).toFixed(1)}%`
-                                    : '0.0%'}
+                                    ? formatPercentStat((myStats.shotsHit / myStats.shotsFired) * 100)
+                                    : '0%'}
                             </div>
                         </div>
                     </div>
@@ -189,14 +198,14 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                     </div>
                     <div className="game-end-top-stat">
                         <div className="game-end-top-stat-label">Ваш урон</div>
-                        <div className="game-end-top-stat-value">{myStats.damageDealt}</div>
+                        <div className="game-end-top-stat-value">{formatWholeStat(myStats.damageDealt)}</div>
                     </div>
                     <div className="game-end-top-stat">
                         <div className="game-end-top-stat-label">Ваша точность</div>
                         <div className="game-end-top-stat-value">
                             {myStats.shotsFired > 0
-                                ? `${((myStats.shotsHit / myStats.shotsFired) * 100).toFixed(1)}%`
-                                : '0.0%'}
+                                ? formatPercentStat((myStats.shotsHit / myStats.shotsFired) * 100)
+                                : '0%'}
                         </div>
                     </div>
                 </div>

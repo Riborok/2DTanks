@@ -1294,6 +1294,27 @@ export class GameWorld {
         }
         return Bonus.bulGrenade;
     }
+
+    private getItemSize(type: Bonus): number {
+        return type === Bonus.key ? ResolutionManager.KEY_SIZE : ResolutionManager.BOX_SIZE;
+    }
+
+    private doesItemOverlapExistingItems(x: number, y: number, size: number): boolean {
+        for (const item of this.items.values()) {
+            const itemSize = this.getItemSize(item.type);
+            const separated =
+                x + size <= item.x ||
+                item.x + itemSize <= x ||
+                y + size <= item.y ||
+                item.y + itemSize <= y;
+
+            if (!separated) {
+                return true;
+            }
+        }
+
+        return false;
+    }
     
     private spawnRandomBox(): void {
         if (!this.pointSpawner) {
@@ -1312,6 +1333,9 @@ export class GameWorld {
         const probeId = ModelIDTracker.otherId;
         for (const { line, col } of slots) {
             const spawnPoint = this.pointSpawner.getSpawnPoint(sz, sz, line, col);
+            if (this.doesItemOverlapExistingItems(spawnPoint.x, spawnPoint.y, sz)) {
+                continue;
+            }
             const probe = new RectangularEntity(spawnPoint, sz, sz, 0, Infinity, probeId);
             const hits = Array.from(this.collisionSystem.getCollisions(probe)).filter((c) => c.id !== probeId);
             if (hits.length > 0) {

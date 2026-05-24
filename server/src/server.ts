@@ -370,11 +370,22 @@ wss.on('connection', (ws: WebSocket, req) => {
                     if (!roomManager.isPlayerCurrentSocket(roomCode, playerId, ws)) {
                         roomCode = null;
                         playerId = null;
+                        ws.send(
+                            JSON.stringify({
+                                type: 'leftGame'
+                            })
+                        );
                         return;
                     }
                     roomManager.leaveRoom(roomCode, playerId);
                     roomCode = null;
                     playerId = null;
+                    ws.send(
+                        JSON.stringify({
+                            type: 'leftGame'
+                        })
+                    );
+                } else {
                     ws.send(
                         JSON.stringify({
                             type: 'leftGame'
